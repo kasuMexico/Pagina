@@ -1,0 +1,47 @@
+# 🚀 Ignorar archivos de conexión a la base de datos
+eia/Conexiones/*.php
+
+# 🚀 Ignorar configuraciones de entorno y variables sensibles
+.env
+.env.local
+.env.production
+config/database.php
+config/secrets.json
+
+# 🚀 Ignorar dependencias de Composer y Node.js
+/vendor/
+node_modules/
+
+# 🚀 Ignorar caché y archivos temporales
+storage/logs/
+storage/framework/cache/
+storage/framework/views/
+cache/
+logs/
+*.log
+
+# 🚀 Ignorar archivos generados por el sistema
+.DS_Store
+Thumbs.db
+
+# 🚀 Ignorar archivos de depuración
+*.bak
+*.swp
+*.swo
+
+# 🚀 Ignorar archivos de compilación y minificación
+/public/build/
+*.min.js
+*.min.css
+
+# 🚀 Ignorar archivos de IDEs (Visual Studio Code, JetBrains, etc.)
+.vscode/
+.idea/
+*.iml
+
+# 🚀 Ignorar datos de pruebas y respaldos
+tests/
+backups/
+dump.sql
+*.sql
+

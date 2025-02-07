@@ -45,3 +45,4 @@ backups/
 dump.sql
 *.sql
 
+.DS_Store

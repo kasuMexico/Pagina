@@ -1,130 +1,200 @@
 <?php
-//indicar que se inicia una sesion
 session_start();
-//inlcuir el archivo de funciones
-require_once 'Funciones_kasu.php';
-$id = $_GET['n'];
-$PromesaPago= $_GET['m'];
 date_default_timezone_set('America/Mexico_City');
-$fecha = date("Y-m-d-H-i-s");
-$data = date( "d-m-Y",strtotime($PromesaPago));
-$campos = array("Id"=>"Id","IdContact"=>"IdContact","Nombre"=>"Nombre","TipoServicio"=>"TipoServicio","Subtotal"=>"Subtotal","NumeroPagos"=>"NumeroPagos","IdFIrma"=>"IdFIrma");
-//echo $data;
-$dataCte = PDF::Datos($mysqli,"Venta",$campos,"IdContact",$id);
-//echo $dataCte["Id"]," ",$dataCte["IdContact"]," ",$dataCte["Nombre"]," ",$dataCte["TipoServicio"]," ",$dataCte["Subtotal"]," ",$dataCte["NumeroPagos"]," ",$dataCte["IdFIrma"];
-/*calculamos los datos de acuerdo al numero de pagos y los asignamos a las variables para el llenado del formato*/
-//Datos asigndos a pago de contado
-if( $dataCte['NumeroPagos'] == 0  || $dataCte['NumeroPagos'] == 1 )
-{
-  $contado = 1; 														// numero de division de acuerdo al mes
-  $NumPag = 1; 														// numero de pagos
-  $div = 1; 														// numero en el que se divide
-  $DM = date_create("$data"); // creamos una fecha dd-mm-yyyy de la mora
 
-  date_modify($DM,"+3 days"); 				// Aumento 3 dias a la primer fecha
-  $FormatoFecha = date_format($DM,"d-m-Y"); 	// Realiza un formato entendible
-/*********/
-$datos = []; // Se crea un array para almacenar las fechas
-$datos[$i] = $data;  // Array con datos[1] fecha del dia de pago
-$datos[$i.'c'] = $FormatoFecha; // Array con datos[1c] fecha aplicando mora
-$pago = round($dataCte['Subtotal']/($div*$contado));  // redondeo de pago Subtotal / numero de pagos * meses
-$mora = round(($dataCte['Subtotal']/( $div*$contado))*1.1); // Del pago obtenido se multiplica por 1.1 tasa de intereses
-$Formato = PDF::Formato($dataCte["Nombre"],$dataCte["IdContact"],$dataCte["TipoServicio"],$NumPag,$datos[$i],$pago,$datos[$i.'c'],$mora,$dataCte["IdFIrma"]);
-//echo $Formato;
-//$PDFResult = PDF::DocPDF($id,$dataCte["Nombre"],$fech,$Formato);
-//echo $PDFResult;
-//header('Location: https://kasu.com.mx');
-    echo "pago unico";
+// Se incluye el archivo que carga las clases y funciones necesarias.
+require_once 'Funciones_kasu.php';
+
+// Se obtienen los parámetros GET
+$id = isset($_GET['n']) ? $_GET['n'] : null;
+$PromesaPago = isset($_GET['m']) ? $_GET['m'] : null;
+
+if (!$id || !$PromesaPago) {
+    die("Parámetros insuficientes.");
 }
-//Datos asigndos a pago a credito
-else
-{
-    echo "<br> pago credito <br>";
-    $credito = 2; 											// numero de division de acuerdo al mes
-    $NumPag = $dataCte['NumeroPagos']*2 ; 														// numero de pagos
-    //echo $NumPag;
-    $div = $dataCte['NumeroPagos']; 														// numero en el que se divide
-    //echo $div;
-    //asignamos a una nueva variable la fecha a utilizar para las interaciones a para los pagos a credito
-    //echo $data;
-    $FechaCredito = date_create("$data");
 
-    for($i = 1; $i<= $NumPag; $i++){
-        // Fecha de registro + 15 paro los pagos posteriores
-        if($i >= 1 ){
-           date_modify($FechaCredito,"+15 days");
+// Se define la fecha de promesa de pago en dos formatos:
+// - $data: en formato "d-m-Y" (para mostrar en el PDF)
+// - $fecha: la fecha actual en formato "Y-m-d" (si es necesaria para otros cálculos)
+$data = date("d-m-Y", strtotime($PromesaPago));
+$fecha = date("Y-m-d");
+
+// Definir el arreglo de campos para la consulta de datos de venta.
+$campos = [
+    "Id"            => "Id",
+    "IdContact"     => "IdContact",
+    "Nombre"        => "Nombre",
+    "TipoServicio"  => "TipoServicio",
+    "Subtotal"      => "Subtotal",
+    "NumeroPagos"   => "NumeroPagos",
+    "IdFIrma"       => "IdFIrma"
+];
+
+// Se obtiene la información del cliente mediante la función PDF::Datos
+$dataCte = PDF::Datos($mysqli, "Venta", $campos, "IdContact", $id);
+
+if (!$dataCte) {
+    die("No se encontraron datos para el cliente.");
+}
+
+// Si el número de pagos es 0 o 1, se procesa como pago único, de lo contrario como crédito.
+if ($dataCte['NumeroPagos'] == 0 || $dataCte['NumeroPagos'] == 1) {
+    echo processPagoUnico($dataCte, $data);
+} else {
+    echo processPagoCredito($dataCte, $data, $PromesaPago);
+}
+
+
+/**
+ * Procesa el escenario de pago único.
+ * 
+ * - Suma 3 días a la fecha de promesa para definir la fecha con mora.
+ * - Calcula el pago y la mora (para pago único, se divide el subtotal entre 1).
+ * - Llama a PDF::Formato para generar el formato final.
+ *
+ * @param array $dataCte Datos obtenidos de la venta.
+ * @param string $promesaFecha Fecha de promesa de pago en formato "d-m-Y".
+ * @return string Resultado (por ejemplo, el formato PDF o mensaje de confirmación).
+ */
+function processPagoUnico($dataCte, $promesaFecha) {
+    // Variables para pago único: se considera un pago (sin división) y una tasa de interés aplicada.
+    $contado = 1;
+    $NumPag = 1;
+    $div = 1;
+    
+    // Crear objeto de fecha a partir de la fecha de promesa
+    $fechaObj = date_create($promesaFecha);
+    // Sumar 3 días para ajustar la fecha (mora)
+    date_modify($fechaObj, "+3 days");
+    $fechaConMora = date_format($fechaObj, "d-m-Y");
+
+    // Creamos un arreglo para almacenar la fecha original y la fecha con mora.
+    $datos = [];
+    $datos[1]    = $promesaFecha;    // Fecha original
+    $datos["1c"] = $fechaConMora;      // Fecha con mora aplicada
+
+    // Calcula el pago y la mora. En pago único, ambos se basan en el subtotal.
+    $pago = round($dataCte['Subtotal'] / ($div * $contado));
+    $mora = round(($dataCte['Subtotal'] / ($div * $contado)) * 1.1);
+
+    // Genera el formato PDF utilizando la función de la clase PDF.
+    $formato = PDF::Formato(
+        $dataCte["Nombre"],
+        $dataCte["IdContact"],
+        $dataCte["TipoServicio"],
+        $NumPag,
+        $datos[1],
+        $pago,
+        $datos["1c"],
+        $mora,
+        $dataCte["IdFIrma"]
+    );
+
+    return "Pago único generado. Formato PDF: " . $formato;
+}
+
+
+/**
+ * Procesa el escenario de pago a crédito.
+ * 
+ * - Calcula el número total de pagos multiplicando el valor en la base de datos por 2.
+ * - Para cada pago, se suma 15 días y se ajusta la fecha:
+ *   * Si el día es entre 1 y 16, se fija a 15; si es mayor, se fija a 01 del siguiente mes.
+ *   * Se suma 3 días para la fecha de mora.
+ * - Se calcula la cuota (pago) y la mora usando el subtotal y el número de pagos.
+ * - Finalmente, se genera el formato PDF con la función PDF::Formato.
+ *
+ * @param array $dataCte Datos de la venta.
+ * @param string $promesaFecha Fecha de promesa en formato "d-m-Y".
+ * @param string $PromesaPago Valor original de la promesa (para pasar a PDF::Formato si es necesario).
+ * @return string Resultado final, por ejemplo, la longitud del formato PDF.
+ */
+function processPagoCredito($dataCte, $promesaFecha, $PromesaPago) {
+    $credito = 2;
+    // Número total de pagos es el doble del valor almacenado en la base de datos.
+    $NumPag = $dataCte['NumeroPagos'] * 2;
+    $div = $dataCte['NumeroPagos'];
+    
+    // Se crea un objeto de fecha a partir de la fecha de promesa.
+    $FechaCredito = date_create($promesaFecha);
+    $datos = [];
+    $pago = 0;
+    $mora = 0;
+
+    // Bucle para calcular la fecha de cada pago.
+    for ($i = 1; $i <= $NumPag; $i++) {
+        // Sumar 15 días para cada pago.
+        date_modify($FechaCredito, "+15 days");
+        $FormatoFC = date_format($FechaCredito, "d-m-Y");
+        
+        // Extraer componentes de la fecha.
+        $dateParts = date_parse($FormatoFC);
+        $DI = $dateParts['day'];
+        $ME = $dateParts['month'];
+        $AN = $dateParts['year'];
+        
+        // En la primera iteración se puede asignar el mes en letras (opcional)
+        if ($i === 1) {
+            $MesLetra = PDF::Mes($ME);
         }
-        $FormatoFC = date_format($FechaCredito,"d-m-Y");
-        //echo $FormatoFC, "<br>";
-        $date =date_parse($FormatoFC);
-        $DI = $date['day'];
-        $ME = $date['month'];
-        $AN = $date['year'];
-        if ($i == 1 )
-				{
-					// se asigna el mes en formato de 3 letras para la BD
-					$MesLetra=PDF::Mes($ME);;
-
-				}
-				// interaciones para los pagos posteriores
-				if($DI >= 1 && $DI <= 15 ||  $DI == 16)
-				{
-					$DI = 15; // Dia fijo para pagos
-					$Mes = $ME; // variable de mes
-					$Year = $AN; // Variable de año
-					//cuando el mes es trece se pasa la fecha al primer mes del siguiente año
-					if($Mes == 13 )
-					{
-						$Mes = '01';
-						$Year = $AN +1;
-					}
-
-				}
-        elseif( $DI >= 17 && $DI <= 29 || $DI == 30 || $DI == 31)
-				{
-					$DI = "01"; // Dia fijo para pagos
-					$Mes= $ME+1; // Suma 1 mes mas
-					//cuando el mes es trece se pasa la fecha al primer mes del siguinete año
-					if($Mes == 13 )
-					{
-						$Mes = '01';
-						$Year = $AN +1;
-					}
-				}
-        if ($i == 1 )// en la primera interacion pasa la fecha insertada
-					{
-						$S = $data;
-            //echo $S;
-					}
-					else // Mas interaciones
-					{
-						$S = $DI.'-'.$Mes.'-'.$Year; // Fechas generadas
-					}
-        	/*aqui se crean arreglos con los datos calculados para generar el pdf */
-				$dm = date_create("$S"); // Crea la fecha
-				date_modify($dm,"+3 days"); // Se suman 3 dias para la retardos de pago
-				$tre = date_format($dm,"d-m-Y"); // Se le da un formato entendible
-        //echo $tre,"<br>";
-				$datos = []; // Se crea un array para almacenar las fechas
-				$datos[$i] = $S;  // Array con datos[1] fecha del dia de pago
-        //echo $datos[$i],"<br>";
-				$datos[$i.'c'] = $tre; // Array con datos[1c] fecha aplicando mora
-				$pago = round($dataCte['Subtotal']/($div*$credito));  // redondeo de pago Subtotal / numero de pagos * meses
-        //echo $pago,"<br>";
-				$mora = round(($dataCte['Subtotal']/( $div*$credito))*1.1); // Del pago obtenido se multiplica por 1.1 tasa de interes
-        //echo "<br>",$datos[$i], $pago, "<br>",$datos[$i. 'c'],$mora, "<br>";
-
+        
+        // Ajuste de la fecha según el día:
+        if ($DI >= 1 && $DI <= 16) {
+            // Para días entre 1 y 16, se fija el día a 15.
+            $DI = 15;
+            $Mes = $ME;
+            $Year = $AN;
+            if ($Mes == 13) {
+                $Mes = '01';
+                $Year = $AN + 1;
+            }
+        } elseif ($DI >= 17) {
+            // Para días mayores, se fija el día a 01 del siguiente mes.
+            $DI = "01";
+            $Mes = $ME + 1;
+            $Year = $AN;
+            if ($Mes == 13) {
+                $Mes = '01';
+                $Year = $AN + 1;
+            }
+        }
+        
+        // Definir la fecha para este pago.
+        if ($i === 1) {
+            $S = $promesaFecha; // Primera iteración: usa la fecha original.
+        } else {
+            $S = sprintf("%02d-%02d-%04d", $DI, $Mes, $Year);
+        }
+        
+        // Calcula la fecha con mora sumando 3 días.
+        $dm = date_create($S);
+        date_modify($dm, "+3 days");
+        $tre = date_format($dm, "d-m-Y");
+        
+        // Guarda las fechas en el arreglo.
+        $datos[$i]    = $S;
+        $datos[$i.'c'] = $tre;
+        
+        // Calcula la cuota mensual y la mora (estas variables se sobreescriben en cada iteración, se asume que el valor final es el deseado).
+        $pago = round($dataCte['Subtotal'] / ($div * $credito));
+        $mora = round(($dataCte['Subtotal'] / ($div * $credito)) * 1.1);
     }
-    $Formato = PDF::Formato($dataCte["Nombre"],$dataCte["IdContact"],$dataCte["TipoServicio"],$NumPag,$datos[$i],$pago,$datos[$i.'c'],$mora,$dataCte["IdFIrma"],$PromesaPago);
-    $fichas = strlen($Formato);
-        echo $fichas;
-	   //echo $Formato[];
-	   //echo "<br/>";
-
-
+    
+    // Genera el formato PDF utilizando la última fecha calculada y otros datos.
+    $formato = PDF::Formato(
+        $dataCte["Nombre"],
+        $dataCte["IdContact"],
+        $dataCte["TipoServicio"],
+        $NumPag,
+        $datos[$i],
+        $pago,
+        $datos[$i.'c'],
+        $mora,
+        $dataCte["IdFIrma"],
+        $PromesaPago
+    );
+    
+    $fichas = strlen($formato);
+    return "Pago a crédito generado. Longitud del formato PDF: " . $fichas;
 }
-
-
-
-/********************* fin pdf *********************/
 ?>

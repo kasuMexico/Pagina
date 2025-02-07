@@ -1,37 +1,63 @@
-<?
-//indicar que se inicia una sesion
+<?php
 session_start();
-//inlcuir el archivo de funciones
+
+// Incluir el archivo de funciones (se asume que Funciones_kasu.php carga o require_once
+// las clases Basicas, Correo, Financieras, Seguridad y FunctionUsageTracker)
 require_once '../php/Funciones_kasu.php';
-//Registramos los archivos automaticos
-//Actualizamos las comisiones que han generado los prospectos
-    Financieras::ActualComis($mysqli);
-//Actualizamos las ventas
-    Financieras::actualizaVts($mysqli);
-//Realiamos el envio de los correos de lectura
-//Realizamos el envio de correos de solicitud de citas
-    $sql1 = "SELECT * FROM prospectos ";
-    //Realiza consulta
-    $res1 = $pros->query($sql1);
-    //Si existe el registro se asocia en un fetch_assoc
-    foreach ($res1 as $Reg1){
-        //Validamos si el usuario esta solicitando cita
-        if($Reg1['Automatico'] == 1 AND $Reg1['Servicio_Interes'] == "DISTRIBUIDOR"){
-            //Se envia el correo electronico
-            $asunto = "AGENDAR CITA";
-            //COnvertimos el id del usuario en base64
-            $UsrEncode = base64_encode('CITA');
-            $dirUrl1 = base64_encode($Reg1['Id']);
-            //Se crea el correo electronico para enviarlo segun los modelos
-            $mensa = Correo::Mensaje($asunto,$Reg1['FullName'],$UsrEncode,$dirUrl1,'','','','','','','','','','','','','','','',$Reg1['Id']);
-            //Se envia el correo electronico
-            Correo::EnviarCorreo($Reg1['FullName'],$Reg1['Email'],$asunto,$mensa);
-            //se registra el valor del correo enviado
-            $ValMail = Basicas::BuscarCampos($pros,'Seguimiento','correos','Asunto',$asunto);
-            //Se inserta el estado en la base de datos
-            Basicas::ActCampo($pros,"prospectos","Estado",$ValMail,$Reg1['Id']);
-        }
+
+// Verifica que las conexiones existan
+if (!isset($mysqli) || !isset($pros)) {
+    die("Error: No se encontraron las conexiones a la base de datos.");
+}
+
+// Registrar el uso de las funciones (esto lo hará cada función que invoque trackUsage)
+
+// Actualizamos las comisiones generadas por los prospectos
+Financieras::ActualComis($mysqli);
+
+// Actualizamos las ventas
+Financieras::actualizaVts($mysqli);
+
+// Realizamos el envío de correos de solicitud de citas
+$sql1 = "SELECT * FROM prospectos";
+$res1 = $pros->query($sql1);
+
+if ($res1 === false) {
+    die("Error al ejecutar la consulta en prospectos: " . $pros->error);
+}
+
+// Iteramos sobre cada prospecto
+foreach ($res1 as $Reg1) {
+    // Si el prospecto tiene marcado Automatico = 1 y su Servicio_Interes es "DISTRIBUIDOR"
+    if ($Reg1['Automatico'] == 1 && $Reg1['Servicio_Interes'] == "DISTRIBUIDOR") {
+        $asunto = "AGENDAR CITA";
+        // Convertir el identificador a base64 (en este ejemplo se codifica la cadena "CITA"
+        // y el id del prospecto; verifica que esto sea lo que deseas)
+        $UsrEncode = base64_encode('CITA');
+        $dirUrl1 = base64_encode($Reg1['Id']);
+        
+        // Se crea el contenido del correo según la plantilla "AGENDAR CITA"
+        $mensa = Correo::Mensaje(
+            $asunto,
+            $Reg1['FullName'],
+            $UsrEncode,
+            $dirUrl1,
+            '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 
+            $Reg1['Id']
+        );
+        
+        // Enviar el correo electrónico (asegúrate de que la función EnviarCorreo esté definida en la clase Correo)
+        Correo::EnviarCorreo($Reg1['FullName'], $Reg1['Email'], $asunto, $mensa);
+        
+        // Se registra el valor del correo enviado consultándolo en la tabla 'correos'
+        $ValMail = Basicas::BuscarCampos($pros, 'Seguimiento', 'correos', 'Asunto', $asunto);
+        
+        // Se actualiza el estado en la tabla prospectos con el valor obtenido
+        Basicas::ActCampo($pros, "prospectos", "Estado", $ValMail, $Reg1['Id']);
     }
-    //Se cierra la conexion con la base de datos
-    $pros->close();
-    $mysqli->close();
+}
+
+// Cerramos las conexiones a la base de datos
+$pros->close();
+$mysqli->close();
+?>

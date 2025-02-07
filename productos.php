@@ -67,7 +67,7 @@
 <body>
 		<!-- Chat de Facebook -->
 		<?
-		require_once 'hmtl/CodeFb.php';
+		require_once 'html/CodeFb.php';
 		?>
 		<!-- Google Tag Manager (noscript) -->
 		<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MCR6T6W"
@@ -128,7 +128,7 @@
 			</div>
 		</section>
     <!-- ***** Header Area Start ***** -->
-		<? require_once 'hmtl/MenuPrincipal.php';?>
+		<? require_once 'html/MenuPrincipal.php';?>
     <!-- ***** Welcome Area End ***** -->
     <!-- ***** Features Big Item Start ***** -->
     <section class="section padding-top-140 padding-bottom-0" id="features">
@@ -335,7 +335,7 @@
 				</div>
 			</section>
 			<!-- ***** Inicio Seccion de productos ***** -->
-			<? require_once 'hmtl/Section_Productos.php'; ?>
+			<? require_once 'html/Section_Productos.php'; ?>
 			<!-- ***** Footer Start ***** -->
 			<section class="section colored" id="pricing-plans">
 				<div class="container">
@@ -354,7 +354,7 @@
 			</div>
 		</section>
 		<footer>
-			<? require_once 'hmtl/footer.php';?>
+			<? require_once 'html/footer.php';?>
 		</footer>
 		<!-- jQuery -->
 		<script src="assets/js/jquery-2.1.0.min.js"></script>

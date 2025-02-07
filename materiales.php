@@ -26,7 +26,7 @@
 <body>
     <!-- Chat de Facebook -->
     <?
-    require_once 'hmtl/CodeFb.php';
+    require_once 'html/CodeFb.php';
     ?>
     <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MCR6T6W"
@@ -68,7 +68,7 @@
         </div>
     </div>
     <!-- ***** Header Area Start ***** -->
-    <? require_once 'hmtl/MenuPrincipal.php';?>
+    <? require_once 'html/MenuPrincipal.php';?>
 
     <br>
     <br>

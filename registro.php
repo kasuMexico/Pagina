@@ -148,7 +148,7 @@
 <body onload="<?PHP echo $localizar; ?>">
 		<!-- Chat de Facebook -->
 		<?
-		require_once 'hmtl/CodeFb.php';
+		require_once 'html/CodeFb.php';
 		?>
 		<!-- Google Tag Manager (noscript) -->
 		<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MCR6T6W"

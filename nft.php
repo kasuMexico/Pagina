@@ -14,15 +14,15 @@ if(isset($_GET['Msg'])){
 $Lgj = $_GET['Lg'];
 //Creamos la funcion de conversion
 function some_function($VAr) {
-	 	$Lenguaje = require_once 'hmtl/EspanolNFT.php';
+	 	$Lenguaje = require_once 'html/EspanolNFT.php';
 	return $Lenguaje;
 }
 function some_function2($VAr) {
-	 	$Lenguaje = require_once 'hmtl/InglesNFT.php';
+	 	$Lenguaje = require_once 'html/InglesNFT.php';
 	return $Lenguaje;
 }
 function some_function3($VAr) {
-	 	$Lenguaje = require_once 'hmtl/AlemanNFT.php';
+	 	$Lenguaje = require_once 'html/AlemanNFT.php';
 	return $Lenguaje;
 }
 ?>
@@ -59,13 +59,13 @@ function some_function3($VAr) {
 		<body>
 				<!-- Chat de Facebook -->
 				<?
-				require_once 'hmtl/CodeFb.php';
+				require_once 'html/CodeFb.php';
 				?>
 				<!-- Google Tag Manager (noscript)-->
 				<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MCR6T6W"
 				height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 				<!-- End Google Tag Manager (noscript) -->
-				<? require_once 'hmtl/MenuPrincipal.php';?>
+				<? require_once 'html/MenuPrincipal.php';?>
 				<!-- Portada de pagina -->
 				<div class="welcome-area">
 				<!-- <div class="welcome-area" style="background-image:url(assets/images/Correo/entregables.jpeg);"> -->
@@ -111,7 +111,7 @@ function some_function3($VAr) {
 				}
 				?>
 				<footer>
-					<? require_once 'hmtl/footer.php';?>
+					<? require_once 'html/footer.php';?>
 				</footer>
 				<script src="assets/js/jquery-2.1.0.min.js"></script>
 				<script src="assets/js/bootstrap.min.js"></script>

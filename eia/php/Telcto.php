@@ -60,5 +60,5 @@ if ($cont === 0) {
 }
 
 // Para efectos de prueba, se muestra el teléfono asignado.
-echo "Teléfono asignado: " . $tel;
+//echo "Teléfono asignado: " . $tel;
 ?>

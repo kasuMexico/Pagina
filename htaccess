@@ -1,0 +1,26 @@
+#este codigo realiza la redireccion cuando para ppoder poner las direciones sin la terminacion .php
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ $1.php [L]
+
+#Realiza el redireccinamiento a la pagina de error personalizada
+ErrorDocument 404 /error.php
+
+<IfModule mod_deflate.c>
+    # Habilitar la compresión
+    SetOutputFilter DEFLATE
+
+    # Tipos de archivo que se van a comprimir
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/x-javascript application/javascript
+
+    # Si comprimir imágenes, audio y vídeo
+    AddOutputFilterByType DEFLATE image/png image/gif image/jpeg
+</IfModule>
+
+#Realizamos que el cache dure 30 dias
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/* "access plus 30 days"                 #las imagenes se descargan cada 30 dias
+  ExpiresByType text/css "access plus 30 days"                #las css se descargan cada 30 dias
+</IfModule>

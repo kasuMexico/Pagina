@@ -1,0 +1,8 @@
+<wpml-config>
+  <custom-types>
+    <custom-type translate="1">service</custom-type>
+	<custom-type translate="1">room</custom-type>
+	<custom-type translate="1">room_service</custom-type>
+    <custom-type translate="1">html_block</custom-type>
+  </custom-types>
+</wpml-config>

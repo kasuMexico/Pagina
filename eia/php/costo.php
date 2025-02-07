@@ -1,0 +1,128 @@
+<?php
+//indicar que se inicia una sesion
+	session_start();
+//inlcuir el archivo de funciones
+    require_once 'Funciones_kasu.php';
+//Buscar precios y tasas
+        $_SESSION["Costo"] = Basicas::BuscarCampos($mysqli,"Costo","Productos","Producto","02a29");
+        $_SESSION["Tasa"] = Basicas::BuscarCampos($mysqli,"TasaReferencia","Productos","Producto","02a29");
+        $_SESSION["Costo1"] = Basicas::BuscarCampos($mysqli,"Costo","Productos","Producto","30a49");
+        $_SESSION["Tasa1"] = Basicas::BuscarCampos($mysqli,"TasaReferencia","Productos","Producto","30a49");
+        $_SESSION["Costo2"] = Basicas::BuscarCampos($mysqli,"Costo","Productos","Producto","50a54");
+        $_SESSION["Tasa2"] = Basicas::BuscarCampos($mysqli,"TasaReferencia","Productos","Producto","50a54");
+        $_SESSION["Costo3"] = Basicas::BuscarCampos($mysqli,"Costo","Productos","Producto","55a59");
+        $_SESSION["Tasa3"] = Basicas::BuscarCampos($mysqli,"TasaReferencia","Productos","Producto","55a59");
+        $_SESSION["Costo4"] = Basicas::BuscarCampos($mysqli,"Costo","Productos","Producto","60a64");
+        $_SESSION["Tasa4"] = Basicas::BuscarCampos($mysqli,"TasaReferencia","Productos","Producto","60a64");
+        $_SESSION["Costo5"] = Basicas::BuscarCampos($mysqli,"Costo","Productos","Producto","65a69");
+        $_SESSION["Tasa5"] = Basicas::BuscarCampos($mysqli,"TasaReferencia","Productos","Producto","65a69");
+        $_SESSION["Costo6"] = Basicas::BuscarCampos($mysqli,"Costo","Productos","Producto","Universidad");
+        $_SESSION["Tasa6"] = Basicas::BuscarCampos($mysqli,"TasaReferencia","Productos","Producto","Universidad");
+
+        $Meses = 0;
+        $Meses1 = 3;
+        $Meses2 = 6;
+        $Meses3 = 9;
+        $Meses4 = 12;
+
+        //Crear el subtotal del valor del producto
+        $subtotal = Basicas::PagoCredito($_SESSION["Costo"],$_SESSION["Tasa"],$Meses);
+        $subtotal1 = Basicas::PagoCredito($_SESSION["Costo1"],$_SESSION["Tasa1"],$Meses);
+        $subtotal2 = Basicas::PagoCredito($_SESSION["Costo2"],$_SESSION["Tasa2"],$Meses);
+        $subtotal3 = Basicas::PagoCredito($_SESSION["Costo3"],$_SESSION["Tasa3"],$Meses);
+        $subtotal4 = Basicas::PagoCredito($_SESSION["Costo4"],$_SESSION["Tasa4"],$Meses);
+        $subtotal5 = Basicas::PagoCredito($_SESSION["Costo5"],$_SESSION["Tasa5"],$Meses);
+        $subtotal6 = Basicas::PagoCredito($_SESSION["Costo6"],$_SESSION["Tasa6"],$Meses);
+        $subtota = Basicas::PagoCredito($_SESSION["Costo"],$_SESSION["Tasa"],$Meses1);
+        $subtota1 = Basicas::PagoCredito($_SESSION["Costo1"],$_SESSION["Tasa1"],$Meses1);
+        $subtota2 = Basicas::PagoCredito($_SESSION["Costo2"],$_SESSION["Tasa2"],$Meses1);
+        $subtota3 = Basicas::PagoCredito($_SESSION["Costo3"],$_SESSION["Tasa3"],$Meses1);
+        $subtota4 = Basicas::PagoCredito($_SESSION["Costo4"],$_SESSION["Tasa4"],$Meses1);
+        $subtota5 = Basicas::PagoCredito($_SESSION["Costo5"],$_SESSION["Tasa5"],$Meses1);
+        $subtota6 = Basicas::PagoCredito($_SESSION["Costo6"],$_SESSION["Tasa6"],$Meses1);
+        $subtot = Basicas::PagoCredito($_SESSION["Costo"],$_SESSION["Tasa"],$Meses2);
+        $subtot1 = Basicas::PagoCredito($_SESSION["Costo1"],$_SESSION["Tasa1"],$Meses2);
+        $subtot2 = Basicas::PagoCredito($_SESSION["Costo2"],$_SESSION["Tasa2"],$Meses2);
+        $subtot3 = Basicas::PagoCredito($_SESSION["Costo3"],$_SESSION["Tasa3"],$Meses2);
+        $subtot4 = Basicas::PagoCredito($_SESSION["Costo4"],$_SESSION["Tasa4"],$Meses2);
+        $subtot5 = Basicas::PagoCredito($_SESSION["Costo5"],$_SESSION["Tasa5"],$Meses2);
+        $subtot6 = Basicas::PagoCredito($_SESSION["Costo6"],$_SESSION["Tasa6"],$Meses2);
+        $subto = Basicas::PagoCredito($_SESSION["Costo"],$_SESSION["Tasa"],$Meses3);
+        $subto1 = Basicas::PagoCredito($_SESSION["Costo1"],$_SESSION["Tasa1"],$Meses3);
+        $subto2 = Basicas::PagoCredito($_SESSION["Costo2"],$_SESSION["Tasa2"],$Meses3);
+        $subto3 = Basicas::PagoCredito($_SESSION["Costo3"],$_SESSION["Tasa3"],$Meses3);
+        $subto4 = Basicas::PagoCredito($_SESSION["Costo4"],$_SESSION["Tasa4"],$Meses3);
+        $subto5 = Basicas::PagoCredito($_SESSION["Costo5"],$_SESSION["Tasa5"],$Meses3);
+        $subto6 = Basicas::PagoCredito($_SESSION["Costo6"],$_SESSION["Tasa6"],$Meses3);
+        $subt = Basicas::PagoCredito($_SESSION["Costo"],$_SESSION["Tasa"],$Meses4);
+        $subt1 = Basicas::PagoCredito($_SESSION["Costo1"],$_SESSION["Tasa1"],$Meses4);
+        $subt2 = Basicas::PagoCredito($_SESSION["Costo2"],$_SESSION["Tasa2"],$Meses4);
+        $subt3 = Basicas::PagoCredito($_SESSION["Costo3"],$_SESSION["Tasa3"],$Meses4);
+        $subt4 = Basicas::PagoCredito($_SESSION["Costo4"],$_SESSION["Tasa4"],$Meses4);
+        $subt5 = Basicas::PagoCredito($_SESSION["Costo5"],$_SESSION["Tasa5"],$Meses4);
+        $subt6 = Basicas::PagoCredito($_SESSION["Costo6"],$_SESSION["Tasa6"],$Meses4);
+
+        echo "02a29", "<br>";
+        echo $_SESSION["Costo"],"/",$_SESSION["Tasa"], "<br>";
+        echo "unico:",$subtotal, "<br>";
+        echo "3: " , $subtota, "<br>";
+        echo "6: " , $subtot, "<br>";
+        echo "9; " , $subto, "<br>";
+        echo "12: " , $subt, "<br>";
+        echo "**********", "<br>";
+        echo "30a49", "<br>";
+        echo $_SESSION["Costo1"],"/",$_SESSION["Tasa1"], "<br>";
+        echo "unico:",$subtotal1, "<br>";
+        echo "3: " , $subtota1, "<br>";
+        echo "6: " , $subtot1, "<br>";
+        echo "9; " , $subto1, "<br>";
+        echo "12: " , $subt1, "<br>";
+        echo "**********", "<br>";
+        echo "50a54", "<br>";
+        echo $_SESSION["Costo2"],"/",$_SESSION["Tasa2"], "<br>";
+        echo "unico:",$subtotal2, "<br>";
+        echo "3: " , $subtota2, "<br>";
+        echo "6: " , $subtot2, "<br>";
+        echo "9; " , $subto2, "<br>";
+        echo "12: " , $subt2, "<br>";
+        echo "**********", "<br>";
+        echo "55a59", "<br>";
+        echo $_SESSION["Costo3"],"/",$_SESSION["Tasa3"], "<br>";
+        echo "unico:",$subtotal3, "<br>";
+        echo "3: " , $subtota3, "<br>";
+        echo "6: " , $subtot3, "<br>";
+        echo "9; " , $subto3, "<br>";
+        echo "12: " , $subt3, "<br>";
+        echo "**********", "<br>";
+        echo "60a64", "<br>";
+        echo $_SESSION["Costo4"],"/",$_SESSION["Tasa4"], "<br>";
+        echo "unico:",$subtotal4, "<br>";
+        echo "3: " , $subtota4, "<br>";
+        echo "6: " , $subtot4, "<br>";
+        echo "9; " , $subto4, "<br>";
+        echo "12: " , $subt4, "<br>";
+        echo "**********", "<br>";
+        echo "65a69", "<br>";
+        echo $_SESSION["Costo5"],"/",$_SESSION["Tasa5"], "<br>";
+        echo "unico:",$subtotal5, "<br>";
+        echo "3: " , $subtota5, "<br>";
+        echo "6: " , $subtot5, "<br>";
+        echo "9; " , $subto5, "<br>";
+        echo "12: " , $subt5, "<br>";
+        echo "**********", "<br>";
+        echo "Universidad", "<br>";
+        echo $_SESSION["Costo6"],"/",$_SESSION["Tasa6"], "<br>";
+        echo "unico:",$subtotal6, "<br>";
+        echo "3: " , $subtota6, "<br>";
+        echo "6: " , $subtot6, "<br>";
+        echo "9; " , $subto6, "<br>";
+        echo "12: " , $subt6, "<br>";
+        echo "**********", "<br>";
+
+
+
+
+
+
+
+?>

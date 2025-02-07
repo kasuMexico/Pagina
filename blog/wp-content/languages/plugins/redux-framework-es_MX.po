@@ -1,0 +1,1990 @@
+# Translation of Plugins - Gutenberg Template and Pattern Library &amp; Redux Framework - Stable (latest release) in Spanish (Mexico)
+# This file is distributed under the same license as the Plugins - Gutenberg Template and Pattern Library &amp; Redux Framework - Stable (latest release) package.
+msgid ""
+msgstr ""
+"PO-Revision-Date: 2022-05-31 13:22:31+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: GlotPress/4.0.0-alpha.3\n"
+"Language: es_MX\n"
+"Project-Id-Version: Plugins - Gutenberg Template and Pattern Library &amp; Redux Framework - Stable (latest release)\n"
+
+#: redux-core/inc/extensions/repeater/repeater/class-redux-repeater.php:160
+msgid "field is not supported within the Repeater field."
+msgstr "el campo no es compatible dentro del campo Repetidor."
+
+#: redux-core/inc/extensions/repeater/repeater/class-redux-repeater.php:160
+msgid "The"
+msgstr "El"
+
+#: extendify-sdk/app/Library/AdminPage.php:201
+msgid "View Pricing"
+msgstr "Ver los precios"
+
+#: extendify-sdk/app/Library/AdminPage.php:197
+msgid "Do you want more patterns and layouts - without limits? Choose one of our plans and receive unlimited access to our complete library."
+msgstr "¿Quieres más patrones y layouts, sin límites? Elige uno de nuestros planes y recibe acceso ilimitado a nuestra biblioteca completa."
+
+#: redux-core/inc/classes/class-redux-enqueue.php:691
+msgid "Your current options will be replaced with the values of this import. Would you like to proceed?"
+msgstr "Tus opciones actuales serán reemplazadas por los valores de esta importación. ¿Quieres continuar?"
+
+#: redux-core/inc/fields/link_color/class-redux-link-color.php:153
+msgid "Focus"
+msgstr "Objetivo"
+
+#: redux-core/inc/extensions/widget_areas/class-redux-widget-areas.php:297
+#: redux-core/inc/fields/color_rgba/class-redux-color-rgba.php:43
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: redux-core/inc/fields/color_rgba/class-redux-color-rgba.php:42
+msgid "Choose"
+msgstr "Elegir"
+
+#: redux-core/inc/fields/color_rgba/class-redux-color-rgba.php:45
+msgid "Select Color"
+msgstr "Selecciona color"
+
+#: sample/sections/select-fields/select.php:253
+msgid "Users Select Option"
+msgstr "Opción de selección de usuarios"
+
+#: redux-core/inc/extensions/datetime/datetime/class-redux-datetime.php:149
+#: sample/sections/additional-types/date.php:14
+#: sample/sections/extensions/js-button.php:48
+msgid "Date"
+msgstr "Fecha"
+
+#: sample/sample-config.php:468
+msgid "Additional Types"
+msgstr "Tipos adicionales"
+
+#: sample/sample-config.php:482
+msgid "Advanced Features"
+msgstr "Funciones Avanzadas"
+
+#: sample/sections/advanced-features/field-validation.php:120
+msgid "All HTML will be stripped"
+msgstr "Todo el HTML se eliminará"
+
+#: sample/sections/typography/typography.php:22
+msgid "Body Font"
+msgstr "Fuente del cuerpo"
+
+#: sample/sections/advanced-features/callback.php:14
+msgid "Callback"
+msgstr "Retorno"
+
+#: sample/sections/advanced-features/callback.php:22
+msgid "Custom Field Callback"
+msgstr "Respuesta del campo personalizado"
+
+#: sample/sections/advanced-features/field-validation.php:138
+msgid "Custom HTML Allowed (wp_kses)"
+msgstr "Se permite HTML a medida (wp_kses)"
+
+#: sample/sample-config.php:571
+msgid "Customizer Only"
+msgstr "Sólo personalizador"
+
+#: sample/sample-config.php:578
+msgid "Customizer Only Option"
+msgstr "Opción sólo para el personalizador"
+
+#: sample/sections/additional-types/date.php:22
+msgid "Date Option"
+msgstr "Opción de fecha"
+
+#: sample/sections/advanced-features/field-validation.php:112
+msgid "Enter <code>1</code> and click <strong>Save Changes</strong> for an error message, or enter <code>2</code> and click <strong>Save Changes</strong> for a warning message."
+msgstr "Introduce <code>1</code> y haz clic en <strong>Guardar Cambios</strong> para mensaje de error o introduce <code>2</code> y haz clic en <strong>Guardar Cambios</strong> para mensaje de aviso."
+
+#: sample/sections/advanced-features/field-required-linking.php:14
+msgid "Field Required / Linking"
+msgstr "Campo obligatorio / enlace"
+
+#: sample/sections/advanced-features/field-validation.php:14
+msgid "Field Validation"
+msgstr "Validación de campo"
+
+#: sample/sections/advanced-features/field-required-linking.php:16
+#: sample/sections/advanced-features/field-validation.php:16
+msgid "For full documentation on validation, visit: "
+msgstr "Para obtener la documentación completa sobre validación, visita: "
+
+#: sample/sections/advanced-features/field-validation.php:129
+msgid "HTML Allowed (wp_kses)"
+msgstr "HTML permitido (wp_kses)"
+
+#: sample/sections/advanced-features/field-validation.php:42
+msgid "If you enter an invalid color it will be removed. Try using the text \"blue\" as a color.  ;)"
+msgstr "Si escribes un color no válido se eliminará. Prueba a usar el texto \"blue\" como color.  ;)"
+
+#: sample/metaboxes.php:82 sample/sections/extensions/taxonomy.php:151
+#: sample/sections/extensions/users.php:127
+#: sample/sections/slider-spinner/spinner.php:22
+msgid "JQuery UI Spinner Example 1"
+msgstr "Ejemplo 1 del icono de carga JQuery UI"
+
+#: sample/metaboxes.php:83 sample/sections/extensions/taxonomy.php:152
+#: sample/sections/extensions/users.php:128
+#: sample/sections/slider-spinner/spinner.php:23
+msgid "JQuery UI spinner description. Min:20, max: 100, step:20, default value: 40"
+msgstr "Descripción del icono de carga de JQuery UI. Min:20, max: 100, step:20, valor por defecto: 40"
+
+#: sample/sections/advanced-features/field-validation.php:158
+msgid "JS will be escaped"
+msgstr "El JS será escapado"
+
+#: sample/sections/advanced-features/field-validation.php:40
+msgid "Multi Text Option - Color Validated"
+msgstr "Opción de texto múltiple - Validación de color"
+
+#: sample/sections/additional-types/raw.php:23
+msgid "Raw"
+msgstr "Sin procesar"
+
+#: sample/sample-config.php:693
+msgid "Section via hook"
+msgstr "Sección via gancho"
+
+#: sample/sections/slider-spinner/slider.php:61
+msgid "Slider Example 4 with float values"
+msgstr "Ejemplo 4 de carrusel con valores flotantes"
+
+#: sample/sections/slider-spinner/slider.php:63
+msgid "Slider description. Min: 0, max: 1, step: .1, default value: .5"
+msgstr "Descripción de carrusel. Min: 0, max: 1, step: .1, default value: .5"
+
+#: sample/sections/additional-types/sorter.php:14
+msgid "Sorter"
+msgstr "Ordenador"
+
+#: sample/sections/typography/typography.php:23
+#: sample/sections/typography/typography.php:94
+msgid "Specify the body font properties."
+msgstr "Especifica las propiedades de la fuente del cuerpo."
+
+#: sample/sections/slider-spinner/spinner.php:14
+msgid "Spinner"
+msgstr "Icono de carga"
+
+#: sample/sections/additional-types/raw.php:31
+msgid "Standard Raw Field"
+msgstr "Campo estándar sin procesar"
+
+#: sample/sections/advanced-features/field-validation.php:66
+msgid "Text Option - Comma Numeric Validated"
+msgstr "Opción de texto - Validación coma numérico"
+
+#: sample/sections/advanced-features/field-validation.php:110
+msgid "Text Option - Custom Callback Validated"
+msgstr "Opción de texto - validación por función propia"
+
+#: sample/sections/advanced-features/field-validation.php:22
+msgid "Text Option - Email Validated"
+msgstr "Opción de texto - validación de correo electrónico"
+
+#: sample/sections/advanced-features/field-validation.php:75
+msgid "Text Option - No Special Chars Validated"
+msgstr "Opción de texto - Sin validación de caracteres especiales"
+
+#: sample/sections/advanced-features/field-validation.php:57
+msgid "Text Option - Numeric Validated"
+msgstr "Opción de texto - Validación numérica"
+
+#: sample/sections/advanced-features/field-validation.php:97
+msgid "Text Option - Preg Replace Validated"
+msgstr "Opción de texto - Validación de Preg Replace"
+
+#: sample/sections/advanced-features/field-validation.php:84
+msgid "Text Option - Str Replace Validated"
+msgstr "Opción de texto - Validación de Str Replace"
+
+#: sample/sections/advanced-features/field-validation.php:48
+msgid "Text Option - URL Validated"
+msgstr "Opción de texto - validación de URL"
+
+#: sample/sections/advanced-features/field-validation.php:32
+msgid "Text Option with Data Attributes"
+msgstr "Opción de texto con atributos Data"
+
+#: sample/sections/advanced-features/field-validation.php:128
+msgid "Textarea Option - HTML Validated"
+msgstr "Opción campo de texto - HTML Validado"
+
+#: sample/sections/advanced-features/field-validation.php:157
+msgid "Textarea Option - JS Validated"
+msgstr "Opción campo de texto - JS validado"
+
+#: sample/sections/advanced-features/field-validation.php:119
+msgid "Textarea Option - No HTML Validated"
+msgstr "Opción de área de texto - HTML no va validado"
+
+#: sample/sample-config.php:580
+msgid "The field desc is NOT visible in customizer."
+msgstr "Esta descripción de campo NO es visible en el personalizador."
+
+#: sample/sample-config.php:579
+msgid "The subtitle is NOT visible in customizer"
+msgstr "El subtítulo NO es visible en el personalizador"
+
+#: sample/sections/slider-spinner/slider.php:62
+msgid "This example displays float values"
+msgstr "Este ejemplo muestra valores flotantes"
+
+#: sample/sections/advanced-features/field-validation.php:86
+msgid "This field's default value was changed by a filter hook!"
+msgstr "¡El valor por defecto de este campo ha sido cambiado por un gancho de filtro!"
+
+#: sample/sections/advanced-features/callback.php:23
+msgid "This is a completely unique field type"
+msgstr "Este es un tipo de campo completamente único"
+
+#: sample/sections/advanced-features/field-validation.php:23
+msgid "This is a little space under the Field Title in the Options table, additional info is good in here."
+msgstr "Este es un pequeño espacio bajo el título del campo en la tabla de opciones, un buen sitio para información adicional."
+
+#: sample/sections/advanced-features/callback.php:24
+msgid "This is created with a callback function, so anything goes in this field. Make sure to define the function though."
+msgstr "Esto se crea con una función de respuesta, así que cualquier cosa vale en este campo. Eso sí, asegúrate de definir la función."
+
+#: sample/sections/advanced-features/field-validation.php:49
+msgid "This must be a URL."
+msgstr "Esto debe ser una URL."
+
+#: sample/sections/advanced-features/field-validation.php:76
+msgid "This must be a alpha numeric only."
+msgstr "Esto sólo puede ser alfanumérico."
+
+#: sample/sections/advanced-features/field-validation.php:67
+msgid "This must be a comma separated string of numerical values."
+msgstr "Esto debe ser una cadena de números separados por comas."
+
+#: sample/sections/advanced-features/field-validation.php:58
+msgid "This must be numeric."
+msgstr "Esto debe ser numérico."
+
+#: sample/sections/advanced-features/wpml-integration.php:22
+msgid "This string can be translated via WPML."
+msgstr "Esta cadena puede ser traducida con WPML ."
+
+#: sample/sections/typography/typography.php:14
+msgid "Typography"
+msgstr "Tipografía"
+
+#: sample/sections/typography/typography.php:49
+msgid "Typography option with each property can be called individually."
+msgstr "Opción de tipografías para cada propiedad que pueden ser llamadas de forma individual."
+
+#: sample/sections/advanced-features/wpml-integration.php:14
+msgid "WPML Integration"
+msgstr "Integración con WPML"
+
+#: sample/sections/advanced-features/wpml-integration.php:27
+msgid "WPML Multi Checkbox"
+msgstr "Casilla de verificación múltiple de WPML"
+
+#: sample/sections/advanced-features/wpml-integration.php:21
+msgid "WPML Text"
+msgstr "Texto WPML"
+
+#: sample/sections/advanced-features/field-validation.php:33
+msgid "You can also pass an options array if you want. Set the default to whatever you like."
+msgstr "También puedes pasar un array de opciones si quieres. Establece los valores por defecto que quieras."
+
+#: sample/sections/advanced-features/wpml-integration.php:28
+msgid "You can literally translate the values via key."
+msgstr "Puedes haces traducciones literales de los valores por clave."
+
+#: sample/sections/advanced-features/field-validation.php:85
+#: sample/sections/advanced-features/field-validation.php:98
+#: sample/sections/advanced-features/field-validation.php:111
+msgid "You decide."
+msgstr "Tú decides."
+
+#. Plugin URI of the plugin
+msgid "http://wordpress.org/plugins/redux-framework"
+msgstr "http://wordpress.org/plugins/redux-framework"
+
+#: redux-core/inc/fields/link_color/class-redux-link-color.php:131
+msgid "Active"
+msgstr "Activo"
+
+#: redux-core/inc/extensions/google_maps/google_maps/class-redux-google-maps.php:178
+#: redux-core/inc/fields/border/class-redux-border.php:106
+#: redux-core/inc/fields/spacing/class-redux-spacing.php:165
+msgid "All"
+msgstr "Todo"
+
+#: redux-core/inc/extensions/customizer/class-redux-extension-customizer.php:751
+msgid "Are you sure?  Resetting will lose all custom values."
+msgstr "¿Estás seguro? La restauración eliminará todos los valores personalizados."
+
+#: redux-core/inc/classes/class-redux-enqueue.php:659
+msgid "Are you sure? Resetting will lose all custom values in this section."
+msgstr "¿Estás seguro? La restauración eliminará todos los valores personalizados en esta sección."
+
+#: redux-core/inc/classes/class-redux-enqueue.php:643
+#: redux-core/inc/extensions/customizer/class-redux-extension-customizer.php:727
+msgid "Are you sure? Resetting will lose all custom values."
+msgstr "¿Estás seguro? La restauración eliminará todos los valores personalizados."
+
+#: redux-core/inc/fields/background/class-redux-background.php:208
+msgid "Background Attachment"
+msgstr "Adjunto del fondo"
+
+#: redux-core/inc/fields/background/class-redux-background.php:231
+msgid "Background Position"
+msgstr "Posición del fondo"
+
+#: redux-core/inc/fields/background/class-redux-background.php:138
+msgid "Background Repeat"
+msgstr "Repetición del fondo"
+
+#: redux-core/inc/fields/border/class-redux-border.php:147
+#: redux-core/inc/fields/spacing/class-redux-spacing.php:255
+#: redux-core/inc/fields/typography/class-redux-typography.php:706
+msgid "Bottom"
+msgstr "Todo"
+
+#: class-redux-framework-plugin.php:370
+msgid "Click here to activate the sample config file."
+msgstr "Da clic aquí para activar el archivo de configuración ejemplo."
+
+#: redux-core/inc/extensions/custom_fonts/custom_fonts/class-redux-custom-fonts.php:99
+#: redux-core/inc/extensions/repeater/repeater/class-redux-repeater.php:167
+#: redux-core/inc/extensions/repeater/repeater/class-redux-repeater.php:219
+#: redux-core/inc/extensions/repeater/repeater/class-redux-repeater.php:393
+#: redux-core/inc/extensions/widget_areas/class-redux-widget-areas.php:295
+#: redux-core/inc/fields/slides/class-redux-slides.php:215
+#: redux-core/inc/fields/slides/class-redux-slides.php:351
+msgid "Delete"
+msgstr "Eliminar"
+
+#: redux-core/inc/classes/class-redux-field.php:40
+#: redux-core/inc/fields/slides/class-redux-slides.php:140
+#: redux-core/inc/fields/slides/class-redux-slides.php:276
+#: sample/sections/additional-types/raw.php:33
+#: sample/sections/additional-types/raw.php:42
+msgid "Description"
+msgstr "Descripción"
+
+#: redux-core/inc/classes/class-redux-page-render.php:179
+msgid "Disable"
+msgstr "Desactivar"
+
+#: redux-core/inc/classes/class-redux-admin-notices.php:136
+#: extendify-sdk/public/build/extendify-assist.js:1
+#: extendify-sdk/public/build/extendify-assist.js:2
+#: extendify-sdk/public/build/extendify-assist.js:3
+#: extendify-sdk/src/Assist/components/task-items/TaskItem.js:51
+#: extendify-sdk/src/Assist/components/task-items/TaskItemOld.js:92
+#: extendify-sdk/src/Assist/notices/AdminNotice.js:134
+#: extendify-sdk/src/Assist/notices/WelcomeNotice.js:65
+msgid "Dismiss"
+msgstr "Descartar"
+
+#: sample/barebones-config.php:160 sample/sample-config.php:225
+#: sample/sample-config.php:553
+msgid "Documentation"
+msgstr "Documentación"
+
+#: redux-core/inc/classes/class-redux-page-render.php:174
+msgid "Enable"
+msgstr "Activar"
+
+#: redux-core/inc/fields/typography/class-redux-typography.php:323
+msgid "Font Family"
+msgstr "Familia tipográfica"
+
+#: redux-core/inc/fields/dimensions/class-redux-dimensions.php:173
+#: redux-core/inc/fields/typography/class-redux-typography.php:597
+msgid "Height"
+msgstr "Altura"
+
+#: redux-core/inc/extensions/import_export/import_export/class-redux-import-export.php:109
+msgid "Import"
+msgstr "Importar"
+
+#: redux-core/inc/extensions/import_export/class-redux-extension-import-export.php:84
+msgid "Import / Export"
+msgstr "Importar / Exportar"
+
+#: redux-core/inc/fields/border/class-redux-border.php:159
+#: redux-core/inc/fields/spacing/class-redux-spacing.php:271
+msgid "Left"
+msgstr "Izquierda"
+
+#: redux-core/inc/fields/switch/class-redux-switch.php:40
+#: sample/metaboxes.php:194
+msgid "Off"
+msgstr "Apagado"
+
+#: redux-core/inc/fields/switch/class-redux-switch.php:37
+#: sample/metaboxes.php:193
+msgid "On"
+msgstr "Encendido"
+
+#: redux-core/inc/classes/class-redux-args.php:277
+#: redux-core/inc/classes/class-redux-args.php:281
+#: redux-core/inc/extensions/metaboxes/class-redux-extension-metaboxes.php:994
+msgid "Options"
+msgstr "Opciones"
+
+#: redux-core/inc/extensions/options_object/class-redux-extension-options-object.php:72
+#: redux-core/inc/extensions/options_object/options_object/class-redux-options-object.php:100
+msgid "Options Object"
+msgstr "Objeto de Opciones"
+
+#: redux-core/inc/fields/password/class-redux-password.php:53
+#: sample/sections/basic-fields/password.php:14
+msgid "Password"
+msgstr "Contraseña"
+
+#: sample/sample-config.php:517
+msgid "Redux Extensions"
+msgstr "Extensiones de Redux"
+
+#: redux-core/class-redux-core.php:324
+msgid "Redux Framework"
+msgstr "Redux Framework"
+
+#: class-redux-framework-plugin.php:370
+msgid "Redux Framework has an embedded demo."
+msgstr "Redux Framework tiene un demostrativo integrado."
+
+#: redux-core/inc/extensions/multi_media/multi_media/class-redux-multi-media.php:148
+#: redux-core/inc/extensions/multi_media/multi_media/class-redux-multi-media.php:230
+#: redux-core/inc/fields/background/class-redux-background.php:337
+#: redux-core/inc/fields/media/class-redux-media.php:249
+#: redux-core/inc/fields/multi_text/class-redux-multi-text.php:60
+#: redux-core/inc/fields/multi_text/class-redux-multi-text.php:77
+#: redux-core/inc/fields/multi_text/class-redux-multi-text.php:99
+#: redux-core/inc/fields/slides/class-redux-slides.php:116
+#: redux-core/inc/fields/slides/class-redux-slides.php:251
+msgid "Remove"
+msgstr "Eliminar"
+
+#: redux-core/inc/fields/border/class-redux-border.php:135
+#: redux-core/inc/fields/spacing/class-redux-spacing.php:239
+msgid "Right"
+msgstr "Derecha"
+
+#: redux-core/templates/panel/footer.tpl.php:58
+#: redux-core/templates/panel/header-stickybar.tpl.php:22
+msgid "Save Changes"
+msgstr "Guardar cambios"
+
+#: redux-core/inc/fields/typography/class-redux-typography.php:575
+msgid "Size"
+msgstr "Tamaño"
+
+#: redux-core/inc/fields/typography/class-redux-typography.php:403
+msgid "Style"
+msgstr "Estilo"
+
+#: redux-core/inc/fields/typography/class-redux-typography.php:445
+#: redux-core/inc/fields/typography/class-redux-typography.php:446
+#: redux-core/inc/fields/typography/class-redux-typography.php:448
+#: redux-core/inc/fields/typography/class-redux-typography.php:450
+msgid "Text Align"
+msgstr "Alinear Texto"
+
+#: redux-core/inc/fields/typography/class-redux-typography.php:476
+#: redux-core/inc/fields/typography/class-redux-typography.php:477
+#: redux-core/inc/fields/typography/class-redux-typography.php:479
+#: redux-core/inc/fields/typography/class-redux-typography.php:481
+msgid "Text Transform"
+msgstr "Transformar Texto"
+
+#: redux-core/inc/validation/not_empty/class-redux-validation-not-empty.php:27
+msgid "This field cannot be empty. Please provide a value."
+msgstr "Este campo no puede quedar vacío. Por favor introduce un valor."
+
+#: redux-core/inc/classes/class-redux-field.php:38
+#: redux-core/inc/extensions/repeater/repeater/class-redux-repeater.php:143
+#: redux-core/inc/extensions/social_profiles/social_profiles/inc/class-redux-social-profiles-widget.php:199
+#: redux-core/inc/fields/slides/class-redux-slides.php:128
+#: redux-core/inc/fields/slides/class-redux-slides.php:263
+#: sample/sections/extensions/repeater.php:32
+#: sample/sections/extensions/repeater.php:39
+msgid "Title"
+msgstr "Título"
+
+#: redux-core/inc/fields/border/class-redux-border.php:123
+#: redux-core/inc/fields/spacing/class-redux-spacing.php:223
+#: redux-core/inc/fields/typography/class-redux-typography.php:679
+msgid "Top"
+msgstr "Arriba"
+
+#: redux-core/inc/fields/slides/class-redux-slides.php:152
+#: redux-core/inc/fields/slides/class-redux-slides.php:288
+msgid "URL"
+msgstr "URL"
+
+#: redux-core/inc/fields/background/class-redux-background.php:330
+#: redux-core/inc/fields/media/class-redux-media.php:242
+#: redux-core/inc/fields/slides/class-redux-slides.php:105
+#: redux-core/inc/fields/slides/class-redux-slides.php:249
+msgid "Upload"
+msgstr "Subir"
+
+#: redux-core/inc/fields/password/class-redux-password.php:54
+msgid "Username"
+msgstr "Nombre de usuario"
+
+#: redux-core/inc/fields/dimensions/class-redux-dimensions.php:144
+msgid "Width"
+msgstr "Ancho"
+
+#: redux-core/inc/extensions/customizer/class-redux-extension-customizer.php:750
+msgid "You have changes that are not saved.  Would you like to save them now?"
+msgstr "Tienes cambios que no han sido salvados. ¿Deseas salvarlos ahora?"
+
+#: redux-core/inc/classes/class-redux-enqueue.php:627
+#: redux-core/inc/extensions/customizer/class-redux-extension-customizer.php:726
+msgid "You have changes that are not saved. Would you like to save them now?"
+msgstr "Tienes cambios que no han sido salvados. ¿Deseas salvarlos ahora?"
+
+#: redux-core/inc/extensions/customizer/class-redux-extension-customizer.php:752
+msgid "Your current options will be replaced with the values of this preset.  Would you like to proceed?"
+msgstr "Tus configuraciones actuales serán reemplazadas con los valores que se presentan. ¿Deseas continuar?"
+
+#: redux-core/inc/classes/class-redux-enqueue.php:675
+#: redux-core/inc/extensions/customizer/class-redux-extension-customizer.php:728
+msgid "Your current options will be replaced with the values of this preset. Would you like to proceed?"
+msgstr "Tus configuraciones actuales serán reemplazadas con los valores que se presentan. ¿Deseas continuar?"
+
+#: redux-core/class-redux-core.php:328
+#: redux-core/inc/welcome/views/about.php:25
+#: redux-core/inc/welcome/views/about.php:131
+#: redux-core/inc/welcome/views/templates.php:23
+msgid "Version"
+msgstr "Versión"
+
+#: redux-core/inc/extensions/metaboxes/class-redux-extension-metaboxes.php:1230
+#: redux-core/templates/panel/header-stickybar.tpl.php:16
+msgid "Expand"
+msgstr "Expandir"
+
+#: redux-core/inc/extensions/widget_areas/class-redux-widget-areas.php:98
+#: redux-core/inc/extensions/widget_areas/class-redux-widget-areas.php:99
+msgid "Name"
+msgstr "Nombre"
+
+#: redux-core/inc/welcome/views/about.php:93
+msgid "Theme"
+msgstr "Tema"
+
+#: redux-core/templates/panel/header.tpl.php:34
+msgid "This has been automatically enabled because"
+msgstr "Esto ha sido automáticamente habilitado debido a"
+
+#: redux-core/inc/fields/typography/class-redux-typography.php:619
+#: redux-core/inc/fields/typography/class-redux-typography.php:624
+#: redux-core/inc/fields/typography/class-redux-typography.php:625
+msgid "Word Spacing"
+msgstr "Espacio de letra"
+
+#: redux-core/inc/fields/typography/class-redux-typography.php:591
+#: redux-core/inc/fields/typography/class-redux-typography.php:596
+msgid "Line Height"
+msgstr "Altura de línea"
+
+#: redux-core/inc/fields/typography/class-redux-typography.php:642
+#: redux-core/inc/fields/typography/class-redux-typography.php:647
+#: redux-core/inc/fields/typography/class-redux-typography.php:648
+msgid "Letter Spacing"
+msgstr "Espaciado de Letra"
+
+#: redux-core/inc/fields/typography/class-redux-typography.php:739
+msgid "Font color"
+msgstr "Color de Fuente"
+
+#: redux-core/inc/fields/typography/class-redux-typography.php:1341
+msgid "Standard Fonts"
+msgstr "Fuentes standar"
+
+#: redux-core/inc/fields/typography/class-redux-typography.php:1424
+msgid "Google Webfonts"
+msgstr "Fuentes Web de Google"
+
+#: redux-core/inc/fields/typography/class-redux-typography.php:507
+#: redux-core/inc/fields/typography/class-redux-typography.php:508
+#: redux-core/inc/fields/typography/class-redux-typography.php:510
+#: redux-core/inc/fields/typography/class-redux-typography.php:512
+msgid "Font Variant"
+msgstr "Fuente Variante"
+
+#: redux-core/inc/fields/typography/class-redux-typography.php:535
+#: redux-core/inc/fields/typography/class-redux-typography.php:536
+#: redux-core/inc/fields/typography/class-redux-typography.php:538
+#: redux-core/inc/fields/typography/class-redux-typography.php:540
+msgid "Text Decoration"
+msgstr "Decoración de Texto"
+
+#: redux-core/inc/fields/typography/class-redux-typography.php:431
+msgid "Font script"
+msgstr "Script de Fuente"
+
+#: redux-core/inc/fields/typography/class-redux-typography.php:385
+#: redux-core/inc/fields/typography/class-redux-typography.php:405
+msgid "Font style"
+msgstr "Estilo de Fuente"
+
+#: redux-core/inc/fields/typography/class-redux-typography.php:569
+#: redux-core/inc/fields/typography/class-redux-typography.php:574
+msgid "Font Size"
+msgstr "Tamaños de fuente"
+
+#: redux-core/inc/classes/class-redux-field.php:39
+#: sample/barebones-config.php:304 sample/barebones-config.php:323
+#: sample/sections/additional-types/raw.php:32
+#: sample/sections/additional-types/raw.php:41
+#: sample/sections/basic-fields/text.php:24
+#: sample/sections/basic-fields/text.php:32
+#: sample/sections/basic-fields/text.php:44
+#: sample/sections/basic-fields/textarea.php:23
+msgid "Subtitle"
+msgstr "Subtítulo"
+
+#: redux-core/inc/fields/background/class-redux-background.php:191
+msgid "Background Size"
+msgstr "Tamaño del fondo"
+
+#: sample/sections/select-fields/select.php:14
+msgid "Select"
+msgstr "Selección"
+
+#. translators: %s: CDN handle.
+#: redux-core/inc/classes/class-redux-cdn.php:134
+msgid "%s CDN unavailable.  Some controls may not render properly."
+msgstr "%s CDN no disponible. Puede que algunos controles no se muestren correctamente."
+
+#: sample/sections/select-fields/select-image.php:46
+msgid "A preview of the selected image will appear underneath the select box."
+msgstr "Una vista previa de la imagen seleccionada aparecerá debajo del cuadro de selección."
+
+#: sample/sections/editors/ace-editor.php:14
+msgid "ACE Editor"
+msgstr "Editor ACE"
+
+#. translators:  Content title for accordion.
+#: redux-core/inc/fields/slides/class-redux-slides.php:363
+msgid "Add %s"
+msgstr "Añadir %s"
+
+#: redux-core/inc/fields/multi_text/class-redux-multi-text.php:28
+msgid "Add More"
+msgstr "Añadir Más"
+
+#: redux-core/inc/fields/gallery/class-redux-gallery.php:48
+#: sample/metaboxes.php:65 sample/sections/extensions/taxonomy.php:124
+#: sample/sections/extensions/users.php:100
+#: sample/sections/media-uploads/gallery.php:22
+msgid "Add/Edit Gallery"
+msgstr "Añadir/Editar Galería"
+
+#: redux-core/inc/classes/class-redux-panel.php:187
+msgid "All Defaults Restored!"
+msgstr "Restaurados todos los valores predeterminados!"
+
+#: sample/sections/design-fields/spacing.php:36
+#: sample/sections/design-fields/spacing.php:62
+msgid "Allow your users to choose the spacing or margin they want."
+msgstr "Permite a los usuarios elegir el espaciado o margen que quieran."
+
+#: sample/sections/design-fields/dimensions.php:25
+#: sample/sections/design-fields/dimensions.php:38
+msgid "Allow your users to choose width, height, and/or unit."
+msgstr "Permite a los usuarios elegir la anchura , la altura y / o unidad ."
+
+#: sample/sections/extensions/taxonomy.php:172
+#: sample/sections/extensions/users.php:148
+#: sample/sections/switch-button/switch.php:47
+#: sample/sections/switch-button/switch.php:56
+msgid "Also called a \"fold\" parent."
+msgstr "También llamado padre de \"pliegue\"."
+
+#: sample/sections/presentation-fields/section.php:46
+msgid "And now you can add more fields below and outside of the indent."
+msgstr "Y ahora puedes añadir más campos debajo y fuera del indentado."
+
+#: redux-core/inc/extensions/customizer/inc/class-redux-customizer-panel.php:193
+#: redux-core/inc/extensions/customizer/inc/class-redux-customizer-section.php:181
+#: extendify-sdk/public/build/extendify-assist.js:1
+#: extendify-sdk/public/build/extendify-onboarding.js:2
+#: extendify-sdk/src/Assist/components/GuidedTour.js:297
+#: extendify-sdk/src/Onboarding/components/PageControl.js:42
+msgid "Back"
+msgstr "Volver"
+
+#: redux-core/inc/extensions/social_profiles/social_profiles/class-redux-social-profiles.php:247
+#: sample/sections/design-fields/background.php:14
+msgid "Background"
+msgstr "Fondo"
+
+#: redux-core/inc/fields/background/class-redux-background.php:156
+msgid "Background Clip"
+msgstr "Recorte del fondo"
+
+#: redux-core/inc/fields/background/class-redux-background.php:174
+msgid "Background Origin"
+msgstr "Origen del fondo"
+
+#: redux-core/inc/fields/typography/class-redux-typography.php:364
+#: redux-core/inc/fields/typography/class-redux-typography.php:366
+msgid "Backup Font Family"
+msgstr "Copiad de seguridad de la Familia de Fuente"
+
+#: sample/barebones-config.php:265
+msgid "Basic Field"
+msgstr "Campo Básico"
+
+#: sample/barebones-config.php:286 sample/metaboxes.php:28
+#: sample/sample-config.php:321
+msgid "Basic Fields"
+msgstr "Campos básicos"
+
+#: sample/barebones-config.php:267
+msgid "Basic field with no subsections."
+msgstr "Campo básico, sin subsecciones."
+
+#: sample/barebones-config.php:288
+msgid "Basic fields as subsections."
+msgstr "Campos básicos como subsecciones."
+
+#: sample/metaboxes.php:58 sample/sections/extensions/taxonomy.php:81
+#: sample/sections/extensions/taxonomy.php:97
+#: sample/sections/extensions/users.php:57
+#: sample/sections/extensions/users.php:73
+#: sample/sections/media-uploads/media.php:25
+#: sample/sections/media-uploads/media.php:59
+#: sample/sections/media-uploads/media.php:68
+msgid "Basic media uploader with disabled URL input field."
+msgstr "Cargador de medios con el campo de entrada de URL deshabilitada."
+
+#: sample/sections/design-fields/background.php:29
+msgid "Body Background"
+msgstr "Fondo del cuerpo"
+
+#: sample/sections/design-fields/background.php:30
+msgid "Body background with image, color, etc."
+msgstr "Fondo del cuerpo con imagen, color, etc."
+
+#: sample/sections/design-fields/border.php:14
+msgid "Border"
+msgstr "Borde"
+
+#: redux-core/inc/fields/border/class-redux-border.php:176
+msgid "Border style"
+msgstr "Estilo del borde"
+
+#: redux-core/class-redux-core.php:340
+msgid "Browser"
+msgstr "Navegador"
+
+#: sample/sections/switch-button/button-set.php:14
+msgid "Button Set"
+msgstr "Conjunto de botones"
+
+#: sample/sections/extensions/taxonomy.php:57
+#: sample/sections/switch-button/button-set.php:22
+msgid "Button Set Option"
+msgstr "Opción de conjunto de botones"
+
+#: sample/sections/switch-button/button-set.php:37
+msgid "Button Set, Multi Select"
+msgstr "Conjunto de botones, selección múltiple"
+
+#: redux-core/inc/themecheck/checks/class-redux-full-package.php:49
+msgid "CI Testing FIle"
+msgstr "Archivo de prueba CI"
+
+#: sample/sections/editors/ace-editor.php:22
+msgid "CSS Code"
+msgstr "Código CSS"
+
+#: sample/sections/select-fields/select.php:104
+msgid "Categories Multi Select Option"
+msgstr "Opción de selección de múltiples categorías"
+
+#: sample/sections/select-fields/select.php:95
+msgid "Categories Select Option"
+msgstr "Opción de selección de categorías"
+
+#: sample/metaboxes.php:36 sample/sections/basic-fields/checkbox.php:14
+msgid "Checkbox"
+msgstr "Casilla de verificación"
+
+#: sample/sections/basic-fields/checkbox.php:23
+#: sample/sections/disabling/disable-field.php:23
+#: sample/sections/disabling/disable-section.php:24
+msgid "Checkbox Option"
+msgstr "Opción de casilla de verificación"
+
+#: redux-core/inc/fields/gallery/class-redux-gallery.php:49
+msgid "Clear Gallery"
+msgstr "Limpiar Galería"
+
+#: sample/sections/color-selection/color.php:14
+msgid "Color"
+msgstr "Color"
+
+#: sample/sections/color-selection/color-gradient.php:14
+msgid "Color Gradient"
+msgstr "Gradiente de color"
+
+#: sample/sections/color-selection/color-rgba.php:14
+#: sample/sections/color-selection/color-rgba.php:22
+msgid "Color RGBA"
+msgstr "Color RGBA"
+
+#: sample/sample-config.php:355
+msgid "Color Selection"
+msgstr "Colores de sección"
+
+#: redux-core/inc/extensions/import_export/import_export/class-redux-import-export.php:132
+#: extendify-sdk/public/build/extendify.js:7
+#: extendify-sdk/src/Library/components/DevHelpers.js:23
+msgid "Copied!"
+msgstr "¡Copiado!"
+
+#: sample/metaboxes.php:66 sample/sections/extensions/taxonomy.php:125
+#: sample/sections/extensions/users.php:101
+#: sample/sections/media-uploads/gallery.php:23
+msgid "Create a new Gallery by selecting existing or uploading new images using the WordPress native uploader"
+msgstr "Crear una nueva galería mediante la selección de nuevas imágenes existentes o cargar utilizando el cargador nativo de WordPress"
+
+#: sample/sections/basic-fields/sortable.php:23
+#: sample/sections/basic-fields/sortable.php:37
+msgid "Define and reorder these however you want."
+msgstr "Define y ordena estos como quieras."
+
+#: sample/sections/media-uploads/slides.php:27
+msgid "Description Here"
+msgstr "Descripción Aquí"
+
+#: sample/sample-config.php:372
+msgid "Design Fields"
+msgstr "Campos de diseño"
+
+#: redux-core/templates/panel/header.tpl.php:11
+#: redux-core/templates/panel/header.tpl.php:48
+msgid "Developer Mode Enabled"
+msgstr "Modo Desarrollador Habilitado"
+
+#: sample/sections/design-fields/dimensions.php:14
+msgid "Dimensions"
+msgstr "Dimensiones"
+
+#: sample/sections/design-fields/dimensions.php:37
+msgid "Dimensions (Width) Option"
+msgstr "Opción de dimensiones (Anchura)"
+
+#: sample/sections/design-fields/dimensions.php:24
+msgid "Dimensions (Width/Height) Option"
+msgstr "Opción de dimensiones (Anchura / Altura)"
+
+#: sample/sections/presentation-fields/divide.php:14
+msgid "Divide"
+msgstr "Dividir"
+
+#: sample/sections/editors/wordpress-editor.php:22
+msgid "Editor"
+msgstr "Editor"
+
+#: sample/sections/editors/wordpress-editor.php:42
+msgid "Editor - Full Width"
+msgstr "Editor - Ancho completo"
+
+#: sample/sections/editors/wordpress-editor.php:29
+msgid "Editor w/o Media Button"
+msgstr "Editor sin botón de medios"
+
+#: sample/sample-config.php:341
+msgid "Editors"
+msgstr "Editores"
+
+#: sample/sections/select-fields/select.php:243
+msgid "Elusive Icons Select Option"
+msgstr "Opción de selección de Elusive Icons"
+
+#: sample/barebones-config.php:273
+msgid "Example Text"
+msgstr "Texto de ejemplo"
+
+#: sample/barebones-config.php:274
+msgid "Example description."
+msgstr "Descripción de ejemplo."
+
+#: sample/barebones-config.php:275
+msgid "Example subtitle."
+msgstr "Ejemplo de subtítulos."
+
+#: redux-core/inc/extensions/import_export/import_export/class-redux-import-export.php:120
+msgid "Export Options"
+msgstr "Opciones de Exportación"
+
+#: sample/barebones-config.php:172 sample/sample-config.php:237
+msgid "Extensions"
+msgstr "Extensiones"
+
+#: sample/sections/basic-fields/multi-text.php:24
+msgid "Field Decription"
+msgstr "Descripción del campo"
+
+#: sample/barebones-config.php:305 sample/barebones-config.php:324
+#: sample/sections/basic-fields/text.php:25
+#: sample/sections/basic-fields/text.php:33
+#: sample/sections/basic-fields/text.php:45
+msgid "Field Description"
+msgstr "Descripción del campo"
+
+#: sample/sections/presentation-fields/section.php:30
+#: sample/sections/presentation-fields/section.php:36
+msgid "Field Subtitle"
+msgstr "Subtítulo del campo"
+
+#: sample/sections/presentation-fields/section.php:29
+#: sample/sections/presentation-fields/section.php:35
+msgid "Field Title"
+msgstr "Título del Campo"
+
+#: sample/sections/basic-fields/multi-text.php:23
+msgid "Field subtitle"
+msgstr "Subtítulo del campo"
+
+#. translators: %1$s: Upload URL.  %2$s: Codex URL.
+#: redux-core/inc/classes/class-redux-filesystem.php:142
+#: redux-core/inc/classes/class-redux-filesystem.php:436
+msgid "File Permission Issues"
+msgstr "Problemas de permisos de archivos"
+
+#: redux-core/inc/fields/typography/class-redux-typography.php:732
+msgid "Font Color"
+msgstr "Color de fuente"
+
+#: redux-core/inc/fields/typography/class-redux-typography.php:426
+msgid "Font Subsets"
+msgstr "Subconjuntos de fuentes"
+
+#: redux-core/inc/fields/typography/class-redux-typography.php:386
+msgid "Font Weight &amp; Style"
+msgstr "Peso y estilo de fuente"
+
+#: redux-core/inc/fields/typography/class-redux-typography.php:325
+msgid "Font family"
+msgstr "Familia de la fuente"
+
+#: redux-core/inc/fields/typography/class-redux-typography.php:418
+msgid "Font subsets"
+msgstr "Subconjuntos de Fuente"
+
+#: sample/sections/color-selection/color.php:34
+msgid "Footer Background Color"
+msgstr "Color del fondo del pie de página"
+
+#: sample/sections/editors/ace-editor.php:17
+msgid "For full documentation on the this field, visit: "
+msgstr "Para obtener la documentación completa sobre este campo, visita: "
+
+#: sample/sections/media-uploads/gallery.php:14
+msgid "Gallery"
+msgstr "Galería"
+
+#: sample/sections/media-uploads/slides.php:28
+msgid "Give us a link!"
+msgstr "¡Danos un enlace!"
+
+#: sample/sections/color-selection/color-rgba.php:23
+msgid "Gives you the RGBA color."
+msgstr "Te da el color RGBA."
+
+#: sample/sections/design-fields/border.php:22
+msgid "Header Border Option"
+msgstr "Opción de borde del encabezado"
+
+#: sample/sections/color-selection/color-gradient.php:22
+msgid "Header Gradient Color Option"
+msgstr "Opciones de degradado de color para la cabecera"
+
+#: redux-core/inc/extensions/customizer/inc/class-redux-customizer-panel.php:204
+msgid "Help"
+msgstr "Ayuda"
+
+#: redux-core/inc/extensions/import_export/import_export/class-redux-import-export.php:124
+msgid "Here you can copy/download your current option settings. Keep this safe as you can use it as a backup should anything go wrong, or you can use it to restore your settings on this site (or any other site)."
+msgstr "Aquí puede copiar / descargar sus ajustes de opciones. Mantenga esto seguro, ya que se puede utilizar como una copia de seguridad si algo va mal, o puede utilizarlo para restaurar la configuración en este sitio (o cualquier otro sitio)."
+
+#: sample/barebones-config.php:296 sample/barebones-config.php:315
+#: sample/sample-config.php:521
+#: sample/sections/additional-types/date-time-picker.php:16
+#: sample/sections/additional-types/date.php:16
+#: sample/sections/additional-types/raw.php:25
+#: sample/sections/additional-types/sorter.php:16
+#: sample/sections/advanced-features/callback.php:16
+#: sample/sections/basic-fields/checkbox.php:18
+#: sample/sections/basic-fields/multi-text.php:16
+#: sample/sections/basic-fields/password.php:16
+#: sample/sections/basic-fields/radio.php:18
+#: sample/sections/basic-fields/sortable.php:17
+#: sample/sections/basic-fields/text.php:15
+#: sample/sections/basic-fields/textarea.php:16
+#: sample/sections/color-selection/color-gradient.php:15
+#: sample/sections/color-selection/color-palette.php:16
+#: sample/sections/color-selection/color-rgba.php:15
+#: sample/sections/color-selection/color.php:16
+#: sample/sections/color-selection/link-color.php:15
+#: sample/sections/color-selection/palette.php:15
+#: sample/sections/design-fields/background.php:16
+#: sample/sections/design-fields/border.php:16
+#: sample/sections/design-fields/box-shadow.php:16
+#: sample/sections/design-fields/dimensions.php:16
+#: sample/sections/design-fields/spacing.php:16
+#: sample/sections/disabling/disable-field.php:18
+#: sample/sections/disabling/disable-section.php:19
+#: sample/sections/editors/wordpress-editor.php:16
+#: sample/sections/extensions/accordion.php:16
+#: sample/sections/extensions/color-scheme.php:16
+#: sample/sections/extensions/custom-fonts.php:16
+#: sample/sections/extensions/google-maps.php:15
+#: sample/sections/extensions/icon-select.php:17
+#: sample/sections/extensions/js-button.php:15
+#: sample/sections/extensions/repeater.php:15
+#: sample/sections/extensions/search.php:17
+#: sample/sections/extensions/shortcodes.php:20
+#: sample/sections/extensions/social-profiles.php:15
+#: sample/sections/media-uploads/gallery.php:16
+#: sample/sections/media-uploads/media.php:16
+#: sample/sections/media-uploads/multi-media.php:16
+#: sample/sections/media-uploads/slides.php:16
+#: sample/sections/presentation-fields/divide.php:16
+#: sample/sections/presentation-fields/info.php:16
+#: sample/sections/presentation-fields/section.php:16
+#: sample/sections/select-fields/image-select.php:16
+#: sample/sections/select-fields/select-image.php:16
+#: sample/sections/select-fields/select.php:16
+#: sample/sections/slider-spinner/slider.php:16
+#: sample/sections/slider-spinner/spinner.php:16
+#: sample/sections/switch-button/button-set.php:16
+#: sample/sections/switch-button/switch.php:16
+#: sample/sections/typography/typography.php:16
+msgid "For full documentation on this field, visit: "
+msgstr "Para obtener la documentación completa sobre este campo, visita: "
+
+#: sample/sections/select-fields/select.php:245
+msgid "Here's a list of all the elusive icons by name and icon."
+msgstr "Esta es una lista de todos los iconos de elusive icons por nombre e icono."
+
+#: redux-core/inc/classes/class-redux-page-render.php:198
+msgid "Hints"
+msgstr "Consejos"
+
+#: redux-core/inc/fields/link_color/class-redux-link-color.php:87
+msgid "Hover"
+msgstr "Sobre"
+
+#: redux-core/templates/panel/header.tpl.php:36
+msgid "If you are not a developer, your theme/plugin author shipped with developer mode enabled. Contact them directly to fix it."
+msgstr "Si no eres un desarrollador, el autor de tu tema o plugin lo ha enviado con el modo desarrollador habilitado. Ponte en contacto con él para solucionarlo."
+
+#: sample/sections/select-fields/image-select.php:14
+msgid "Image Select"
+msgstr "Seleccionar imagen"
+
+#: sample/sections/select-fields/image-select.php:67
+msgid "Images Option"
+msgstr "Opción de imágenes"
+
+#: sample/sections/select-fields/image-select.php:59
+msgid "Images Option (with tiles => true)"
+msgstr "Opciones de imágenes (con títulos =>true)"
+
+#: sample/sections/select-fields/image-select.php:22
+msgid "Images Option for Layout"
+msgstr "Opción de imagen para estructura"
+
+#: redux-core/inc/extensions/import_export/import_export/class-redux-import-export.php:77
+msgid "Import Options"
+msgstr "Opciones de Importación"
+
+#: sample/sections/presentation-fields/info.php:14
+msgid "Info"
+msgstr "Información"
+
+#: redux-core/inc/classes/class-redux-ajax-save.php:42
+#: redux-core/inc/classes/class-redux-ajax-select2.php:38
+msgid "Invalid security credential.  Please reload the page and try again."
+msgstr "Credencial de seguridad no válida. Vuelve a cargar la página e inténtalo de nuevo."
+
+#: redux-core/inc/classes/class-redux-ajax-save.php:52
+#: redux-core/inc/classes/class-redux-ajax-select2.php:42
+msgid "Invalid user capability.  Please reload the page and try again."
+msgstr "Capacidad de usuario no válida. Por favor, vuelve a cargar la página e inténtalo de nuevo."
+
+#: sample/sections/extensions/taxonomy.php:173
+#: sample/sections/extensions/users.php:149
+#: sample/sections/switch-button/switch.php:48
+#: sample/sections/switch-button/switch.php:57
+msgid "Items set with a fold to this ID will hide unless this is set to the appropriate value."
+msgstr "Los elementos que tengan como pliegue este ID se ocultarán a no ser que esto tenga el valor adecuado."
+
+#: sample/sections/editors/ace-editor.php:34
+msgid "JS Code"
+msgstr "Código JS"
+
+#: sample/sections/color-selection/link-color.php:14
+msgid "Link Color"
+msgstr "Color del enlace"
+
+#: sample/sections/color-selection/link-color.php:22
+msgid "Links Color Option"
+msgstr "Opción de color de los enlaces"
+
+#: sample/metaboxes.php:94 sample/sections/switch-button/switch.php:23
+#: sample/sections/switch-button/switch.php:30
+msgid "Look, it's on!"
+msgstr "¡Mira, está encendido!"
+
+#: sample/sections/extensions/taxonomy.php:162
+#: sample/sections/extensions/users.php:138
+#: sample/sections/switch-button/switch.php:37
+msgid "Look, it's on! Also hidden child elements!"
+msgstr "¡Mira, está encendido! ¡También con elementos hijos ocultos!"
+
+#: sample/sections/media-uploads/media.php:14
+msgid "Media"
+msgstr "Medios"
+
+#: sample/sections/extensions/taxonomy.php:117
+#: sample/sections/extensions/users.php:93
+#: sample/sections/media-uploads/media.php:42
+msgid "Media No Preview"
+msgstr "Medios sin vista previa"
+
+#: sample/sample-config.php:388
+msgid "Media Uploads"
+msgstr "Cargas de medios"
+
+#: sample/metaboxes.php:56 sample/sections/extensions/taxonomy.php:95
+#: sample/sections/extensions/users.php:71
+#: sample/sections/media-uploads/media.php:23
+#: sample/sections/media-uploads/media.php:66
+msgid "Media w/ URL"
+msgstr "Medio con URL"
+
+#: sample/sections/extensions/taxonomy.php:109
+#: sample/sections/extensions/users.php:85
+#: sample/sections/media-uploads/media.php:32
+#: sample/sections/media-uploads/media.php:97
+msgid "Media w/o URL"
+msgstr "Medios sin URL"
+
+#: sample/sections/select-fields/select.php:172
+msgid "Menus Multi Select Option"
+msgstr "Opción de selección de múltiples menus"
+
+#: sample/sections/select-fields/select.php:163
+msgid "Menus Select Option"
+msgstr "Opción de selección de menus"
+
+#: sample/sections/basic-fields/checkbox.php:31
+msgid "Multi Checkbox Option"
+msgstr "Multi-opción de casilla de verificación"
+
+#: sample/sections/basic-fields/checkbox.php:50
+msgid "Multi Checkbox Option (with menu data)"
+msgstr "Multi-opción de casilla de verificación (con datos de menu)"
+
+#: sample/sections/basic-fields/checkbox.php:58
+msgid "Multi Checkbox Option (with sidebar data)"
+msgstr "Multi-opción de casilla de verificación (con datos del contenido lateral)"
+
+#: sample/sections/select-fields/select.php:74
+msgid "Multi Select Option"
+msgstr "Opcion de selección múltiple"
+
+#: sample/sections/basic-fields/multi-text.php:14
+msgid "Multi Text"
+msgstr "Texto múltiple"
+
+#: sample/sections/basic-fields/multi-text.php:22
+msgid "Multi Text Option"
+msgstr "Opción de texto múltiple"
+
+#. translators: New accordion title.
+#. translators:  Content title for new accordion.
+#: redux-core/inc/fields/slides/class-redux-slides.php:48
+#: redux-core/inc/fields/slides/class-redux-slides.php:233
+msgid "New %s"
+msgstr "Nuevo %s"
+
+#: redux-core/inc/fields/select/class-redux-select.php:183
+#: redux-core/inc/fields/select_image/class-redux-select-image.php:145
+msgid "No items of this type were found."
+msgstr "No se encontró ningún elemento de este tipo."
+
+#: redux-core/inc/fields/background/class-redux-background.php:285
+#: redux-core/inc/fields/media/class-redux-media.php:89
+msgid "No media selected"
+msgstr "Nada seleccionado"
+
+#: sample/sections/color-selection/color-gradient.php:23
+#: sample/sections/color-selection/link-color.php:23
+#: sample/sections/color-selection/palette.php:23
+#: sample/sections/design-fields/border.php:23
+#: sample/sections/design-fields/border.php:39
+msgid "Only color validation can be done on this field type"
+msgstr "Solo se puede hacer  validación de color en este tipo de campo"
+
+#: sample/sections/editors/ace-editor.php:45
+msgid "PHP Code"
+msgstr "Código PHP"
+
+#: redux-core/inc/themecheck/checks/class-redux-full-package.php:50
+msgid "PHP Unit Testing"
+msgstr "Tests unitarios PHP"
+
+#: sample/sections/design-fields/spacing.php:35
+#: sample/sections/design-fields/spacing.php:61
+msgid "Padding/Margin Option"
+msgstr "Opción de margen interior/margen"
+
+#: sample/sections/select-fields/select.php:121
+msgid "Pages Multi Select Option"
+msgstr "Opción de selección de múltiples páginas"
+
+#: sample/sections/additional-types/date.php:23
+#: sample/sections/basic-fields/checkbox.php:24
+#: sample/sections/basic-fields/checkbox.php:32
+#: sample/sections/basic-fields/checkbox.php:51
+#: sample/sections/basic-fields/checkbox.php:59
+#: sample/sections/basic-fields/radio.php:24
+#: sample/sections/basic-fields/radio.php:39
+#: sample/sections/disabling/disable-field.php:24
+#: sample/sections/disabling/disable-section.php:25
+#: sample/sections/extensions/taxonomy.php:58
+#: sample/sections/select-fields/image-select.php:23
+#: sample/sections/select-fields/image-select.php:68
+#: sample/sections/select-fields/select.php:23
+#: sample/sections/select-fields/select.php:49
+#: sample/sections/select-fields/select.php:75
+#: sample/sections/select-fields/select.php:96
+#: sample/sections/select-fields/select.php:105
+#: sample/sections/select-fields/select.php:113
+#: sample/sections/select-fields/select.php:122
+#: sample/sections/select-fields/select.php:130
+#: sample/sections/select-fields/select.php:139
+#: sample/sections/select-fields/select.php:147
+#: sample/sections/select-fields/select.php:156
+#: sample/sections/select-fields/select.php:164
+#: sample/sections/select-fields/select.php:173
+#: sample/sections/select-fields/select.php:181
+#: sample/sections/select-fields/select.php:190
+#: sample/sections/select-fields/select.php:208
+#: sample/sections/select-fields/select.php:217
+#: sample/sections/select-fields/select.php:225
+#: sample/sections/select-fields/select.php:236
+#: sample/sections/select-fields/select.php:244
+#: sample/sections/select-fields/select.php:254
+#: sample/sections/select-fields/select.php:263
+#: sample/sections/switch-button/button-set.php:23
+#: sample/sections/switch-button/button-set.php:38
+msgid "No validation can be done on this field type"
+msgstr "No se puede hacer ninguna validación en este tipo de campo"
+
+#: sample/sections/select-fields/select.php:112
+msgid "Pages Select Option"
+msgstr "Opción de selección de páginas"
+
+#: sample/sections/color-selection/palette.php:22
+msgid "Palette Color Option"
+msgstr "Opción de color de paleta"
+
+#: sample/sections/editors/ace-editor.php:23
+msgid "Paste your CSS code here."
+msgstr "Pega tu código CSS aquí."
+
+#: sample/sections/editors/ace-editor.php:35
+msgid "Paste your JS code here."
+msgstr "Pega tu código JS aquí."
+
+#: sample/sections/editors/ace-editor.php:46
+msgid "Paste your PHP code here."
+msgstr "Pega tu código PHP aquí."
+
+#: sample/sections/color-selection/color.php:35
+msgid "Pick a background color for the footer (default: #dd9933)."
+msgstr "Elige un color de fondo para el pie de página (por defecto: #dd9933)."
+
+#: sample/sections/color-selection/color.php:27
+msgid "Pick a title color for the theme (default: #000)."
+msgstr "Elige un color de título para el tema (por defecto: # 000)."
+
+#: redux-core/inc/classes/class-redux-enqueue.php:706
+msgid "Please Wait"
+msgstr "Espere por favor"
+
+#: redux-core/inc/classes/class-redux-cdn.php:127
+msgid "Please wait a few minutes, then try refreshing the page. Unable to load some remotely hosted scripts."
+msgstr "Espera unos minutos y luego intenta actualizar la página. No se pueden cargar algunos scripts alojados remotamente."
+
+#: sample/sections/select-fields/select.php:189
+msgid "Post Type Multi Select Option"
+msgstr "Selección múltiple de tipo de entrada"
+
+#: sample/sections/select-fields/select.php:199
+msgid "Post Type Multi Select Option + Sortable"
+msgstr "Selección múltiple de tipo de entrada + ordenable"
+
+#: sample/sections/select-fields/select.php:180
+msgid "Post Type Select Option"
+msgstr "Opción de selección de tipo de contenido"
+
+#: sample/sections/select-fields/select.php:216
+msgid "Posts Multi Select Option"
+msgstr "Opción de selección de entradas múltiples"
+
+#: sample/sections/select-fields/select.php:207
+msgid "Posts Select Option2"
+msgstr "Opción selector de entradas2"
+
+#: sample/sample-config.php:403
+msgid "Presentation Fields"
+msgstr "Campos de presentación"
+
+#: sample/sections/extensions/taxonomy.php:210
+#: sample/sections/extensions/users.php:180
+#: sample/sections/select-fields/image-select.php:97
+msgid "Preset"
+msgstr "Preajuste"
+
+#: redux-core/inc/extensions/customizer/inc/class-redux-customizer-section.php:98
+msgid "Press return or enter to expand"
+msgstr "Pulsa retorno o intro para expandir"
+
+#: redux-core/inc/extensions/customizer/inc/class-redux-customizer-section.php:175
+msgid "Press return or enter to open"
+msgstr "Pulsa return o enter para abrir"
+
+#: redux-core/inc/extensions/customizer/inc/class-redux-customizer-panel.php:109
+#: redux-core/inc/extensions/customizer/inc/class-redux-customizer-panel.php:231
+msgid "Press return or enter to open this panel"
+msgstr "Pulsa retorno o intro para abrir este panel"
+
+#: sample/sections/basic-fields/radio.php:14
+msgid "Radio"
+msgstr "Radio"
+
+#: sample/sections/basic-fields/radio.php:23
+msgid "Radio Option"
+msgstr "Opción de radio"
+
+#: sample/sections/basic-fields/radio.php:38
+msgid "Radio Option w/ Menu Data"
+msgstr "Opción de radio con datos de menú"
+
+#: redux-core/inc/themecheck/checks/class-redux-full-package.php:48
+msgid "Redux Boostrap Tests"
+msgstr "Pruebas Redux Bootstrap"
+
+#: redux-core/inc/themecheck/checks/class-redux-full-package.php:45
+msgid "Redux Code Styles"
+msgstr "Estilos de código de Redux"
+
+#. translators: %s: CDN handle.
+#: redux-core/inc/classes/class-redux-cdn.php:134
+msgid "Redux Framework Warning"
+msgstr "Advertencia de Redux Framework"
+
+#: redux-core/inc/themecheck/checks/class-redux-full-package.php:47
+msgid "Redux Plugin File"
+msgstr "Archivo de plugin Redux"
+
+#: redux-core/inc/themecheck/checks/class-redux-full-package.php:44
+msgid "Redux Resting Diles"
+msgstr "Redux Resting Diles"
+
+#: redux-core/inc/themecheck/checks/class-redux-full-package.php:46
+msgid "Redux Unit Testing"
+msgstr "Test unitario de Redux"
+
+#: redux-core/inc/themecheck/checks/class-redux-full-package.php:43
+msgid "Redux localization utilities"
+msgstr "Utilidades de localización de Redux"
+
+#: redux-core/inc/fields/link_color/class-redux-link-color.php:65
+msgid "Regular"
+msgstr "Regular"
+
+#: redux-core/templates/panel/footer.tpl.php:63
+#: redux-core/templates/panel/header-stickybar.tpl.php:27
+msgid "Reset All"
+msgstr "Restablecer Todo"
+
+#: redux-core/templates/panel/footer.tpl.php:62
+#: redux-core/templates/panel/header-stickybar.tpl.php:26
+msgid "Reset Section"
+msgstr "Restablecer Sección"
+
+#: sample/barebones-config.php:44 sample/barebones-config.php:45
+#: sample/sample-config.php:89 sample/sample-config.php:92
+msgid "Sample Options"
+msgstr "Opciones de ejemplo"
+
+#: sample/sections/presentation-fields/section.php:14
+msgid "Section"
+msgstr "Sección"
+
+#: redux-core/inc/classes/class-redux-panel.php:208
+msgid "Section Defaults Restored!"
+msgstr "Restaurados todos los valores predeterminados de la sección!"
+
+#: sample/sections/presentation-fields/section.php:22
+msgid "Section Example"
+msgstr "Ejemplo de Sección"
+
+#: sample/sample-config.php:438
+msgid "Select Fields"
+msgstr "Campos de selección"
+
+#: sample/sections/select-fields/select-image.php:14
+#: sample/sections/select-fields/select-image.php:23
+#: sample/sections/select-fields/select-image.php:45
+msgid "Select Image"
+msgstr "Seleccionar imagen"
+
+#: sample/sections/select-fields/select.php:22
+msgid "Select Option"
+msgstr "Opción de selección"
+
+#: sample/sections/select-fields/select.php:48
+msgid "Select Option with optgroup"
+msgstr "Seleccionar opción con optogoup"
+
+#: sample/sections/select-fields/image-select.php:60
+msgid "Select a background pattern."
+msgstr "Selecciona un patrón de fondo."
+
+#: redux-core/inc/fields/select/class-redux-select.php:106
+#: redux-core/inc/fields/select_image/class-redux-select-image.php:26
+msgid "Select an item"
+msgstr "Seleccionar un elemento"
+
+#: sample/sections/select-fields/select.php:38
+msgid "Select your themes alternative color scheme."
+msgstr "Selecciona tu esquema de colores alternativos del tema."
+
+#: redux-core/inc/classes/class-redux-panel.php:166
+#: redux-core/inc/extensions/metaboxes/class-redux-extension-metaboxes.php:1213
+msgid "Settings Imported!"
+msgstr "¡Ajustes Importados!"
+
+#: redux-core/inc/classes/class-redux-panel.php:229
+msgid "Settings Saved!"
+msgstr "¡Ajustes Guardados!"
+
+#: redux-core/inc/classes/class-redux-panel.php:256
+#: redux-core/inc/extensions/metaboxes/class-redux-extension-metaboxes.php:1217
+msgid "Settings have changed, you should save them!"
+msgstr "Los ajustes han cambiado, ¡debería guardarlos!"
+
+#: redux-core/inc/extensions/options_object/options_object/class-redux-options-object.php:106
+msgid "Show Object in Javascript Console Object"
+msgstr "Mostrar Objeto en la Consola de Objetos de Javascript"
+
+#: sample/sections/color-selection/color.php:26
+msgid "Site Title Color"
+msgstr "Color del título del sitio"
+
+#: redux-core/inc/fields/slides/class-redux-slides.php:32
+msgid "Slide"
+msgstr "Deslizar"
+
+#: sample/sections/slider-spinner/slider.php:14
+msgid "Slider"
+msgstr "Carrusel"
+
+#: sample/sample-config.php:452
+msgid "Slider / Spinner"
+msgstr "Carrusel / Icono de carga"
+
+#: sample/sections/slider-spinner/slider.php:21
+msgid "Slider Example 1"
+msgstr "Ejemplo 1 de carrusel"
+
+#: sample/sections/slider-spinner/slider.php:33
+msgid "Slider Example 2 with Steps (5)"
+msgstr "Ejemplo 2 de carrusel con pasos (5)"
+
+#: sample/sections/slider-spinner/slider.php:45
+msgid "Slider Example 3 with two sliders"
+msgstr "Ejemplo de carrusel 2 con dos carruseles"
+
+#: sample/sections/slider-spinner/slider.php:35
+msgid "Slider description. Min: 0, max: 300, step: 5, default value: 75"
+msgstr "Descripción de carrusel. Min: 0, max: 300, paso 5, por defecto: 75"
+
+#: sample/sections/slider-spinner/slider.php:47
+msgid "Slider description. Min: 0, max: 500, step: 5, slider 1 default value: 100, slider 2 default value: 300"
+msgstr "Descripción de carrusel. Min: 0, max: 500, step: 5, slider 1 default value: 100, slider 2 default value: 300"
+
+#: sample/sections/slider-spinner/slider.php:23
+msgid "Slider description. Min: 1, max: 500, step: 1, default value: 250"
+msgstr "Descripción de carrusel. Min: 1, max: 500, paso 1, por defecto: 250"
+
+#: sample/sections/media-uploads/slides.php:14
+msgid "Slides"
+msgstr "Diapositivas"
+
+#: sample/metaboxes.php:164 sample/sections/media-uploads/slides.php:22
+msgid "Slides Options"
+msgstr "Opciones de carrusel"
+
+#: sample/sections/basic-fields/sortable.php:14
+msgid "Sortable"
+msgstr "Ordenable"
+
+#: sample/sections/basic-fields/sortable.php:22
+msgid "Sortable Text Option"
+msgstr "Opción de texto que se puede ordenar"
+
+#: sample/sections/design-fields/spacing.php:14
+msgid "Spacing"
+msgstr "Espaciado"
+
+#: redux-core/inc/fields/typography/class-redux-typography.php:429
+msgid "Subsets"
+msgstr "Subconjuntos"
+
+#: sample/barebones-config.php:166 sample/sample-config.php:231
+msgid "Support"
+msgstr "Soporte"
+
+#: sample/sections/switch-button/switch.php:14
+msgid "Switch"
+msgstr "Interruptor"
+
+#: sample/sections/extensions/taxonomy.php:161
+#: sample/sections/extensions/users.php:137
+#: sample/sections/switch-button/switch.php:36
+msgid "Switch - Nested Children, Enable to show"
+msgstr "Interruptor - Hijos anidados, Activar para mostrar"
+
+#: sample/sections/extensions/taxonomy.php:171
+#: sample/sections/extensions/users.php:147
+#: sample/sections/switch-button/switch.php:46
+msgid "Switch - This and the next switch required for patterns to show"
+msgstr "Interruptor - Este y el siguiente son necesarios para mostrar los patrones"
+
+#: sample/sections/switch-button/switch.php:29
+msgid "Switch Off"
+msgstr "Apagar"
+
+#: sample/metaboxes.php:93 sample/sections/switch-button/switch.php:22
+msgid "Switch On"
+msgstr "Encender"
+
+#: sample/sections/switch-button/switch.php:55
+msgid "Switch2 - Enable the above switch and this one for patterns to show"
+msgstr "Switch2 - Activa el interruptor de arriba y este para que se muestren los patrones"
+
+#: sample/sections/select-fields/select.php:138
+msgid "Tags Multi Select Option"
+msgstr "Opción de selección de múltiples etiquetas"
+
+#: sample/sections/select-fields/select.php:129
+msgid "Tags Select Option"
+msgstr "Opción de selección de etiquetas"
+
+#: redux-core/inc/extensions/social_profiles/social_profiles/class-redux-social-profiles.php:234
+#: sample/barebones-config.php:295 sample/sections/basic-fields/text.php:14
+msgid "Text"
+msgstr "Texto"
+
+#: sample/barebones-config.php:314
+msgid "Text Area"
+msgstr "Área de texto"
+
+#: sample/barebones-config.php:322
+msgid "Text Area Field"
+msgstr "Campo de área de texto"
+
+#: sample/barebones-config.php:303 sample/metaboxes.php:108
+#: sample/sections/basic-fields/text.php:23
+#: sample/sections/extensions/repeater.php:37
+#: sample/sections/extensions/repeater.php:61
+#: sample/sections/extensions/repeater.php:63
+msgid "Text Field"
+msgstr "Campo de texto"
+
+#: sample/sections/basic-fields/text.php:31
+msgid "Text Field w/ Hint"
+msgstr "Campo de texto con ayuda"
+
+#: sample/sections/basic-fields/textarea.php:14
+msgid "Textarea"
+msgstr "Área de texto"
+
+#: sample/sections/advanced-features/field-validation.php:137
+#: sample/sections/basic-fields/textarea.php:22
+msgid "Textarea Option - HTML Validated Custom"
+msgstr "Opción de área de texto - Validación personalizada de HTML"
+
+#: sample/sections/presentation-fields/divide.php:16
+msgid "The spacer to the section menu as seen to the left (after this section block) is the divide \"section\". Also the divider below is the divide \"field\"."
+msgstr "El espaciador al menú de sección como se ve a la izquierda (después de este bloque de sección) es la división \"sección\". También el divisor abajo es el \"campo\" de la división."
+
+#: sample/barebones-config.php:225 sample/sample-config.php:293
+msgid "Theme Information 1"
+msgstr "Información 1 del Tema"
+
+#: sample/barebones-config.php:231 sample/sample-config.php:298
+msgid "Theme Information 2"
+msgstr "Información 2 del Tema"
+
+#: sample/sections/select-fields/select.php:37
+msgid "Theme Stylesheet"
+msgstr "Hoja de estilo del tema"
+
+#: redux-core/inc/classes/class-redux-enqueue.php:722
+msgid "There was a problem with your action. Please try again or reload the page."
+msgstr "Hubo un problema con tu acción. Inténtalo de nuevo o vuelve a cargar la página."
+
+#: redux-core/inc/classes/class-redux-enqueue.php:718
+msgid "There was an error saving. Here is the result of your action:"
+msgstr "Ha habido un error al guardar. Este es el resultado de su acción:"
+
+#: sample/sample-config.php:323
+msgid "These are really basic fields!"
+msgstr "¡Estos son campos muy básicos!"
+
+#: sample/sections/extensions/taxonomy.php:211
+#: sample/sections/extensions/taxonomy.php:213
+#: sample/sections/extensions/users.php:181
+#: sample/sections/extensions/users.php:183
+#: sample/sections/select-fields/image-select.php:98
+#: sample/sections/select-fields/image-select.php:100
+msgid "This allows you to set a json string or array to override multiple preferences in your theme."
+msgstr "Esto te permite establecer una cadena json que sobreescriba múltiples preferencias de tu tema."
+
+#: sample/sections/slider-spinner/slider.php:34
+msgid "This example displays the value in a text box"
+msgstr "Este ejemplo muestra el valor en un cuadro de texto"
+
+#: sample/sections/slider-spinner/slider.php:46
+msgid "This example displays the values in select boxes"
+msgstr "Este ejemplo muestra los valores en cajas de selección"
+
+#: sample/sections/select-fields/select.php:200
+msgid "This field also has sortable enabled!"
+msgstr "¡Este campo también es ordenable!"
+
+#: redux-core/inc/validation/date/class-redux-validation-date.php:27
+msgid "This field must be a valid date."
+msgstr "Este campo debe se una fecha válida."
+
+#: sample/metaboxes.php:166 sample/sections/media-uploads/slides.php:24
+msgid "This field will store all slides values into a multidimensional array to use into a foreach loop."
+msgstr "Este campo almacenará todos los valores de diapositivas en una matriz multidimensional para usar en un bucle foreach."
+
+#: sample/sections/media-uploads/slides.php:26
+msgid "This is a title"
+msgstr "Este es un título"
+
+#: sample/sections/presentation-fields/info.php:28
+#: sample/sections/presentation-fields/info.php:35
+#: sample/sections/presentation-fields/info.php:43
+#: sample/sections/presentation-fields/info.php:51
+#: sample/sections/presentation-fields/info.php:60
+#: sample/sections/presentation-fields/info.php:67
+#: sample/sections/presentation-fields/info.php:75
+#: sample/sections/presentation-fields/info.php:84
+#: sample/sections/presentation-fields/info.php:93
+#: sample/sections/presentation-fields/info.php:102
+msgid "This is a title."
+msgstr "Esto es un título."
+
+#: sample/sections/presentation-fields/info.php:52
+msgid "This is an info field with the <strong>critical</strong> style applied and an icon."
+msgstr "Este es un campo de información con el estilo de <strong>crítico</strong> aplicado y un icono."
+
+#: sample/sections/presentation-fields/info.php:61
+msgid "This is an info field with the <strong>custom</strong> style applied, color arg passed, and an icon."
+msgstr "Este es un campo de información con el estilo de <strong>personalizado</strong> aplicado, color arg pasado y un ícono."
+
+#: sample/sections/presentation-fields/info.php:29
+msgid "This is an info field with the <strong>info</strong> style applied. By default the <strong>normal</strong> style is applied."
+msgstr "Este es un campo de información con el estilo de <strong>información</strong> aplicado. Por defecto se aplica el estilo <strong>normal</strong> ."
+
+#: sample/sections/presentation-fields/info.php:44
+msgid "This is an info field with the <strong>success</strong> style applied and an icon."
+msgstr "Este es un campo de información con el estilo de <strong>éxito</strong> aplicado y un icono."
+
+#: sample/sections/presentation-fields/info.php:36
+msgid "This is an info field with the <strong>warning</strong> style applied."
+msgstr "Este es un campo de información con el estilo de <strong>advertencia</strong> aplicado."
+
+#: sample/sections/presentation-fields/info.php:76
+msgid "This is an info non-notice field with the <strong>info</strong> style applied."
+msgstr "Este es un campo de no-aviso de información con el estilo de <strong>info</strong> aplicado."
+
+#: sample/sections/presentation-fields/info.php:68
+msgid "This is an info non-notice field with the <strong>normal</strong> style applied."
+msgstr "Este es un campo de no-aviso de información con el estilo de <strong>normal</strong> aplicado."
+
+#: sample/sections/presentation-fields/info.php:94
+msgid "This is an info non-notice field with the <strong>success</strong> style applied and an icon."
+msgstr "Este es un campo de no-aviso de información con el estilo de <strong>éxito</strong> aplicado y un icono."
+
+#: sample/sections/presentation-fields/info.php:85
+msgid "This is an info non-notice field with the <strong>warning</strong> style applied and an icon."
+msgstr "Este es un campo de no-aviso de información con el estilo de <strong>advertencia</strong> aplicado y un icono."
+
+#: sample/sections/presentation-fields/info.php:103
+msgid "This is an non-notice field with the <strong>critical</strong> style applied and an icon."
+msgstr "Este es un campo de no-aviso de información con el estilo de <strong>crítico</strong> aplicado y un icono."
+
+#: sample/metaboxes.php:67 sample/sections/additional-types/date.php:24
+#: sample/sections/advanced-features/field-sanitizing.php:25
+#: sample/sections/advanced-features/field-sanitizing.php:34
+#: sample/sections/advanced-features/field-sanitizing.php:43
+#: sample/sections/advanced-features/field-validation.php:24
+#: sample/sections/advanced-features/field-validation.php:34
+#: sample/sections/advanced-features/field-validation.php:43
+#: sample/sections/advanced-features/field-validation.php:50
+#: sample/sections/advanced-features/field-validation.php:59
+#: sample/sections/advanced-features/field-validation.php:68
+#: sample/sections/advanced-features/field-validation.php:77
+#: sample/sections/advanced-features/field-validation.php:99
+#: sample/sections/advanced-features/field-validation.php:121
+#: sample/sections/advanced-features/field-validation.php:130
+#: sample/sections/advanced-features/field-validation.php:139
+#: sample/sections/advanced-features/field-validation.php:159
+#: sample/sections/basic-fields/checkbox.php:25
+#: sample/sections/basic-fields/checkbox.php:33
+#: sample/sections/basic-fields/checkbox.php:52
+#: sample/sections/basic-fields/checkbox.php:60
+#: sample/sections/basic-fields/radio.php:25
+#: sample/sections/basic-fields/radio.php:40
+#: sample/sections/basic-fields/sortable.php:24
+#: sample/sections/basic-fields/sortable.php:38
+#: sample/sections/basic-fields/textarea.php:24
+#: sample/sections/color-selection/color-gradient.php:24
+#: sample/sections/color-selection/color-palette.php:51
+#: sample/sections/color-selection/color-palette.php:63
+#: sample/sections/color-selection/color-palette.php:77
+#: sample/sections/color-selection/color-palette.php:89
+#: sample/sections/color-selection/link-color.php:24
+#: sample/sections/color-selection/palette.php:24
+#: sample/sections/design-fields/border.php:25
+#: sample/sections/design-fields/border.php:42
+#: sample/sections/design-fields/box-shadow.php:39
+#: sample/sections/disabling/disable-field.php:25
+#: sample/sections/disabling/disable-section.php:26
+#: sample/sections/extensions/taxonomy.php:59
+#: sample/sections/extensions/taxonomy.php:126
+#: sample/sections/extensions/users.php:102
+#: sample/sections/media-uploads/gallery.php:24
+#: sample/sections/select-fields/image-select.php:69
+#: sample/sections/select-fields/select.php:24
+#: sample/sections/select-fields/select.php:50
+#: sample/sections/select-fields/select.php:76
+#: sample/sections/select-fields/select.php:97
+#: sample/sections/select-fields/select.php:106
+#: sample/sections/select-fields/select.php:114
+#: sample/sections/select-fields/select.php:123
+#: sample/sections/select-fields/select.php:131
+#: sample/sections/select-fields/select.php:140
+#: sample/sections/select-fields/select.php:148
+#: sample/sections/select-fields/select.php:157
+#: sample/sections/select-fields/select.php:165
+#: sample/sections/select-fields/select.php:174
+#: sample/sections/select-fields/select.php:182
+#: sample/sections/select-fields/select.php:191
+#: sample/sections/select-fields/select.php:201
+#: sample/sections/select-fields/select.php:209
+#: sample/sections/select-fields/select.php:218
+#: sample/sections/select-fields/select.php:226
+#: sample/sections/select-fields/select.php:237
+#: sample/sections/select-fields/select.php:255
+#: sample/sections/switch-button/button-set.php:24
+#: sample/sections/switch-button/button-set.php:39
+msgid "This is the description field, again good for additional info."
+msgstr "Este es el campo de descripción, de nuevo para información adicional."
+
+#: sample/sections/presentation-fields/info.php:22
+msgid "This is the info field, if you want to break sections up."
+msgstr "Este es el campo de información, por si quires dividir las secciones."
+
+#: sample/sections/extensions/taxonomy.php:110
+#: sample/sections/extensions/taxonomy.php:118
+#: sample/sections/extensions/users.php:86
+#: sample/sections/extensions/users.php:94
+#: sample/sections/media-uploads/media.php:33
+#: sample/sections/media-uploads/media.php:43
+#: sample/sections/media-uploads/media.php:98
+msgid "This represents the minimalistic view. It does not have the preview box or the display URL in an input box. "
+msgstr "Esto representa la vista minimalista. No tiene el cuadro de vista previa o la URL visible en una caja de texto. "
+
+#: sample/sections/slider-spinner/slider.php:22
+msgid "This slider displays the value as a label."
+msgstr "Este carrusel muestra el valor como etiqueta."
+
+#: sample/sections/select-fields/image-select.php:24
+msgid "This uses some of the built in images, you can use them for layout options."
+msgstr "Eso usa algunas de las imágenes incluidas, puedes usarlas en las opciones de estructura."
+
+#: redux-core/inc/fields/background/class-redux-background.php:121
+#: redux-core/inc/fields/color/class-redux-color.php:76
+#: redux-core/inc/fields/color_gradient/class-redux-color-gradient.php:132
+msgid "Transparent"
+msgstr "Transparente"
+
+#: redux-core/inc/fields/dimensions/class-redux-dimensions.php:194
+#: redux-core/inc/fields/dimensions/class-redux-dimensions.php:198
+#: redux-core/inc/fields/dimensions/class-redux-dimensions.php:200
+#: redux-core/inc/fields/spacing/class-redux-spacing.php:282
+#: redux-core/inc/fields/spacing/class-redux-spacing.php:283
+msgid "Units"
+msgstr "Unidades"
+
+#: sample/metaboxes.php:165 sample/sections/media-uploads/slides.php:23
+msgid "Unlimited slides with drag and drop sortings."
+msgstr "Diapositivas ilimitadas que se ordenan arrastrándolas."
+
+#: redux-core/inc/validation/css/class-redux-validation-css.php:27
+msgid "Unsafe strings were found in your CSS and have been filtered out."
+msgstr "Se han encontrado cadenas inseguras en tu código CSS, han sido filtradas."
+
+#: sample/sections/media-uploads/media.php:53
+msgid "Upload Anything - Disabled Mode"
+msgstr "Cargar cualquier cosa - modo deshabilitado"
+
+#: sample/metaboxes.php:59 sample/sections/extensions/taxonomy.php:82
+#: sample/sections/extensions/taxonomy.php:98
+#: sample/sections/extensions/taxonomy.php:111
+#: sample/sections/extensions/taxonomy.php:119
+#: sample/sections/extensions/users.php:58
+#: sample/sections/extensions/users.php:74
+#: sample/sections/extensions/users.php:87
+#: sample/sections/extensions/users.php:95
+#: sample/sections/media-uploads/media.php:26
+#: sample/sections/media-uploads/media.php:34
+#: sample/sections/media-uploads/media.php:44
+#: sample/sections/media-uploads/media.php:60
+#: sample/sections/media-uploads/media.php:69
+#: sample/sections/media-uploads/media.php:99
+msgid "Upload any media using the WordPress native uploader"
+msgstr "Sube cualquier archivo media utilizando el cargador nativo de WordPress"
+
+#: sample/sections/editors/wordpress-editor.php:23
+msgid "Use any of the features of WordPress editor inside your panel!"
+msgstr "Usa cualquiera de las opciones del editor de WordPress dentro de tu panel!"
+
+#: sample/sections/select-fields/select.php:224
+msgid "User Role Select Option"
+msgstr "Opción de selección de rol de usuario"
+
+#: redux-core/inc/fields/link_color/class-redux-link-color.php:109
+msgid "Visited"
+msgstr "Visitado"
+
+#: redux-core/inc/extensions/import_export/import_export/class-redux-import-export.php:112
+msgid "WARNING! This will overwrite all existing option values, please proceed with caution!"
+msgstr "¡ATENCIÓN! Esto sobrescribirá todos los valores de las opciones existentes, ¡proceda con precaución!"
+
+#: redux-core/templates/panel/header.tpl.php:20
+msgid "WP_DEBUG is enabled"
+msgstr "WP_DEBUG está habilitado"
+
+#: redux-core/inc/classes/class-redux-panel.php:86
+msgid "Warning- This options panel will not work properly without javascript!"
+msgstr "¡Atención! ¡Este panel de opciones no funcionará correctamente sin JavaScript!"
+
+#: redux-core/inc/welcome/class-redux-welcome.php:113
+msgid "What is Redux Framework?"
+msgstr "¿Qué es Redux Framework?"
+
+#: sample/sections/presentation-fields/section.php:23
+msgid "With the \"section\" field you can create indented option sections."
+msgstr "Con el campo \"sección\", puedes crear secciones de opciones con sangría."
+
+#: sample/sections/editors/wordpress-editor.php:14
+msgid "WordPress Editor"
+msgstr "Editor de WordPress"
+
+#: redux-core/templates/panel/footer.tpl.php:67
+#: redux-core/templates/panel/header-stickybar.tpl.php:31
+msgid "Working..."
+msgstr "Procesando..."
+
+#: sample/sections/select-fields/select.php:89
+msgid "You can easily add a variety of data from WordPress."
+msgstr "Puedes agregar fácilmente una variedad de datos de WordPress."
+
+#: sample/sections/design-fields/spacing.php:37
+#: sample/sections/design-fields/spacing.php:63
+msgid "You can enable or disable any piece of this field. Top, Right, Bottom, Left, or Units."
+msgstr "Puede activar o desactivar cualquier pieza de este campo . Superior, derecha, inferior, izquierda o unidades."
+
+#: sample/sections/design-fields/dimensions.php:26
+#: sample/sections/design-fields/dimensions.php:39
+msgid "You can enable or disable any piece of this field. Width, Height, or Units."
+msgstr "Puede activar o desactivar cualquier parte de este campo. Anchura, altura o unidades."
+
+#: redux-core/inc/validation/no_special_chars/class-redux-validation-no-special-chars.php:27
+msgid "You must not enter any special characters in this field, all special characters have been removed."
+msgstr "No debe introducir ningún carácter especial en este campo, se han eliminado todos los caracteres especiales."
+
+#: redux-core/inc/validation/comma_numeric/class-redux-validation-comma-numeric.php:34
+msgid "You must provide a comma separated list of numerical values for this option."
+msgstr "Debe proporcionar una lista de valores numéricos separados por comas para esta opción."
+
+#: redux-core/inc/validation/numeric/class-redux-validation-numeric.php:27
+msgid "You must provide a numerical value for this option."
+msgstr "Debe proporcionar un valor numérico para esta opción."
+
+#: redux-core/inc/validation/url/class-redux-validation-url.php:27
+msgid "You must provide a valid URL for this option."
+msgstr "Debe proporcionar una dirección URL válida para esta opción."
+
+#: redux-core/inc/validation/email/class-redux-validation-email.php:27
+msgid "You must provide a valid email for this option."
+msgstr "Debe proporcionar un correo electrónico válido para esta opción."
+
+#: redux-core/inc/classes/class-redux-ajax-save.php:114
+msgid "Your panel has no fields. Nothing to save."
+msgstr "Tu panel no tiene campos. Nada que guardar."
+
+#: redux-core/templates/panel/header.tpl.php:31
+msgid "and"
+msgstr "y"
+
+#: redux-core/inc/classes/class-redux-page-render.php:188
+msgid "clicking"
+msgstr "pulsando"
+
+#: redux-core/inc/classes/class-redux-panel.php:270
+#: redux-core/inc/extensions/metaboxes/class-redux-extension-metaboxes.php:1221
+#: redux-core/inc/extensions/metaboxes/class-redux-extension-metaboxes.php:1527
+msgid "error(s) were found!"
+msgstr "¡Se encontraron errores!"
+
+#: redux-core/inc/classes/class-redux-page-render.php:186
+msgid "moving the mouse over"
+msgstr "mover el ratón por encima"
+
+#: redux-core/inc/classes/class-redux-panel.php:285
+#: redux-core/inc/extensions/metaboxes/class-redux-extension-metaboxes.php:1225
+msgid "warning(s) were found!"
+msgstr "¿Se encontraron advertencias!"
+
+#: redux-core/templates/panel/header.tpl.php:26
+msgid "you are working in a localhost environment"
+msgstr "estás trabajando en un ambiente de host local"

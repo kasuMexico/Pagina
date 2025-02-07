@@ -1,0 +1,17 @@
+.col-md-6{
+  padding: 1em;
+  text-align:center;
+}
+
+.Grafica{
+  width: 100%;
+  height: 100%;
+  margin:0px auto;
+}
+
+ @media only screen and (max-width: 700px) {
+   .Grafica{
+     width: 100%;
+     margin:0px auto;
+   }
+ }

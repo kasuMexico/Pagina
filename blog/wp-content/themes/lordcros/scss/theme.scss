@@ -1,0 +1,19 @@
+@charset "UTF-8";
+
+/*****************************************************************/
+/*
+/*** Theme Scss file Compile
+/*
+/*****************************************************************/
+
+@import "variable_theme";
+@import "theme/global";
+@import "theme/animation";
+@import "theme/owl.carousel";
+@import "theme/header";
+@import "theme/page";
+@import "theme/blog";
+@import "theme/shortcodes";
+@import "theme/sidebar";
+@import "theme/footer";
+@import "theme/responsive";

@@ -1,0 +1,38 @@
+.Img_Prod
+img{width:90%;border-radius:10px}
+.pricing-header
+button{background-color:white;border:white}
+.ImgFb{width:50px}
+.Formulario{display:none}
+modal-content{height:auto;padding:1em}
+.imgBlog{border-radius:10px}
+.TexBlog{text-align:justify}
+/*Realiza los ajustes en la pantalla para los productos*/
+div.descri {padding: 20px;display: show;}
+div.backg {height: 100vh;}
+@media only screen and (max-width: 600px) {div.descri {display: none;}div.backg {height: 100%;}}
+/*Estilos de la ventana que muestra el fondo de pantalla inicial y los productos*/
+.welcome-area{
+  overflow:hidden;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background-image:url(../images/patrocinios_en_mexico.jpeg);
+  background-repeat:no-repeat;
+  background-position:center center;
+  background-size:cover;
+  height:100vh;
+  padding-top: 15vh;
+}
+
+.LlamadaKASU{
+  padding: 1vh;
+}
+@media only screen and (max-width: 600px) {
+  .LlamadaKASU{
+    padding: 3vh;
+    position: relative;
+    bottom: 5vh;
+  }
+    }

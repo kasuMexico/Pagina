@@ -1,0 +1,60 @@
+.facebook{
+  background-color: #3b5998;
+  color: white;   width: 70%;
+  padding: 12px;
+  border: none;
+  border-radius: 4px;
+  margin: 5px 0;
+  opacity: 0.85;
+  display: inline-block;
+  font-size: 17px;
+  line-height: 20px;
+  text-decoration: none; /* remove underline from anchors */
+}
+.ErrorLogin{
+    color:red;
+}
+.imagenes img{
+    border-radius: 50%;
+}
+
+.formulario{
+    text-align: center;
+}
+
+.Input-Texto{
+    width: 90%;
+    margin: 6px;
+    background-color:#fff;
+    padding:10px;
+    border-radius: 4px;
+}
+.radio-for-checkboxes{
+    width: 2px;  
+    height: 2px;
+}
+.BtnCuestionario{
+    text-align: justify;
+}
+
+.BtnEnviar{
+    text-align: center;  
+}
+
+.form-group input, .enlaceboton{
+  background-color: #00b347;
+  color: white;   width: 50%;
+  padding: 12px;
+  border: none;
+  border-radius: 4px;
+  margin: 5px 0;
+  opacity: 0.85;
+  display: inline-block;
+  font-size: 17px;
+  line-height: 20px;
+  text-decoration: none; /* remove underline from anchors */
+}
+
+.imagenEmpresa{
+    width: 100px;
+}

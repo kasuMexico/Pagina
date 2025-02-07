@@ -1,0 +1,104 @@
+.center {
+    margin: auto;
+    width: 30%;
+    border: 3px;
+    padding: 20px;
+}
+
+input[type=date] {
+    width: 100%;
+    padding: 8px 20px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.add {
+    width: 100%;
+    background-color: #33cc33;
+    color: white;
+    padding: 14px 20px;
+    margin: 8px 0;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    font-family: "Raleway", sans-serif;
+}
+    th,
+    td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    a.mod {
+        background-color: #33cc33;
+        color: white;
+        padding: 6px 12px;
+        margin: 8px 0;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        font-family: "Raleway", sans-serif;
+    }
+
+    a.eli {
+        background-color: #e60000;
+        color: white;
+        padding: 6px 12px;
+        margin: 8px 0;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        font-family: "Raleway", sans-serif;
+    }
+
+@media only screen and (max-width: 800px) {
+    .center {
+        margin: auto;
+        width: auto;
+        border: 3px;
+        padding: 20px;
+    }
+
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th,
+    td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    a.mod {
+        background-color: #33cc33;
+        color: white;
+        padding: 6px 12px;
+        margin: 8px 0;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 18px;
+        font-family: "Raleway", sans-serif;
+    }
+
+    a.eli {
+        background-color: #e60000;
+        color: white;
+        padding: 6px 12px;
+        margin: 8px 0;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 18px;
+        font-family: "Raleway", sans-serif;
+    }
+}

@@ -1,0 +1,359 @@
+/*****************************************************************/
+/*
+/*** Sidebar Scss file Compile
+/*
+/*****************************************************************/
+.sidebar-container {
+	margin-bottom: 0px;
+}
+
+.sidebar-widget {
+	margin-bottom: 40px;
+
+	&:last-child { margin-bottom: 0; }
+
+	.widget-title, .widgettitle {
+		font-size: 18px;
+		font-weight: bold;
+		line-height: 26px;
+		margin-bottom: 18px;
+	}
+
+	a {
+		text-decoration: none;
+		color: $body_font_color;
+		transition: all .25s ease-in-out;
+
+		&:hover { color: $site_primary_color; }
+	}
+}
+
+.sidebar-widget, .footer-widget:not(.widget_nav_menu) {
+	ul {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		margin-top: -5px;
+
+		li {
+			position: relative;
+			font-size: 15px;
+			font-weight: normal;
+			line-height: 35px;
+			padding-left: 20px;
+
+			a {
+				text-decoration: none;
+				color: $body_font_color;
+				transition: all .25s ease-in-out;
+			}
+
+			&:before {
+				content: "\f054";
+				display: block;
+				position: absolute;
+				left: 0;
+				font-family: "Font Awesome 5 Free";
+				font-weight: 900;
+				font-size: 10px;
+				height: 10px;
+				line-height: 10px;
+				width: 10px;
+				margin-top: 12px;
+				transition: all .25s ease-in-out;
+			}
+
+			&:hover { 
+				> a, &:before { color: $site_primary_color !important;  }
+			}
+		}
+	}
+}
+
+.mobile-sidebar-toggle-btn {
+	display: none;
+	position: fixed;
+	left: -5px; top: 50%;
+	margin-top: -25px;
+	width: 50px; height: 50px;
+	cursor: pointer;
+	z-index: 10;
+
+	.btn-inner {
+		position: absolute;
+		top: 0; left: 0;
+		width: 100%; height: 100%;
+		font-size: 20px;
+		line-height: 50px;
+		color: #fff;
+		background-color: $site_primary_color;
+		text-align: center;
+		box-shadow: -2px 3px 8px 0px rgba(0, 0, 0, 0.2);
+		border-top-right-radius: 50%;
+		border-bottom-right-radius: 50%;
+		z-index: 10;
+	}
+
+	.dot-wave {
+		position: absolute;
+		width: 80px; height: 80px;
+		top: -15px; left: -15px;
+		opacity: 0;
+		background-color: $site_primary_color;
+		border-radius: 50%;
+		animation: wlb-flash 2s infinite ease-out;
+	}
+}
+
+.mobile-sidebar-header {
+	display: none;
+	align-items: center;
+	justify-content: space-between;
+	border-bottom: 1px solid #e6e6e6;
+	margin-bottom: 20px;
+	padding-bottom: 20px;
+
+	.title {
+		font-size: 20px;
+		font-weight: 600;
+		line-height: 28px;
+		text-transform: uppercase;
+		margin: 0;
+	}
+
+	.close-btn {
+		position: relative;
+		font-size: 14px;
+		line-height: 20px;
+		font-weight: 500;
+		text-transform: uppercase;
+		color: #333;
+		padding-right: 20px;
+		letter-spacing: .3px;
+		text-decoration: none;
+
+		&:before, &:after {
+			content: '';
+			display: block;
+			position: absolute;
+			right: 0px;
+			top: 8px;
+			width: 15px;
+			height: 2px;
+			background-color: #333;
+		}
+
+		&:before { transform: rotate(-45deg); }
+
+		&:after { transform: rotate(45deg); }
+
+		&:hover { opacity: .8; }
+	}
+}
+
+// Room Widget
+.lordcros-rooms-widget-content {
+	> .room {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		margin-bottom: 25px;
+
+		.room-thumbs {
+			flex: 0 0 auto;
+
+			a {
+				position: relative;
+				display: block;
+				border-radius: 2px;
+				max-width: 130px;
+				overflow: hidden;
+				margin-right: 25px;
+
+				img {
+					width: 100%;
+					height: auto;
+				}
+
+				&:after {
+					content: '';
+					display: block;
+					position: absolute;
+					left: 0; right: 0;
+					top: 0; bottom: 0;
+					background-color: $site_secondary_color;
+					opacity: 0;
+					transition: all .25s ease-in-out;
+				}
+
+				&:hover:after { opacity: .3; }
+			}
+		}
+
+		.room-info {
+			flex: 1 1 auto;
+			display: inline-flex;
+			flex-direction: column;
+			align-items: flex-start;
+
+			.room-title {
+				margin-bottom: 3px;
+
+				a {
+					display: block;
+					font-family: $h3_font_family;
+					font-size: 16px;
+					line-height: 26px;
+					font-weight: 600;
+					color: $h3_font_color;
+					text-decoration: none;
+					text-transform: capitalize;
+
+					&:hover { color: $site_primary_color; }
+				}
+			}
+
+			.price-section {
+				font-size: 15px;
+				line-height: 24px;
+				font-weight: normal;
+				margin-bottom: 10px;
+			}
+
+			.room-book-btn {
+				display: inline-flex;
+				align-items: center;
+				font-size: 15px;
+				line-height: 24px;
+				color: $h3_font_color;
+				font-weight: normal;
+				text-decoration: none;
+
+				i {
+					font-size: 11px;
+					margin-left: 10px;
+					transition: all .25s ease;
+				}
+
+				&:hover {
+					opacity: .7;
+
+					i { transform: translateX(7px); }
+				}
+			}
+		}
+
+		&:last-child { margin-bottom: 0; }
+	}
+}
+
+// Search Widget
+.widget_search {
+	.searchform { position: relative; }
+
+	.search-field {
+		font-size: 15px;
+		line-height: 24px;
+		border: 1px solid #e4e4e4;
+		border-radius: 2px;
+		padding: 12px 20px;
+		outline: none;
+		box-shadow: none;
+		padding-right: 100px;
+		width: 100%;
+		transition: all .25s ease-in-out;
+
+		&:focus { border-color: #d2d2d2; }
+	}
+
+	#searchsubmit {
+		position: absolute;
+		font-size: 20px;
+		color: #fff;
+		padding: 0.5em .7em;
+		right: 3px; top: 3px;
+		bottom: 3px;
+		border: none;
+		outline: none;
+		background-color: $site_primary_color;
+		transition: all .25s;
+
+		&:hover {
+			opacity: .8;
+		}
+	}
+}
+
+// Recent Post Widget
+.widget_lordcros-recent-posts-widget {
+	.lordcros-recent-posts-list {
+		li {
+			display: flex;
+			align-items: flex-start;
+			justify-content: space-between;
+			padding: 0;
+			margin-bottom: 25px;
+
+			.recent-posts-thumbnail {
+				flex: 0 0 auto;
+				display: block;
+				position: relative;
+				border-radius: 2px;
+				max-width: 130px;
+				overflow: hidden;
+				margin-right: 25px;
+
+				img {
+					width: 100%;
+					height: auto;
+				}
+
+				&:after {
+					content: '';
+					display: block;
+					position: absolute;
+					left: 0; right: 0;
+					top: 0; bottom: 0;
+					background-color: $site_secondary_color;
+					opacity: 0;
+					transition: all 0.25s ease-in-out;
+				}
+
+				&:hover:after { opacity: .3; }
+			}
+
+			.recent-posts-info {
+				flex: 1 1 auto;
+				display: inline-flex;
+				flex-direction: column;
+				align-items: flex-start;
+
+				.post-title {
+					margin-bottom: 5px;
+
+					a {
+						display: block;
+						font-family: $h3_font_family;
+						font-size: 16px;
+						line-height: 26px;
+						font-weight: 600;
+						color: $h3_font_color;
+						text-decoration: none;
+						text-transform: capitalize;
+
+						&:hover { color: $site_primary_color; }
+					}
+				}
+
+				.recent-posts-time {
+					font-size: 15px;
+					line-height: 24px;
+				}
+			}
+
+			&:last-child { margin-bottom: 0; }
+
+			&:before { content: none; }
+		}
+	}
+}

@@ -1,17 +1,28 @@
-<?PHP
-//indicar que se inicia una sesion
-	session_start();
-    //Vaciamos las variables y redireccionamos si el pago es a credito
-        unset($_SESSION["Ventana"]);
-        unset($_SESSION["Producto"]);
-        unset($_SESSION["nombre"]);
-        unset($_SESSION["Cnc"]);
-        unset($_SESSION["Costo"]);
-        unset($_SESSION["Tasa"]);
-        unset($_SESSION["Mail"]);
-        unset($_SESSION["Tel"]);
-        unset($_SESSION["Dir"]);
-        unset($_SESSION["CURP"]);
-    //Redireccionamos a la ventana de registro
-        header('Location: https://kasu.com.mx/login/registro.php');
+<?php
+// Inicia la sesión
+session_start();
+
+// Elimina todas las variables de sesión
+$_SESSION = array();
+
+// Si se usan cookies para la sesión, se borra la cookie asociada.
+if (ini_get("session.use_cookies")) {
+    $params = session_get_cookie_params();
+    setcookie(
+        session_name(),
+        '',
+        time() - 42000,
+        $params["path"],
+        $params["domain"],
+        $params["secure"],
+        $params["httponly"]
+    );
+}
+
+// Destruye la sesión
+session_destroy();
+
+// Redirecciona al usuario a la página de registro (o login)
+header('Location: https://kasu.com.mx/login/registro.php');
+exit;
 ?>

@@ -45,7 +45,7 @@
 <body>
     <!-- Chat de Facebook -->
     <?
-    require_once 'hmtl/CodeFb.php';
+    require_once 'html/CodeFb.php';
     ?>
     <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MCR6T6W"
@@ -61,7 +61,7 @@
         </div>
     </div>
     <!-- ***** Header Area Start ***** -->
-    <? require_once 'hmtl/MenuPrincipal.php';?>
+    <? require_once 'html/MenuPrincipal.php';?>
     <br><br><br><br><br>
     <section class="section" id="testimonials" display= "none">
         <div class="container" display= "none">
@@ -119,7 +119,7 @@
     </section>
     <!-- ***** Footer Start ***** -->
     <footer>
-      <? require_once'hmtl/footer.php';?>
+      <? require_once'html/footer.php';?>
     </footer>
     <!-- jQuery -->
     <script src="assets/js/jquery-2.1.0.min.js"></script>

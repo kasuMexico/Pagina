@@ -66,15 +66,15 @@ if ($_GET['Ml'] == 4) {
 <body>
     <!-- Chat de Facebook -->
     <?
-    require_once 'hmtl/CodeFb.php';
+    require_once 'html/CodeFb.php';
     ?>
     <!-- Google Tag Manager (noscript)-->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MCR6T6W" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
     <!-- inicio ventanas emergentes de la letra pequeña de el contrato -->
-    <? require_once 'hmtl/Ventas_emer_Index.php'; ?>
+    <? require_once 'html/Ventas_emer_Index.php'; ?>
     <!-- fin ventanas emergentes de la letra pequeña de el contrato -->
-    <? require_once 'hmtl/MenuPrincipal.php'; ?>
+    <? require_once 'html/MenuPrincipal.php'; ?>
     <!-- Portada de pagina -->
     <!-- ***** Inicio Area de Welcome de Pagina con busqueda de cliente *****-->
     <div class="main-banner wow fadeIn" id="top" data-wow-duration="1s" data-wow-delay="0.5s">
@@ -116,7 +116,7 @@ if ($_GET['Ml'] == 4) {
         </div>
     </div>
     <!-- ***** Inicio Seccion de productos ***** -->
-    <? require_once 'hmtl/Section_Productos.php'; ?>
+    <? require_once 'html/Section_Productos.php'; ?>
     <!-- ***** Inicio Seccion de Clientes ***** -->
     <section class="section colored padding-top-70" id="Clientes">
         <div class="container">
@@ -281,7 +281,7 @@ if ($_GET['Ml'] == 4) {
     </section>
     <!-- Contacto -->
     <footer>
-        <? require_once 'hmtl/footer.php'; ?>
+        <? require_once 'html/footer.php'; ?>
     </footer>
     <script type="text/javascript" src="eia/javascript/finger.js"></script>
     <script src="assets/js/jquery-2.1.0.min.js"></script>

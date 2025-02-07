@@ -17,7 +17,7 @@ Este proyecto representa la plataforma en línea de **KASU**, proporcionando inf
 
 ├── assets/ # Archivos estáticos (CSS, JS, imágenes) 
 ├── eia/ # Librerías y archivos PHP auxiliares 
-├── hmtl/ # (Posible error, debería ser html/) Archivos de la interfaz HTML 
+├── html/ # (Posible error, debería ser html/) Archivos de la interfaz HTML 
 ├── login/ # Módulo de autenticación de usuarios 
 ├── opiniones/ # Gestión de testimonios y comentarios 
 ├── patro/ # (Pendiente revisar su propósito) 

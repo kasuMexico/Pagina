@@ -32,14 +32,14 @@
 <body>
 		<!-- Chat de Facebook -->
 		<?
-		require_once 'hmtl/CodeFb.php';
+		require_once 'html/CodeFb.php';
 		?>
 		<!-- Google Tag Manager (noscript) -->
 		<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MCR6T6W"
 		height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 		<!-- End Google Tag Manager (noscript) -->
     <!-- ***** Header Area Start ***** -->
-		<? require_once 'hmtl/MenuPrincipal.php';?>
+		<? require_once 'html/MenuPrincipal.php';?>
     <div class="welcome-area" id="welcome">
         <!-- ***** Header Text Start ***** -->
         <div class="header-text">
@@ -315,7 +315,7 @@
     <!-- ***** Contact Us End ***** -->
     <!-- ***** Footer Start ***** -->
 		<footer>
-			<? require_once 'hmtl/footer.php';?>
+			<? require_once 'html/footer.php';?>
 		</footer>
     <!-- jQuery -->
    <script src="assets/js/jquery-2.1.0.min.js"></script>

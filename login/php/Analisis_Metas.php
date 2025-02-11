@@ -1,135 +1,148 @@
-<?
-/*************************************** Analisis de metas *****************************************************/
-    //Se lanza el primer dia de el mes
-    $Fec0 = date("Y-m-d",strtotime('first day of this month'));
-    //se obtienen las metas de ventas de este usuario
-    $IdAsig = Basicas::Buscar1Fechas($mysqli,"Id","Asignacion","Usuario",$_SESSION["Vendedor"],"Fecha",$Fec0);
-    $IdAsig1 = Basicas::MaxDat($mysqli,"Usuario","Asignacion","Id",$IdAsig);
-    //Buscamos los datos de las asignaciones
-    $MetaVta = Basicas::BuscarCampos($mysqli,"MVtas","Asignacion","Id",$IdAsig);
-    $MetaCob = Basicas::BuscarCampos($mysqli,"MCob","Asignacion","Id",$IdAsig);
-    $Normali = Basicas::BuscarCampos($mysqli,"Normalidad","Asignacion","Id",$IdAsig);
-    //Se valida el Usuario por permiso
-    //Crear consulta
-    $sqal = "SELECT * FROM Empleados WHERE Nombre != 'Vacante'";
-    //Realiza consulta
-    $r4e9s = $mysqli->query($sqal);
-    //Si existe el registro se asocia en un fetch_assoc
-    foreach ($r4e9s as $Resd5){
-        //Se realiza la operacion con los niveles
-        if($Resd5['Nivel'] >= 5){
-            //SE suman las ventas de el usuario del mes
-            $VtasHoy = Basicas::Sumar1Fechas($mysqli,"CostoVenta","Venta","Usuario",$Resd5["IdUsuario"],"FechaRegistro",$Fec0);
-            //SE suman los pagos de el usuario del mes
-            $CobHoy = Basicas::Sumar1Fechas($mysqli,"Cantidad","Pagos","Usuario",$Resd5["IdUsuario"],"FechaRegistro",$Fec0);
-        }elseif($Resd5['Nivel'] <= 4){
-            //Buscamos el IdUsuario de los asignados
-            $s3ql1 = "SELECT * FROM Empleados WHERE Equipo = '".$Resd5['Id']."'";
-            //Realiza consulta
-            $r8e9s1 = $mysqli->query($s3ql1);
-            //Si existe el registro se asocia en un fetch_assoc
-            foreach ($r8e9s1 as $Re7g1){
-                //SE suman las ventas de el usuario del mes
-                $VtasHoy = $VtasHoy+Basicas::Sumar1Fechas($mysqli,"CostoVenta","Venta","Usuario",$Re7g1["IdUsuario"],"FechaRegistro",$Fec0);
-                //SE suman los pagos de el usuario del mes
-                $CobHoy = $CobHoy+Basicas::Sumar1Fechas($mysqli,"Cantidad","Pagos","Usuario",$Re7g1["IdUsuario"],"FechaRegistro",$Fec0);
+<?php
+/**************************************************************************************************
+ * BLOQUE: ANÁLISIS DE METAS Y COMISIONES
+ * Este script calcula las ventas acumuladas, pagos, sueldos y comisiones del mes en curso,
+ * utilizando funciones definidas en la clase Basicas (y Financieras, en su caso).
+ **************************************************************************************************/
+
+// Se asume que la sesión ya se inició y que se cargaron las librerías necesarias, por ejemplo:
+// session_start();
+// require_once '../../eia/librerias.php';
+// date_default_timezone_set('America/Mexico_City');
+
+// Definir la fecha base: primer día del mes (formato "Y-m-d")
+$Fec0 = date("Y-m-d", strtotime('first day of this month'));
+//echo "DEBUG: Fecha base (primer día del mes): $Fec0<br>";
+
+// Inicializar acumuladores
+$VtasHoy    = 0.0;  // Ventas acumuladas del mes
+$CobHoy     = 0.0;  // Pagos acumulados del mes
+$SUeldos    = 0.0;  // Sueldos por pagar
+$comisiones = 0.0;  // Total de comisiones acumuladas
+$ComGenHoy  = 0.0;  // Comisiones generadas hoy (por contacto)
+
+// Obtener las metas asignadas al usuario (vendedor actual)
+// Se utiliza la función Buscar1Fechas para obtener el ID de asignación para la fecha base
+$IdAsig  = $basicas->Buscar1Fechas($mysqli, "Id", "Asignacion", "Usuario", $_SESSION["Vendedor"], "Fecha", $Fec0);
+if (empty($IdAsig)) {
+    //echo "DEBUG: No se encontró asignación para el usuario " . htmlspecialchars($_SESSION["Vendedor"]) . " en la fecha $Fec0.<br>";
+} else {
+    //echo "DEBUG: ID de asignación obtenido: $IdAsig<br>";
+}
+
+$MetaVta = $basicas->BuscarCampos($mysqli, "MVtas", "Asignacion", "Id", $IdAsig);
+$MetaCob = $basicas->BuscarCampos($mysqli, "MCob", "Asignacion", "Id", $IdAsig);
+$Normali = $basicas->BuscarCampos($mysqli, "Normalidad", "Asignacion", "Id", $IdAsig);
+
+//echo "DEBUG: Meta de ventas: $MetaVta, Meta de cobranza: $MetaCob, Normalidad: $Normali<br>";
+
+// CONSULTA: Obtener todos los empleados activos (excluyendo aquellos cuyo Nombre es 'Vacante')
+$sqlEmpl = "SELECT * FROM Empleados WHERE Nombre != 'Vacante'";
+$resultEmpl = $mysqli->query($sqlEmpl);
+
+if ($resultEmpl === false) {
+    die("ERROR en consulta de empleados: " . $mysqli->error);
+}
+
+// Recorrer cada empleado para acumular ventas, pagos, sueldos y comisiones
+while ($empleado = $resultEmpl->fetch_assoc()) {
+    $idEmpleado = $empleado["IdUsuario"];
+    $nivelEmp = (int)$empleado['Nivel'];
+
+    //echo "DEBUG: Procesando empleado $idEmpleado (Nivel $nivelEmp)<br>";
+
+    // Si el empleado es de Nivel ≥ 5, se suman ventas y pagos directamente
+    if ($nivelEmp >= 5) {
+        $ventas = (float)$basicas->Sumar1Fechas($mysqli, "CostoVenta", "Venta", "Usuario", $idEmpleado, "FechaRegistro", $Fec0);
+        $pagos  = (float)$basicas->Sumar1Fechas($mysqli, "Cantidad", "Pagos", "Usuario", $idEmpleado, "FechaRegistro", $Fec0);
+        $VtasHoy += $ventas;
+        $CobHoy  += $pagos;
+        //echo "DEBUG: Empleado $idEmpleado (Nivel>=5): Ventas = $ventas, Pagos = $pagos<br>";
+    }
+    // Si el empleado es de Nivel ≤ 4, se suman ventas y pagos de los miembros de su equipo
+    elseif ($nivelEmp <= 4) {
+        $equipoId = $mysqli->real_escape_string($empleado['Id']);
+        $sqlEquipo = "SELECT * FROM Empleados WHERE Equipo = '$equipoId'";
+        $resultEquipo = $mysqli->query($sqlEquipo);
+        if ($resultEquipo) {
+            while ($miembro = $resultEquipo->fetch_assoc()) {
+                $ventas = (float)$basicas->Sumar1Fechas($mysqli, "CostoVenta", "Venta", "Usuario", $miembro["IdUsuario"], "FechaRegistro", $Fec0);
+                $pagos  = (float)$basicas->Sumar1Fechas($mysqli, "Cantidad", "Pagos", "Usuario", $miembro["IdUsuario"], "FechaRegistro", $Fec0);
+                $VtasHoy += $ventas;
+                $CobHoy  += $pagos;
+                //echo "DEBUG: Miembro de equipo {$miembro['IdUsuario']} (Nivel<=4): Ventas = $ventas, Pagos = $pagos<br>";
             }
         }
-        //SUeldos por pagar
-        if($Resd5['Nivel'] >= 7){
-          $Sueldo = 0;
-        }elseif($Resd5['Nivel'] <= 6){
-          $Sueldo = 6000;
-        }elseif($Resd5['Nivel'] <= 5){
-          $Sueldo = 6000;
-        }elseif($Resd5['Nivel'] <= 4){
-          $Sueldo = 8000;
-        }elseif($Resd5['Nivel'] <= 3){
-          $Sueldo = 10000;
-        }elseif($Resd5['Nivel'] <= 2){
-          $Sueldo = 15000;
-        }elseif($Resd5['Nivel'] <= 1){
-          $Sueldo = 20000;
-        }
-        //Suma de sueldos por pagar
-        $SUeldos = $SUeldos+$Sueldo;
-        //COmisiones por pagar
-        //Se restan los pagos de las comisiones a las comisiones generadas
-        $sj1 = Basicas::Sumar1cond($mysqli,"ComVtas","Comisiones","IdVendedor",$Resd5['IdUsuario']);
-        $sj2 = Basicas::Sumar1cond($mysqli,"ComCob","Comisiones","IdVendedor",$Resd5['IdUsuario']);
-        $tj = Basicas::Sumar1cond($mysqli,"Cantidad","Comisiones_pagos","IdVendedor",$Resd5['IdUsuario']);
-        //Se restan los valores
-        $sj = $sj1+$sj2;
-        $Saldo = $sj-$tj;
-        if($Saldo <= 0){
-          $Saldo = 0;
-        }
-        //General de comisiones
-        $comisiones = $comisiones+$Saldo;
     }
-    //Sumamos 15 dias al primero de mes
-    $Quincena = strtotime($Fec0.'+ 15 days');
-    $hoy = strtotime(date("Y-m-d"));
-    //Analisis sueldos por quincena
-    if($hoy > $Quincena){$SUeldos = $SUeldos/2;}
-    //ANalisis de ventas
-    //Sacamos el porcentaje de ventas
-    $AvVtas = $MetaVta/$VtasHoy;
-    //aterrizamos a cero si no da valor
-    if($VtasHoy <= 0){ $AvVtas = 0;}
-    //Sacamos el porcentaje de pagos
-    $AvCob = $CobHoy/$MetaCob;
-    $AvCob = $AvCob*100;
-    //aterrizamos a cero si no da valor
-    if($AvCob <= 0){ $AvCob = 0;}
-    //Sacamos la normalidad de el usuario
-    $spv = Basicas::ColorPor($MetaCob,$CobHoy);
-    $bxo = Basicas::ColorPor($MetaVta,$VtasHoy);
-    //Reasignamos el avance de las ventas si el usuario es vendedor externo
-    if($Resd5['Nivel'] == 7){
-      $AvCob = $AvVtas;
+
+    // Determinar el sueldo asignado según el Nivel del empleado
+    if ($nivelEmp >= 7) {
+        $Sueldo = 0;
+    } elseif ($nivelEmp <= 6) {
+        $Sueldo = 6000;
+    } elseif ($nivelEmp <= 5) {
+        $Sueldo = 6000;
+    } elseif ($nivelEmp <= 4) {
+        $Sueldo = 8000;
+    } elseif ($nivelEmp <= 3) {
+        $Sueldo = 10000;
+    } elseif ($nivelEmp <= 2) {
+        $Sueldo = 15000;
+    } elseif ($nivelEmp <= 1) {
+        $Sueldo = 20000;
+    } else {
+        $Sueldo = 0;
     }
-/************************************* seccion de comiisones por contacto ******************************************/
-    $Niv =  Basicas::BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$_SESSION["Vendedor"]);
-    //Buscamos la comision de el usuario
-    $PorCom = Basicas::BuscarCampos($mysqli,"N".$Niv,"Comision","Id",2);
-    //Reducimos el porcentaje a centecimas
-    $as = $PorCom/100;
-    //aterrizamos la fecha de ayer
-    $Ayer = date("Y-m-d",strtotime(date("Y-m-d").'-1 day'));
-    //Buscamos mi finger print
-    $IdContacto = Basicas::BuscarCampos($mysqli,"IdContacto","Empleados","IdUsuario",$_SESSION["Vendedor"]);
-    //Buscamos el fingerprint de el usuario
-    $IdFing = Basicas::Max2Dat($mysqli,"Id","Eventos","Evento","Ingreso","Contacto",$IdContacto);
-    //Obtenemos el fingerprint
-    $Fingerprint = Basicas::BuscarCampos($mysqli,"IdFInger","Eventos","Id",$IdFing);
-    //Crear consulta
-    $sqal2 = "SELECT * FROM Eventos WHERE Evento = 'Tarjeta' AND IdFInger != '".$Fingerprint."' AND Usuario = '".$_SESSION["Vendedor"]."' AND FechaRegistro >= $Fec0";
-    //Realiza consulta
-    $r4e9s2 = $mysqli->query($sqal2);
-    //Si existe el registro se asocia en un fetch_assoc
-    foreach ($r4e9s2 as $Resd52){
-      //Obnemos el producto de cada cupon
-      $Prducto = Basicas::Buscar2Campos($mysqli,"Producto","PostSociales","Id",$Resd52["Cupon"],"Tipo","Art");
-      //Buscamos el valor de la comision sobre la venta segun el nivel
-      $ComGen = Basicas::BuscarCampos($mysqli,"comision","Productos","Producto",$Prducto);
-      //Calculamos la comision degun el nivel
-      $Comis = $ComGen*$as;
-      //Selector de pago de comisiones
-      if($Prducto == "Universidad"){
-        //Comisiones por universitario
-        $Comis = $Comis/2500;
-      }elseif($Prducto == "Retiro"){
-        //Comisiones por Retiro
-        $Comis = $Comis/1000;
-      }else{
-        //Comisiones por funerario
-        $Comis = $Comis/100;
-      }
-      //solo cuenta una vez por dia
-      $CatLeid = Basicas::Cuenta1Fec1Cond($mysqli,"Eventos","IdFInger",$Resd52["IdFInger"],"Usuario",$_SESSION["Vendedor"],"FechaRegistro",$Ayer);
-      if($CatLeid == 1){
-        //Sumamos las comisiones para obtener el general
-        $ComGenHoy = $ComGenHoy+$Comis;
-      }
+    $SUeldos += $Sueldo;
+    //echo "DEBUG: Empleado $idEmpleado: Sueldo asignado = $Sueldo<br>";
+
+    // Calcular comisiones:
+    $comVtas = (float)$basicas->Sumar1cond($mysqli, "ComVtas", "Comisiones", "IdVendedor", $idEmpleado);
+    $comCob  = (float)$basicas->Sumar1cond($mysqli, "ComCob", "Comisiones", "IdVendedor", $idEmpleado);
+    $pagosCom = (float)$basicas->Sumar1cond($mysqli, "Cantidad", "Comisiones_pagos", "IdVendedor", $idEmpleado);
+    $totalComision = $comVtas + $comCob;
+    $Saldo = $totalComision - $pagosCom;
+    if ($Saldo < 0) {
+        $Saldo = 0;
     }
+    $comisiones += $Saldo;
+    //echo "DEBUG: Empleado $idEmpleado: Comisiones generadas = $totalComision, Pagos de comisiones = $pagosCom, Saldo = $Saldo<br>";
+}
+
+// Ajustar sueldos: si la fecha actual es posterior al día 15 del mes, se divide el total de sueldos entre 2
+$Quincena = strtotime($Fec0 . ' +15 days');
+$hoyTimestamp = strtotime(date("Y-m-d"));
+if ($hoyTimestamp > $Quincena) {
+    $SUeldos /= 2;
+    //echo "DEBUG: Sueldos ajustados (después del día 15): $SUeldos<br>";
+}
+
+// Cálculo de avances:
+// Porcentaje de ventas: meta de ventas / ventas acumuladas (si hay ventas)
+$AvVtas = ($VtasHoy > 0) ? $MetaVta / $VtasHoy : 0;
+// Porcentaje de cobranza: (pagos acumulados / meta de cobranza) * 100
+$AvCob = ($MetaCob > 0) ? ($CobHoy / $MetaCob) * 100 : 0;
+
+// Obtener colores según el avance (usando la función ColorPor)
+$spv = $basicas->ColorPor($MetaCob, $CobHoy);
+$bxo = $basicas->ColorPor($MetaVta, $VtasHoy);
+
+// Ajuste para vendedores externos (Nivel 7): igualar avance de cobranza al de ventas
+$nivelUsuario = (int)$basicas->BuscarCampos($mysqli, "Nivel", "Empleados", "IdUsuario", $_SESSION["Vendedor"]);
+if ($nivelUsuario === 7) {
+    $AvCob = $AvVtas;
+    //echo "DEBUG: Vendedor externo, ajuste de avance de cobranza: $AvCob<br>";
+}
+
+/*/ Mostrar resultados de depuración finales
+echo "DEBUG: Ventas acumuladas del mes: $VtasHoy<br>";
+echo "DEBUG: Pagos acumulados del mes: $CobHoy<br>";
+echo "DEBUG: Meta de ventas: $MetaVta<br>";
+echo "DEBUG: Meta de cobranza: $MetaCob<br>";
+echo "DEBUG: Avance de ventas: " . round($AvVtas * 100, 2) . "%<br>";
+echo "DEBUG: Avance de cobranza: " . round($AvCob, 2) . "%<br>";
+echo "DEBUG: Total de sueldos por pagar: $SUeldos<br>";
+echo "DEBUG: Total de comisiones acumuladas: $comisiones<br>";
+echo "DEBUG: Comisiones generadas hoy (por contacto): " . number_format($ComGenHoy, 2, '.', ',') . "<br>";
+*/
+?>

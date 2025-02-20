@@ -240,7 +240,7 @@ function guardarRegistroEnBD($datos, $mysqli)
             $_SESSION["Cnc"] = agregarDatosContacto($VendeDor, $gps, 'N/A', 'N/A', 'N/A', $SubProd, $mysqli);
 
             // Generar el legal antes de la venta
-            $firma = Seguridad::Firma($mysqli, $_SESSION["Cnc"], $_SESSION["Costo"]);
+            $firma = $seguridad->Firma($mysqli, $_SESSION["Cnc"], $_SESSION["Costo"]);
             $_SESSION["Venta"] = generarPago($VendeDor, $_SESSION["Cnc"], $Prod, $_SESSION["Costo"], $gps, 1, $firma, 'S/D', 'S/D', $mysqli);
 
             // Agregar el evento y registar el cliente
@@ -384,7 +384,7 @@ function generarPago($VendeDor, $idContacto, $producto, $costo, $gps, $Meses, $f
         "CostoVenta"    => $costo,
         "Idgps"         => $gps,
         "NumeroPagos"   => $mysqli->real_escape_string($Meses),
-        "IdFIrma"       => $mysqli->real_escape_string(Seguridad::Firma($mysqli, $idContacto, $costo)),
+        "IdFIrma"       => $mysqli->real_escape_string($seguridad->Firma($mysqli, $idContacto, $costo)),
         "Status"        => "PREVENTA",
         "Mes"           => date("M"),
         "Cupon"         => $tarjeta,

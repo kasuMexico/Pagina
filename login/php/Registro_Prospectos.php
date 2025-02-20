@@ -395,7 +395,7 @@ if (isset($_POST['FormCotizar'])) {
         header('Location: https://kasu.com.mx?Msg='.$mensaje);
     }else{
         //Registro de el prospecto en la plataforma de prospectos
-        $ArrayRes = Seguridad::peticion_get($_POST['CURP']);
+        $ArrayRes = $seguridad->peticion_get($_POST['CURP']);
         //Validamos que el usuario sea correcto
         if($ArrayRes["Response"] == "correct" AND $ArrayRes["StatusCurp"] != "BD"){
             //Obtenemos el nombre de el cliente

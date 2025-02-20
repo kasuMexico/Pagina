@@ -5,6 +5,7 @@ foreach (glob("../Funciones/*.php") as $archivo) {
 }
 //creamos una variable general para las funciones
 $basicas = new Basicas();
+$seguridad = new Seguridad();
 //Requerir las conexiones
 //require_once '../Conexiones/cn_vtas.php';
 require_once '../Conexiones/cn_pruebas.php';
@@ -72,7 +73,7 @@ if ($data['tipo_peticion'] === 'new_service') { // if tipo_peticion
             }
       }
       //Se busca que el cliente exista
-      $ArrayRes = Seguridad::peticion_get($data['curp_en_uso']);
+      $ArrayRes = $seguridad->peticion_get($data['curp_en_uso']);
       //Validamos que la curp sea real
       if($ArrayRes["Response"] == "correct" AND $ArrayRes["StatusCurp"] != "BD"){ //Validamos la Clave CURP
               //Creamos la Direccion de el Cliente
@@ -136,7 +137,7 @@ if ($data['tipo_peticion'] === 'new_service') { // if tipo_peticion
               $Costo = $basicas->BuscarCampos($mysqli,"Costo","Productos","Producto",$producto);
               $Tasa = $basicas->BuscarCampos($mysqli,"TasaAnual","Productos","Producto",$producto);
               //Se genera la referencia unica del cte MMN
-              $firma = Seguridad::Firma($mysqli,$IdContacto,$Costo);
+              $firma = $seguridad->Firma($mysqli,$IdContacto,$Costo);
               //Registramos el nombre de el cliente
               $nombre = $ArrayRes["Nombre"]." ".$ArrayRes["Paterno"]." ".$ArrayRes["Materno"];
               //Buscamos los datos y realizamos un registro en la venta

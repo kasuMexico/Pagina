@@ -1,28 +1,34 @@
 <?php
-//indicar que se inicia una sesion *JCCM
+// Iniciar la sesión *JCCM
 session_start();
-//Requerimos el archivo de librerias *JCCM
+// Requerir el archivo de librerías *JCCM
 require_once 'eia/librerias.php';
-//Javascript que imprime el mensaje de alerta de recepcion de comentario
+
+// Si se recibe un mensaje en la URL, se muestra un alert en JavaScript
 if (isset($_GET['Msg'])) {
     echo "<script type='text/javascript'>
-						alert('" . $_GET['Msg'] . "');
-				</script>";
+            alert('" . addslashes($_GET['Msg']) . "');
+          </script>";
 }
-if ($_GET['Ml'] == 4) {
+
+// Verificar que el parámetro 'Ml' existe y es igual a 4
+if (isset($_GET['Ml']) && $_GET['Ml'] == 4) {
+    // Se utiliza el parámetro 'dat' para determinar en qué tabla actualizar
     if (empty($_GET['dat'])) {
-        //Se inserta el estado en la base de datos
+        // Actualiza el campo 'Cancelacion' en la tabla 'Contacto'
         $basicas->ActCampo($mysqli, "Contacto", "Cancelacion", 1, $_GET['Id']);
     } else {
-        //Se inserta el estado en la base de datos
+        // Actualiza el campo 'Cancelacion' en la tabla 'prospectos'
         $basicas->ActCampo($pros, "prospectos", "Cancelacion", 1, $_GET['Id']);
     }
-    //Se imprime el alert en la pagina
+    // Imprimir un alert indicando que se ha dado de baja el email
     echo "<script type='text/javascript'>
-				 alert('Se ha dado de baja tu email de nuestro News Letter');
-				 </script>";
+            alert('Se ha dado de baja tu email de nuestro News Letter');
+          </script>";
 }
 ?>
+
+
 <!DOCTYPE html>
 <html lang="es">
 

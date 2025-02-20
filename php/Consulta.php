@@ -65,9 +65,9 @@
 		                    echo "
 		                      <div>
 		                        <p>Pagos Realizados</p>
-		                        <h4>".Financieras::SumarPagos($mysqli,"Cantidad","Pagos","IdVenta",$idvta)."</h4>
+		                        <h4>".$financieras->SumarPagos($mysqli,"Cantidad","Pagos","IdVenta",$idvta)."</h4>
 		                        <p>Pendiente de pagar</p>
-		                        <h4>".Financieras::SaldoCredito($mysqli,$idvta)."</h4>
+		                        <h4>".$financieras->SaldoCredito($mysqli,$idvta)."</h4>
 		                      </div>";
 													//se
 													if($status == 'PREVENTA'){

@@ -113,13 +113,13 @@
 	  $ft++;
 	}elseif($Resd7['Status'] == "COBRANZA"){
 	    //Ventas no concretadas
-	    $pago = Financieras::Pago($mysqli,$Resd7['Id']);
+	    $pago = $financieras->Pago($mysqli,$Resd7['Id']);
 	    //Suma de los pagos
 	    $pagPero = $pagPero+$pago;
 	    //buscamos el id de las polizas
-	    $NP1i = Financieras::PagosPend($mysqli, $Resd7['Id']);
+	    $NP1i = $financieras->PagosPend($mysqli, $Resd7['Id']);
 	    //Pago a dar
-	    $p1go = Financieras::Pago($mysqli, $Resd7['Id']);
+	    $p1go = $financieras->Pago($mysqli, $Resd7['Id']);
 	    //SUmamos los pagos
 	    if($NP1i > 0){
 	      $PaMo = $p1go*$NP1i;
@@ -129,7 +129,7 @@
 	    //Sumamos los valores de la venta
 	    $CarteCol = $CarteCol+$Resd7['CostoVenta'];
 	    //Creamos los pagos para la colocacion
-	    $Sald2re1 = Financieras::SaldoCredito($mysqli, $Resd7['Id']);
+	    $Sald2re1 = $financieras->SaldoCredito($mysqli, $Resd7['Id']);
 	    //Calculos de cartera
 	    $SaldCre1 = $SaldCre1+$Sald2re1;
 	
@@ -141,9 +141,9 @@
 	    //Comparamos la venta
 	    if($fecRegis >= $IniMs){
 	      //buscamos el id de las polizas
-	      $NPOi3 = Financieras::PagosPend($mysqli, $Resd7['Id']);
+	      $NPOi3 = $financieras->PagosPend($mysqli, $Resd7['Id']);
 	      //Pago a dar
-	      $pago3 = Financieras::Pago($mysqli, $Resd7['Id']);
+	      $pago3 = $financieras->Pago($mysqli, $Resd7['Id']);
 	      //SUmamos los pagos
 	      if($NPOi3 > 0){
 	          $PenaMo3 = $pago3*$NPOi3;
@@ -152,9 +152,9 @@
 	      }
 	    }
 	      //buscamos el id de las polizas
-	      $NPOi = Financieras::PagosPend($mysqli, $Resd7['Id']);
+	      $NPOi = $financieras->PagosPend($mysqli, $Resd7['Id']);
 	      //Pago a dar
-	      $pago = Financieras::Pago($mysqli, $Resd7['Id']);
+	      $pago = $financieras->Pago($mysqli, $Resd7['Id']);
 	      //SUmamos los pagos
 	      if($NPOi > 0){
 	        $PenaMo = $pago*$NPOi;

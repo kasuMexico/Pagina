@@ -215,8 +215,8 @@ if (isset($_POST['BtnMetPago'])) {
     $_SESSION["Venta"] = $basicas->InsertCampo($mysqli, "Venta", $Venta);
     
     if ($Meses != 1) {
-        $pago = Financieras::Pago($mysqli, $_SESSION["Venta"]);
-        $mora = Financieras::Mora($pago);
+        $pago = $financieras->Pago($mysqli, $_SESSION["Venta"]);
+        $mora = $financieras->Mora($pago);
         $Pripg = array(
             "vta"      => $_SESSION["Venta"],
             "fec_pri"  => date('Y-m-d'),
@@ -236,7 +236,7 @@ if (isset($_POST['BtnMetPago'])) {
             "FechaRegistro" => date('Y-m-d') . " " . date('H:i:s')
         );
         $basicas->InsertCampo($mysqli, "Pagos", $DatPago);
-        $SubTotl = Financieras::SaldoCredito($mysqli, $_SESSION["Venta"]);
+        $SubTotl = $financieras->SaldoCredito($mysqli, $_SESSION["Venta"]);
         if ($SubTotl <= 0) {
             $basicas->ActCampo($mysqli, "Venta", "Status", "ACTIVACION", $_SESSION["Venta"]);
         }

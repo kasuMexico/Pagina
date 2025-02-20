@@ -79,7 +79,7 @@ require_once '../eia/librerias.php';
                         <td>Pagos Realizados</td>
                         <td>
 													<?PHP
-														$PagsRe = Financieras::SumarPagos($mysqli,"cantidad","Pagos","IdVenta",$_GET['Id']);
+														$PagsRe = $financieras->SumarPagos($mysqli,"cantidad","Pagos","IdVenta",$_GET['Id']);
 														echo money_format('%.2n', $PagsRe);
                         	?>
 												</td>
@@ -88,7 +88,7 @@ require_once '../eia/librerias.php';
                         <td>Moras Pagadas</td>
                         <td>
 													<?PHP
-														$MorRe = Financieras::SumarMora($mysqli,"cantidad","Pagos","IdVenta",$_GET['Id']);
+														$MorRe = $financieras->SumarMora($mysqli,"cantidad","Pagos","IdVenta",$_GET['Id']);
 														echo money_format('%.2n', $MorRe);
                         	?>
 												</td>
@@ -100,7 +100,7 @@ require_once '../eia/librerias.php';
 													//Si el status del cliente esta en activacon no muestra el pago
 													if($Reg['Status'] != "ACTIVO" AND $Reg['Status'] != "ACTIVACION" ){
 															//Se imprime el valor para liquidar el credito
-															$doa = Financieras::SaldoCredito($mysqli,$_GET['Id']);
+															$doa = $financieras->SaldoCredito($mysqli,$_GET['Id']);
 															echo money_format('%.2n', $doa);
 													}
 													?>

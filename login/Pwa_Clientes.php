@@ -16,15 +16,15 @@ require_once '../eia/librerias.php';
                 //Si el status del cliente esta en activacon no muestra el pago
                 if($_POST['StatusVta'] != "ACTIVO" AND $_POST['StatusVta'] != "ACTIVACION" ){
                     //Si el saldo es mayor al costo de compra se usa el pago extemporaneo
-                    $s56 = Financieras::SaldoCredito($mysqli,$_POST['IdVenta']);
+                    $s56 = $financieras->SaldoCredito($mysqli,$_POST['IdVenta']);
                     //Se obtieneel valor del pago
-                    $Pago1 = Financieras::Pago($mysqli,$_POST['IdVenta']);
+                    $Pago1 = $financieras->Pago($mysqli,$_POST['IdVenta']);
                     $Pago = money_format('%.2n', $Pago1);
                     //Saldo de la cuenta
-                    $Saldo = Financieras::SaldoCredito($mysqli,$_POST['IdVenta']);
+                    $Saldo = $financieras->SaldoCredito($mysqli,$_POST['IdVenta']);
                     $Saldo = money_format('%.2n', $Saldo);
                     //Se obtiene el numero de pagos pendientes
-                    $PagoPend = Financieras::PagosPend($mysqli,$_POST['IdVenta']);
+                    $PagoPend = $financieras->PagosPend($mysqli,$_POST['IdVenta']);
                 }
             }
             //Variables para lanzar las ventanas emergentes

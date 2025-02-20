@@ -17,12 +17,12 @@
     //Si existe el registro se asocia en un fetch_assoc
       if($Reg=mysqli_fetch_assoc($res)){
         //Se obtiene el monto de la deuda
-        $Pago1 = Financieras::Pago($mysqli,$Cte);
+        $Pago1 = $financieras->Pago($mysqli,$Cte);
         $Pago = money_format('%.2n', $Pago1);
         //Se obtiene el numero de pagos pendientes
-        $PagoPend = Financieras::PagosPend($mysqli,$Cte);
+        $PagoPend = $financieras->PagosPend($mysqli,$Cte);
         //Saldo de la cuenta
-        $Saldo = Financieras::SaldoCredito($mysqli,$Cte);
+        $Saldo = $financieras->SaldoCredito($mysqli,$Cte);
         $Saldo = money_format('%.2n', $Saldo);
       }
       //Buscamos los datos de contacto de el clientes
@@ -117,7 +117,7 @@
                               </div>
                               <div class="modal-body">
                                   <?
-                                    $mora = money_format('%.2n', Financieras::Mora($Pago1));
+                                    $mora = money_format('%.2n', $financieras->Mora($Pago1));
                                     if(empty($_POST['Promesa'])){
                                         echo '
                                         <p>Pagos pendientes <strong> '.$PagoPend.' Pagos</strong></p>
@@ -318,7 +318,7 @@
                              echo "
                                     <p> Producto Contratado </p><h2>".$Reg['Producto']."</h2>
                                     <p> Costo de compra </p><h2>".money_format('%.2n', $Reg['CostoVenta'])."</h2>
-                                    <p> Liquidacion </p><h2>".money_format('%.2n', Financieras::SaldoCredito($mysqli,$Reg['Id'])).".</h2>
+                                    <p> Liquidacion </p><h2>".money_format('%.2n', $financieras->SaldoCredito($mysqli,$Reg['Id'])).".</h2>
                                     <p> Status de la poliza </p><h2>".$Reg['Status']."</h2>
                                   ";
                              ?>

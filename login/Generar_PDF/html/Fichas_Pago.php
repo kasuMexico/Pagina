@@ -1,4 +1,7 @@
 <?
+//creamos una variable general para las funciones
+$basicas = new Basicas();
+$financieras = new Financieras();
 //SI no tiene promesa de primer pago asigna la venta mas 15 dias
 if(empty($fec)){
     $Fecha = date( "Y-m-d",strtotime($row['FechaRegistro']));
@@ -7,9 +10,9 @@ if(empty($fec)){
     $Fecha = date( "d-m-Y",strtotime($fec));
 }
 //Si el saldo es mayor al costo de compra se usa el pago extemporaneo
-$s56 = Financieras::SaldoCredito($mysqli,$row['Id']);
+$s56 = $financieras->SaldoCredito($mysqli,$row['Id']);
 //Se obtiene el monto de la deuda
-$pago = Financieras::Pago($mysqli,$row['Id']);
+$pago = $financieras->Pago($mysqli,$row['Id']);
 //Variable principal
 $a = 1;
 $cont = 1;
@@ -91,7 +94,7 @@ while($cont <= $num){
                     <td class='grey   size'>A partir del:</td>
                     <td class='trasp  size'>	<?php echo $tre; ?></td>
                     <td class='grey   size'>Pago por:</td>
-                    <td class='trasp  size'> $&nbsp;<?php echo Financieras::Mora($pago);?></td>
+                    <td class='trasp  size'> $&nbsp;<?php echo $financieras->Mora($pago);?></td>
 
                   </tr>
                   <tr>

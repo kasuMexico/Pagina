@@ -17,9 +17,9 @@ require_once '../eia/librerias.php';
         //Si existe el registro se asocia en un fetch_assoc
             if($Reg=mysqli_fetch_assoc($res)){
               //Se obtiene el monto de la deuda
-              $Pago = Financieras::Pago($mysqli,$_POST['IdVenta']);
+              $Pago = $financieras->Pago($mysqli,$_POST['IdVenta']);
               //Se obtiene el numero de pagos pendientes
-              $PagoPend = Financieras::PagosPend($mysqli,$_POST['IdVenta']);
+              $PagoPend = $financieras->PagosPend($mysqli,$_POST['IdVenta']);
 							//se obtiene la fecha de promesa de el acuerdo
 							$FecProm = $basicas->BuscarCampos($mysqli,"FechaReg","PromesaPago","id",$_POST["Referencia"]);
               //sE obtiene la cantidad de la promesa de pago
@@ -145,7 +145,7 @@ $IdVen = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["
 																	//Se suman los pagos dentro del periodo
 																		$SuPagT = $basicas->SumarFechas($mysqli,"Cantidad","Pagos","IdVenta",$fila[1],'FechaRegistro',$limiInf,'FechaRegistro',$limiSup);
 																	//Se resta la suma de los pagos a el pago que le corresponde
-																		$pago = Financieras::Pago($mysqli, $fila[1]);
+																		$pago = $financieras->Pago($mysqli, $fila[1]);
 																	//Se operan los pagos para saber si ya re realizo el pago o la suma de los pagos da el pago que le corresponde
 																		$dj = $pago-$SuPagT;
 																	//Si el pago dado es mayor a el que le corresponde no se imprime
@@ -239,7 +239,7 @@ $IdVen = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["
     																	//Se suman los pagos dentro del periodo
     																		$SuPagT = $basicas->SumarFechas($mysqli,"Cantidad","Pagos","IdVenta",$fila[1],'FechaRegistro',$limiInf,'FechaRegistro',$limiSup);
     																	//Se resta la suma de los pagos a el pago que le corresponde
-    																		$pago = Financieras::Pago($mysqli, $fila[1]);
+    																		$pago = $financieras->Pago($mysqli, $fila[1]);
     																	//Se operan los pagos para saber si ya re realizo el pago o la suma de los pagos da el pago que le corresponde
     																		$dj = $pago-$SuPagT;
     																	//Si el pago dado es mayor a el que le corresponde no se imprime

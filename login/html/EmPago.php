@@ -11,7 +11,7 @@
             <input type="text" name="Host" value="<?PHP echo $_SERVER['PHP_SELF'];?>" style="display: none;">
             <input type="text" name="name" value="<?PHP echo $name;?>" style="display: none;">
             <?
-              $mora = money_format('%.2n', Financieras::Mora($Pago1));
+              $mora = money_format('%.2n', $financieras->Mora($Pago1));
               if(empty($_POST['Promesa'])){
                   echo '
                   <p>Pagos pendientes <strong> '.$PagoPend.' Pagos</strong></p>

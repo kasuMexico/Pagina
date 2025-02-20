@@ -21,5 +21,6 @@
 //creamos una variable general para las funciones
 $basicas = new Basicas();
 $seguridad = new Seguridad();
+$financieras = new Financieras();
 
 ?>

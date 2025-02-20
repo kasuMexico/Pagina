@@ -3,7 +3,7 @@ session_start();
 
 // Incluir el archivo de funciones (se asume que Funciones_kasu.php carga o require_once
 // las clases Basicas, Correo, Financieras, Seguridad y FunctionUsageTracker)
-require_once '../php/Funciones_kasu.php';
+require_once '../librerias.php';
 
 // Verifica que las conexiones existan
 if (!isset($mysqli) || !isset($pros)) {
@@ -13,10 +13,10 @@ if (!isset($mysqli) || !isset($pros)) {
 // Registrar el uso de las funciones (esto lo hará cada función que invoque trackUsage)
 
 // Actualizamos las comisiones generadas por los prospectos
-Financieras::ActualComis($mysqli);
+$financieras->ActualComis($mysqli);
 
 // Actualizamos las ventas
-Financieras::actualizaVts($mysqli);
+$financieras->actualizaVts($mysqli);
 
 // Realizamos el envío de correos de solicitud de citas
 $sql1 = "SELECT * FROM prospectos";

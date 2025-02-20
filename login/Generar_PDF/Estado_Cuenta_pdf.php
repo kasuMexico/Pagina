@@ -1,4 +1,6 @@
 <?php
+//creamos una variable general para las funciones
+$financieras = new Financieras();
 try {
 //indicar que se inicia una sesion
 	ob_start(); // inicia la creacion de los documentos
@@ -29,7 +31,7 @@ try {
                   if($venta['Status'] == "ACTIVO" || $venta['Status'] == "ACTIVACION"){
                       $saldo = money_format('%.2n',0);
                   }else {
-                  		$saldo = Financieras::SaldoCredito($mysqli,$venta['Id']);
+                  		$saldo = $financieras->SaldoCredito($mysqli,$venta['Id']);
                   }
                   //SI el usuario compro a un mes o de contado
                   if( $venta['NumeroPagos'] >= 2 ){

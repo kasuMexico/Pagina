@@ -248,7 +248,7 @@
                     </div>
                     <div class="col-lg-3 col-md-6 col-sm-12">
                         <div class="count-item decoration-top">
-                            <strong><?PHP echo Basicas::MaxDat($mysqli,"	Id","patrocinios");?></strong>
+                            <strong><?PHP echo $basicas->MaxDat($mysqli,"	Id","patrocinios");?></strong>
                             <span>Proyectos</span>
                         </div>
                     </div>

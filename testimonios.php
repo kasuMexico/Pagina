@@ -85,7 +85,7 @@
             //Creamos la variables pricipales
             $cont = 1;
             //Contamos el no de  Articulos
-            $Max = Basicas::MaxDat($mysqli,"id","opiniones");
+            $Max = $basicas->MaxDat($mysqli,"id","opiniones");
             //Se imprimen los comentarios
             while($cont <= $Max){
                 //Consulta para los artiulos

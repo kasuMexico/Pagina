@@ -11,16 +11,16 @@
       $_GET['Art'] = 1;
     }
 //Buscamos el maximo Id de los productos
-		$MaxProd = Basicas::MaxDat($mysqli,"Id","ContProd");
+		$MaxProd = $basicas->MaxDat($mysqli,"Id","ContProd");
 //Si estan buscando un archivo que no existe te redirecciona a la pagina de error 404
 		if ($_GET['Art'] > $MaxProd) {
 			//Hacemos el comparativo
 			header('Location: https://kasu.com.mx/error');
 		}
 //Extraemos el valor de Mercado pago
-		$LigaMP = Basicas::BuscarCampos($mysqli,"Liga","MercadoPago","Referencia",$_GET['Pro']);
+		$LigaMP = $basicas->BuscarCampos($mysqli,"Liga","MercadoPago","Referencia",$_GET['Pro']);
 //Seleccionamos la liga de Suscripcion o pago unico
-		$MediPago = Basicas::BuscarCampos($mysqli,"Plazo","MercadoPago","Referencia",$_GET['Pro']);
+		$MediPago = $basicas->BuscarCampos($mysqli,"Plazo","MercadoPago","Referencia",$_GET['Pro']);
 		if($MediPago == 1){
 			$PreLig = "https://www.mercadopago.com.mx/checkout/v1/redirect?preference-id=";
 		}else{
@@ -145,12 +145,12 @@
                     <div class="left-text">
                         <? echo $Reg['DesIni_Producto'];
 												//Boton de compra debajo de texto
-												$Desc = Basicas::BuscarCampos($mysqli,"Descuento","PostSociales","Id",$_SESSION["tarjeta"]);
+												$Desc = $basicas->BuscarCampos($mysqli,"Descuento","PostSociales","Id",$_SESSION["tarjeta"]);
 												if(!empty($Desc)){
 													//IMPRIMIOS LA IMAGEN
 													echo '
 													<br>
-													<img class="img-thumbnail" src="assets/images/cupones/'.Basicas::BuscarCampos($mysqli,"Img","PostSociales","Id",$_SESSION["tarjeta"]).'" style="width: 15em;">
+													<img class="img-thumbnail" src="assets/images/cupones/'.$basicas->BuscarCampos($mysqli,"Img","PostSociales","Id",$_SESSION["tarjeta"]).'" style="width: 15em;">
 													<br>
 													<a href="registro.php?pro='.$dat.'" class="main-button-slider-pol"><strong>Comprar -'.money_format('%.2n', $Desc).'</strong></a>
 													<br>
@@ -243,12 +243,12 @@
 									<? echo $Reg['Precios_Producto'];?>
 								</div>
 								<?
-								$Desc = Basicas::BuscarCampos($mysqli,"Descuento","PostSociales","Id",$_SESSION["tarjeta"]);
+								$Desc = $basicas->BuscarCampos($mysqli,"Descuento","PostSociales","Id",$_SESSION["tarjeta"]);
 								if(!empty($Desc)){
 									//iMPRIMIOS LA IMAGEN
 									echo '
 									<br>
-									<img class="img-thumbnail" src="assets/images/cupones/'.Basicas::BuscarCampos($mysqli,"Img","PostSociales","Id",$_SESSION["tarjeta"]).'" style="width: 15em;">
+									<img class="img-thumbnail" src="assets/images/cupones/'.$basicas->BuscarCampos($mysqli,"Img","PostSociales","Id",$_SESSION["tarjeta"]).'" style="width: 15em;">
 									<br>
 									<a href="registro.php?pro='.$dat.'" class="main-button-slider-pol"><strong>Comprar -'.money_format('%.2n', $Desc).'</strong></a>
 									<br>
@@ -313,7 +313,7 @@
 								//iMPRIMIOS LA IMAGEN
 								echo '
 								<br>
-								<img class="img-thumbnail" src="assets/images/cupones/'.Basicas::BuscarCampos($mysqli,"Img","PostSociales","Id",$_SESSION["tarjeta"]).'" style="width: 15em;">
+								<img class="img-thumbnail" src="assets/images/cupones/'.$basicas->BuscarCampos($mysqli,"Img","PostSociales","Id",$_SESSION["tarjeta"]).'" style="width: 15em;">
 								<br>
 								<a href="registro.php?pro='.$dat.'" class="main-button-slider-pol"><strong>Comprar -'.money_format('%.2n', $Desc).'</strong></a>
 								';

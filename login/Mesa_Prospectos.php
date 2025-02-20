@@ -177,8 +177,8 @@
                                     $sql3 = "SELECT * FROM Empleados WHERE Nivel >= '".$Nivel."' AND Nombre != 'Vacante'";
                                     $S623 = $mysqli->query($sql3);
                                     while($S633= mysqli_fetch_array($S623)){
-                                      $Su2cur3 = Basicas::BuscarCampos($mysqli,"nombreSucursal","Sucursal","Id",$S633['Sucursal']);
-                                      $St2ats3 = Basicas::BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$S633['Nivel']);
+                                      $Su2cur3 = $basicas->BuscarCampos($mysqli,"nombreSucursal","Sucursal","Id",$S633['Sucursal']);
+                                      $St2ats3 = $basicas->BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$S633['Nivel']);
                                       echo "<option value='".$S633['Id']."'>".$S633['Nombre']." - ".$St2ats3." - ".$Su2cur3."</option>";
                                     }
                                   ?>
@@ -208,7 +208,7 @@
                                 <select class="form-control" name="NvoVend">
                                 <?
                                 //Buscamos el nivel de el usuario
-                                $Nvl = Basicas::BuscarCampos($mysqli,'Nivel','Empleados','IdUsuario',$_SESSION["Vendedor"]);
+                                $Nvl = $basicas->BuscarCampos($mysqli,'Nivel','Empleados','IdUsuario',$_SESSION["Vendedor"]);
                                 //Select para la lista de prospectos a asiganar
                                 if($Nvl == 1){
                                   //Se crea la consulta para los vendedores
@@ -219,8 +219,8 @@
                                 }
                                   $S629 = $mysqli->query($sql9);
                                   while($S635= mysqli_fetch_array($S629)){
-                                    $Su2cur = Basicas::BuscarCampos($mysqli,"nombreSucursal","Sucursal","Id",$S635['Sucursal']);
-                                    $St2ats = Basicas::BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$S635['Nivel']);
+                                    $Su2cur = $basicas->BuscarCampos($mysqli,"nombreSucursal","Sucursal","Id",$S635['Sucursal']);
+                                    $St2ats = $basicas->BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$S635['Nivel']);
                                     echo "<option value='".$S635['Id']."'>".$S635['Nombre']." - ".$St2ats." - ".$Su2cur."</option>";
                                   }
                                 ?>
@@ -423,9 +423,9 @@
                   </tr>
               <?
               if($name == ' '){
-                  $buscar = Basicas::BLikesD2($pros,'prospectos','FullName',$name,'Cancelacion',0,'Automatico',0);
+                  $buscar = $basicas->BLikesD2($pros,'prospectos','FullName',$name,'Cancelacion',0,'Automatico',0);
                 }else{
-                  $buscar = Basicas::BLikesCan($pros,"prospectos","FullName",$name,"Cancelacion",0);
+                  $buscar = $basicas->BLikesCan($pros,"prospectos","FullName",$name,"Cancelacion",0);
                 }
                   foreach ($buscar as $row){
                   //Contamos las semanas activas
@@ -434,7 +434,7 @@
                   $CSem = $HoyA-$Sem;
                   $ContSem = $CSem/604800;
                   //COnvertir en distribuidor
-                  $Distri = Basicas::BuscarCampos($pros,'Id','Distribuidores','IdProspecto',$row['Id']);
+                  $Distri = $basicas->BuscarCampos($pros,'Id','Distribuidores','IdProspecto',$row['Id']);
                   //Se busca si el cliente ya esta no debe nada
                         echo "
                         <tr>
@@ -442,7 +442,7 @@
                             <th>".round($ContSem,0)."</th>
                             <th>".$row['Servicio_Interes']."</th>
                             <th>".$row['Sugeridos']."</th>
-                            <th>".Basicas::BuscarCampos($mysqli,"IdUsuario","Empleados","Id",$row['Asignado'])."</th>
+                            <th>".$basicas->BuscarCampos($mysqli,"IdUsuario","Empleados","Id",$row['Asignado'])."</th>
                             <th>
                             <div style='display: flex;'>
                                 <form method='POST' action='".$_SERVER['PHP_SELF']."'>
@@ -477,7 +477,7 @@
                                       ";
                                     }
                                     //Cuando el prospecto genero una cita
-                                    if(!empty(Basicas::Buscar2Campos($pros,'Id','citas','IdProspecto',$row['Id'],'FechaCita',date("Y-m-d")))){
+                                    if(!empty($basicas->Buscar2Campos($pros,'Id','citas','IdProspecto',$row['Id'],'FechaCita',date("Y-m-d")))){
                                     echo "
                                         <!-- Ticket de Atencion al cliente -->
                                         <label for='9".$row['Id']."' title='Ticket de Atencion al cliente' class='btn' style='background: #F39C12; color: #F8F9F9;' ><i class='material-icons'>phone_locked</i></label>

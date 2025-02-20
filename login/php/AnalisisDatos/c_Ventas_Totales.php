@@ -14,7 +14,7 @@ $array = array();
   foreach ($res1 as $Reg1){
       $producto = $Reg1['Producto'];
       //Se Suma las ventas de los Usuarios q tienen el Id del equipo
-      $unidades_vendidas = Basicas::ConUno($mysqli,'Venta','Producto',$producto);
+      $unidades_vendidas = $basicas->ConUno($mysqli,'Venta','Producto',$producto);
       //Insertamos el valor en el array
       $array['cols'][] = array('type' => 'string');
       $array['rows'][] = array('c' => array( array('v'=> $producto), array('v'=>(int)$unidades_vendidas)) );

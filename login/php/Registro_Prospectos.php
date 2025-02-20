@@ -23,12 +23,12 @@ if(isset($Latitud)){
         "Presicion" => $Presicion
     );
     //Se realiza el insert en la base de datos
-    Basicas::InsertCampo($pros,"gps",$DatGps);
+    $basicas->InsertCampo($pros,"gps",$DatGps);
 }
 //Sevalida que el fingerprint exista
 if(isset($fingerprint)){
       //Sevalida que el fingerprint exista
-      $Reg2 = Basicas::BuscarCampos($pros,'Id','FingerPrint','fingerprint',$fingerprint);
+      $Reg2 = $basicas->BuscarCampos($pros,'Id','FingerPrint','fingerprint',$fingerprint);
       //COndicional si esta vacia la consulta
       if(empty($Reg2)){
       //Se crea el array que contiene los datos de FINGERPRINT
@@ -54,7 +54,7 @@ if(isset($fingerprint)){
               "useragent"     => $useragent
           );
     //Se realiza el insert en la base de datos
-    Basicas::InsertCampo($pros,"FingerPrint",$DatFinger);
+    $basicas->InsertCampo($pros,"FingerPrint",$DatFinger);
     }
 }
 /*******************************************************************************************************************************
@@ -62,7 +62,7 @@ if(isset($fingerprint)){
 ********************************************************************************************************************************/
   if(isset($_POST['Registro'])){
       //Verificamos que no exista el prospectos
-      $IdProspecto = Basicas::BuscarCampos($pros,'Id','prospectos','Email',$Mail);
+      $IdProspecto = $basicas->BuscarCampos($pros,'Id','prospectos','Email',$Mail);
       //Seleccionamos el origen de el prospecto
       if(empty($Origen)){
         $Origen = "Web";
@@ -80,7 +80,7 @@ if(isset($fingerprint)){
           "Alta"              => $hoy." ".$HoraActual
       );
 //Se realiza el insert en la base de datos
-      $Us = Basicas::InsertCampo($pros,"prospectos",$DatProsp);
+      $Us = $basicas->InsertCampo($pros,"prospectos",$DatProsp);
 //Creamos el array para guardar los datos
       $DatEventos = array(
           "Us"            => $Us,
@@ -94,7 +94,7 @@ if(isset($fingerprint)){
           "FechaRegistro" => $hoy." ".$HoraActual
       );
 //Se realiza el insert en la base de datos
-    Basicas::InsertCampo($mysqli,"Eventos",$DatEventos);
+    $basicas->InsertCampo($mysqli,"Eventos",$DatEventos);
 //Enviamos los correos de confirmacion de registro
     header('Location: https://kasu.com.mx/eia/EnviarCorreo.php?ProReIn='.$Us.'&Host='.$Host.'&Mail='.$Mail.'&Servicio='.$Servicio);
 
@@ -112,7 +112,7 @@ if(isset($fingerprint)){
           "Alta"          => $hoy." ".$HoraActual
     );
 //Se realiza el insert en la base de datos
-    Basicas::InsertCampo($pros,"Distribuidores",$DatProsp);
+    $basicas->InsertCampo($pros,"Distribuidores",$DatProsp);
 /******************  Se registra el evento  *********************/
 //Creamos el array para guardar los datos
       $DatEventos = array(
@@ -127,7 +127,7 @@ if(isset($fingerprint)){
           "FechaRegistro" => $hoy." ".$HoraActual
       );
 //Se realiza el insert en la base de datos
-    Basicas::InsertCampo($mysqli,"Eventos",$DatEventos);
+    $basicas->InsertCampo($mysqli,"Eventos",$DatEventos);
 //Creamos la respuesta
     $Msg = "se ha registrado correctamente tus datos, te enviaremos en breve el contrato de distribuidor";
 //echo "Se ha enviado un email al correo registrado.";
@@ -136,7 +136,7 @@ if(isset($fingerprint)){
 /*********************************** Registra un nuevo prospecto ***************************************/
     if(isset($_POST['prospectoNvo'])){
 //Verificamos que no exista el prospectos
-    $IdProspecto = Basicas::BuscarCampos($pros,'Id','prospectos','Email',$Mail);
+    $IdProspecto = $basicas->BuscarCampos($pros,'Id','prospectos','Email',$Mail);
 //Si el prospectoexiste no se registra
     if(empty($IdProspecto)){
 //Creamos el array para guardar los datos
@@ -154,7 +154,7 @@ if(isset($fingerprint)){
               "Alta"              => $hoy." ".$HoraActual
           );
 //Se realiza el insert en la base de datos
-      $Us = Basicas::InsertCampo($pros,"prospectos",$DatProsp);
+      $Us = $basicas->InsertCampo($pros,"prospectos",$DatProsp);
 //El prospecto ya se registro previamente
           $asunto = "CONOCE KASU";
           $Evento = "1MAILPROS";
@@ -164,7 +164,7 @@ if(isset($fingerprint)){
           $Evento = "2MAILPROS";
           $Us = $IdProspecto;
 //Se actualiza el Estado en la base
-      Basicas::ActCampo($pros,"prospectos","Estado",2,$IdProspecto);
+      $basicas->ActCampo($pros,"prospectos","Estado",2,$IdProspecto);
       }
 //Creamos el array para guardar los datos
       $DatEventos = array(
@@ -179,7 +179,7 @@ if(isset($fingerprint)){
           "FechaRegistro" => $hoy." ".$HoraActual
       );
 //Se realiza el insert en la base de datos
-      Basicas::InsertCampo($mysqli,"Eventos",$DatEventos);
+      $basicas->InsertCampo($mysqli,"Eventos",$DatEventos);
       //Redireccionamos a la pagina del pago
       header('Location: https://kasu.com.mx'.$Host.'?Ml=5&name='.$name);
 }
@@ -213,7 +213,7 @@ if(isset($fingerprint)){
                 "FechaRegistro" => $hoy." ".$HoraActual
             );
           //Se realiza el insert en la base de datos
-          $IdPros = Basicas::InsertCampo($pros,"PrespEnviado",$DatEventos);
+          $IdPros = $basicas->InsertCampo($pros,"PrespEnviado",$DatEventos);
           //Direccion de descarga
           $dirUrl1 = "https://kasu.com.mx/login/Generar_PDF/Cotizacion_pdf.php";
       }
@@ -250,7 +250,7 @@ if(isset($fingerprint)){
                 "FechaRegistro" => $hoy." ".$HoraActual
             );
           //Se realiza el insert en la base de datos
-          $IdPros = Basicas::InsertCampo($pros,"PrespEnviado",$DatEventos);
+          $IdPros = $basicas->InsertCampo($pros,"PrespEnviado",$DatEventos);
           //Direccion de descarga
           $dirUrl1 = "https://kasu.com.mx/eia/EnviarCorreo.php";
       }
@@ -274,9 +274,9 @@ if(isset($fingerprint)){
                 "FechaRegistro" => $hoy." ".$HoraActual
             );
       //Se realiza el insert en la base de datos
-            Basicas::InsertCampo($mysqli,"Eventos",$DatEventos);
+            $basicas->InsertCampo($mysqli,"Eventos",$DatEventos);
      //Se envia el correo en automatico
-            Basicas::ActCampo($pros,"prospectos","Automatico",1,$IdProspecto);
+            $basicas->ActCampo($pros,"prospectos","Automatico",1,$IdProspecto);
     //Se redirecciona a la pagina de inicio
             header('Location: https://kasu.com.mx'.$Host.'?Ml=5&name='.$name);
     }
@@ -292,7 +292,7 @@ if(isset($fingerprint)){
           "FechaRegistro"     => $hoy." ".$HoraActual
       );
 //Se realiza el insert en la base de datos
-      $Cita = Basicas::InsertCampo($pros,"citas",$CitaReg);
+      $Cita = $basicas->InsertCampo($pros,"citas",$CitaReg);
 //El prospecto ya se registro previamente
       $asunto = "CITA TELEFONICA";
       $Evento = "CitaRegis";
@@ -309,7 +309,7 @@ if(isset($fingerprint)){
           "FechaRegistro" => $hoy." ".$HoraActual
       );
 //Se realiza el insert en la base de datos
-      Basicas::InsertCampo($mysqli,"Eventos",$DatEventos);
+      $basicas->InsertCampo($mysqli,"Eventos",$DatEventos);
 }
 /*******************************************Baja de prospecto*******************************************/
 if(isset($_POST['BajaEmp'])){
@@ -321,9 +321,9 @@ if(isset($_POST['BajaEmp'])){
         "FechaRegistro" => $hoy." ".$HoraActual
     );
 //Se realiza el insert en la base de datos
-    Basicas::InsertCampo($mysqli,"Eventos",$DatEventos);
+    $basicas->InsertCampo($mysqli,"Eventos",$DatEventos);
 //Se inserta el estado en la base de datos
-    Basicas::ActCampo($pros,"prospectos","Cancelacion",1,$IdProspecto);
+    $basicas->ActCampo($pros,"prospectos","Cancelacion",1,$IdProspecto);
 //Se envia a la pagina de origen
     header('Location: https://kasu.com.mx'.$Host.'?Ml=4&name='.$name);
 }
@@ -337,9 +337,9 @@ if(isset($_POST['AsigVende'])){
         "FechaRegistro" => $hoy." ".$HoraActual
     );
 //Se realiza el insert en la base de datos
-    Basicas::InsertCampo($mysqli,"Eventos",$DatEventos);
+    $basicas->InsertCampo($mysqli,"Eventos",$DatEventos);
 //Se inserta el estado en la base de datos
-    Basicas::ActCampo($pros,"prospectos","Asignado",$NvoVend,$IdProspecto);
+    $basicas->ActCampo($pros,"prospectos","Asignado",$NvoVend,$IdProspecto);
 //Se envia a la pagina de origen
     header('Location: https://kasu.com.mx'.$Host.'?Ml=5&name='.$name);
 }
@@ -355,19 +355,19 @@ if (isset($_POST['CamDat'])) {
     if($Recg=mysqli_fetch_assoc($recs)){
     //se valida que los datos se hayan mofificado
         if($Recg['FullName'] != $FullName){
-          Basicas::ActTab($pros,"prospectos","FullName",$FullName,"Id",$IdProspecto);
+          $basicas->ActTab($pros,"prospectos","FullName",$FullName,"Id",$IdProspecto);
         }
         if($Recg['NoTel'] != $NoTel){
-          Basicas::ActTab($pros,"prospectos","NoTel",$NoTel,"Id",$IdProspecto);
+          $basicas->ActTab($pros,"prospectos","NoTel",$NoTel,"Id",$IdProspecto);
         }
         if($Recg['Email'] != $Email){
-          Basicas::ActTab($pros,"prospectos","Email",$Email,"Id",$IdProspecto);
+          $basicas->ActTab($pros,"prospectos","Email",$Email,"Id",$IdProspecto);
         }
         if($Recg['Direccion'] != $Direccion){
-          Basicas::ActTab($pros,"prospectos","Direccion",$Direccion,"Id",$IdProspecto);
+          $basicas->ActTab($pros,"prospectos","Direccion",$Direccion,"Id",$IdProspecto);
         }
         if($Recg['Servicio_Interes'] != $Servicio_Interes){
-          Basicas::ActTab($pros,"prospectos","Servicio_Interes",$Servicio_Interes,"Id",$IdProspecto);
+          $basicas->ActTab($pros,"prospectos","Servicio_Interes",$Servicio_Interes,"Id",$IdProspecto);
         }
     }
     //Redireccionamos a la pagina del pago
@@ -384,9 +384,9 @@ $pros->close();
 /*********************************  Registra el prospecto pr la pagina principal  *********************************/
 if (isset($_POST['FormCotizar'])) {
     //se busca que el cliente no este duplicado como poliza vendida
-    echo $OPsdA = Basicas::BuscarCampos($mysqli,"id","Usuario","ClaveCurp",$_POST['CURP']);
+    echo $OPsdA = $basicas->BuscarCampos($mysqli,"id","Usuario","ClaveCurp",$_POST['CURP']);
     //se busca que el cliente no este duplicado como prospecto registrado
-    echo $OPsdB = Basicas::BuscarCampos($pros,"Id","prospectos","Curp",$_POST['CURP']);
+    echo $OPsdB = $basicas->BuscarCampos($pros,"Id","prospectos","Curp",$_POST['CURP']);
     //si el cliente esta duplicado se activa este if  $OPsdA >= 1 AND $OPsdB >= 1
     if($OPsdA >= 1 AND $OPsdB >= 1){
         //Registro de Mensaje a mostrar
@@ -413,11 +413,11 @@ if (isset($_POST['FormCotizar'])) {
                 "Alta"              => date('Y-m-d')." ".date('H:i:s')
             );
             //Se realiza el insert en la base de datos
-            Basicas::InsertCampo($pros,"prospectos",$DatProsp);
+            $basicas->InsertCampo($pros,"prospectos",$DatProsp);
             //Obtenemos el costo de la poliza
-            $edad = Basicas::ObtenerEdad($_POST['CURP']);
-            $SubProd = Basicas::ProdFune($edad);
-            $Costo = Basicas::BuscarCampos($mysqli,"Costo","Productos","Producto",$SubProd);
+            $edad = $basicas->ObtenerEdad($_POST['CURP']);
+            $SubProd = $basicas->ProdFune($edad);
+            $Costo = $basicas->BuscarCampos($mysqli,"Costo","Productos","Producto",$SubProd);
             //Registro de Mensaje a mostrar
             $mensaje = "Esta poliza de gastos funerarios KASU tiene un costo de".money_format('%.2n', $Costo);
             //Redireccionamos a la pagina del pago

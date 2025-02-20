@@ -50,10 +50,10 @@ foreach ($res1 as $Reg1) {
         Correo::EnviarCorreo($Reg1['FullName'], $Reg1['Email'], $asunto, $mensa);
         
         // Se registra el valor del correo enviado consultándolo en la tabla 'correos'
-        $ValMail = Basicas::BuscarCampos($pros, 'Seguimiento', 'correos', 'Asunto', $asunto);
+        $ValMail = $basicas->BuscarCampos($pros, 'Seguimiento', 'correos', 'Asunto', $asunto);
         
         // Se actualiza el estado en la tabla prospectos con el valor obtenido
-        Basicas::ActCampo($pros, "prospectos", "Estado", $ValMail, $Reg1['Id']);
+        $basicas->ActCampo($pros, "prospectos", "Estado", $ValMail, $Reg1['Id']);
     }
 }
 

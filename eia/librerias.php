@@ -18,5 +18,6 @@
     setlocale(LC_ALL,'es_MX');
     $dias = array("Domingo","Lunes", "Mártes", "Miercoles", "Jueves", "Viernes", "Sabado");
     $meses =array("","Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre");
-
+//creamos una variable general para las funciones
+$basicas = new Basicas();
 ?>

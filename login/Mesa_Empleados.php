@@ -23,23 +23,23 @@
     $Ventana = "Ventana".$Vtn;
   }
   //Buscamos el Id de la venta
-  $Vende = Basicas::BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+  $Vende = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
   //Seleccionamos el nivel de el usuario
-  $Nivel = Basicas::BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+  $Nivel = $basicas->BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$_SESSION["Vendedor"]);
   //Buscamos el correo del usuario
-  $Email = Basicas::BuscarCampos($mysqli,"Mail","Contacto","Id",$Reg["IdContacto"]);
+  $Email = $basicas->BuscarCampos($mysqli,"Mail","Contacto","Id",$Reg["IdContacto"]);
   //Ajuste de formato
   $Fec1hFin = date("Y-m-d",strtotime($FechFin));
   $Fec1hIni = date("Y-m-d",strtotime($FechIni));
   //Pagos del periodo
-  $PagosPerio = Basicas::SumarFechas($mysqli,"Cantidad","Comisiones_pagos","IdVendedor",$Reg['IdUsuario'],"fechaRegistro",$Fec1hFin,"fechaRegistro",$Fec1hIni);
+  $PagosPerio = $basicas->SumarFechas($mysqli,"Cantidad","Comisiones_pagos","IdVendedor",$Reg['IdUsuario'],"fechaRegistro",$Fec1hFin,"fechaRegistro",$Fec1hIni);
   //variables bancarias
   $Cont = rand(1, 9);
   $RefDepo = hash('adler32', $FechFin."-".$Reg['IdUsuario']."-".$Cont);
   $Cuenta = $Reg["Cuenta"];
   if(!empty($_POST['CambiNivl'])){
     //Actualizar la tabla de ventas
-    Basicas::ActCampo($mysqli,"Empleados","Nivel",$_POST['NvoNivel'],$_POST['IdEmpleado']);
+    $basicas->ActCampo($mysqli,"Empleados","Nivel",$_POST['NvoNivel'],$_POST['IdEmpleado']);
     //actualiza el valos de una tabla  y una condicion
   }
   //Se pasan las variables POST a Variable
@@ -143,15 +143,15 @@
                                               if($Reg['Equipo'] == ""){
                                                 echo "Sistema";
                                               }else{
-                                                $Id = Basicas::BuscarCampos($mysqli,"Id","Empleados","Id",$Reg['Equipo']);
+                                                $Id = $basicas->BuscarCampos($mysqli,"Id","Empleados","Id",$Reg['Equipo']);
                                                 //Consulta para encontrar al lider
                                                 $lid = "SELECT * FROM Empleados WHERE Id = '".$Id."'";
                                                 //Realiza consulta
                                                     $rds = mysqli_query($mysqli, $lid);
                                                 //Si existe el registro se asocia en un fetch_assoc
                                                     if($dis=mysqli_fetch_assoc($rds)){
-                                                        $Sucur = Basicas::BuscarCampos($mysqli,"nombreSucursal","Sucursal","Id",$dis['Sucursal']);
-                                                        $Stats = Basicas::BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$dis['Nivel']);
+                                                        $Sucur = $basicas->BuscarCampos($mysqli,"nombreSucursal","Sucursal","Id",$dis['Sucursal']);
+                                                        $Stats = $basicas->BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$dis['Nivel']);
                                                         echo $dis['Nombre']." - ".$Stats." - ".$Sucur;
                                                       }
                                               }
@@ -166,13 +166,13 @@
                                 <label for="exampleFormControlSelect1">Selecciona a quien se asignara</label>
                                 <select class="form-control" name="NvoVend">
                                 <?
-                                  //$Rivel = Basicas::BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+                                  //$Rivel = $basicas->BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$_SESSION["Vendedor"]);
                                   //Se crea la consulta para los vendedores
                                   $sql9 = "SELECT * FROM Empleados WHERE Nivel = '$nue' AND Nombre != 'Vacante'";
                                   $S629 = $mysqli->query($sql9);
                                   while($S635= mysqli_fetch_array($S629)){
-                                    $Su2cur = Basicas::BuscarCampos($mysqli,"nombreSucursal","Sucursal","Id",$S635['Sucursal']);
-                                    $St2ats = Basicas::BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$S635['Nivel']);
+                                    $Su2cur = $basicas->BuscarCampos($mysqli,"nombreSucursal","Sucursal","Id",$S635['Sucursal']);
+                                    $St2ats = $basicas->BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$S635['Nivel']);
                                     echo "<option value='".$S635['Id']."'>".$S635['Nombre']." - ".$St2ats." - ".$Su2cur."</option>";
                                   }
                                 ?>
@@ -236,8 +236,8 @@
                                   $sql3 = "SELECT * FROM Empleados WHERE Nivel >= '".$Nivel."' AND Nombre != 'Vacante'";
                                   $S623 = $mysqli->query($sql3);
                                   while($S633= mysqli_fetch_array($S623)){
-                                    $Su2cur3 = Basicas::BuscarCampos($mysqli,"nombreSucursal","Sucursal","Id",$S633['Sucursal']);
-                                    $St2ats3 = Basicas::BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$S633['Nivel']);
+                                    $Su2cur3 = $basicas->BuscarCampos($mysqli,"nombreSucursal","Sucursal","Id",$S633['Sucursal']);
+                                    $St2ats3 = $basicas->BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$S633['Nivel']);
                                     echo "<option value='".$S633['Id']."'>".$S633['Nombre']." - ".$St2ats3." - ".$Su2cur3."</option>";
                                   }
                                 ?>
@@ -320,14 +320,14 @@
                               <input type="number" name="IdEmpleado" value="<?PHP echo $Reg['Id'];?>" style="display: none;">
                               <p>Este colaborador tiene el status</p>
                               <p><strong><?PHP
-                                              echo Basicas::BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$Reg['Nivel']);
+                                              echo $basicas->BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$Reg['Nivel']);
                                         ?>
                               </strong></p>
                               <label for="exampleFormControlSelect1">Selecciona que puesto se le asignara</label>
                               <select class="form-control" name="NvoNivel">
                               <?
                                 //Se crea la consulta para los vendedores
-                                $Rivel = Basicas::BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+                                $Rivel = $basicas->BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$_SESSION["Vendedor"]);
                                 $sql9 = "SELECT * FROM Nivel WHERE Id >= ".$Rivel;
                                 $S629 = $mysqli->query($sql9);
                                 while($S635= mysqli_fetch_array($S629)){
@@ -377,12 +377,12 @@
                   </tr>
               <?
               if(!empty($name)){
-                  $buscar = Basicas::BLikes($mysqli,"Empleados","Nombre",$name);
+                  $buscar = $basicas->BLikes($mysqli,"Empleados","Nombre",$name);
                   foreach ($buscar as $row){
                   //Se restan los pagos de las comisiones a las comisiones generadas
-                  $sj1 = Basicas::Sumar1cond($mysqli,"ComVtas","Comisiones","IdVendedor",$row['IdUsuario']);
-                  $sj2 = Basicas::Sumar1cond($mysqli,"ComCob","Comisiones","IdVendedor",$row['IdUsuario']);
-                  $tj = Basicas::Sumar1cond($mysqli,"Cantidad","Comisiones_pagos","IdVendedor",$row['IdUsuario']);
+                  $sj1 = $basicas->Sumar1cond($mysqli,"ComVtas","Comisiones","IdVendedor",$row['IdUsuario']);
+                  $sj2 = $basicas->Sumar1cond($mysqli,"ComCob","Comisiones","IdVendedor",$row['IdUsuario']);
+                  $tj = $basicas->Sumar1cond($mysqli,"Cantidad","Comisiones_pagos","IdVendedor",$row['IdUsuario']);
                   //Se restan los valores
                   $sj = $sj1+$sj2;
                   $Saldo = $sj-$tj;
@@ -390,19 +390,19 @@
                     $Saldo = 0;
                   }
                   /************************************* seccion de comiisones por contacto ******************************************/
-                      $Niv =  Basicas::BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$row['IdUsuario']);
+                      $Niv =  $basicas->BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$row['IdUsuario']);
                       //Buscamos la comision de el usuario
-                      $PorCom = Basicas::BuscarCampos($mysqli,"N".$Niv,"Comision","Id",2);
+                      $PorCom = $basicas->BuscarCampos($mysqli,"N".$Niv,"Comision","Id",2);
                       //Reducimos el porcentaje a centecimas
                       $as = $PorCom/100;
                       //aterrizamos la fecha de ayer
                       $Ayer = date("Y-m-d",strtotime(date("Y-m-d").'-1 day'));
                       //Buscamos mi finger print
-                      $IdContacto = Basicas::BuscarCampos($mysqli,"IdContacto","Empleados","IdUsuario",$row['IdUsuario']);
+                      $IdContacto = $basicas->BuscarCampos($mysqli,"IdContacto","Empleados","IdUsuario",$row['IdUsuario']);
                       //Buscamos el fingerprint de el usuario
-                      $IdFing = Basicas::Max2Dat($mysqli,"Id","Eventos","Evento","Ingreso","Contacto",$IdContacto);
+                      $IdFing = $basicas->Max2Dat($mysqli,"Id","Eventos","Evento","Ingreso","Contacto",$IdContacto);
                       //Obtenemos el fingerprint
-                      $Fingerprint = Basicas::BuscarCampos($mysqli,"IdFInger","Eventos","Id",$IdFing);
+                      $Fingerprint = $basicas->BuscarCampos($mysqli,"IdFInger","Eventos","Id",$IdFing);
                       //Crear consulta
                       $sqal2 = "SELECT * FROM Eventos WHERE Evento = 'Tarjeta' AND IdFInger != '".$Fingerprint."' AND Usuario = '".$row["IdUsuario"]."' AND FechaRegistro >= $FechIni";
                       //Realiza consulta
@@ -411,9 +411,9 @@
                       //Si existe el registro se asocia en un fetch_assoc
                       foreach ($r4e9s2 as $Resd52){
                         //Obnemos el producto de cada cupon
-                        $Prducto = Basicas::Buscar2Campos($mysqli,"Producto","PostSociales","Id",$Resd52["Cupon"],"Tipo","Art");
+                        $Prducto = $basicas->Buscar2Campos($mysqli,"Producto","PostSociales","Id",$Resd52["Cupon"],"Tipo","Art");
                         //Buscamos el valor de la comision sobre la venta segun el nivel
-                        $ComGen = Basicas::BuscarCampos($mysqli,"comision","Productos","Producto",$Prducto);
+                        $ComGen = $basicas->BuscarCampos($mysqli,"comision","Productos","Producto",$Prducto);
                         //Calculamos la comision degun el nivel
                         $Comis = $ComGen*$as;
                         //Selector de pago de comisiones
@@ -428,7 +428,7 @@
                           $Comis = $Comis/100;
                         }
                         //solo cuenta una vez por dia
-                        $CatLeid = Basicas::Cuenta1Fec1Cond($mysqli,"Eventos","IdFInger",$Resd52["IdFInger"],"Usuario",$row['IdUsuario'],"FechaRegistro",$Ayer);
+                        $CatLeid = $basicas->Cuenta1Fec1Cond($mysqli,"Eventos","IdFInger",$Resd52["IdFInger"],"Usuario",$row['IdUsuario'],"FechaRegistro",$Ayer);
                         if($CatLeid == 1){
                           //Sumamos las comisiones para obtener el general
                           $ComGenHoy = $ComGenHoy+$Comis;
@@ -439,9 +439,9 @@
                         echo "
                         <tr>
                             <th>".$row['Nombre']."</th>
-                            <th>".Basicas::BuscarCampos($mysqli,"IdUsuario","Empleados","Id",$row['Equipo'])."</th>
-                            <th>".Basicas::BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$row['Nivel'])."</th>
-                            <th>".Basicas::BuscarCampos($mysqli,"nombreSucursal","Sucursal","Id",$row['Sucursal'])."</th>
+                            <th>".$basicas->BuscarCampos($mysqli,"IdUsuario","Empleados","Id",$row['Equipo'])."</th>
+                            <th>".$basicas->BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$row['Nivel'])."</th>
+                            <th>".$basicas->BuscarCampos($mysqli,"nombreSucursal","Sucursal","Id",$row['Sucursal'])."</th>
                             <th>".money_format('%.2n', $Saldo)."</th>
                             <th>".money_format('%.2n', $ComGenHoy)."</th>
                             <th>

@@ -33,7 +33,7 @@ if (isset($_POST['PagoCom'])) {
     ];
 
     // Insertar datos en la tabla Comisiones_pagos
-    Basicas::InsertCampo($mysqli, "Comisiones_pagos", $DatGps);
+    $basicas->InsertCampo($mysqli, "Comisiones_pagos", $DatGps);
 
     // Redireccionar a la pantalla del empleado
     header('Location: https://kasu.com.mx' . $Host . '?Vt=1&name=' . $name);
@@ -48,9 +48,9 @@ if (isset($_POST['CambiVend'])) {
     $name      = isset($_POST['name'])      ? $mysqli->real_escape_string($_POST['name'])      : '';
 
     // Verificar el equipo actual del empleado
-    $IdBAse = Basicas::BuscarCampos($mysqli, "Equipo", "Empleados", "Id", $IdEmpleado);
+    $IdBAse = $basicas->BuscarCampos($mysqli, "Equipo", "Empleados", "Id", $IdEmpleado);
     if ($IdBAse != $NvoVend) {
-        Basicas::ActCampo($mysqli, "Empleados", "Equipo", $NvoVend, $IdEmpleado);
+        $basicas->ActCampo($mysqli, "Empleados", "Equipo", $NvoVend, $IdEmpleado);
     }
 
     header('Location: https://kasu.com.mx' . $Host . '?Vt=1&name=' . $name);
@@ -65,16 +65,16 @@ if (isset($_POST['BajaEmp'])) {
     $name       = isset($_POST['name'])       ? $mysqli->real_escape_string($_POST['name'])       : '';
 
     // Obtener el Id de contacto del empleado
-    $IdBAse = Basicas::BuscarCampos($mysqli, "IdContacto", "Empleados", "Id", $IdEmpleado);
+    $IdBAse = $basicas->BuscarCampos($mysqli, "IdContacto", "Empleados", "Id", $IdEmpleado);
     // Actualizar datos del empleado a "baja"
-    Basicas::ActCampo($mysqli, "Empleados", "Nombre", "Vacante", $IdEmpleado);
-    Basicas::ActCampo($mysqli, "Empleados", "IdUsuario", "Usuario", $IdEmpleado);
-    Basicas::ActCampo($mysqli, "Empleados", "IdContacto", NULL, $IdEmpleado);
-    Basicas::ActCampo($mysqli, "Empleados", "Pass", NULL, $IdEmpleado);
-    Basicas::ActCampo($mysqli, "Empleados", "Equipo", NULL, $IdEmpleado);
-    Basicas::ActCampo($mysqli, "Empleados", "Sucursal", NULL, $IdEmpleado);
+    $basicas->ActCampo($mysqli, "Empleados", "Nombre", "Vacante", $IdEmpleado);
+    $basicas->ActCampo($mysqli, "Empleados", "IdUsuario", "Usuario", $IdEmpleado);
+    $basicas->ActCampo($mysqli, "Empleados", "IdContacto", NULL, $IdEmpleado);
+    $basicas->ActCampo($mysqli, "Empleados", "Pass", NULL, $IdEmpleado);
+    $basicas->ActCampo($mysqli, "Empleados", "Equipo", NULL, $IdEmpleado);
+    $basicas->ActCampo($mysqli, "Empleados", "Sucursal", NULL, $IdEmpleado);
     // Registrar el motivo de baja en la tabla Contacto
-    Basicas::ActCampo($mysqli, "Contacto", "Motivo", $MotivoBaja, $IdBAse);
+    $basicas->ActCampo($mysqli, "Contacto", "Motivo", $MotivoBaja, $IdBAse);
 
     header('Location: https://kasu.com.mx' . $Host . '?Vt=1&name=' . $name);
     exit();
@@ -113,25 +113,25 @@ if (isset($_POST['CreaEmpl'])) {
         "Direccion" => $Direccion,
         "Producto"  => "Empleado"
     ];
-    $uSR = Basicas::InsertCampo($mysqli, "Contacto", $DatContac);
+    $uSR = $basicas->InsertCampo($mysqli, "Contacto", $DatContac);
 
     // Se busca un registro en Empleados (por ejemplo, el primer disponible de un nivel y sucursal)
-    $Reg = Basicas::Buscar2Campos($mysqli, "Id", "Empleados", "Sucursal", 0, "Nivel", $Nivel);
+    $Reg = $basicas->Buscar2Campos($mysqli, "Id", "Empleados", "Sucursal", 0, "Nivel", $Nivel);
     if (!empty($Reg)) {
-        Basicas::ActCampo($mysqli, "Empleados", "Nombre", $Nombre, $Reg);
-        Basicas::ActCampo($mysqli, "Empleados", "IdContacto", $uSR, $Reg);
-        Basicas::ActCampo($mysqli, "Empleados", "IdUsuario", NULL, $Reg);
-        Basicas::ActCampo($mysqli, "Empleados", "Pass", $dRc, $Reg);
-        Basicas::ActCampo($mysqli, "Empleados", "Equipo", $Lider, $Reg);
-        Basicas::ActCampo($mysqli, "Empleados", "Sucursal", $Sucursal, $Reg);
-        Basicas::ActCampo($mysqli, "Empleados", "FechaAlta", $hoy, $Reg);
-        Basicas::ActCampo($mysqli, "Empleados", "Cuenta", $Cuenta, $Reg);
+        $basicas->ActCampo($mysqli, "Empleados", "Nombre", $Nombre, $Reg);
+        $basicas->ActCampo($mysqli, "Empleados", "IdContacto", $uSR, $Reg);
+        $basicas->ActCampo($mysqli, "Empleados", "IdUsuario", NULL, $Reg);
+        $basicas->ActCampo($mysqli, "Empleados", "Pass", $dRc, $Reg);
+        $basicas->ActCampo($mysqli, "Empleados", "Equipo", $Lider, $Reg);
+        $basicas->ActCampo($mysqli, "Empleados", "Sucursal", $Sucursal, $Reg);
+        $basicas->ActCampo($mysqli, "Empleados", "FechaAlta", $hoy, $Reg);
+        $basicas->ActCampo($mysqli, "Empleados", "Cuenta", $Cuenta, $Reg);
     }
     // Si el nivel es 7, se asume que se debe realizar algún ajuste adicional
     if ($Nivel == 7) {
         $contra = '&Add=' . $uSR;
         // Actualiza el estado del prospecto
-        Basicas::ActCampo($pros, "prospectos", "Cancelacion", 1, $IdProspecto);
+        $basicas->ActCampo($pros, "prospectos", "Cancelacion", 1, $IdProspecto);
     }
     header('Location: https://kasu.com.mx' . $Host . '?Ml=1&name=' . $name . $contra);
     exit();
@@ -149,7 +149,7 @@ if (isset($_POST['ReenCOntra'])) {
     $dRc = mt_rand();
     $dirUrl1 = base64_encode($dRc);
     $DirUrl = "https://kasu.com.mx/login/index.php?data=" . $dirUrl1 . "&Usr=" . $Id;
-    Basicas::ActCampo($mysqli, "Empleados", "Pass", $dRc, $Id);
+    $basicas->ActCampo($mysqli, "Empleados", "Pass", $dRc, $Id);
     $Mensaje = Correo::Mensaje('RESTABLECIMIENTO DE CONTRASEÑA', $Nombre, $DirUrl, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '');
     Correo::EnviarCorreo($Nombre, $Email, 'RESTABLECIMIENTO DE CONTRASEÑA', $Mensaje);
     header('Location: https://kasu.com.mx' . $Host . '?Ml=1&name=' . $name);
@@ -166,15 +166,15 @@ if (!empty($_POST['GenCont'])) {
 
     if ($PassWord1 === $PassWord2) {
         $decodedPass = base64_decode($data);
-        $PassRecordId = Basicas::BuscarCampos($mysqli, "Id", "Empleados", "Pass", $decodedPass);
+        $PassRecordId = $basicas->BuscarCampos($mysqli, "Id", "Empleados", "Pass", $decodedPass);
         if (!empty($PassRecordId)) {
             // Registro de eventos: insertar GPS y FingerPrint si aún no existen
-            $gpsLogin = Basicas::InsertCampo($mysqli, "gps", [
+            $gpsLogin = $basicas->InsertCampo($mysqli, "gps", [
                 "Latitud" => isset($_POST['Latitud']) ? $mysqli->real_escape_string($_POST['Latitud']) : '',
                 "Longitud" => isset($_POST['Longitud']) ? $mysqli->real_escape_string($_POST['Longitud']) : '',
                 "Presicion" => isset($_POST['Presicion']) ? $mysqli->real_escape_string($_POST['Presicion']) : ''
             ]);
-            if (empty(Basicas::BuscarCampos($mysqli, "id", "FingerPrint", "fingerprint", $fingerprint))) {
+            if (empty($basicas->BuscarCampos($mysqli, "id", "FingerPrint", "fingerprint", $fingerprint))) {
                 $DatFinger = [
                     "fingerprint"   => $fingerprint,
                     "browser"       => isset($_POST['browser']) ? $_POST['browser'] : '',
@@ -196,7 +196,7 @@ if (!empty($_POST['GenCont'])) {
                     "plugins"       => isset($_POST['plugins']) ? $_POST['plugins'] : '',
                     "useragent"     => isset($_POST['useragent']) ? $_POST['useragent'] : ''
                 ];
-                Basicas::InsertCampo($mysqli, "FingerPrint", $DatFinger);
+                $basicas->InsertCampo($mysqli, "FingerPrint", $DatFinger);
             }
             // Registrar evento
             $DatEventos = [
@@ -207,13 +207,13 @@ if (!empty($_POST['GenCont'])) {
                 "Usuario"       => isset($_POST['Usuario']) ? $_POST['Usuario'] : '',
                 "FechaRegistro" => $hoy . " " . $HoraActual
             ];
-            Basicas::InsertCampo($mysqli, "Eventos", $DatEventos);
+            $basicas->InsertCampo($mysqli, "Eventos", $DatEventos);
 
             // Convertir contraseña a SHA-256
             $PassSHa = hash('sha256', $PassWord1);
             // Actualizar datos del empleado (asumiendo que $PassRecordId es la clave a actualizar)
-            Basicas::ActCampo($mysqli, "Empleados", "IdUsuario", isset($_POST['User']) ? $_POST['User'] : '', $PassRecordId);
-            Basicas::ActCampo($mysqli, "Empleados", "Pass", $PassSHa, $PassRecordId);
+            $basicas->ActCampo($mysqli, "Empleados", "IdUsuario", isset($_POST['User']) ? $_POST['User'] : '', $PassRecordId);
+            $basicas->ActCampo($mysqli, "Empleados", "Pass", $PassSHa, $PassRecordId);
             $dta = 3; // Registro exitoso
         } else {
             $dta = 1; // El registro ya fue utilizado
@@ -242,9 +242,9 @@ if (isset($_POST['CamDat'])) {
         if ($Recg['Telefono'] != $Telefono) { $val++; }
         if ($Recg['Mail'] != $Mail) { $val++; }
     }
-    $IdVenta = Basicas::BuscarCampos($mysqli, "Id", "Venta", "IdContact", $IdContact);
+    $IdVenta = $basicas->BuscarCampos($mysqli, "Id", "Venta", "IdContact", $IdContact);
     if (!empty($IdVenta)) {
-        $SDTM = Basicas::BuscarCampos($mysqli, "Producto", "Venta", "Id", $IdVenta);
+        $SDTM = $basicas->BuscarCampos($mysqli, "Producto", "Venta", "Id", $IdVenta);
     }
     if ($val > 0) {
         $Pripg = [
@@ -255,10 +255,10 @@ if (isset($_POST['CamDat'])) {
             "Direccion" => $Direccion,
             "Producto"  => $SDTM
         ];
-        $NvoCnc = Basicas::InsertCampo($mysqli, "Contacto", $Pripg);
-        Basicas::ActTab($mysqli, "Usuario", "IdContact", $NvoCnc, "IdContact", $IdContact);
+        $NvoCnc = $basicas->InsertCampo($mysqli, "Contacto", $Pripg);
+        $basicas->ActTab($mysqli, "Usuario", "IdContact", $NvoCnc, "IdContact", $IdContact);
         if (!empty($IdVenta)) {
-            Basicas::ActCampo($mysqli, "Venta", "IdContact", $NvoCnc, $IdVenta);
+            $basicas->ActCampo($mysqli, "Venta", "IdContact", $NvoCnc, $IdVenta);
         }
     }
     // Enviar correo de actualización
@@ -275,7 +275,7 @@ if (isset($_POST['Reporte'])) {
         "Usuario"  => $_SESSION["Vendedor"],
         "Problema" => $problema
     ];
-    Basicas::InsertCampo($mysqli, "Problemas", $DatProblema);
+    $basicas->InsertCampo($mysqli, "Problemas", $DatProblema);
     $msg = base64_encode('Gracias por enviarnos tu reporte');
     header('Location: https://kasu.com.mx' . $Host . '?Msg=' . $msg);
     exit();

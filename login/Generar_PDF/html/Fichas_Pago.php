@@ -20,13 +20,13 @@ if($row['NumeroPagos'] == 0  || $row['NumeroPagos'] == 1){
     $num = 1;
     //Si el pago es de contado se imprime el saldo de el credito
     $pago = $s56;
-    $a = Basicas::BuscarCampos($mysqli,"Perido","Productos","Producto",$row['Producto']);;
+    $a = $basicas->BuscarCampos($mysqli,"Perido","Productos","Producto",$row['Producto']);;
 }else{
     // Numero de pagos multiplicado para que simule las quincenas
     $num	= $row['NumeroPagos'];
 }
 //se imprimen las fichas dos veces por q es la periodicidad
-$rf = Basicas::BuscarCampos($mysqli,"Perido","Productos","Producto",$row['Producto']);
+$rf = $basicas->BuscarCampos($mysqli,"Perido","Productos","Producto",$row['Producto']);
 //Se calculan los dias a sumar para los Pagos
 $Day = 30/$rf;
 $Day1 = round($Day, 0, PHP_ROUND_HALF_DOWN);

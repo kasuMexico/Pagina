@@ -5,10 +5,7 @@
 //   define('ROOT_PATH', $_SERVER['DOCUMENT_ROOT'] . '/');
 
   //inlcuir el archivo de funciones
-  require_once '../eia/librerias.php';
-    require_once('../eia/Funciones/Funciones_Basicas.php');
-    require_once('../eia/Funciones/Funciones_Seguridad.php');
-    require_once('../eia/Conexiones/cn_prueba.php');
+    require_once '../eia/librerias.php';
 
   //Validar si existe la session y redireccionar
   if(!isset($_SESSION["Vendedor"])){
@@ -193,7 +190,7 @@ function guardarRegistroEnBD($datos, $mysqli)
             "Presicion" => $mysqli->real_escape_string($Presicion)
         );
         //Se realiza el insert en la base de datos del GPS
-        $gps = Basicas::InsertCampo($mysqli, "gps", $DatGps);
+        $gps = $basicas->InsertCampo($mysqli, "gps", $DatGps);
 
         // Se segmentan los datos para poder agregarlo, se epro qu eel csv tenag este acomodo antes de subir la informacion
         $nombre = $datos[1];
@@ -208,7 +205,7 @@ function guardarRegistroEnBD($datos, $mysqli)
         $datosFallidos = [];
 
         // Buscar usuario
-        $OPsd = Basicas::BuscarCampos($mysqli, "Nombre", "Usuario", "ClaveCurp", $curp);
+        $OPsd = $basicas->BuscarCampos($mysqli, "Nombre", "Usuario", "ClaveCurp", $curp);
         if (!empty($OPsd)) {
             $datosFallidos[] = [$datos, ['Datos ya registrados']];
         } else {
@@ -219,7 +216,7 @@ function guardarRegistroEnBD($datos, $mysqli)
             switch ($tipo) {
                 case 'Policia':
                     // código para la opción 'Retiro'
-                    $SubProd = Basicas::ProdPoli($edad);
+                    $SubProd = $basicas->ProdPoli($edad);
                     break;
                 case 'Retiro':
                     // código para la opción 'Retiro'
@@ -231,13 +228,13 @@ function guardarRegistroEnBD($datos, $mysqli)
                     // código para la opción 'VIDACOLEC'
                     break;
                 default:
-                    $SubProd = Basicas::ProdFune($edad);
+                    $SubProd = $basicas->ProdFune($edad);
                     break;
             }
 
             // se asigna el costo y la tasa
-            $_SESSION["Costo"] = Basicas::BuscarCampos($mysqli, "Costo", "Productos", "Producto", $SubProd);
-            $_SESSION["Tasa"] = Basicas::BuscarCampos($mysqli, "TasaAnual", "Productos", "Producto", $SubProd);
+            $_SESSION["Costo"] = $basicas->BuscarCampos($mysqli, "Costo", "Productos", "Producto", $SubProd);
+            $_SESSION["Tasa"] = $basicas->BuscarCampos($mysqli, "TasaAnual", "Productos", "Producto", $SubProd);
 
             // se crean los registros necesarios
             $_SESSION["Cnc"] = agregarDatosContacto($VendeDor, $gps, 'N/A', 'N/A', 'N/A', $SubProd, $mysqli);
@@ -327,7 +324,7 @@ function agregarDatosContacto($VendeDor, $gps, $Host, $Mail, $Telefono, $Product
     );
 
     //Se realiza el insert en la base de datos
-    return Basicas::InsertCampo($mysqli, "Contacto", $DatContac);
+    return $basicas->InsertCampo($mysqli, "Contacto", $DatContac);
 }
 
 /********************************************************************************************************************************************
@@ -350,7 +347,7 @@ function agregarEvento($contacto, $gps, $Host, $formfields, $connection, $timezo
         "FechaRegistro" => date('Y-m-d') . " " . date('H:i:s')
     );
     //Se realiza el insert en la base de datos
-    return Basicas::InsertCampo($mysqli, "Eventos", $DatEventos);
+    return $basicas->InsertCampo($mysqli, "Eventos", $DatEventos);
 }
 
 /********************************************************************************************************************************************
@@ -368,7 +365,7 @@ function agregarCliente($idContacto, $nombre, $paterno, $materno, $curp, $mail, 
         "Email"         => $mail
     );
     //Se realiza el insert en la base de datos
-    return Basicas::InsertCampo($mysqli, "Usuario", $DatUser);
+    return $basicas->InsertCampo($mysqli, "Usuario", $DatUser);
 }
 
 /********************************************************************************************************************************************
@@ -382,7 +379,7 @@ function generarPago($VendeDor, $idContacto, $producto, $costo, $gps, $Meses, $f
     $Venta = array(
         "Usuario"       => $VendeDor,
         "IdContact"     => $idContacto,
-        "Nombre"        => Basicas::BuscarCampos($mysqli, "Nombre", "Usuario", "IdContact", $idContacto),
+        "Nombre"        => $basicas->BuscarCampos($mysqli, "Nombre", "Usuario", "IdContact", $idContacto),
         "Producto"      => $producto,
         "CostoVenta"    => $costo,
         "Idgps"         => $gps,
@@ -394,7 +391,7 @@ function generarPago($VendeDor, $idContacto, $producto, $costo, $gps, $Meses, $f
         "TipoServicio"  => $mysqli->real_escape_string($TipoServicio)
     );
     //Insertar los datos en la base
-    return Basicas::InsertCampo($mysqli, "Venta", $Venta);
+    return $basicas->InsertCampo($mysqli, "Venta", $Venta);
 }
 
 /********************************************************************************************************************************************
@@ -412,7 +409,7 @@ function datosLegal($idContacto, $Meses = 1, $Terminos = 'S/D', $Aviso = 'S/D', 
     );
 
     //Se realiza el insert en la base de datos
-    return Basicas::InsertCampo($mysqli, "Legal", $DatLegal);
+    return $basicas->InsertCampo($mysqli, "Legal", $DatLegal);
 }
 
 ?>

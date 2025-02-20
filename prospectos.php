@@ -82,7 +82,7 @@
   //Registros
   if(!empty($_GET['Usr'])){
       //Buscamos si ya se ha registrado previamente
-      $Reg2 = Basicas::BuscarCampos($pros,'Id','Distribuidores','IdProspecto',$usr);
+      $Reg2 = $basicas->BuscarCampos($pros,'Id','Distribuidores','IdProspecto',$usr);
       //Reenvios segun el resultado
         if(empty($Reg2) or $data == "CITREG" or  $data == "CITA"){
       //Busqueda de prospectos

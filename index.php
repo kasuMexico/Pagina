@@ -12,10 +12,10 @@ if (isset($_GET['Msg'])) {
 if ($_GET['Ml'] == 4) {
     if (empty($_GET['dat'])) {
         //Se inserta el estado en la base de datos
-        Basicas::ActCampo($mysqli, "Contacto", "Cancelacion", 1, $_GET['Id']);
+        $basicas->ActCampo($mysqli, "Contacto", "Cancelacion", 1, $_GET['Id']);
     } else {
         //Se inserta el estado en la base de datos
-        Basicas::ActCampo($pros, "prospectos", "Cancelacion", 1, $_GET['Id']);
+        $basicas->ActCampo($pros, "prospectos", "Cancelacion", 1, $_GET['Id']);
     }
     //Se imprime el alert en la pagina
     echo "<script type='text/javascript'>
@@ -85,7 +85,7 @@ if ($_GET['Ml'] == 4) {
                         <div class="col-lg-6 align-self-center">
                             <div class="left-content header-text wow fadeInLeft" data-wow-duration="1s" data-wow-delay="1s">
                                 <h6><img src="../assets/images/flor_redonda.svg" style="width: 10vh;"></h6>
-                                <h2> Seguros <em> de Gastos <span>Funerarios</span> y mucho </em>más</h2>
+                                <h2> Servicios <em> de Gastos <span>Funerarios</span> y mucho </em>más</h2>
                                 <p>La Visión de <strong>KASU</strong> es lograr una cobertura universal para las familias mexicanas en lo que se refiere a servicios funerarios.</p>
                                 <div class="form">
                                     <input id="curp" type="text" class="text" placeholder="Ingresa tu CURP">
@@ -127,10 +127,10 @@ if ($_GET['Ml'] == 4) {
                         <br>
                         <div class="count-item decoration-bottom">
                             <h2 class="section-title">
-                                <strong>1<?PHP echo number_format(Basicas::MaxDat($mysqli, "Id", "Venta"), 0, ".", ","); ?></strong><span> Clientes Activos</span>
+                                <strong>1<?PHP echo number_format($basicas->MaxDat($mysqli, "Id", "Venta"), 0, ".", ","); ?></strong><span> Clientes Activos</span>
                             </h2>
                         </div>
-                        <p><strong>KASU</strong> es una empresa que ofrece seguros funerarios a bajo costo en México, los cuales <strong>se pagan una sola vez en la vida</strong> y no requiere renovación o pagos adicionales, lo cual es una <strong>característica única</strong> y diferenciadora en comparación con otros seguros funerarios en el mercado.</p>
+                        <p><strong>KASU</strong> es una empresa que ofrece Servicios funerarios a bajo costo en México, los cuales <strong>se pagan una sola vez en la vida</strong> y no requiere renovación o pagos adicionales, lo cual es una <strong>característica única</strong> y diferenciadora en comparación con otros Servicios funerarios en el mercado.</p>
                         <br>
                         <p>
                             Este enfoque en ayudar a las personas es el factor mas importante a promocionar,
@@ -240,7 +240,7 @@ if ($_GET['Ml'] == 4) {
                 //Creamos la variables pricipales
                 $cont = 1;
                 //Contamos el no de  Articulos
-                $Max = Basicas::MaxDat($mysqli, "id", "opiniones");
+                $Max = $basicas->MaxDat($mysqli, "id", "opiniones");
                 //Buscamos un numero random
                 $Arts = rand($cont, $Max);
                 $ks = $Max - 1;

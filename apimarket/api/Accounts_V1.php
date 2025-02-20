@@ -3,6 +3,8 @@
 foreach (glob("../Funciones/*.php") as $archivo) {
     require_once $archivo;
 }
+//creamos una variable general para las funciones
+$basicas = new Basicas();
 //Requerir las conexiones
 //require_once '../Conexiones/cn_vtas.php';
 require_once '../Conexiones/cn_pruebas.php';
@@ -51,15 +53,15 @@ if ($data['tipo_peticion'] === 'new_service') { // if tipo_peticion
       //si el producto es Funerario obtenemos el bloque del producto
       if($producto == "Funerario"){
             //Obtene mos la edad de el cliente
-            $EdadCte = Basicas::ObtenerEdad($data['curp_en_uso']);
-            $producto =  Basicas::ProdFune($EdadCte);
+            $EdadCte = $basicas->ObtenerEdad($data['curp_en_uso']);
+            $producto =  $basicas->ProdFune($EdadCte);
       }
       //Buscamos si el cliente no se encuentra duplicado en la base de datos
-      $OPsd = Basicas::BuscarCampos($mysqli,"IdContact","Usuario","ClaveCurp",$data['curp_en_uso']);
+      $OPsd = $basicas->BuscarCampos($mysqli,"IdContact","Usuario","ClaveCurp",$data['curp_en_uso']);
       //Si el cliente ya se encuentraregistrado arroja un error
       if(!empty($OPsd)){
             //Buscamos si el cliente no se encuentra duplicado en la base de datos
-            $DJsuT = Basicas::BuscarCampos($mysqli,"Producto","Venta","IdContact",$OPsd);
+            $DJsuT = $basicas->BuscarCampos($mysqli,"Producto","Venta","IdContact",$OPsd);
             //Se comparan los productos
             if($DJsuT == $producto){ //Producto Duplicado
               //Cerramos las conexiones a la base de datos
@@ -106,7 +108,7 @@ if ($data['tipo_peticion'] === 'new_service') { // if tipo_peticion
                  "Producto"       => $producto
               );
               //Se realiza el insert en la base de datos
-              $IdContacto = Basicas::InsertCampo($mysqli,"Contacto",$DatContac);
+              $IdContacto = $basicas->InsertCampo($mysqli,"Contacto",$DatContac);
               //Se crea el array que contiene los datos de registro
               $DatUser = array (
                   "IdContact"     => $IdContacto,
@@ -119,7 +121,7 @@ if ($data['tipo_peticion'] === 'new_service') { // if tipo_peticion
                   "Email"         => $mail
               );
               //Se realiza el insert en la base de datos
-              Basicas::InsertCampo($mysqli,"Usuario",$DatUser);
+              $basicas->InsertCampo($mysqli,"Usuario",$DatUser);
               //Se crea el array que contiene los datos de registro
               $DatLegal = array (
                   "IdContacto"    => $IdContacto,
@@ -129,10 +131,10 @@ if ($data['tipo_peticion'] === 'new_service') { // if tipo_peticion
                   "Fideicomiso"   => $fideicomiso
               );
               //Se realiza el insert en la base de datos
-              Basicas::InsertCampo($mysqli,"Legal",$DatLegal);
+              $basicas->InsertCampo($mysqli,"Legal",$DatLegal);
               //Buscar precios y tasas
-              $Costo = Basicas::BuscarCampos($mysqli,"Costo","Productos","Producto",$producto);
-              $Tasa = Basicas::BuscarCampos($mysqli,"TasaAnual","Productos","Producto",$producto);
+              $Costo = $basicas->BuscarCampos($mysqli,"Costo","Productos","Producto",$producto);
+              $Tasa = $basicas->BuscarCampos($mysqli,"TasaAnual","Productos","Producto",$producto);
               //Se genera la referencia unica del cte MMN
               $firma = Seguridad::Firma($mysqli,$IdContacto,$Costo);
               //Registramos el nombre de el cliente
@@ -151,7 +153,7 @@ if ($data['tipo_peticion'] === 'new_service') { // if tipo_peticion
                   "TipoServicio"  => "Ecologico"
                 );
                 //Insertar los datos en la base
-                $IdVenta = Basicas::InsertCampo($mysqli,"Venta",$Venta);
+                $IdVenta = $basicas->InsertCampo($mysqli,"Venta",$Venta);
                 //Se crea el array que contiene los datos para REGISTRO DE EVENTOS
                 $DatEventos = array(
                     "Contacto"      => $IdContacto,
@@ -160,7 +162,7 @@ if ($data['tipo_peticion'] === 'new_service') { // if tipo_peticion
                     "FechaRegistro" => date('Y-m-d')." ".date('H:i:s')
                 );
                 //Se realiza el insert en la base de datos
-                Basicas::InsertCampo($mysqli,"Eventos",$DatEventos);
+                $basicas->InsertCampo($mysqli,"Eventos",$DatEventos);
                 //Cerramos las conexiones a la base de datos
                 mysqli_close($mysqli);
                 // Enviar la respuesta en formato JSON

@@ -1,4 +1,6 @@
 <?php
+//creamos una variable general para las funciones
+$basicas = new Basicas();
 //La peticion debe ser por metodo POST y el cuerpo de la solicitud
 //debe estar en formato (Content-Type: application/json)
 //y debe contener los siguientes parámetros:
@@ -16,7 +18,7 @@ if ($data['tipo_peticion'] == 'token_full') {
     // Verificar las credenciales del usuario
     if ($Usr_Agent = Seguridad::ValidarUsrAPI($mysqli,$data['nombre_de_usuario'],$_SERVER['HTTP_USER_AGENT'])) {
       //Descargamos la contraseña de el usuario
-      $password_usuario = Basicas::BuscarCampos($mysqli,"Pass","Empleados","IdUsuario",$data['nombre_de_usuario']);
+      $password_usuario = $basicas->BuscarCampos($mysqli,"Pass","Empleados","IdUsuario",$data['nombre_de_usuario']);
       //Buscamos los datos para gener el Secret_KEY
       $Secret_KEY = hash_hmac('sha256',$Usr_Agent,$password_usuario);
       //Enviamos a la funcion de validacion de curp

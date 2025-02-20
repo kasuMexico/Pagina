@@ -37,7 +37,7 @@ require_once '../eia/librerias.php';
         $Lanzar = "#Ventana";
       }
   //Buscar el id de el vendedor
-      $IdVen = Basicas::BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+      $IdVen = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -113,9 +113,9 @@ require_once '../eia/librerias.php';
                             }
                     }elseif($Niv <= 4 AND $Niv >= 2){
                       //Buscamos el id de la sucursal
-                      $IdSuc = Basicas::BuscarCampos($mysqli,"Sucursal","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+                      $IdSuc = $basicas->BuscarCampos($mysqli,"Sucursal","Empleados","IdUsuario",$_SESSION["Vendedor"]);
                       //Buscamos el nombre de la sucursal
-                      $NomSuc = Basicas::BuscarCampos($mysqli,"NombreSucursal","Sucursal","Id",$IdSuc);
+                      $NomSuc = $basicas->BuscarCampos($mysqli,"NombreSucursal","Sucursal","Id",$IdSuc);
                       //Crear consulta
                       $sqal = "SELECT * FROM Empleados WHERE Nombre != 'Vacante' AND Nivel >= '$Niv' AND Sucursal = $IdSuc";
                       //Realiza consulta
@@ -142,9 +142,9 @@ require_once '../eia/librerias.php';
                         }
                     }elseif($Niv == 1){
                       //Buscamos el id de la sucursal
-                      $IdSuc = Basicas::BuscarCampos($mysqli,"Sucursal","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+                      $IdSuc = $basicas->BuscarCampos($mysqli,"Sucursal","Empleados","IdUsuario",$_SESSION["Vendedor"]);
                       //Buscamos el nombre de la sucursal
-                      $NomSuc = Basicas::BuscarCampos($mysqli,"NombreSucursal","Sucursal","Id",$IdSuc);
+                      $NomSuc = $basicas->BuscarCampos($mysqli,"NombreSucursal","Sucursal","Id",$IdSuc);
                       //Crear consulta
                       $sqal = "SELECT * FROM Empleados WHERE Nombre != 'Vacante' AND Nivel >= '$Niv'";
                       //Realiza consulta

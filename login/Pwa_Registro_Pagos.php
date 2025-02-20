@@ -21,9 +21,9 @@ require_once '../eia/librerias.php';
               //Se obtiene el numero de pagos pendientes
               $PagoPend = Financieras::PagosPend($mysqli,$_POST['IdVenta']);
 							//se obtiene la fecha de promesa de el acuerdo
-							$FecProm = Basicas::BuscarCampos($mysqli,"FechaReg","PromesaPago","id",$_POST["Referencia"]);
+							$FecProm = $basicas->BuscarCampos($mysqli,"FechaReg","PromesaPago","id",$_POST["Referencia"]);
               //sE obtiene la cantidad de la promesa de pago
-              $CantProm = Basicas::BuscarCampos($mysqli,"Pago","PromesaPago","id",$_POST["Referencia"]);
+              $CantProm = $basicas->BuscarCampos($mysqli,"Pago","PromesaPago","id",$_POST["Referencia"]);
               //realizamos la consulta
               $GpsSql = "SELECT * FROM gps WHERE Id = '".$Reg['Idgps']."'";
               //Realiza consulta
@@ -36,9 +36,9 @@ require_once '../eia/librerias.php';
             $Ventana = "Ventana2";
       }
 //Buscar el nivel de el usuario
-$Niv = Basicas::BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+$Niv = $basicas->BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$_SESSION["Vendedor"]);
 //Buscar el id de el vendedor
-$IdVen = Basicas::BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+$IdVen = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -130,7 +130,7 @@ $IdVen = Basicas::BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["V
 	                    // obtener el array de objetos
 	                        while ($fila = $resultado->fetch_row()) {
 														//Se busca si la promesa de pago ya se realizo
-														$RefPag = Basicas::BuscarCampos($mysqli,"Id","Pagos","Referencia",$fila[0]);
+														$RefPag = $basicas->BuscarCampos($mysqli,"Id","Pagos","Referencia",$fila[0]);
 														//Si el Id no esta registrado imprime la promesa de pago
 														if(empty($RefPag)){
 	                        	//Se busca el usuario
@@ -143,7 +143,7 @@ $IdVen = Basicas::BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["V
 																		$Fdp = strftime("%d de %B", strtotime($fila[13]."+14 days"));
 																	//Se busca el pago por el cliente si existe y es por la cantidad del pago no se imprime
 																	//Se suman los pagos dentro del periodo
-																		$SuPagT = Basicas::SumarFechas($mysqli,"Cantidad","Pagos","IdVenta",$fila[1],'FechaRegistro',$limiInf,'FechaRegistro',$limiSup);
+																		$SuPagT = $basicas->SumarFechas($mysqli,"Cantidad","Pagos","IdVenta",$fila[1],'FechaRegistro',$limiInf,'FechaRegistro',$limiSup);
 																	//Se resta la suma de los pagos a el pago que le corresponde
 																		$pago = Financieras::Pago($mysqli, $fila[1]);
 																	//Se operan los pagos para saber si ya re realizo el pago o la suma de los pagos da el pago que le corresponde
@@ -172,9 +172,9 @@ $IdVen = Basicas::BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["V
 												}
 										}elseif($Niv <= 4){
                       //Buscamos el id de la sucursal
-                      $IdSuc = Basicas::BuscarCampos($mysqli,"Sucursal","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+                      $IdSuc = $basicas->BuscarCampos($mysqli,"Sucursal","Empleados","IdUsuario",$_SESSION["Vendedor"]);
                       //Buscamos el nombre de la sucursal
-                      $NomSuc = Basicas::BuscarCampos($mysqli,"NombreSucursal","Sucursal","Id",$IdSuc);
+                      $NomSuc = $basicas->BuscarCampos($mysqli,"NombreSucursal","Sucursal","Id",$IdSuc);
                       //Crear consulta
                       $sqal = "SELECT * FROM Empleados WHERE Nombre != 'Vacante' AND Nivel >= '$Niv' AND Sucursal = $IdSuc";
                       //Realiza consulta
@@ -224,7 +224,7 @@ $IdVen = Basicas::BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["V
     	                    // obtener el array de objetos
     	                        while ($fila = $resultado->fetch_row()) {
     														//Se busca si la promesa de pago ya se realizo
-    														$RefPag = Basicas::BuscarCampos($mysqli,"Id","Pagos","Referencia",$fila[0]);
+    														$RefPag = $basicas->BuscarCampos($mysqli,"Id","Pagos","Referencia",$fila[0]);
     														//Si el Id no esta registrado imprime la promesa de pago
     														if(empty($RefPag)){
     	                        	//Se busca el usuario
@@ -237,7 +237,7 @@ $IdVen = Basicas::BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["V
     																		$Fdp = strftime("%d de %B", strtotime($fila[13]."+14 days"));
     																	//Se busca el pago por el cliente si existe y es por la cantidad del pago no se imprime
     																	//Se suman los pagos dentro del periodo
-    																		$SuPagT = Basicas::SumarFechas($mysqli,"Cantidad","Pagos","IdVenta",$fila[1],'FechaRegistro',$limiInf,'FechaRegistro',$limiSup);
+    																		$SuPagT = $basicas->SumarFechas($mysqli,"Cantidad","Pagos","IdVenta",$fila[1],'FechaRegistro',$limiInf,'FechaRegistro',$limiSup);
     																	//Se resta la suma de los pagos a el pago que le corresponde
     																		$pago = Financieras::Pago($mysqli, $fila[1]);
     																	//Se operan los pagos para saber si ya re realizo el pago o la suma de los pagos da el pago que le corresponde

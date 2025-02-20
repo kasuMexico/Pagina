@@ -1,4 +1,6 @@
 <?php
+//creamos una variable general para las funciones
+$basicas = new Basicas();
 //Archivo con el que se generan los Presupuestos
   //Se pasan las variables POST a Variable
   if(!isset($_POST['busqueda'])){
@@ -58,7 +60,7 @@
 										<tbody>
                       <?
                       if(!empty($Propuest['a0a29'])){
-                        $Pra0a29 = Basicas::BuscarCampos($mysqli,"Costo","Productos","Producto","02a29");
+                        $Pra0a29 = $basicas->BuscarCampos($mysqli,"Costo","Productos","Producto","02a29");
                         $Pa0a29 = $Propuest['a0a29']*$Pra0a29;
                         echo '
 											<tr>
@@ -71,7 +73,7 @@
                       ';
                       }
                       if(!empty($Propuest['a30a49'])){
-                        $Pra30a49 = Basicas::BuscarCampos($mysqli,"Costo","Productos","Producto","30a49");
+                        $Pra30a49 = $basicas->BuscarCampos($mysqli,"Costo","Productos","Producto","30a49");
                         $Pa30a49 = $Propuest['a30a49']*$Pra30a49;
                         echo '
                       <tr>
@@ -84,7 +86,7 @@
                       ';
                       }
                       if(!empty($Propuest['a50a54'])){
-                        $Pra50a54 = Basicas::BuscarCampos($mysqli,"Costo","Productos","Producto","50a54");
+                        $Pra50a54 = $basicas->BuscarCampos($mysqli,"Costo","Productos","Producto","50a54");
                         $Pa50a54 = $Propuest['a50a54']*$Pra50a54;
                         echo '
                       <tr>
@@ -97,7 +99,7 @@
                       ';
                       }
                       if(!empty($Propuest['a55a59'])){
-                        $Pra55a59 = Basicas::BuscarCampos($mysqli,"Costo","Productos","Producto","55a59");
+                        $Pra55a59 = $basicas->BuscarCampos($mysqli,"Costo","Productos","Producto","55a59");
                         $Pa55a59 = $Propuest['a55a59']*$Pra55a59;
                         echo '
                       <tr>
@@ -110,7 +112,7 @@
                       ';
                       }
                       if(!empty($Propuest['a60a64'])){
-                        $Pra60a64 = Basicas::BuscarCampos($mysqli,"Costo","Productos","Producto","60a64");
+                        $Pra60a64 = $basicas->BuscarCampos($mysqli,"Costo","Productos","Producto","60a64");
                         $Pa60a64 = $Propuest['a60a64']*$Pra60a64;
                         echo '
                       <tr>
@@ -123,7 +125,7 @@
                       ';
                       }
                       if(!empty($Propuest['a65a69'])){
-                        $Pra65a69 = Basicas::BuscarCampos($mysqli,"Costo","Productos","Producto","65a69");
+                        $Pra65a69 = $basicas->BuscarCampos($mysqli,"Costo","Productos","Producto","65a69");
                         $Pa65a69 = $Propuest['a65a69']*$Pra65a69;
                         echo '
                       <tr>
@@ -140,7 +142,7 @@
                       //Se suman las cantidades
                       $Canti = $Propuest['a0a29']+$Propuest['a30a49']+$Propuest['a50a54']+$Propuest['a55a59']+$Propuest['a60a64']+$Propuest['a65a69'];
                       //se obtiene la tasa de interes
-                      $tasa = Basicas::BuscarCampos($mysqli,"TasaAnual","Productos","Producto","02a29");
+                      $tasa = $basicas->BuscarCampos($mysqli,"TasaAnual","Productos","Producto","02a29");
                       //Tasa anual se divide en meses
                       $aR=$tasa/12;
                       //tasa entre 100

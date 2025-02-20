@@ -70,7 +70,7 @@ class Seguridad {
     public function ObtenerClave($c0, $d8) {
         $this->trackUsage();  // Registra el uso de este método.
         $d8 = mysqli_real_escape_string($c0, $d8);
-        $Dir = Basicas::BuscarCampos($c0, "DireccionClaves", "Usuario", "Id", $d8);
+        $Dir = $basicas->BuscarCampos($c0, "DireccionClaves", "Usuario", "Id", $d8);
         if (!$Dir) {
             return "No se encontró Dirección de Claves";
         }

@@ -13,7 +13,7 @@
       //Creamos la variables pricipales
       $cont = 1;
       //Contamos el no de  Articulos
-      $MaxPro = Basicas::MaxDat($mysqli,"id","ContProd");
+      $MaxPro = $basicas->MaxDat($mysqli,"id","ContProd");
       //Se imprimen los comentarios
       while($cont <= $MaxPro){
         //Consulta para los artiulos

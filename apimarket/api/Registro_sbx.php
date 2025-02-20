@@ -7,6 +7,7 @@ foreach (glob("../Funciones/*.php") as $archivo) {
 }
 //creamos una variable general para las funciones
 $basicas = new Basicas();
+$seguridad = new Seguridad();
 //Requerir las conexiones
 require_once '../Conexiones/cn_pruebas.php';
 require_once '../Conexiones/cn_prosp.php';
@@ -63,7 +64,7 @@ if ($data['tipo_peticion'] == 'token_full') {
         exit;
     }
 
-      //$ArrayRes =  Seguridad::peticion_get($data['curp_en_uso']);
+      //$ArrayRes =  $seguridad->peticion_get($data['curp_en_uso']);
 
     if ($ArrayRes["Response"] == "Error" || $ArrayRes["StatusCurp"] == "BD") {
         header('HTTP/1.1 417 Bad Request');
@@ -130,7 +131,7 @@ if ($data['tipo_peticion'] == 'product_cost') {
       //Variable para multimples consultas
       $producto = $data['producto'];
       //Validamos el Token de ACCeso
-      if (Seguridad::verificarToken($token,$data,$Secret_KEY)) {
+      if ($seguridad->verificarToken($token,$data,$Secret_KEY)) {
         //Validamos el producto
         if($basicas->VerificarProducto($data['curp_en_uso'],$producto)){
           //si el producto es Funerario obtenemos el bloque del producto
@@ -195,7 +196,7 @@ if ($data['tipo_peticion'] == 'registro_servicio') { // if tipo_peticion
       $authorizationHeader = $_SERVER['HTTP_AUTHORIZATION'];
       $token = substr($authorizationHeader, 7);
       //Validamos el Token de ACCeso
-      if (Seguridad::verificarToken($token,$data,$Secret_KEY)) { //Validamos el TOKEN
+      if ($seguridad->verificarToken($token,$data,$Secret_KEY)) { //Validamos el TOKEN
         //Validamos el producto
         if($basicas->VerificarProducto($data['curp_en_uso'],$producto)){ //Verificamos el Producto
           //si el producto es Funerario obtenemos el bloque del producto
@@ -219,7 +220,7 @@ if ($data['tipo_peticion'] == 'registro_servicio') { // if tipo_peticion
             }
           }*/
           //Se busca que el cliente exista
-          //$ArrayRes = Seguridad::peticion_get($data['curp_en_uso']);
+          //$ArrayRes = $seguridad->peticion_get($data['curp_en_uso']);
           //Validamos que la curp sea real
           if($ArrayRes["Response"] == "correct" || $ArrayRes["StatusCurp"] != "BD"){ //Validamos la Clave CURP
               //Creamos la Direccion de el Cliente
@@ -278,7 +279,7 @@ if ($data['tipo_peticion'] == 'registro_servicio') { // if tipo_peticion
               $Costo = $basicas->BuscarCampos($mysqli,"Costo","Productos","Producto",$producto);
               $Tasa = $basicas->BuscarCampos($mysqli,"TasaAnual","Productos","Producto",$producto);
               //Se genera la referencia unica del cte MMN
-              $firma = Seguridad::Firma($mysqli,$IdContacto,$Costo);
+              $firma = $seguridad->Firma($mysqli,$IdContacto,$Costo);
               //Buscamos los datos y realizamos un registro en la venta
               $Venta = array (
                   "Usuario"       => $User_Agent,

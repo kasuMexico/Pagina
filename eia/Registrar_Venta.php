@@ -104,7 +104,7 @@ if (isset($_POST['Registro'])) {
 // Registro de CURP cuando la venta es para el CLIENTE
 if (isset($_POST['BtnRegCurBen'])) {
     $OPsd = $basicas->BuscarCampos($mysqli, "Nombre", "Usuario", "ClaveCurp", $CurClie);
-    $ArrayRes = Seguridad::peticion_get($CurClie);
+    $ArrayRes = $seguridad->peticion_get($CurClie);
     $_SESSION["NombreCOm"] = $ArrayRes["Nombre"] . " " . $ArrayRes["Paterno"] . " " . $ArrayRes["Materno"];
     
     if (!empty($OPsd)) {
@@ -145,7 +145,7 @@ if (isset($_POST['BtnRegCurBen'])) {
 // Registro de CURP cuando la venta es para el BENEFICIARIO
 if (isset($_POST['BtnRegCurCli'])) {
     $OPsd = $basicas->BuscarCampos($mysqli, "Nombre", "Usuario", "ClaveCurp", $CurBen);
-    $ArrayRes = Seguridad::peticion_get($CurBen);
+    $ArrayRes = $seguridad->peticion_get($CurBen);
     $_SESSION["NombreCOm"] = $ArrayRes["Nombre"] . " " . $ArrayRes["Paterno"] . " " . $ArrayRes["Materno"];
     
     if (!empty($OPsd)) {
@@ -196,7 +196,7 @@ if (isset($_POST['BtnMetPago'])) {
     if ($Meses == 0) {
         $Meses = 1;
     }
-    $firma = Seguridad::Firma($mysqli, $IdContacto, $Costo);
+    $firma = $seguridad->Firma($mysqli, $IdContacto, $Costo);
     
     $Venta = array(
         "Usuario"      => $VendeDor,
@@ -309,7 +309,7 @@ if (isset($_POST['RegistroMesa'])) {
     
     // Registro de CURP para cliente (verificar duplicidad)
     $OPsd = $basicas->BuscarCampos($mysqli, "id", "Usuario", "ClaveCurp", $CurClie);
-    $ArrayRes = Seguridad::peticion_get($CurClie);
+    $ArrayRes = $seguridad->peticion_get($CurClie);
     $nombreCompleto = $ArrayRes["Nombre"] . " " . $ArrayRes["Paterno"] . " " . $ArrayRes["Materno"];
     
     if (!empty($OPsd)) {

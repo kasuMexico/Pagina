@@ -1,6 +1,7 @@
 <?php
 //creamos una variable general para las funciones
 $basicas = new Basicas();
+$seguridad = new Seguridad();
 // *****  Este Codigo Realiza la validacion de los Token de Acceso requiere el envio de los siguientes datos
 // *****  HTTP_AUTHORIZATION contiene el Token enviado en la cabecera con el token Bearer
 // *****  nombre_de_usuario  Es el Usuario con el que se autenticara el usuario
@@ -12,11 +13,11 @@ $token = substr($authorizationHeader, 7); // El número 7 representa la longitud
 //Descargamos la contraseña de el usuario
 $password_usuario = $basicas->BuscarCampos($mysqli,"Pass","Empleados","IdUsuario",$data['nombre_de_usuario']);
 //Esta funcion Valida y genere el Usr Agent
-$Usr_Agent = Seguridad::ValidarUsrAPI($mysqli,$data['nombre_de_usuario'],$_SERVER['HTTP_USER_AGENT']);
+$Usr_Agent = $seguridad->ValidarUsrAPI($mysqli,$data['nombre_de_usuario'],$_SERVER['HTTP_USER_AGENT']);
 //Buscamos los datos para gener el Secret_KEY
 $Secret_KEY = hash_hmac('sha256',$Usr_Agent,$password_usuario);
 //Validamos por que no se aprobo el token
-$Valid_Token = Seguridad::verificarToken($token,$data,$Secret_KEY);
+$Valid_Token = $seguridad->verificarToken($token,$data,$Secret_KEY);
 //Validamos el Token de ACCeso
 if ($Valid_Token === false) {
   header('HTTP/1.1 401 Unauthorized');

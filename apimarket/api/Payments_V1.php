@@ -5,6 +5,7 @@ foreach (glob("../Funciones/*.php") as $archivo) {
 }
 //creamos una variable general para las funciones
 $basicas = new Basicas();
+$seguridad = new Seguridad();
 //Requerir las conexiones
 //require_once '../Conexiones/cn_vtas.php';
 require_once '../Conexiones/cn_pruebas.php';
@@ -49,11 +50,11 @@ if ($data['tipo_peticion'] == 'product_cost') {
       //Descargamos la contraseña de el usuario
       $password_usuario = $basicas->BuscarCampos($mysqli,"Pass","Empleados","IdUsuario",$data['nombre_de_usuario']);
       //Esta funcion Valida y genere el Usr Agent
-      $Usr_Agent = Seguridad::ValidarUsrAPI($mysqli,$data['nombre_de_usuario'],$_SERVER['HTTP_USER_AGENT']);
+      $Usr_Agent = $seguridad->ValidarUsrAPI($mysqli,$data['nombre_de_usuario'],$_SERVER['HTTP_USER_AGENT']);
       //Buscamos los datos para gener el Secret_KEY
       $Secret_KEY = hash_hmac('sha256',$Usr_Agent,$password_usuario);
       //Validamos por que no se aprobo el token
-      $Valid_Token = Seguridad::verificarToken($token,$data,$Secret_KEY);
+      $Valid_Token = $seguridad->verificarToken($token,$data,$Secret_KEY);
       //Validamos el Token de ACCeso
       if ($Valid_Token === false) {
         header('HTTP/1.1 401 Unauthorized');
@@ -120,11 +121,11 @@ if ($data['tipo_peticion'] == 'registro_servicio') { // if tipo_peticion
       //Descargamos la contraseña de el usuario
       $password_usuario = $basicas->BuscarCampos($mysqli,"Pass","Empleados","IdUsuario",$data['nombre_de_usuario']);
       //Esta funcion Valida y genere el Usr Agent
-      $Usr_Agent = Seguridad::ValidarUsrAPI($mysqli,$data['nombre_de_usuario'],$_SERVER['HTTP_USER_AGENT']);
+      $Usr_Agent = $seguridad->ValidarUsrAPI($mysqli,$data['nombre_de_usuario'],$_SERVER['HTTP_USER_AGENT']);
       //Buscamos los datos para gener el Secret_KEY
       $Secret_KEY = hash_hmac('sha256',$Usr_Agent,$password_usuario);
       //Validamos por que no se aprobo el token
-      $Valid_Token = Seguridad::verificarToken($token,$data,$Secret_KEY);
+      $Valid_Token = $seguridad->verificarToken($token,$data,$Secret_KEY);
       //Validamos el Token de ACCeso
       if ($Valid_Token === false) {  //Validamos el TOKEN
         /*header('HTTP/1.1 201 OK');
@@ -164,7 +165,7 @@ if ($data['tipo_peticion'] == 'registro_servicio') { // if tipo_peticion
             }
       }
       //Se busca que el cliente exista
-      $ArrayRes = Seguridad::peticion_get($data['curp_en_uso']);
+      $ArrayRes = $seguridad->peticion_get($data['curp_en_uso']);
       //Validamos que la curp sea real
       if($ArrayRes["Response"] == "correct" AND $ArrayRes["StatusCurp"] != "BD"){ //Validamos la Clave CURP
               //Creamos la Direccion de el Cliente
@@ -223,7 +224,7 @@ if ($data['tipo_peticion'] == 'registro_servicio') { // if tipo_peticion
               $Costo = $basicas->BuscarCampos($mysqli,"Costo","Productos","Producto",$producto);
               $Tasa = $basicas->BuscarCampos($mysqli,"TasaAnual","Productos","Producto",$producto);
               //Se genera la referencia unica del cte MMN
-              $firma = Seguridad::Firma($mysqli,$IdContacto,$Costo);
+              $firma = $seguridad->Firma($mysqli,$IdContacto,$Costo);
               //Buscamos los datos y realizamos un registro en la venta
               $Venta = array (
                   "Usuario"       => $User_Agent,

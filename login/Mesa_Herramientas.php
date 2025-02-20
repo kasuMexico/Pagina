@@ -84,7 +84,7 @@
                               <label for="exampleFormControlSelect1">Nombre</label>
                               <input class="form-control" disabled type="text" name="Nombre" value="<?php echo $Reg['Nombre'];?>">
                               <label for="exampleFormControlSelect1">Puesto</label>
-                              <input class="form-control" disabled type="text" name="Nivel" value="<?php echo Basicas::BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$Reg['Nivel']);?>">
+                              <input class="form-control" disabled type="text" name="Nivel" value="<?php echo $basicas->BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$Reg['Nivel']);?>">
                               <label for="exampleFormControlSelect1">Clabe Bancaria</label>
                               <input class="form-control" disabled type="text" name="Cuenta" value="<?php echo $Reg['Cuenta'];?>">
                               <label for="exampleFormControlSelect1">Direccion</label>

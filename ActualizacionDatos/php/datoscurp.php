@@ -479,7 +479,7 @@ $htmlIndex = '
                 );
 
             //Se realiza el insert en la base de datos
-              $insert = Basicas::InsertCampo($mysqli,"DatosActualizados",$DatActual);
+              $insert = $basicas->InsertCampo($mysqli,"DatosActualizados",$DatActual);
               //Si se ejecuta algun error
               if($insert == "null"){
                   //Envia mensaje
@@ -511,7 +511,7 @@ $htmlIndex = '
             "actualizacion" =>"ConCurp"
             );
               //Se realiza el insert en la base de datos
-             $insert = Basicas::InsertCampo($mysqli,"DatosActualizados",$DatActual);
+             $insert = $basicas->InsertCampo($mysqli,"DatosActualizados",$DatActual);
              //Si se ejecuta algun error
              if($insert == "null"){
                  //Envia mensaje
@@ -600,7 +600,7 @@ $htmlIndex = '
              );
            }
             //Se realiza el insert en la base de datos
-             $insert = Basicas::InsertCampo($mysqli,"DatosActualizados",$DatActual);
+             $insert = $basicas->InsertCampo($mysqli,"DatosActualizados",$DatActual);
              //Si se ejecuta algun error
              if($insert == "null"){
                  //Envia mensaje

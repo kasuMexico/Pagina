@@ -13,16 +13,16 @@ $array = array();
 $i = 0;
 while($row = mysqli_fetch_assoc($result)){
   //Buscmos el nivel de el usuario
-  $Nivel = Basicas::BuscarCampos($mysqli,'Nivel','Empleados','IdUsuario',$_SESSION["Vendedor"]);
+  $Nivel = $basicas->BuscarCampos($mysqli,'Nivel','Empleados','IdUsuario',$_SESSION["Vendedor"]);
   //Se realiza la operacion con los niveles
       if($Nivel >= 5){
-          $unidades_vendidas = Basicas::ConUnCon($mysqli,'Venta','Usuario',$_SESSION["Vendedor"],'Status',$row['Nombre']);
+          $unidades_vendidas = $basicas->ConUnCon($mysqli,'Venta','Usuario',$_SESSION["Vendedor"],'Status',$row['Nombre']);
       }elseif($Nivel <= 4){
-        $b = Basicas::Max1DifDat($mysqli,'Nivel','Empleados','Nombre','Vacante');
+        $b = $basicas->Max1DifDat($mysqli,'Nivel','Empleados','Nombre','Vacante');
         $a = $b;
         while ($a >= $Nivel) {
           //Buscamos en el siguiente nivel si hay asignaciones
-          $ExiReg = Basicas::ConDosCon($mysqli,'Empleados','Equipo',$lider,'Nivel',$a,'Nombre','Vacante');
+          $ExiReg = $basicas->ConDosCon($mysqli,'Empleados','Equipo',$lider,'Nivel',$a,'Nombre','Vacante');
           //Seleccionamos la busqueda segun el nivel
           if($a == $b || !empty($ExiReg)){
             $sql1 = "SELECT * FROM Empleados WHERE Nivel = '".$a."' AND Nombre != 'Vacante'";
@@ -35,7 +35,7 @@ while($row = mysqli_fetch_assoc($result)){
           foreach ($res1 as $Reg1){
             $lider = $Reg1['Equipo'];
             //Se Suma las ventas de los Usuarios q tienen el Id del equipo
-            $unidades_vendidas = $unidades_vendidas+Basicas::ConUnCon($mysqli,'Venta','Usuario',$Reg1['IdUsuario'],'Status',$row['Nombre']);
+            $unidades_vendidas = $unidades_vendidas+$basicas->ConUnCon($mysqli,'Venta','Usuario',$Reg1['IdUsuario'],'Status',$row['Nombre']);
           }
           $a--;
         }

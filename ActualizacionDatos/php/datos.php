@@ -7,10 +7,10 @@ session_start();
   }
 //Incluye la conexion a la base
 // require_once('../../eia/php/Funciones_kasu.php');
-require_once('../../eia/Conexiones/cn_vtas.php');
-require_once('../../eia/Funciones/Funciones_Basicas.php');
+//require_once('../../eia/Conexiones/cn_vtas.php');
+require_once('../../eia/librerias.php');
     //Se buscan los datos del cliente
-    $IdVt = Basicas::BuscarCampos($mysqli,"IdContact","Usuario","ClaveCurp",$_SESSION['txtCurp_ActIndCli']);
+    $IdVt = $basicas->BuscarCampos($mysqli,"IdContact","Usuario","ClaveCurp",$_SESSION['txtCurp_ActIndCli']);
     //Si existe el registro se asocia en un fetch_assoc
     $sql = "SELECT * FROM Contacto WHERE Id = '".$IdVt."'";
     //Realiza consulta

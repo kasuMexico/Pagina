@@ -41,19 +41,19 @@
         }
     $Ventana = "Ventana".$Vtn;
     //Seleccion de Usuarios por nivel del usuario
-    $Vende = Basicas::BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+    $Vende = $basicas->BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$_SESSION["Vendedor"]);
   }
   //Actualizacion de datos
   if(!empty($_POST['CambiVend'])){
       //Actualizar la tabla de ventas
-      Basicas::ActCampo($mysqli,"Venta","Usuario",$_POST['NvoVend'],$_POST['IdVenta']);
+      $basicas->ActCampo($mysqli,"Venta","Usuario",$_POST['NvoVend'],$_POST['IdVenta']);
       //actualiza el valos de una tabla  y una condicion
-      Basicas::ActTab($mysqli,"PromesaPago","User",$_POST['NvoVend'],"IdVta",$_POST['IdVenta']);
+      $basicas->ActTab($mysqli,"PromesaPago","User",$_POST['NvoVend'],"IdVta",$_POST['IdVenta']);
       //se actualizan los Pagos
-      Basicas::ActTab($mysqli,"Pagos","Usuario",$_POST['NvoVend'],"IdVenta",$_POST['IdVenta']);
+      $basicas->ActTab($mysqli,"Pagos","Usuario",$_POST['NvoVend'],"IdVenta",$_POST['IdVenta']);
   }elseif(!empty($_POST['CancelaCte'])){
       //Actualizar PARA Cancelar el Producto
-      Basicas::ActCampo($mysqli,"Venta","Status","CANCELADO",$_POST['IdVenta']);
+      $basicas->ActCampo($mysqli,"Venta","Status","CANCELADO",$_POST['IdVenta']);
   }
   //Se pasan las variables POST a Variable
   if(!isset($_POST['nombre'])){
@@ -161,26 +161,26 @@
                                 <input type="text" name="Status" value="<?PHP echo $_POST['Status'];?>" style="display: none;">
                                 <p>Este cliente esta asignado a</p>
                                 <p><strong><?PHP
-                                              $Niv =  Basicas::BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+                                              $Niv =  $basicas->BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$_SESSION["Vendedor"]);
                                               if($Reg['Usuario'] == "SISTEMA"){
                                                 echo $Reg['Usuario'];
                                                 $Niv = 4;
                                                 $sql = "SELECT * FROM Empleados WHERE Nivel >= $Niv AND Nombre != 'Vacante' ";
                                               }elseif($Niv == 1){
-                                                $UsrPro = Basicas::BuscarCampos($mysqli,"Nombre","Empleados","IdUsuario",$Reg['Usuario']);
+                                                $UsrPro = $basicas->BuscarCampos($mysqli,"Nombre","Empleados","IdUsuario",$Reg['Usuario']);
                                                 if(empty($UsrPro)){
                                                   echo "Sin Asignar";
                                                 }else{
                                                   echo $UsrPro;
                                                 }
                                                 //Se busca la sucursal de el actual y nivel de el usuario
-                                                $Suc =  Basicas::BuscarCampos($mysqli,"Sucursal","Empleados","IdUsuario",$Reg['Usuario']);
+                                                $Suc =  $basicas->BuscarCampos($mysqli,"Sucursal","Empleados","IdUsuario",$Reg['Usuario']);
                                                 $sql = "SELECT * FROM Empleados WHERE Nombre != 'Vacante'";
                                               }else{
-                                                echo Basicas::BuscarCampos($mysqli,"Nombre","Empleados","IdUsuario",$Reg['Usuario']);
+                                                echo $basicas->BuscarCampos($mysqli,"Nombre","Empleados","IdUsuario",$Reg['Usuario']);
                                                 //Se busca la sucursal de el actual y nivel de el usuario
-                                                $Suc =  Basicas::BuscarCampos($mysqli,"Sucursal","Empleados","IdUsuario",$Reg['Usuario']);
-                                                $Niv =  Basicas::BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$Reg['Usuario']);
+                                                $Suc =  $basicas->BuscarCampos($mysqli,"Sucursal","Empleados","IdUsuario",$Reg['Usuario']);
+                                                $Niv =  $basicas->BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$Reg['Usuario']);
                                                 $sql = "SELECT * FROM Empleados WHERE Nivel >= $Niv AND Nombre != 'Vacante' AND Sucursal = $Suc";
                                               }
                                               ?>
@@ -192,8 +192,8 @@
                                   $S62 = $mysqli->query($sql);
                                   while($S63= mysqli_fetch_array($S62)){
                                     echo "<option value='".$S63['IdUsuario']."'>".
-                                    Basicas::BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$S63['Nivel'])." - ".
-                                    Basicas::BuscarCampos($mysqli,"nombreSucursal","Sucursal","Id",$S63['Sucursal'])." - ".
+                                    $basicas->BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$S63['Nivel'])." - ".
+                                    $basicas->BuscarCampos($mysqli,"nombreSucursal","Sucursal","Id",$S63['Sucursal'])." - ".
                                     $S63['Nombre']."</option>";
                                   }
                                 ?>
@@ -432,10 +432,10 @@
               //Busqueda de clientes
               if(!empty($_POST['Status'])){
                   //Buscamos clientes por status
-                  $buscar = Basicas::BLikes( $mysqli,"Venta","Status",$_POST['Status']);
+                  $buscar = $basicas->BLikes( $mysqli,"Venta","Status",$_POST['Status']);
               }elseif(!empty($name)){
                   //Buscamos clientes por nombre
-                  $buscar = Basicas::BLikes( $mysqli,"Venta","Nombre",$name);
+                  $buscar = $basicas->BLikes( $mysqli,"Venta","Nombre",$name);
               }
                   foreach ($buscar as $row){
                   //Se busca si el cliente ya esta no debe nada

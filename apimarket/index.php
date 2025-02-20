@@ -126,7 +126,7 @@
             <div class="center-heading">
               <div class="count-item decoration-bottom">
                   <h2 class="section-title">
-                    <strong>1<?PHP echo number_format(Basicas::MaxDat($mysqli,"Id","Venta"),0,".",",");?></strong><span> Clientes Activos</span>
+                    <strong>1<?PHP echo number_format($basicas->MaxDat($mysqli,"Id","Venta"),0,".",",");?></strong><span> Clientes Activos</span>
                   </h2>
               </div>
               <p style="text-align: justify;"><strong>KASU</strong> es una plataforma que cuenta con un entorno de gestión robusto que permite a los usuarios realizar la compra de pequeñas partes de fideicomisos que sirven como ahorro para afrontar situaciones difíciles en su vida, tales como gastos funerarios, enviar a sus hijos a la universidad, crear fondos para el retiro y envio y recepcion de remesas.</p>
@@ -251,7 +251,7 @@
 							//Creamos la variables pricipales
 							$cont = 1;
 							//Contamos el no de  Articulos
-							$MaxPro = Basicas::MaxDat($mysqli,"id","ContProd");
+							$MaxPro = $basicas->MaxDat($mysqli,"id","ContProd");
 							//Se imprimen los comentarios
 							while($cont <= $MaxPro){
 								//Consulta para los artiulos

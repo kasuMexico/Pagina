@@ -3,6 +3,8 @@
 foreach (glob("../Funciones/*.php") as $archivo) {
     require_once $archivo;
 }
+//creamos una variable general para las funciones
+$basicas = new Basicas();
 //Requerir las conexiones
 //require_once '../Conexiones/cn_vtas.php';
 require_once '../Conexiones/cn_pruebas.php';
@@ -45,7 +47,7 @@ if ($data['tipo_peticion'] == 'product_cost') {
       //Variable para multimples consultas
       $producto = $data['producto'];
       //Descargamos la contraseña de el usuario
-      $password_usuario = Basicas::BuscarCampos($mysqli,"Pass","Empleados","IdUsuario",$data['nombre_de_usuario']);
+      $password_usuario = $basicas->BuscarCampos($mysqli,"Pass","Empleados","IdUsuario",$data['nombre_de_usuario']);
       //Esta funcion Valida y genere el Usr Agent
       $Usr_Agent = Seguridad::ValidarUsrAPI($mysqli,$data['nombre_de_usuario'],$_SERVER['HTTP_USER_AGENT']);
       //Buscamos los datos para gener el Secret_KEY
@@ -61,23 +63,23 @@ if ($data['tipo_peticion'] == 'product_cost') {
         exit;
       }else{
         //Validamos el producto
-        if(Basicas::VerificarProducto($data['curp_en_uso'],$producto)){
+        if($basicas->VerificarProducto($data['curp_en_uso'],$producto)){
           //si el producto es Funerario obtenemos el bloque del producto
           if($producto == "Funerario"){
             //Obtene mos la edad de el cliente
-            $EdadCte = Basicas::ObtenerEdad($data['curp_en_uso']);
-            $producto =  Basicas::ProdFune($EdadCte);
+            $EdadCte = $basicas->ObtenerEdad($data['curp_en_uso']);
+            $producto =  $basicas->ProdFune($EdadCte);
           }
             // Enviar la respuesta en formato JSON
             header('HTTP/1.1 200 OK');
             header('Content-Type: application/json');
             echo json_encode(
               array(
-                  'costo'         => Basicas::BuscarCampos($mysqli,"Costo","Productos","Producto",$producto),
-                  'comision'      => Basicas::BuscarCampos($mysqli,"comision","Productos","Producto",$producto),
+                  'costo'         => $basicas->BuscarCampos($mysqli,"Costo","Productos","Producto",$producto),
+                  'comision'      => $basicas->BuscarCampos($mysqli,"comision","Productos","Producto",$producto),
                   'foma_pago'     => array(
-                      'meses_max'     => Basicas::BuscarCampos($mysqli,"MaxCredito","Productos","Producto",$producto),
-                      'tasa_interes'  => Basicas::BuscarCampos($mysqli,"TasaAnual","Productos","Producto",$producto)
+                      'meses_max'     => $basicas->BuscarCampos($mysqli,"MaxCredito","Productos","Producto",$producto),
+                      'tasa_interes'  => $basicas->BuscarCampos($mysqli,"TasaAnual","Productos","Producto",$producto)
                   )
               )
             );
@@ -116,7 +118,7 @@ if ($data['tipo_peticion'] == 'registro_servicio') { // if tipo_peticion
       //Variable para multimples consultas
       $producto = $data['producto'];
       //Descargamos la contraseña de el usuario
-      $password_usuario = Basicas::BuscarCampos($mysqli,"Pass","Empleados","IdUsuario",$data['nombre_de_usuario']);
+      $password_usuario = $basicas->BuscarCampos($mysqli,"Pass","Empleados","IdUsuario",$data['nombre_de_usuario']);
       //Esta funcion Valida y genere el Usr Agent
       $Usr_Agent = Seguridad::ValidarUsrAPI($mysqli,$data['nombre_de_usuario'],$_SERVER['HTTP_USER_AGENT']);
       //Buscamos los datos para gener el Secret_KEY
@@ -145,15 +147,15 @@ if ($data['tipo_peticion'] == 'registro_servicio') { // if tipo_peticion
       //si el producto es Funerario obtenemos el bloque del producto
       if($producto == "Funerario"){
             //Obtene mos la edad de el cliente
-            $EdadCte = Basicas::ObtenerEdad($data['curp_en_uso']);
-            $producto =  Basicas::ProdFune($EdadCte);
+            $EdadCte = $basicas->ObtenerEdad($data['curp_en_uso']);
+            $producto =  $basicas->ProdFune($EdadCte);
       }
       //Buscamos si el cliente no se encuentra duplicado en la base de datos
-      $OPsd = Basicas::BuscarCampos($mysqli,"IdContact","Usuario","ClaveCurp",$data['curp_en_uso']);
+      $OPsd = $basicas->BuscarCampos($mysqli,"IdContact","Usuario","ClaveCurp",$data['curp_en_uso']);
       //Si el cliente ya se encuentraregistrado arroja un error
       if(!empty($OPsd)){
             //Buscamos si el cliente no se encuentra duplicado en la base de datos
-            $DJsuT = Basicas::BuscarCampos($mysqli,"Producto","Venta","IdContact",$OPsd);
+            $DJsuT = $basicas->BuscarCampos($mysqli,"Producto","Venta","IdContact",$OPsd);
             //Se comparan los productos
             if($DJsuT == $producto){ //Producto Duplicado
               //Si el cliente tiene mas de la edad aceptable del producto
@@ -193,7 +195,7 @@ if ($data['tipo_peticion'] == 'registro_servicio') { // if tipo_peticion
                  "Producto"  => $producto
               );
               //Se realiza el insert en la base de datos
-              $IdContacto = Basicas::InsertCampo($mysqli,"Contacto",$DatContac);
+              $IdContacto = $basicas->InsertCampo($mysqli,"Contacto",$DatContac);
               //Registramos el nombre de el cliente
               $nombre = $ArrayRes["Nombre"]." ".$ArrayRes["Paterno"]." ".$ArrayRes["Materno"];
               //Se crea el array que contiene los datos de registro
@@ -206,7 +208,7 @@ if ($data['tipo_peticion'] == 'registro_servicio') { // if tipo_peticion
                   "Email"         => $mail
               );
               //Se realiza el insert en la base de datos
-              Basicas::InsertCampo($mysqli,"Usuario",$DatUser);
+              $basicas->InsertCampo($mysqli,"Usuario",$DatUser);
               //Se crea el array que contiene los datos de registro
               $DatLegal = array (
                   "IdContacto"    => $IdContacto,
@@ -216,10 +218,10 @@ if ($data['tipo_peticion'] == 'registro_servicio') { // if tipo_peticion
                   "Fideicomiso"   => $fideicomiso
               );
               //Se realiza el insert en la base de datos
-              Basicas::InsertCampo($mysqli,"Legal",$DatLegal);
+              $basicas->InsertCampo($mysqli,"Legal",$DatLegal);
               //Buscar precios y tasas
-              $Costo = Basicas::BuscarCampos($mysqli,"Costo","Productos","Producto",$producto);
-              $Tasa = Basicas::BuscarCampos($mysqli,"TasaAnual","Productos","Producto",$producto);
+              $Costo = $basicas->BuscarCampos($mysqli,"Costo","Productos","Producto",$producto);
+              $Tasa = $basicas->BuscarCampos($mysqli,"TasaAnual","Productos","Producto",$producto);
               //Se genera la referencia unica del cte MMN
               $firma = Seguridad::Firma($mysqli,$IdContacto,$Costo);
               //Buscamos los datos y realizamos un registro en la venta
@@ -236,7 +238,7 @@ if ($data['tipo_peticion'] == 'registro_servicio') { // if tipo_peticion
                   "TipoServicio"  => "Ecologico"
                 );
                 //Insertar los datos en la base
-                $IdVenta = Basicas::InsertCampo($mysqli,"Venta",$Venta);
+                $IdVenta = $basicas->InsertCampo($mysqli,"Venta",$Venta);
                 //Se crea el array que contiene los datos para REGISTRO DE EVENTOS
                 $DatEventos = array(
                     "Contacto"      => $IdContacto,
@@ -245,7 +247,7 @@ if ($data['tipo_peticion'] == 'registro_servicio') { // if tipo_peticion
                     "FechaRegistro" => date('Y-m-d')." ".date('H:i:s')
                 );
                 //Se realiza el insert en la base de datos
-                Basicas::InsertCampo($mysqli,"Eventos",$DatEventos);
+                $basicas->InsertCampo($mysqli,"Eventos",$DatEventos);
                 // Enviar la respuesta en formato JSON
                 header('HTTP/1.1 201 OK');
                 header('Content-Type: application/json');

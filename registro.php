@@ -16,13 +16,13 @@
 //Validamos el cupon registrado
 				if(!empty($_SESSION["tarjeta"])){
 					//Buscamos si el producto puede aplicar el descuento
-							$IdProd = Basicas::BuscarCampos($mysqli,"Id","Productos","Producto",$_SESSION["Producto"]);
+							$IdProd = $basicas->BuscarCampos($mysqli,"Id","Productos","Producto",$_SESSION["Producto"]);
 					//Buscamos las variables de los cupones
-							$Img = Basicas::BuscarCampos($mysqli,"Img","PostSociales","Id",$_SESSION["tarjeta"]);
-							$Descuento = Basicas::BuscarCampos($mysqli,"Descuento","PostSociales","Id",$_SESSION["tarjeta"]);
-							$Prod = Basicas::BuscarCampos($mysqli,"Producto","PostSociales","Id",$_SESSION["tarjeta"]);
+							$Img = $basicas->BuscarCampos($mysqli,"Img","PostSociales","Id",$_SESSION["tarjeta"]);
+							$Descuento = $basicas->BuscarCampos($mysqli,"Descuento","PostSociales","Id",$_SESSION["tarjeta"]);
+							$Prod = $basicas->BuscarCampos($mysqli,"Producto","PostSociales","Id",$_SESSION["tarjeta"]);
 					//Buscamos el id de el cupon asignado
-							$IdPCup = Basicas::BuscarCampos($mysqli,"Id","Productos","Producto",$Prod);
+							$IdPCup = $basicas->BuscarCampos($mysqli,"Id","Productos","Producto",$Prod);
 					//Creamos el nuevo precio de el producto
 							if($IdProd >= $IdPCup){
 								$Valor = 1;

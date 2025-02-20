@@ -47,7 +47,7 @@ if (!$Reg || empty($Reg['id'])) {
         "plugins"       => $_POST['plugins'],
         "useragent"     => $_POST['useragent']
     );
-    $IdFinger = Basicas::InsertCampo($mysqli, "FingerPrint", $DatFinger);
+    $IdFinger = $basicas->InsertCampo($mysqli, "FingerPrint", $DatFinger);
     if (!$IdFinger) {
         error_log("Error al insertar FingerPrint.");
     }
@@ -69,7 +69,7 @@ $DatEventos = array(
     "FechaRegistro" => $hoy . " " . $HoraActual
 );
 
-$resultEvento = Basicas::InsertCampo($mysqli, "Eventos", $DatEventos);
+$resultEvento = $basicas->InsertCampo($mysqli, "Eventos", $DatEventos);
 if ($resultEvento === false) {
     error_log("Error al insertar Evento: " . mysqli_error($mysqli));
 } else {

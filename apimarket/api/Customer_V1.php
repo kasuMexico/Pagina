@@ -3,6 +3,8 @@
 foreach (glob("../Funciones/*.php") as $archivo) {
     require_once $archivo;
 }
+//creamos una variable general para las funciones
+$basicas = new Basicas();
 //Requerir las conexiones
 require_once '../Conexiones/cn_vtas.php';
 //require_once '../Conexiones/cn_pruebas.php';
@@ -47,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] != 'POST') {
 
   //Realizamos un registro de eventos cada que se realice una peticion resulte positiva o negativa
   //buscamos el dato de contacto de el cliente
-  $IdContacto = Basicas::BuscarCampos($mysqli,"IdContact","Usuario","ClaveCurp",$data['curp_en_uso']);
+  $IdContacto = $basicas->BuscarCampos($mysqli,"IdContact","Usuario","ClaveCurp",$data['curp_en_uso']);
   //Realizamos un insert en la base de datos como evento realizado
   $DatEventos = array(
       "Contacto"      => $data['nombre_de_usuario'],
@@ -59,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] != 'POST') {
       "FechaRegistro" => date('Y-m-d')." ".date('H:i:s')
   );
   //Se realiza el insert en la base de datos
-  Basicas::InsertCampo($mysqli,"Eventos",$DatEventos);
+  $basicas->InsertCampo($mysqli,"Eventos",$DatEventos);
 
 
   if($data['tipo_peticion'] === "request" AND $data['request'] === "request_block"){ //Consulta las claves que deben ponerse en individual request
@@ -118,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] != 'POST') {
   //Bloque de consultas indivi
   }elseif($data['tipo_peticion'] === "individual_request" AND $data['request'] != "producto"){ // consulta un dato especifico de el cliente
     //Buscamos la clave proporcionada por el usuario
-    $Autorizacion = Basicas::BuscarCampos($mysqli,"Clave","Autorizacion","ClaveCurp",$data['curp_en_uso']);
+    $Autorizacion = $basicas->BuscarCampos($mysqli,"Clave","Autorizacion","ClaveCurp",$data['curp_en_uso']);
     //Validamos que las consultas sean autorizadas
     if($Autorizacion == "No"){
       //Cerramos las conexiones a la base de datos
@@ -128,17 +130,17 @@ if ($_SERVER['REQUEST_METHOD'] != 'POST') {
       exit;
     }
     //Realizamos la busqueda en la base de datos del id para los registros que buscan los datos de contacto
-    $IdContact = Basicas::BuscarCampos($mysqli,"IdContact","Usuario","ClaveCurp",$data['curp_en_uso']);
+    $IdContact = $basicas->BuscarCampos($mysqli,"IdContact","Usuario","ClaveCurp",$data['curp_en_uso']);
     //Realizamos las busquedas individualizadas
     if (in_array($data['request'], ["Mail", "Telefono", "calle", "numero", "colonia", "municipio", "codigo_postal", "estado", "Producto"])) { //Inician las precondiciones de busqueda
       //Busqueda en la tabla Contacto
-      $Retorno = Basicas::BuscarCampos($mysqli,$data['request'],"Contacto","id",$IdContact);
+      $Retorno = $basicas->BuscarCampos($mysqli,$data['request'],"Contacto","id",$IdContact);
     }elseif (in_array($data['request'], ["Usuario", "Tipo", "Nombre"])) {
       //Busqueda en la tabla Usuario
-      $Retorno = Basicas::BuscarCampos($mysqli,$data['request'],"Usuario","ClaveCurp",$data['curp_en_uso']);
+      $Retorno = $basicas->BuscarCampos($mysqli,$data['request'],"Usuario","ClaveCurp",$data['curp_en_uso']);
     }elseif (in_array($data['request'], ["CostoVenta", "NumeroPagos", "IdFIrma", "Status", "FechaRegistro"])) {
       //Identificamos si hay mas de una venta
-      $Cont_vtas = Basicas::ConUno($mysqli,"Venta","IdContact",$IdContact);
+      $Cont_vtas = $basicas->ConUno($mysqli,"Venta","IdContact",$IdContact);
       if($Cont_vtas > 1){
 
         $producto = array(); // Se declara el array vacío
@@ -155,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] != 'POST') {
         }
       }else{
         //Busqueda en la tabla Venta
-        $Retorno = Basicas::BuscarCampos($mysqli,$data['request'],"Venta","IdContact",$IdContact);
+        $Retorno = $basicas->BuscarCampos($mysqli,$data['request'],"Venta","IdContact",$IdContact);
       }
     }else{
       //Cerramos las conexiones a la base de datos
@@ -180,7 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] != 'POST') {
   //retornamos los datos de un cliente
   }elseif($data['tipo_peticion'] === "request_block" AND $data['request'] === "cliente"){ //consulta los datos generales de un cliente
     //Buscamos la clave proporcionada por el usuario
-    $Autorizacion = Basicas::BuscarCampos($mysqli,"Clave","Autorizacion","ClaveCurp",$data['curp_en_uso']);
+    $Autorizacion = $basicas->BuscarCampos($mysqli,"Clave","Autorizacion","ClaveCurp",$data['curp_en_uso']);
     //Validamos que las consultas sean autorizadas
     if($Autorizacion == "No"){
       //Cerramos las conexiones a la base de datos
@@ -233,7 +235,7 @@ if ($_SERVER['REQUEST_METHOD'] != 'POST') {
     //Variables para multimples consultas
     $producto = $data['producto'];
     //Validamos el producto con base en la edad del cliente para saber si es apto
-    if(Basicas::VerificarProducto($data['curp_en_uso'],$producto) == false){
+    if($basicas->VerificarProducto($data['curp_en_uso'],$producto) == false){
       //Si el cliente tiene mas de la edad aceptable del producto
       header('HTTP/1.1 406 No aceptable');
       exit;
@@ -241,13 +243,13 @@ if ($_SERVER['REQUEST_METHOD'] != 'POST') {
     //si el producto es Funerario obtenemos el bloque del producto
     if($producto == "Funerario"){
       //Obtene mos la edad de el cliente
-      $EdadCte = Basicas::ObtenerEdad($data['curp_en_uso']);
-      $producto =  Basicas::ProdFune($EdadCte);
+      $EdadCte = $basicas->ObtenerEdad($data['curp_en_uso']);
+      $producto =  $basicas->ProdFune($EdadCte);
     }
-    $costo      = Basicas::BuscarCampos($mysqli,"Costo","Productos","Producto",$producto);
-    $comision   = Basicas::BuscarCampos($mysqli,"comision","Productos","Producto",$producto);
-    $meses_max  = Basicas::BuscarCampos($mysqli,"MaxCredito","Productos","Producto",$producto);
-    $tasa_anual = Basicas::BuscarCampos($mysqli,"TasaAnual","Productos","Producto",$producto);
+    $costo      = $basicas->BuscarCampos($mysqli,"Costo","Productos","Producto",$producto);
+    $comision   = $basicas->BuscarCampos($mysqli,"comision","Productos","Producto",$producto);
+    $meses_max  = $basicas->BuscarCampos($mysqli,"MaxCredito","Productos","Producto",$producto);
+    $tasa_anual = $basicas->BuscarCampos($mysqli,"TasaAnual","Productos","Producto",$producto);
     //Cerramos las conexiones a la base de datos
     mysqli_close($mysqli);
     // Enviar la respuesta en formato JSON
@@ -267,19 +269,19 @@ if ($_SERVER['REQUEST_METHOD'] != 'POST') {
     );
   }elseif($data['tipo_peticion'] === "request_block" AND $data['request'] === "catalogo_productos"){ //consulta todos los productos existentes
     // Obtenemos el dato maximo de productos
-    $Max = Basicas::MaxDat($mysqli,"Id","Productos");
+    $Max = $basicas->MaxDat($mysqli,"Id","Productos");
     $a = 1;
     $productos = array();
     while ($a <= $Max) {
         //Creamos el array que imprima los datos
         $producto = array(
-            'producto'        => Basicas::BuscarCampos($mysqli,"Producto","Productos","Id",$a),
-            'costo'           => Basicas::BuscarCampos($mysqli,"Costo","Productos","Id",$a),
-            'comision'        => Basicas::BuscarCampos($mysqli,"comision","Productos","Id",$a),
-            'fideicomiso'     => Basicas::BuscarCampos($mysqli,"Fideicomiso","Productos","Id",$a),
+            'producto'        => $basicas->BuscarCampos($mysqli,"Producto","Productos","Id",$a),
+            'costo'           => $basicas->BuscarCampos($mysqli,"Costo","Productos","Id",$a),
+            'comision'        => $basicas->BuscarCampos($mysqli,"comision","Productos","Id",$a),
+            'fideicomiso'     => $basicas->BuscarCampos($mysqli,"Fideicomiso","Productos","Id",$a),
             'foma_pago'       => array(
-                  'meses_max'     => Basicas::BuscarCampos($mysqli,"MaxCredito","Productos","Id",$a),
-                  'tasa_anual'  => Basicas::BuscarCampos($mysqli,"TasaAnual","Productos","Id",$a)
+                  'meses_max'     => $basicas->BuscarCampos($mysqli,"MaxCredito","Productos","Id",$a),
+                  'tasa_anual'  => $basicas->BuscarCampos($mysqli,"TasaAnual","Productos","Id",$a)
             )
         );
         array_push($productos, $producto);

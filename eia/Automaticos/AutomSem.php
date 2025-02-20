@@ -35,29 +35,29 @@ while ($fila = mysqli_fetch_array($resultado)) {
 $claves_aleatorias = array_rand($dir, 4);
 
 // Para cada uno, se obtiene el target_post_id; si es 0 se usa el ID original
-$temp = Basicas::BuscarCampos($cnp, "target_post_id", "wp_yoast_seo_links", "post_id", $id[$claves_aleatorias[0]]);
+$temp = $basicas->BuscarCampos($cnp, "target_post_id", "wp_yoast_seo_links", "post_id", $id[$claves_aleatorias[0]]);
 $pst_parA = ($temp == 0) ? $id[$claves_aleatorias[0]] : $temp;
 
-$temp = Basicas::BuscarCampos($cnp, "target_post_id", "wp_yoast_seo_links", "post_id", $id[$claves_aleatorias[1]]);
+$temp = $basicas->BuscarCampos($cnp, "target_post_id", "wp_yoast_seo_links", "post_id", $id[$claves_aleatorias[1]]);
 $pst_parB = ($temp == 0) ? $id[$claves_aleatorias[1]] : $temp;
 
-$temp = Basicas::BuscarCampos($cnp, "target_post_id", "wp_yoast_seo_links", "post_id", $id[$claves_aleatorias[2]]);
+$temp = $basicas->BuscarCampos($cnp, "target_post_id", "wp_yoast_seo_links", "post_id", $id[$claves_aleatorias[2]]);
 $pst_parC = ($temp == 0) ? $id[$claves_aleatorias[2]] : $temp;
 
-$temp = Basicas::BuscarCampos($cnp, "target_post_id", "wp_yoast_seo_links", "post_id", $id[$claves_aleatorias[3]]);
+$temp = $basicas->BuscarCampos($cnp, "target_post_id", "wp_yoast_seo_links", "post_id", $id[$claves_aleatorias[3]]);
 $pst_parD = ($temp == 0) ? $id[$claves_aleatorias[3]] : $temp;
 
 // Obtener el ID mínimo de la imagen (post) para cada artículo
-$IdImgA = Basicas::Min1Dat($cnp, "ID", "wp_posts", "post_parent", $pst_parA);
-$IdImgB = Basicas::Min1Dat($cnp, "ID", "wp_posts", "post_parent", $pst_parB);
-$IdImgC = Basicas::Min1Dat($cnp, "ID", "wp_posts", "post_parent", $pst_parC);
-$IdImgD = Basicas::Min1Dat($cnp, "ID", "wp_posts", "post_parent", $pst_parD);
+$IdImgA = $basicas->Min1Dat($cnp, "ID", "wp_posts", "post_parent", $pst_parA);
+$IdImgB = $basicas->Min1Dat($cnp, "ID", "wp_posts", "post_parent", $pst_parB);
+$IdImgC = $basicas->Min1Dat($cnp, "ID", "wp_posts", "post_parent", $pst_parC);
+$IdImgD = $basicas->Min1Dat($cnp, "ID", "wp_posts", "post_parent", $pst_parD);
 
 // Obtener la primera imagen (guid) de cada artículo
-$imag1 = Basicas::BuscarCampos($cnp, "guid", "wp_posts", "ID", $IdImgA);
-$imag2 = Basicas::BuscarCampos($cnp, "guid", "wp_posts", "ID", $IdImgB);
-$imag3 = Basicas::BuscarCampos($cnp, "guid", "wp_posts", "ID", $IdImgC);
-$imag4 = Basicas::BuscarCampos($cnp, "guid", "wp_posts", "ID", $IdImgD);
+$imag1 = $basicas->BuscarCampos($cnp, "guid", "wp_posts", "ID", $IdImgA);
+$imag2 = $basicas->BuscarCampos($cnp, "guid", "wp_posts", "ID", $IdImgB);
+$imag3 = $basicas->BuscarCampos($cnp, "guid", "wp_posts", "ID", $IdImgC);
+$imag4 = $basicas->BuscarCampos($cnp, "guid", "wp_posts", "ID", $IdImgD);
 
 // Titulos aleatorios
 $Titulo1 = $tit[$claves_aleatorias[0]];
@@ -74,18 +74,18 @@ $dirUrl4 = $empresa . "blog/" . $dir[$claves_aleatorias[3]];
 /*************************************************************************************************************
                                       ENVÍO DE CORREOS A PROSPECTOS
 *************************************************************************************************************/
-$MxArt = Basicas::MaxDat($pros, "Id", "prospectos");
+$MxArt = $basicas->MaxDat($pros, "Id", "prospectos");
 $i = 1;
 
 // Enviar un correo de artículos a cada prospecto
 while ($i <= $MxArt) {
     // Se verifica si el prospecto tiene el servicio cancelado
-    $Fa = Basicas::BuscarCampos($pros, "Cancelacion", "prospectos", "Id", $i);
+    $Fa = $basicas->BuscarCampos($pros, "Cancelacion", "prospectos", "Id", $i);
     if (empty($Fa)) {
         // Se obtienen los datos del prospecto
-        $FullName  = Basicas::BuscarCampos($pros, "FullName", "prospectos", "Id", $i);
-        $RegEmail  = Basicas::BuscarCampos($pros, "Email", "prospectos", "Id", $i);
-        $Rl        = Basicas::BuscarCampos($pros, "Sugeridos", "prospectos", "Id", $i);
+        $FullName  = $basicas->BuscarCampos($pros, "FullName", "prospectos", "Id", $i);
+        $RegEmail  = $basicas->BuscarCampos($pros, "Email", "prospectos", "Id", $i);
+        $Rl        = $basicas->BuscarCampos($pros, "Sugeridos", "prospectos", "Id", $i);
 
         // Se crea el correo utilizando la plantilla "ARTÍCULOS SUGERIDOS"
         $mensa = Correo::Mensaje(
@@ -115,7 +115,7 @@ while ($i <= $MxArt) {
 
         // Se incrementa el valor de "Sugeridos" y se actualiza el registro
         $Rl++;
-        Basicas::ActCampo($pros, "prospectos", "Sugeridos", $Rl, $i);
+        $basicas->ActCampo($pros, "prospectos", "Sugeridos", $Rl, $i);
     }
     $i++;
 }
@@ -130,14 +130,14 @@ if (!$S629) {
 }
 while ($S659 = mysqli_fetch_array($S629)) {
     // Obtener el Id de contacto de la venta
-    $i = Basicas::BuscarCampos($mysqli, "IdContact", "Venta", "Id", $S659[0]);
+    $i = $basicas->BuscarCampos($mysqli, "IdContact", "Venta", "Id", $S659[0]);
     // Verificar si el servicio está cancelado en la tabla Contacto
-    $Fa = Basicas::BuscarCampos($mysqli, "Cancelacion", "Contacto", "id", $i);
+    $Fa = $basicas->BuscarCampos($mysqli, "Cancelacion", "Contacto", "id", $i);
     if (empty($Fa)) {
-        $FullName = Basicas::BuscarCampos($mysqli, "Nombre", "Usuario", "IdContact", $i);
-        $RegEmail = Basicas::BuscarCampos($mysqli, "Mail", "Contacto", "id", $i);
+        $FullName = $basicas->BuscarCampos($mysqli, "Nombre", "Usuario", "IdContact", $i);
+        $RegEmail = $basicas->BuscarCampos($mysqli, "Mail", "Contacto", "id", $i);
         if (!empty($RegEmail)) {
-            $Rl = Basicas::BuscarCampos($mysqli, "Sugeridos", "Contacto", "id", $i);
+            $Rl = $basicas->BuscarCampos($mysqli, "Sugeridos", "Contacto", "id", $i);
             // Se utiliza la plantilla "ARTÍCULOS SUGERIDOS" con un indicador 'Baja' en el sexto parámetro (según lo definido en Funciones_kasu.php)
             $mensa = Correo::Mensaje(
                 $asunto,
@@ -163,7 +163,7 @@ while ($S659 = mysqli_fetch_array($S629)) {
             );
             Correo::EnviarCorreo($FullName, $RegEmail, $asunto, $mensa);
             $Rl++;
-            Basicas::ActCampo($mysqli, "Contacto", "Sugeridos", $Rl, $i);
+            $basicas->ActCampo($mysqli, "Contacto", "Sugeridos", $Rl, $i);
         }
     }
 }
@@ -181,7 +181,7 @@ if ($res1) {
             if ($Reg1['Estado'] == 0) {
                 $asunto = 'CONOCENOS UN POCO MÁS';
             } else {
-                $asunto = Basicas::Buscar2Campos($pros, 'Asunto', 'correos', 'Seguimiento', $Reg1['Estado'], 'Tipo', 'VENTA');
+                $asunto = $basicas->Buscar2Campos($pros, 'Asunto', 'correos', 'Seguimiento', $Reg1['Estado'], 'Tipo', 'VENTA');
             }
             // Se definen parámetros según el asunto
             if ($asunto == "CONOCENOS UN POCO MÁS") {
@@ -270,8 +270,8 @@ if ($res1) {
             // Enviar el correo
             Correo::EnviarCorreo($Reg1['FullName'], $Reg1['Email'], $asunto, $mensa);
             // Registrar el estado del correo enviado
-            $ValMail = Basicas::BuscarCampos($pros, 'Seguimiento', 'correos', 'Asunto', $asunto);
-            Basicas::ActCampo($pros, "prospectos", "Estado", $ValMail, $Reg1['Id']);
+            $ValMail = $basicas->BuscarCampos($pros, 'Seguimiento', 'correos', 'Asunto', $asunto);
+            $basicas->ActCampo($pros, "prospectos", "Estado", $ValMail, $Reg1['Id']);
         }
     }
 }

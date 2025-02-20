@@ -19,7 +19,7 @@ $array = array();
   foreach ($res1 as $Reg1){
       $producto = $Reg1['Producto'];
       //Se Suma las ventas de los Usuarios q tienen el Id del equipo
-      $unidades_vendidas = Basicas::Cuenta1Fec($mysqli,'Venta','Producto',$producto,'FechaRegistro',$FechaInicial);
+      $unidades_vendidas = $basicas->Cuenta1Fec($mysqli,'Venta','Producto',$producto,'FechaRegistro',$FechaInicial);
       //Insertamos el valor en el array
       $array['cols'][] = array('type' => 'string');
       $array['rows'][] = array('c' => array( array('v'=> $producto), array('v'=>(int)$unidades_vendidas)) );

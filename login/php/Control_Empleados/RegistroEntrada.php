@@ -1,4 +1,6 @@
 <?
+//creamos una variable general para las funciones
+$basicas = new Basicas();
 /******************************  INICIO Registro entrada, descansos, comida y salida   *************************************/
 $_SESSION["Entrada"] = date('09:00:00');
 $_SESSION["Tolerancia"] = date('09:10:00');
@@ -12,11 +14,11 @@ $evOfi = "Oficina";
 /**********************************Inicio de la funcion***********************************/
 
 if(date('w',strtotime($hoy)) != 0 && date('w',strtotime($hoy)) != 6){
-    $Vendedor = Basicas::BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+    $Vendedor = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
     //busca que no tenga registro del dia
-    $existe = Basicas::ConUnCon($mysqli,"Asistencia","Fech_in",$hoy,"usuario_id",$Vendedor);
-    $_SESSION["exis"] = Basicas::BuscarCampos($mysqli,"usuario_id","Asistencia","Fech_in",$hoy);
-    $_SESSION["Registre"] = Basicas::Buscar2Campos($mysqli,"Salida","Asistencia","Fech_in",$hoy,"usuario_id",$Vendedor);
+    $existe = $basicas->ConUnCon($mysqli,"Asistencia","Fech_in",$hoy,"usuario_id",$Vendedor);
+    $_SESSION["exis"] = $basicas->BuscarCampos($mysqli,"usuario_id","Asistencia","Fech_in",$hoy);
+    $_SESSION["Registre"] = $basicas->Buscar2Campos($mysqli,"Salida","Asistencia","Fech_in",$hoy,"usuario_id",$Vendedor);
     if($existe == 0){
         $Color = "#04B431";
         $Texto = "Entrada";
@@ -34,8 +36,8 @@ if(date('w',strtotime($hoy)) != 0 && date('w',strtotime($hoy)) != 6){
                   "Entrada"   => $HoraActual,
                   "Antelacion"   => $antelacion
                 );
-                $_SESSION["llegue"] = Basicas::InsertCampo($mysqli,"Asistencia",$Vine);
-                $_SESSION["exis"] = Basicas::BuscarCampos($mysqli,"usuario_id","Asistencia","Fech_in",$hoy);
+                $_SESSION["llegue"] = $basicas->InsertCampo($mysqli,"Asistencia",$Vine);
+                $_SESSION["exis"] = $basicas->BuscarCampos($mysqli,"usuario_id","Asistencia","Fech_in",$hoy);
                 $Color = "#FFBF00";
                 $Texto = $evDes;
                 echo "<script>alert('Se registro tu entrada, llegaste antes');</script>";
@@ -51,16 +53,16 @@ if(date('w',strtotime($hoy)) != 0 && date('w',strtotime($hoy)) != 6){
                if(strtotime($HoraActual) > strtotime($_SESSION["Entrada"]) && strtotime($HoraActual) < strtotime($_SESSION["Tolerancia"]) && isset($_POST['Latitud']) && isset($_POST['Longitud'])){
                 // if(strtotime($HoraActual) > strtotime($_SESSION["Entrada"]) && strtotime($HoraActual) < strtotime($_SESSION["Tolerancia"])){
                     echo "<script>alert('Se registro tu entrada con tolerancia');</script>";
-                    $_SESSION["llegue"] = Basicas::InsertCampo($mysqli,"Asistencia",$Vine);
-                    $_SESSION["exis"] = Basicas::BuscarCampos($mysqli,"usuario_id","Asistencia","Fech_in",$hoy);
+                    $_SESSION["llegue"] = $basicas->InsertCampo($mysqli,"Asistencia",$Vine);
+                    $_SESSION["exis"] = $basicas->BuscarCampos($mysqli,"usuario_id","Asistencia","Fech_in",$hoy);
                     $Color = "#FFBF00";
                     $Texto = $evDes;
                     header("Refresh: 0; URL= $url");
                 // }else if(strtotime($HoraActual) >= strtotime($_SESSION["Aviso"])){
                }else if(strtotime($HoraActual) >= strtotime($_SESSION["Aviso"]) && isset($_POST['Latitud']) && isset($_POST['Longitud'])){
                     echo "<script>alert('Se envio un mensaje de notificacion a tu supervisor con la hora de tu llegada')</script>";
-                    $_SESSION["llegue"] = Basicas::InsertCampo($mysqli,"Asistencia",$Vine);
-                    $_SESSION["exis"] = Basicas::BuscarCampos($mysqli,"usuario_id","Asistencia","Fech_in",$hoy);
+                    $_SESSION["llegue"] = $basicas->InsertCampo($mysqli,"Asistencia",$Vine);
+                    $_SESSION["exis"] = $basicas->BuscarCampos($mysqli,"usuario_id","Asistencia","Fech_in",$hoy);
                     $Color = "#FFBF00";
                     $Texto = $evDes;
                     $sqlTeam = "SELECT Equipo FROM Empleados WHERE Id = $Vendedor";
@@ -72,8 +74,8 @@ if(date('w',strtotime($hoy)) != 0 && date('w',strtotime($hoy)) != 6){
                           $lat = $_POST['Latitud'];
                           $lon = $_POST['Longitud'];
                           $geo = "Lat: ".$lat." Lon: ".$lon;
-                            $correo = Basicas::BuscarCampos($mysqli,"Mail","Contacto","id",$regBoss['IdContact']);
-                            $nom = Basicas::BuscarCampos($mysqli,"Nombre","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+                            $correo = $basicas->BuscarCampos($mysqli,"Mail","Contacto","id",$regBoss['IdContact']);
+                            $nom = $basicas->BuscarCampos($mysqli,"Nombre","Empleados","IdUsuario",$_SESSION["Vendedor"]);
                             $maiil = Correo::Mensaje('Evento Inusual',$regBoss['Nombre'],$nom,"Entrada",$HoraActual,$geo,'','','','','','','','','','','','','');
                            Correo::EnviarCorreo($regBoss['Nombre'],$correo,'Retardo',$maiil);
                         }
@@ -86,8 +88,8 @@ if(date('w',strtotime($hoy)) != 0 && date('w',strtotime($hoy)) != 6){
                    header("Refresh: 0; URL= $url");
                 }else{
                     echo "<script>alert('Se registro tu entrada, llegas tarde');</script>";
-                    $_SESSION["llegue"] = Basicas::InsertCampo($mysqli,"Asistencia",$Vine);
-                    $_SESSION["exis"] = Basicas::BuscarCampos($mysqli,"usuario_id","Asistencia","Fech_in",$hoy);
+                    $_SESSION["llegue"] = $basicas->InsertCampo($mysqli,"Asistencia",$Vine);
+                    $_SESSION["exis"] = $basicas->BuscarCampos($mysqli,"usuario_id","Asistencia","Fech_in",$hoy);
                     $Color = "#FFBF00";
                     $Texto = $evDes;
                     header("Refresh: 0; URL= $url");
@@ -112,11 +114,11 @@ if(date('w',strtotime($hoy)) != 0 && date('w',strtotime($hoy)) != 6){
             $extra = date("H:i:s",(strtotime("00:00:00")+strtotime($HoraActual)-strtotime($_SESSION["Salida"])));
            // if(strtotime($HoraActual) >= strtotime($_SESSION["Salida"]) && $_SESSION["Registre"] == "00:00:00"){
             if($_SESSION["Registre"] == "00:00:00"){
-                $ven = Basicas::BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+                $ven = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
                 if($_POST["Salida"] == 'Salida E'){
-                    $ya = Basicas::ActCampoSal($mysqli, "Asistencia", $HoraActual, "", $ven, "Salida", "Extra", "Fech_in", "Salida", $hoy, "00:00:00");
+                    $ya = $basicas->ActCampoSal($mysqli, "Asistencia", $HoraActual, "", $ven, "Salida", "Extra", "Fech_in", "Salida", $hoy, "00:00:00");
                 }else{
-                    $ya = Basicas::ActCampoSal($mysqli, "Asistencia", $HoraActual, $extra, $ven, "Salida", "Extra", "Fech_in", "Salida", $hoy, "00:00:00");
+                    $ya = $basicas->ActCampoSal($mysqli, "Asistencia", $HoraActual, $extra, $ven, "Salida", "Extra", "Fech_in", "Salida", $hoy, "00:00:00");
                 }
                 if($ya != 0){
                     header("Refresh: 0; URL= $url");
@@ -167,8 +169,8 @@ if(date('w',strtotime($hoy)) != 0 && date('w',strtotime($hoy)) != 6){
         $display = "none";
     }
 }else{
-    $_SESSION["Registre"] = Basicas::Buscar2Campos($mysqli,"Salida","Asistencia","Fech_in",$hoy,"usuario_id",$Vendedor);
-    $existe = Basicas::ConUnCon($mysqli,"Asistencia","Fech_in",$hoy,"usuario_id",$Vendedor);
+    $_SESSION["Registre"] = $basicas->Buscar2Campos($mysqli,"Salida","Asistencia","Fech_in",$hoy,"usuario_id",$Vendedor);
+    $existe = $basicas->ConUnCon($mysqli,"Asistencia","Fech_in",$hoy,"usuario_id",$Vendedor);
 	  $Color = "#04B431";
     $Texto = "Trabajar";
     $val = "";
@@ -180,8 +182,8 @@ if(date('w',strtotime($hoy)) != 0 && date('w',strtotime($hoy)) != 6){
                   "Fech_in"   => $hoy,
                   "Entrada"   => $HoraActual
                 );
-                $_SESSION["llegue"] = Basicas::InsertCampo($mysqli,"Asistencia",$Vine);
-                $_SESSION["exis"] = Basicas::BuscarCampos($mysqli,"usuario_id","Asistencia","Fech_in",$hoy);
+                $_SESSION["llegue"] = $basicas->InsertCampo($mysqli,"Asistencia",$Vine);
+                $_SESSION["exis"] = $basicas->BuscarCampos($mysqli,"usuario_id","Asistencia","Fech_in",$hoy);
                 $Color = "#FFBF00";
                 $Texto = "Descanso";
                 echo "<script>alert('Se registro tu entrada');</script>";
@@ -221,7 +223,7 @@ if(date('w',strtotime($hoy)) != 0 && date('w',strtotime($hoy)) != 6){
 }
 /************************         FIN Registro entrada, descansos, comida y salida    *******************************************/
 /**************************        INICIO de Cronometro        ******************************************/
-  $hrEntrada = Basicas::Buscar2Campos($mysqli,"Entrada","Asistencia","Fech_in",$hoy,"usuario_id",$Vendedor);
+  $hrEntrada = $basicas->Buscar2Campos($mysqli,"Entrada","Asistencia","Fech_in",$hoy,"usuario_id",$Vendedor);
   if($hrEntrada != ""){
       $nomVen = $_SESSION["Vendedor"];
       $sqlCont = "SELECT COUNT(*) FROM Eventos WHERE Usuario = '".$nomVen."' AND FechaRegistro like '".$hoy."%' AND (Evento = 'Descanso' OR Evento = 'Oficina')";

@@ -7,9 +7,9 @@ require_once '../eia/librerias.php';
     if(!isset($_SESSION["Vendedor"])){
         header('Location: https://kasu.com.mx/login');
       }else{
-        $Niv =  Basicas::BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+        $Niv =  $basicas->BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$_SESSION["Vendedor"]);
         //Buscamos la comision de el usuario
-        $PorCom = Basicas::BuscarCampos($mysqli,"N".$Niv,"Comision","Id",2);
+        $PorCom = $basicas->BuscarCampos($mysqli,"N".$Niv,"Comision","Id",2);
       }
 ?>
 <!DOCTYPE html>
@@ -41,7 +41,7 @@ require_once '../eia/librerias.php';
         </div>
         <?
         $a = 1;
-        $b = Basicas::Max1Dat($mysqli,"Id","PostSociales","Tipo","Vta");
+        $b = $basicas->Max1Dat($mysqli,"Id","PostSociales","Tipo","Vta");
         //Contamos los registros que existen
         while ($a <= 6) {
             //Buscamos 10 codigos en forma random
@@ -68,7 +68,7 @@ require_once '../eia/librerias.php';
                 $DirPrin = "https://twitter.com/intent/tweet?text=".urlencode($Reg['DesA'])."&url=".urlencode('https://kasu.com.mx/constructor.php?datafb=');
               }
               //Buscamos el valor de la comision sobre la venta segun el nivel
-              $ComGen = Basicas::BuscarCampos($mysqli,"comision","Productos","Producto",$Reg['Producto']);
+              $ComGen = $basicas->BuscarCampos($mysqli,"comision","Productos","Producto",$Reg['Producto']);
               //Calculamos la comision degun el nivel
               $as = $PorCom/100;
               $Comis = $ComGen*$as;
@@ -108,7 +108,7 @@ require_once '../eia/librerias.php';
         }
         //Buscamos el final de los articulos
         $g = 1;
-        $f = Basicas::Max1Dat($mysqli,"Id","PostSociales","Tipo","Art");
+        $f = $basicas->Max1Dat($mysqli,"Id","PostSociales","Tipo","Art");
         $b++;
         //Contamos los registros que existen
         while ($g <= 4) {
@@ -136,7 +136,7 @@ require_once '../eia/librerias.php';
                 $DirPrin = "https://twitter.com/intent/tweet?text=".urlencode($Reg['DesA'])."&url=".urlencode('https://kasu.com.mx/constructor.php?datafb=');
               }
               //Buscamos el valor de la comision sobre la venta segun el nivel
-              $ComGen = Basicas::BuscarCampos($mysqli,"comision","Productos","Producto",$Reg['Producto']);
+              $ComGen = $basicas->BuscarCampos($mysqli,"comision","Productos","Producto",$Reg['Producto']);
               //Calculamos la comision degun el nivel
               $as = $PorCom/100;
               $Comis = $ComGen*$as;

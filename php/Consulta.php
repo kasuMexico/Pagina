@@ -8,14 +8,14 @@
 				//Protegemos el valor
 				$dat = $mysqli -> real_escape_string($dat);
         //Buscamos si existe el registro CURP en la base de datos
-        $cont = Basicas::BuscarCampos($mysqli,"IdContact","Usuario","ClaveCurp",$dat);
+        $cont = $basicas->BuscarCampos($mysqli,"IdContact","Usuario","ClaveCurp",$dat);
 				//Se realiza la busqueda de valores
 	      if($cont >= 1){
                 //Variables Generales;
                 $Tabla = "Venta";
                 $Refer = "IdContact";
 								//Se imprime la informacion a mostrar
-                $producto = Basicas::BuscarCampos($mysqli,"Producto",$Tabla,$Refer,$cont);
+                $producto = $basicas->BuscarCampos($mysqli,"Producto",$Tabla,$Refer,$cont);
 								//Seleccionamos el producto por categoria
 								if($producto == "Universidad"){
 									$prodMost = "Inversion Universitaria";
@@ -30,15 +30,15 @@
 										"Host"      		=> $_SERVER['PHP_SELF'],
 										"Evento"    		=> "ConsultaCURP",
 										"Usuario"    		=> "PLATAFORMA",
-										"IdVta"   			=> Basicas::BuscarCampos($mysqli,"Id","Venta","IdContact",$cont),
+										"IdVta"   			=> $basicas->BuscarCampos($mysqli,"Id","Venta","IdContact",$cont),
 										"FechaRegistro" => date('Y-m-d')." ".date('H:i:s')
 								);
 								//Se realiza el insert en la base de datos
-								Basicas::InsertCampo($mysqli, "Eventos", $DatEventos);
+								$basicas->InsertCampo($mysqli, "Eventos", $DatEventos);
 								//Buscamos el nombre de el cliente
-								$Nombre = Basicas::BuscarCampos($mysqli,"Nombre",$Tabla,$Refer,$cont);
-								$Paterno = Basicas::BuscarCampos($mysqli,"Paterno",$Tabla,$Refer,$cont);
-								$Materno = Basicas::BuscarCampos($mysqli,"Materno",$Tabla,$Refer,$cont);
+								$Nombre = $basicas->BuscarCampos($mysqli,"Nombre",$Tabla,$Refer,$cont);
+								$Paterno = $basicas->BuscarCampos($mysqli,"Paterno",$Tabla,$Refer,$cont);
+								$Materno = $basicas->BuscarCampos($mysqli,"Materno",$Tabla,$Refer,$cont);
 								//Creamos el nombre
 								$Nombre = $Nombre." ".$Paterno." ".$Materno;
                 //Imprimimos los datos del cliente
@@ -54,10 +54,10 @@
 		                <p>Producto:</p>
 		                <h4 >".$prodMost."</h4>
 		                <p>Tipo Servicio:</p>
-		                <h4 >".Basicas::BuscarCampos($mysqli,"TipoServicio",$Tabla,$Refer,$cont)."</h4>
+		                <h4 >".$basicas->BuscarCampos($mysqli,"TipoServicio",$Tabla,$Refer,$cont)."</h4>
 										<br>
 		                <p>Estatus:</p>
-		                <h4 >".Basicas::BuscarCampos($mysqli,"Status",$Tabla,$Refer,$cont)."</h4>
+		                <h4 >".$basicas->BuscarCampos($mysqli,"Status",$Tabla,$Refer,$cont)."</h4>
 		              </div>";
 									//Se selecciona el valor por status de la venta
 		            if($status == 'COBRANZA' || $status == 'PREVENTA'){
@@ -101,7 +101,7 @@
 											"FechaRegistro" => date('Y-m-d')." ".date('H:i:s')
 									);
 									//Se realiza el insert en la base de datos
-									Basicas::InsertCampo($mysqli, "Eventos", $DatEventos);
+									$basicas->InsertCampo($mysqli, "Eventos", $DatEventos);
 									//Imprime mensaje que la curp no esta registrada
 									echo "
 										<div style='padding:2rem; height:250px;'>

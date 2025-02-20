@@ -8,7 +8,7 @@ require_once '../eia/librerias.php';
         header('Location: https://kasu.com.mx/login');
       }else{
         //Seleccionamos el Id de el usuario
-        $IdAsignacion = Basicas::BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+        $IdAsignacion = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
       }
       if(!empty($_POST['CreaProsp'])){
         //Lanzamos Ventana emergente
@@ -31,11 +31,11 @@ require_once '../eia/librerias.php';
             if($Reg=mysqli_fetch_assoc($res)){
               //Variables para lanzar las ventanas emergentes
               $Lanzar = "#Ventana1";
-              $nomVd = Basicas::BuscarCampos($mysqli,"Nombre","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+              $nomVd = $basicas->BuscarCampos($mysqli,"Nombre","Empleados","IdUsuario",$_SESSION["Vendedor"]);
             }
       }elseif (!empty($_POST['Cancelar'])) {
           //Actualizacion de Datos
-          $nomVd = Basicas::ActCampo($pros,"prospectos","Cancelacion",1,$_POST['IdPros']);
+          $nomVd = $basicas->ActCampo($pros,"prospectos","Cancelacion",1,$_POST['IdPros']);
       }
       //Javascript que imprime el mensaje de alerta de recepcion de comentario
       if(isset($_GET['Msg'])){
@@ -104,7 +104,7 @@ require_once '../eia/librerias.php';
                         <p> Avance de Venta </p>
                         <?
                         //Buscamos si se ha enviado un presupuesto
-                        $sum = Basicas::BuscarCampos($pros,"Id","PrespEnviado","IdProspecto",$Reg['Id']);
+                        $sum = $basicas->BuscarCampos($pros,"Id","PrespEnviado","IdProspecto",$Reg['Id']);
                         //SI se ha enviado el presupuesto se avanza el 50% de la venta
                         if(!empty($sum)){
                           $Va5r = $Reg['Estado']*10;
@@ -161,7 +161,7 @@ require_once '../eia/librerias.php';
                    <?PHP
                    if($Niv >= 5){
                         //Buscamos el Id de el empleado
-                        $Vende = Basicas::BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+                        $Vende = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
                         //Crear consulta
                         $Ventas = "SELECT * FROM prospectos WHERE Asignado = '".$Vende."' AND Cancelacion = 0";
                         //Realiza consulta
@@ -180,9 +180,9 @@ require_once '../eia/librerias.php';
                             }
                         }elseif($Niv <= 4 AND $Niv >= 2){
                           //Buscamos el id de la sucursal
-                          $IdSuc = Basicas::BuscarCampos($mysqli,"Sucursal","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+                          $IdSuc = $basicas->BuscarCampos($mysqli,"Sucursal","Empleados","IdUsuario",$_SESSION["Vendedor"]);
                           //Buscamos el nombre de la sucursal
-                          $NomSuc = Basicas::BuscarCampos($mysqli,"NombreSucursal","Sucursal","Id",$IdSuc);
+                          $NomSuc = $basicas->BuscarCampos($mysqli,"NombreSucursal","Sucursal","Id",$IdSuc);
                           //Crear consulta
                           $sqal = "SELECT * FROM Empleados WHERE Nombre != 'Vacante' AND Nivel >= '$Niv' AND Sucursal = $IdSuc";
                           //Realiza consulta
@@ -209,9 +209,9 @@ require_once '../eia/librerias.php';
                             }
                         }elseif($Niv == 1){
                           //Buscamos el id de la sucursal
-                          $IdSuc = Basicas::BuscarCampos($mysqli,"Sucursal","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+                          $IdSuc = $basicas->BuscarCampos($mysqli,"Sucursal","Empleados","IdUsuario",$_SESSION["Vendedor"]);
                           //Buscamos el nombre de la sucursal
-                          $NomSuc = Basicas::BuscarCampos($mysqli,"NombreSucursal","Sucursal","Id",$IdSuc);
+                          $NomSuc = $basicas->BuscarCampos($mysqli,"NombreSucursal","Sucursal","Id",$IdSuc);
                           //Crear consulta
                           $sqal = "SELECT * FROM Empleados WHERE Nombre != 'Vacante' AND Nivel >= '$Niv'";
                           //Realiza consulta

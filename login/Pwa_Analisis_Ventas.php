@@ -19,12 +19,12 @@
 	  }
 	}else{
 	  //Se comprueba el nivel del usuario
-	  $Niv = Basicas::BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+	  $Niv = $basicas->BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$_SESSION["Vendedor"]);
 	}
 	//Php que realiza el analisis de las metas de venta y colocacion
 	require_once 'php/Analisis_Metas.php';
 	//Inicio de las ventas
-	$FeIniVtas = date("d-M-Y", strtotime(Basicas::MinDat($mysqli,"FechaRegistro","Venta")));
+	$FeIniVtas = date("d-M-Y", strtotime($basicas->MinDat($mysqli,"FechaRegistro","Venta")));
 	//$sqal = "alter table Productos add (PlazoPagos varchar (20)  null)";
 	//$sqal = "SHOW TABLES FROM u176240951_web";
 	$sqal = "SELECT * FROM Productos";
@@ -33,24 +33,24 @@
 	//Si existe el registro se asocia en un fetch_assoc
 	foreach ($r4e9s as $Resd6){
 	  //print_r($Resd6);
-	  //Basicas::ActTab($mysqli,'Productos','PlazoPagos',15,'Id',$Resd6['Id']);
+	  //$basicas->ActTab($mysqli,'Productos','PlazoPagos',15,'Id',$Resd6['Id']);
 	}
 	//COntamos los prospectos
-	$ProsGen = Basicas::Cuenta0Fec($mysqli,"Contacto","FechaRegistro",$Fec0);
+	$ProsGen = $basicas->Cuenta0Fec($mysqli,"Contacto","FechaRegistro",$Fec0);
 	//Prospecto digitales
-	$ProsDig = Basicas::Cuenta1Fec($mysqli,"Contacto","Usuario","PLATAFORMA","FechaRegistro",$Fec0);
+	$ProsDig = $basicas->Cuenta1Fec($mysqli,"Contacto","Usuario","PLATAFORMA","FechaRegistro",$Fec0);
 	//Obetenemos el total
 	$ProsGen = $ProsGen-$ProsDig;
 	//Prospectos generaros en la base de datos de ventas
-	$ProsDgt = Basicas::Cuenta0Fec($pros,"prospectos","Alta",$Fec0);
+	$ProsDgt = $basicas->Cuenta0Fec($pros,"prospectos","Alta",$Fec0);
 	//Prspectos digitales
-	$ProsTier = Basicas::Cuenta1Fec($pros,"prospectos","Origen","vta","Alta",$Fec0);
+	$ProsTier = $basicas->Cuenta1Fec($pros,"prospectos","Origen","vta","Alta",$Fec0);
 	//Obetenemos el total
 	$ProsDgt = $ProsDgt-$ProsTier;
 	//Contamos las ventas de el mes
-	$Ventas = Basicas::Cuenta0Fec($mysqli,"Venta","FechaRegistro",$Fec0);
+	$Ventas = $basicas->Cuenta0Fec($mysqli,"Venta","FechaRegistro",$Fec0);
 	//Sumamos el valor de las ventas del mes
-	$VtaDine = Basicas::Sumar0Fecha($mysqli,"CostoVenta","Venta","FechaRegistro",$Fec0);
+	$VtaDine = $basicas->Sumar0Fecha($mysqli,"CostoVenta","Venta","FechaRegistro",$Fec0);
 	//Valor del fideicomiso
 	$sqal = "SELECT * FROM Productos";
 	//Realiza consulta
@@ -58,7 +58,7 @@
 	//Si existe el registro se asocia en un fetch_assoc
 	foreach ($r4e9s as $Resd6){
 	  //COsto de venta de cada producto
-	  $vTAStOT = Basicas::Sumar2cond($mysqli,"CostoVenta","Venta","Status","ACTIVO","Producto",$Resd6['Producto']);
+	  $vTAStOT = $basicas->Sumar2cond($mysqli,"CostoVenta","Venta","Status","ACTIVO","Producto",$Resd6['Producto']);
 	  //Costo de venta
 	  $vTtOT = $vTtOT+$vTAStOT;
 	  //Valor Actual del fideicomiso
@@ -76,7 +76,7 @@
 	  $V++;
 	  if($Resd7['Status'] == "ACTIVO"){
 	      //Tasa de interes para la venta
-	      $TiFide = Basicas::BuscarCampos($mysqli,"TFideicomiso","Productos","Producto",$Resd7['Producto']);
+	      $TiFide = $basicas->BuscarCampos($mysqli,"TFideicomiso","Productos","Producto",$Resd7['Producto']);
 	      $TiFide = $TiFide/100;
 	      //Calculamos la tasa de interes diaria
 	      $TiD = $TiFide/365;
@@ -89,7 +89,7 @@
 	      //Calculamos la tasa con la cual se operara
 	      $TasaF = pow($Bta, $Dias);
 	      //Calculamos el valor de hoy de el producto
-	      $FideAho = Basicas::BuscarCampos($mysqli,"Fideicomiso","Productos","Producto",$Resd7['Producto']);
+	      $FideAho = $basicas->BuscarCampos($mysqli,"Fideicomiso","Productos","Producto",$Resd7['Producto']);
 	      $FideAho = $FideAho/100;
 	      //Precio de venta por tasa para obtener lo q se fue al fideicomiso
 	      $ValFPr = $Resd7['CostoVenta']*$FideAho;
@@ -98,8 +98,8 @@
 	      //Valor general acumulado
 	      $VaF0003 = $VaF0003+$VFPVta;
 	      //Calculamos la edad promedio de el cliente
-	      $CurpCte = Basicas::BuscarCampos($mysqli,"ClaveCurp","Usuario","IdContact",$Resd7['Id']);
-	      $EdCte = Basicas::ObtenerEdad($CurpCte);
+	      $CurpCte = $basicas->BuscarCampos($mysqli,"ClaveCurp","Usuario","IdContact",$Resd7['Id']);
+	      $EdCte = $basicas->ObtenerEdad($CurpCte);
 	      //Sumamos las edades
 	      if($EdCte != "CURP invalid"){
 	          $tuArray = array($EdCte);
@@ -137,7 +137,7 @@
 	    //Sacamos el ultimo pago de el cliente
 	    $IniMs = strtotime($Fec0);
 	    //Buscamos el ultimo pago de el cliente
-	    $fecRegis = strtotime(Basicas::Max1Dat($mysqli,"FechaRegistro","Pagos","Id",$Resd7['Id']));
+	    $fecRegis = strtotime($basicas->Max1Dat($mysqli,"FechaRegistro","Pagos","Id",$Resd7['Id']));
 	    //Comparamos la venta
 	    if($fecRegis >= $IniMs){
 	      //buscamos el id de las polizas
@@ -175,11 +175,11 @@
 	//Subimos a Relacion de 10
 	$dc1v = $dc1v*10;
 	//Obtenemos la cobranza total
-	$CObTo = Basicas::Sumar($mysqli,"Cantidad","Pagos");
+	$CObTo = $basicas->Sumar($mysqli,"Cantidad","Pagos");
 	//SUmamos comisiones
-	$Cta = Basicas::Sumar($mysqli,"Cantidad","Comisiones_pagos");
+	$Cta = $basicas->Sumar($mysqli,"Cantidad","Comisiones_pagos");
 	//SUmamos el costo po poliza entregada
-	$Plizas = Basicas::Cuenta0Fec($mysqli,"Contacto","FechaRegistro",$FeIniVtas);
+	$Plizas = $basicas->Cuenta0Fec($mysqli,"Contacto","FechaRegistro",$FeIniVtas);
 	$Cpol = $Plizas*37.5;
 	//lag de las ventas no Concretadas
 	$ValREm = $dcv*37.5;
@@ -202,10 +202,10 @@
 	arsort($cuenta);
 	$ModaClie = key($cuenta);
 	//Valor Actual del fideicomiso
-	$Ti = Basicas::BuscarCampos($mysqli,"TasaAnual","Productos","Id",1);
+	$Ti = $basicas->BuscarCampos($mysqli,"TasaAnual","Productos","Id",1);
 	$Ta = $Ti/100;
 	//Generamos el valor de los servicios Pagados
-	$SerPagados = Basicas::Sumar($mysqli,"Costo","EntregaServicio");
+	$SerPagados = $basicas->Sumar($mysqli,"Costo","EntregaServicio");
 	//Post de busqueda
 	if(!empty($_POST['ConsulVect'])){
 	  //Nombre de la grafica
@@ -231,7 +231,7 @@
 	            //Ultimo dia de el año
 	            $Fecha2 = date("Y-m-d",strtotime('last day of this month'.$Fe2a));
 	            //Buscamos los productos por el año
-	            $UVen[] = $unidades_vendidas = Basicas::CuentaFechas($mysqli,'Venta','Producto',$Reg1['Producto'],'FechaRegistro',$Fecha2,'FechaRegistro',$Fe2a,'Status','PREVENTA');
+	            $UVen[] = $unidades_vendidas = $basicas->CuentaFechas($mysqli,'Venta','Producto',$Reg1['Producto'],'FechaRegistro',$Fecha2,'FechaRegistro',$Fe2a,'Status','PREVENTA');
 	            //Año de venta y creacion de array
 	            $Año[$c] = $aNOi = date("M",strtotime($Fe2a));
 	          $c++;
@@ -253,7 +253,7 @@
 	//Nombre de la grafica
 	$NombreGraf = "Ventas Totales Efectivas";
 	//Fecha inicial
-	$Fech0 = Basicas::MinDat($mysqli,'FechaRegistro','Venta');
+	$Fech0 = $basicas->MinDat($mysqli,'FechaRegistro','Venta');
 	$Fecha = date("d-m-Y",strtotime('first day of january '.date("Y",strtotime($Fech0))));
 	//Ultimo dia permanente
 	  $i = 0;
@@ -273,7 +273,7 @@
 	          //Ultimo dia de el año
 	          $Fecha2 = date("Y-m-d",strtotime('last day of December'.date("Y",strtotime($Fe2a))));
 	          //Buscamos los productos por el año
-	          $UVen[] = $unidades_vendidas = Basicas::CuentaFechas($mysqli,'Venta','Producto',$Reg1['Producto'],'FechaRegistro',$Fecha2,'FechaRegistro',$Fe2a,'Status','PREVENTA');
+	          $UVen[] = $unidades_vendidas = $basicas->CuentaFechas($mysqli,'Venta','Producto',$Reg1['Producto'],'FechaRegistro',$Fecha2,'FechaRegistro',$Fe2a,'Status','PREVENTA');
 	          //Año de venta y creacion de array
 	          $Año[$c] = $aNOi = date("Y",strtotime($Fe2a));
 	        $c++;

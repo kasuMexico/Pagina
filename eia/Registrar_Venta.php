@@ -7,7 +7,7 @@ session_start();
 
 // Incluir el archivo central que carga las funciones, clases y conexiones necesarias.
 // Ajusta la ruta según tu estructura; si ya no existe "Funciones_kasu.php", usa "librerias.php".
-require_once 'Funciones_kasu.php';
+require_once 'librerias.php';
 
 // -----------------------------------------------------------------------------
 // Registro de datos generales: Fingerprint, Eventos, GPS y Vendedor
@@ -18,8 +18,8 @@ if (!empty($_SESSION["IdUsr"])) {
     $VendeDor = $_SESSION["IdUsr"];
 } else {
     // Se busca el primer usuario que registró el fingerprint con evento "Tarjeta"
-    $IdReg = Basicas::Min2Dat($mysqli, "Id", "Eventos", "IdFInger", $fingerprint, "Evento", "Tarjeta");
-    $BusFing = Basicas::BuscarCampos($mysqli, "Usuario", "Eventos", "Id", $IdReg);
+    $IdReg = $basicas->Min2Dat($mysqli, "Id", "Eventos", "IdFInger", $fingerprint, "Evento", "Tarjeta");
+    $BusFing = $basicas->BuscarCampos($mysqli, "Usuario", "Eventos", "Id", $IdReg);
     $VendeDor = !empty($BusFing) ? $BusFing : "PLATAFORMA";
 }
 
@@ -35,12 +35,12 @@ if (empty($_SESSION["gps"])) {
         "Longitud"  => $mysqli->real_escape_string($_POST['Longitud']),
         "Presicion" => $mysqli->real_escape_string($_POST['Presicion'])
     );
-    $_SESSION["gps"] = Basicas::InsertCampo($mysqli, "gps", $DatGps);
+    $_SESSION["gps"] = $basicas->InsertCampo($mysqli, "gps", $DatGps);
 }
 
 // -----------------------------------------------------------------------------
 // Registro de Fingerprint
-$fingerprintExists = Basicas::BuscarCampos($mysqli, "id", "FingerPrint", "fingerprint", $fingerprint);
+$fingerprintExists = $basicas->BuscarCampos($mysqli, "id", "FingerPrint", "fingerprint", $fingerprint);
 if (empty($fingerprintExists)) {
     $DatFinger = array(
         "fingerprint"   => $mysqli->real_escape_string($fingerprint),
@@ -63,7 +63,7 @@ if (empty($fingerprintExists)) {
         "plugins"       => $mysqli->real_escape_string($plugins),
         "useragent"     => $mysqli->real_escape_string($useragent)
     );
-    Basicas::InsertCampo($mysqli, "FingerPrint", $DatFinger);
+    $basicas->InsertCampo($mysqli, "FingerPrint", $DatFinger);
 }
 
 // -----------------------------------------------------------------------------
@@ -78,7 +78,7 @@ if (isset($_POST['Registro'])) {
         "calle"     => $mysqli->real_escape_string($Direccion),
         "Producto"  => $mysqli->real_escape_string($Producto)
     );
-    $_SESSION["Cnc"] = Basicas::InsertCampo($mysqli, "Contacto", $DatContac);
+    $_SESSION["Cnc"] = $basicas->InsertCampo($mysqli, "Contacto", $DatContac);
     $_SESSION["Mail"] = $Mail;
     
     $DatEventos = array(
@@ -94,7 +94,7 @@ if (isset($_POST['Registro'])) {
         "Cupon"         => $_SESSION["tarjeta"],
         "FechaRegistro" => date('Y-m-d') . " " . date('H:i:s')
     );
-    Basicas::InsertCampo($mysqli, "Eventos", $DatEventos);
+    $basicas->InsertCampo($mysqli, "Eventos", $DatEventos);
     $_SESSION["Producto"] = $Producto;
     header('Location: https://kasu.com.mx/registro.php');
     exit;
@@ -103,7 +103,7 @@ if (isset($_POST['Registro'])) {
 // -----------------------------------------------------------------------------
 // Registro de CURP cuando la venta es para el CLIENTE
 if (isset($_POST['BtnRegCurBen'])) {
-    $OPsd = Basicas::BuscarCampos($mysqli, "Nombre", "Usuario", "ClaveCurp", $CurClie);
+    $OPsd = $basicas->BuscarCampos($mysqli, "Nombre", "Usuario", "ClaveCurp", $CurClie);
     $ArrayRes = Seguridad::peticion_get($CurClie);
     $_SESSION["NombreCOm"] = $ArrayRes["Nombre"] . " " . $ArrayRes["Paterno"] . " " . $ArrayRes["Materno"];
     
@@ -122,15 +122,15 @@ if (isset($_POST['BtnRegCurBen'])) {
             "ClaveCurp"   => $ArrayRes["Curp"],
             "Email"       => $_SESSION["Mail"]
         );
-        Basicas::InsertCampo($mysqli, "Usuario", $DatUser);
+        $basicas->InsertCampo($mysqli, "Usuario", $DatUser);
         if ($_SESSION["Producto"] == "Funerario") {
-            $edad = Basicas::ObtenerEdad($CurClie);
-            $SubProd = Basicas::ProdFune($edad);
+            $edad = $basicas->ObtenerEdad($CurClie);
+            $SubProd = $basicas->ProdFune($edad);
             $_SESSION["Producto"] = $SubProd;
             $_SESSION["Edad"] = $edad;
         }
-        $_SESSION["Costo"] = Basicas::BuscarCampos($mysqli, "Costo", "Productos", "Producto", $_SESSION["Producto"]);
-        $_SESSION["Tasa"]  = Basicas::BuscarCampos($mysqli, "TasaAnual", "Productos", "Producto", $_SESSION["Producto"]);
+        $_SESSION["Costo"] = $basicas->BuscarCampos($mysqli, "Costo", "Productos", "Producto", $_SESSION["Producto"]);
+        $_SESSION["Tasa"]  = $basicas->BuscarCampos($mysqli, "TasaAnual", "Productos", "Producto", $_SESSION["Producto"]);
         $_SESSION["Ventana"] = "Ventana2";
         header('Location: https://kasu.com.mx/registro.php');
         exit;
@@ -144,7 +144,7 @@ if (isset($_POST['BtnRegCurBen'])) {
 // -----------------------------------------------------------------------------
 // Registro de CURP cuando la venta es para el BENEFICIARIO
 if (isset($_POST['BtnRegCurCli'])) {
-    $OPsd = Basicas::BuscarCampos($mysqli, "Nombre", "Usuario", "ClaveCurp", $CurBen);
+    $OPsd = $basicas->BuscarCampos($mysqli, "Nombre", "Usuario", "ClaveCurp", $CurBen);
     $ArrayRes = Seguridad::peticion_get($CurBen);
     $_SESSION["NombreCOm"] = $ArrayRes["Nombre"] . " " . $ArrayRes["Paterno"] . " " . $ArrayRes["Materno"];
     
@@ -163,14 +163,14 @@ if (isset($_POST['BtnRegCurCli'])) {
             "ClaveCurp"   => $ArrayRes["Curp"],
             "Email"       => $mysqli->real_escape_string($EmaBen)
         );
-        Basicas::InsertCampo($mysqli, "Usuario", $DatUser);
+        $basicas->InsertCampo($mysqli, "Usuario", $DatUser);
         if ($_SESSION["Producto"] == "Funerario") {
-            $edad = Basicas::ObtenerEdad($CurBen);
-            $SubProd = Basicas::ProdFune($edad);
+            $edad = $basicas->ObtenerEdad($CurBen);
+            $SubProd = $basicas->ProdFune($edad);
             $_SESSION["Producto"] = $SubProd;
         }
-        $_SESSION["Costo"] = Basicas::BuscarCampos($mysqli, "Costo", "Productos", "Producto", $_SESSION["Producto"]);
-        $_SESSION["Tasa"]  = Basicas::BuscarCampos($mysqli, "TasaAnual", "Productos", "Producto", $_SESSION["Producto"]);
+        $_SESSION["Costo"] = $basicas->BuscarCampos($mysqli, "Costo", "Productos", "Producto", $_SESSION["Producto"]);
+        $_SESSION["Tasa"]  = $basicas->BuscarCampos($mysqli, "TasaAnual", "Productos", "Producto", $_SESSION["Producto"]);
         $_SESSION["Ventana"] = "Ventana2";
         header('Location: https://kasu.com.mx/registro.php');
         exit;
@@ -191,7 +191,7 @@ if (isset($_POST['BtnMetPago'])) {
         "Aviso"       => $mysqli->real_escape_string($Aviso),
         "Fideicomiso" => $mysqli->real_escape_string($Fideicomiso)
     );
-    Basicas::InsertCampo($mysqli, "Legal", $DatLegal);
+    $basicas->InsertCampo($mysqli, "Legal", $DatLegal);
     
     if ($Meses == 0) {
         $Meses = 1;
@@ -201,7 +201,7 @@ if (isset($_POST['BtnMetPago'])) {
     $Venta = array(
         "Usuario"      => $VendeDor,
         "IdContact"    => $_SESSION["Cnc"],
-        "Nombre"       => Basicas::BuscarCampos($mysqli, "Nombre", "Usuario", "IdContact", $_SESSION["Cnc"]),
+        "Nombre"       => $basicas->BuscarCampos($mysqli, "Nombre", "Usuario", "IdContact", $_SESSION["Cnc"]),
         "Producto"     => $_SESSION["Producto"],
         "CostoVenta"   => $_SESSION["Costo"],
         "Idgps"        => $_SESSION["gps"],
@@ -212,7 +212,7 @@ if (isset($_POST['BtnMetPago'])) {
         "Cupon"        => $_SESSION["tarjeta"],
         "TipoServicio" => $mysqli->real_escape_string($TipoServicio)
     );
-    $_SESSION["Venta"] = Basicas::InsertCampo($mysqli, "Venta", $Venta);
+    $_SESSION["Venta"] = $basicas->InsertCampo($mysqli, "Venta", $Venta);
     
     if ($Meses != 1) {
         $pago = Financieras::Pago($mysqli, $_SESSION["Venta"]);
@@ -225,7 +225,7 @@ if (isset($_POST['BtnMetPago'])) {
             "FechaReg" => date('Y-m-d'),
             "url"      => "PLATAFORMA"
         );
-        Basicas::InsertCampo($mysqli, "PromesaPago", $Pripg);
+        $basicas->InsertCampo($mysqli, "PromesaPago", $Pripg);
     } else {
         $DatPago = array(
             "IdVenta"       => $_SESSION["Venta"],
@@ -235,14 +235,14 @@ if (isset($_POST['BtnMetPago'])) {
             "status"        => "Normal",
             "FechaRegistro" => date('Y-m-d') . " " . date('H:i:s')
         );
-        Basicas::InsertCampo($mysqli, "Pagos", $DatPago);
+        $basicas->InsertCampo($mysqli, "Pagos", $DatPago);
         $SubTotl = Financieras::SaldoCredito($mysqli, $_SESSION["Venta"]);
         if ($SubTotl <= 0) {
-            Basicas::ActCampo($mysqli, "Venta", "Status", "ACTIVACION", $_SESSION["Venta"]);
+            $basicas->ActCampo($mysqli, "Venta", "Status", "ACTIVACION", $_SESSION["Venta"]);
         }
     }
     
-    Basicas::ActCampo($pros, "prospectos", "Cancelacion", 2, $IdProspecto);
+    $basicas->ActCampo($pros, "prospectos", "Cancelacion", 2, $IdProspecto);
     header('Location: https://kasu.com.mx/' . $Host . '?curp=' . $CurClie . '&Ml=7&Name=' . $OPsd);
     exit;
 }
@@ -251,11 +251,11 @@ if (isset($_POST['BtnMetPago'])) {
 // Registro de venta vía MercadoPago
 if (isset($_GET['stat'])) {
     if ($_GET['collection_status'] != "approved") {
-        $MaxVta = Basicas::Max1Dat($mysqli, "Id", "Venta", "Status", "PREVENTA");
+        $MaxVta = $basicas->Max1Dat($mysqli, "Id", "Venta", "Status", "PREVENTA");
         header('Location: https://kasu.com.mx/eia/EnviarCorreo.php?MxVta=' . $MaxVta);
         exit;
     } else {
-        $Valor = Basicas::BuscarCampos($mysqli, "Valor", "MercadoPago", "Referencia", $_GET['external_reference']);
+        $Valor = $basicas->BuscarCampos($mysqli, "Valor", "MercadoPago", "Referencia", $_GET['external_reference']);
         $DatPago = array(
             "Referencia"         => $_GET['collection_id'],
             "Usuario"            => $VendeDor,
@@ -268,7 +268,7 @@ if (isset($_GET['stat'])) {
             "merchant_order_id"  => $_GET['merchant_order_id'],
             "external_reference" => $_GET['external_reference']
         );
-        $fyn = Basicas::InsertCampo($mysqli, "Pagos", $DatPago);
+        $fyn = $basicas->InsertCampo($mysqli, "Pagos", $DatPago);
         if ($_GET['external_reference'] == "T7G9TD8D") {
             header('Location: https://kasu.com.mx/ActualizacionDatos/index.php?stat=' . $_GET['stat'] . '&Dtpg=' . $fyn);
         } else {
@@ -281,9 +281,9 @@ if (isset($_GET['stat'])) {
 // -----------------------------------------------------------------------------
 // Registro de actualización de pago (cuando el cliente paga vía MercadoPago)
 if (isset($_POST['ActuPago'])) {
-    $UsrVta = Basicas::BuscarCampos($mysqli, "IdContact", "Usuario", "ClaveCurp", $CurBen);
-    $IdVtaCo = Basicas::BuscarCampos($mysqli, "Id", "Venta", "IdContact", $UsrVta);
-    Basicas::ActCampo($mysqli, "Pagos", "IdVenta", $IdVtaCo, $Dtpg);
+    $UsrVta = $basicas->BuscarCampos($mysqli, "IdContact", "Usuario", "ClaveCurp", $CurBen);
+    $IdVtaCo = $basicas->BuscarCampos($mysqli, "Id", "Venta", "IdContact", $UsrVta);
+    $basicas->ActCampo($mysqli, "Pagos", "IdVenta", $IdVtaCo, $Dtpg);
     header('Location: https://kasu.com.mx/registro.php');
     exit;
 }
@@ -305,10 +305,10 @@ if (isset($_POST['RegistroMesa'])) {
         "codigo_postal" => $mysqli->real_escape_string($codigo_postal),
         "Producto"      => $mysqli->real_escape_string($Producto)
     );
-    $IdContacto = Basicas::InsertCampo($mysqli, "Contacto", $DatContac);
+    $IdContacto = $basicas->InsertCampo($mysqli, "Contacto", $DatContac);
     
     // Registro de CURP para cliente (verificar duplicidad)
-    $OPsd = Basicas::BuscarCampos($mysqli, "id", "Usuario", "ClaveCurp", $CurClie);
+    $OPsd = $basicas->BuscarCampos($mysqli, "id", "Usuario", "ClaveCurp", $CurClie);
     $ArrayRes = Seguridad::peticion_get($CurClie);
     $nombreCompleto = $ArrayRes["Nombre"] . " " . $ArrayRes["Paterno"] . " " . $ArrayRes["Materno"];
     
@@ -326,14 +326,14 @@ if (isset($_POST['RegistroMesa'])) {
             "ClaveCurp"   => $ArrayRes["Curp"],
             "Email"       => $Mail
         );
-        Basicas::InsertCampo($mysqli, "Usuario", $DatUser);
+        $basicas->InsertCampo($mysqli, "Usuario", $DatUser);
         if ($Producto == "FUNERARIO") {
-            $edad = Basicas::ObtenerEdad($CurClie);
-            $SubProd = Basicas::ProdFune($edad);
+            $edad = $basicas->ObtenerEdad($CurClie);
+            $SubProd = $basicas->ProdFune($edad);
             $_SESSION["Producto"] = $SubProd;
         }
-        $_SESSION["Costo"] = Basicas::BuscarCampos($mysqli, "Costo", "Productos", "Producto", $_SESSION["Producto"]);
-        $_SESSION["Tasa"]  = Basicas::BuscarCampos($mysqli, "TasaAnual", "Productos", "Producto", $_SESSION["Producto"]);
+        $_SESSION["Costo"] = $basicas->BuscarCampos($mysqli, "Costo", "Productos", "Producto", $_SESSION["Producto"]);
+        $_SESSION["Tasa"]  = $basicas->BuscarCampos($mysqli, "TasaAnual", "Productos", "Producto", $_SESSION["Producto"]);
         $_SESSION["Ventana"] = "Ventana2";
         header('Location: https://kasu.com.mx/registro.php');
         exit;

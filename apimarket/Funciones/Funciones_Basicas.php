@@ -1,4 +1,6 @@
 <?PHP
+//creamos una variable general para las funciones
+$basicas = new Basicas();
 class Basicas{
   /**************************************************************************************************************************
     Esta funcion valida un usuario y una contraseña  para el modod sandbox;
@@ -150,11 +152,11 @@ class Basicas{
 ****************************************************************************************************************************/
     public function VerificarProducto($curp_en_uso,$producto){
       //Obtene mos la edad de el cliente
-        $EdadCte = Basicas::ObtenerEdad($curp_en_uso);
+        $EdadCte = $basicas->ObtenerEdad($curp_en_uso);
       //si el producto es Funerario obtenemos el bloque del producto
       if($producto == "Funerario"){
           //Validamos si el cliente esta fuera de la edad
-          if(Basicas::ProdFune($EdadCte)){
+          if($basicas->ProdFune($EdadCte)){
             return true;
           }else{
             return false;

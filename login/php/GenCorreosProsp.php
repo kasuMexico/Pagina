@@ -1,4 +1,6 @@
 <?
+//creamos una variable general para las funciones
+$basicas = new Basicas();
 /*********************************Enviar correos por flujo de ventas*********************************/
 //Estructura de correos
 if(isset($_POST['interno']) || isset($Evento)){
@@ -9,12 +11,12 @@ if(isset($_POST['interno']) || isset($Evento)){
     //se valida que el correo exista
     if(empty($_POST['Asunto'])){
       //Verificamos que no exista el prospectos
-        $IdProspecto = Basicas::BuscarCampos($pros,'Id','prospectos','Email',$Mail);
+        $IdProspecto = $basicas->BuscarCampos($pros,'Id','prospectos','Email',$Mail);
         $correo = $Mail;
     }else{
     //Se obtiene el servicio de interes
-    $Servicio = Basicas::BuscarCampos($pros,'Servicio_Interes','prospectos','Id',$IdProspecto);
-    $correo = Basicas::BuscarCampos($pros,'Email','prospectos','Id',$IdProspecto);
+    $Servicio = $basicas->BuscarCampos($pros,'Servicio_Interes','prospectos','Id',$IdProspecto);
+    $correo = $basicas->BuscarCampos($pros,'Email','prospectos','Id',$IdProspecto);
     //obtengo el email desde el form login.php
     $asunto = $_POST['Asunto'];
     }
@@ -53,7 +55,7 @@ if(isset($_POST['interno']) || isset($Evento)){
             //Variable de redireccionamiento para activar la cuenta
             $empresa = 'https://www.kasu.com.mx/clientes/';
             //Se busca el id del cliente
-            $dirUrl1 = Basicas::BuscarCampos($mysqli,'Id','Venta','Nombre',$name);
+            $dirUrl1 = $basicas->BuscarCampos($mysqli,'Id','Venta','Nombre',$name);
             //Se crea el correo electronico para enviarlo segun los modelos
             $mensa = Correo::Mensaje($asunto,$name,$empresa,$dirUrl1,'','','','','','','','','','','','','','','',$IdProspecto);
             //echo $mensa;
@@ -76,28 +78,28 @@ if(isset($_POST['interno']) || isset($Evento)){
             //Se seleccionan 4 articulos alatorios del blog
             $claves_aleatorias = array_rand($dir, 4);
             //Obtenemos la liga original de el articulo
-            if ($pst_parA = Basicas::BuscarCampos($cnp,"target_post_id","wp_yoast_seo_links","post_id",$id[$claves_aleatorias[0]]) == 0){
+            if ($pst_parA = $basicas->BuscarCampos($cnp,"target_post_id","wp_yoast_seo_links","post_id",$id[$claves_aleatorias[0]]) == 0){
               $pst_parA = $id[$claves_aleatorias[0]];
             }
-            if ($pst_parB = Basicas::BuscarCampos($cnp,"target_post_id","wp_yoast_seo_links","post_id",$id[$claves_aleatorias[1]]) == 0){
+            if ($pst_parB = $basicas->BuscarCampos($cnp,"target_post_id","wp_yoast_seo_links","post_id",$id[$claves_aleatorias[1]]) == 0){
               $pst_parB = $id[$claves_aleatorias[1]];
             }
-            if ($pst_parC = Basicas::BuscarCampos($cnp,"target_post_id","wp_yoast_seo_links","post_id",$id[$claves_aleatorias[2]]) == 0) {
+            if ($pst_parC = $basicas->BuscarCampos($cnp,"target_post_id","wp_yoast_seo_links","post_id",$id[$claves_aleatorias[2]]) == 0) {
               $pst_parC = $id[$claves_aleatorias[2]];
             }
-            if ($pst_parD = Basicas::BuscarCampos($cnp,"target_post_id","wp_yoast_seo_links","post_id",$id[$claves_aleatorias[3]]) == 0) {
+            if ($pst_parD = $basicas->BuscarCampos($cnp,"target_post_id","wp_yoast_seo_links","post_id",$id[$claves_aleatorias[3]]) == 0) {
               $pst_parD = $id[$claves_aleatorias[3]];
             }
             //Obtenemos el id minimo de la imagen a buscar
-            $IdImgA = Basicas::Min1Dat($cnp,"ID","wp_posts","post_parent",$pst_parA);
-            $IdImgB = Basicas::Min1Dat($cnp,"ID","wp_posts","post_parent",$pst_parB);
-            $IdImgC = Basicas::Min1Dat($cnp,"ID","wp_posts","post_parent",$pst_parC);
-            $IdImgD = Basicas::Min1Dat($cnp,"ID","wp_posts","post_parent",$pst_parD);
+            $IdImgA = $basicas->Min1Dat($cnp,"ID","wp_posts","post_parent",$pst_parA);
+            $IdImgB = $basicas->Min1Dat($cnp,"ID","wp_posts","post_parent",$pst_parB);
+            $IdImgC = $basicas->Min1Dat($cnp,"ID","wp_posts","post_parent",$pst_parC);
+            $IdImgD = $basicas->Min1Dat($cnp,"ID","wp_posts","post_parent",$pst_parD);
             //Obtenemos la primera imagen de el articulo
-            $imag1 = Basicas::BuscarCampos($cnp,"guid","wp_posts","ID",$IdImgA);
-            $imag2 = Basicas::BuscarCampos($cnp,"guid","wp_posts","ID",$IdImgB);
-            $imag3 = Basicas::BuscarCampos($cnp,"guid","wp_posts","ID",$IdImgC);
-            $imag4 = Basicas::BuscarCampos($cnp,"guid","wp_posts","ID",$IdImgD);
+            $imag1 = $basicas->BuscarCampos($cnp,"guid","wp_posts","ID",$IdImgA);
+            $imag2 = $basicas->BuscarCampos($cnp,"guid","wp_posts","ID",$IdImgB);
+            $imag3 = $basicas->BuscarCampos($cnp,"guid","wp_posts","ID",$IdImgC);
+            $imag4 = $basicas->BuscarCampos($cnp,"guid","wp_posts","ID",$IdImgD);
             //-titulos aleatorios
             $Titulo1 = $tit[$claves_aleatorias[0]];
             $Titulo2 = $tit[$claves_aleatorias[1]];
@@ -184,7 +186,7 @@ if(isset($_POST['interno']) || isset($Evento)){
             //Se crea el correo electronico para enviarlo segun los modelos
             $mensa = Correo::Mensaje($asunto,$name,$Telefono,$dirUrl1,'','','','','','','','','','','','','','','',$IdProspecto);
             //Se borra de automatizar los correos
-            Basicas::ActCampo($pros,"prospectos","Automatico",0,$IdProspecto);
+            $basicas->ActCampo($pros,"prospectos","Automatico",0,$IdProspecto);
           }
           elseif ($asunto == "¡INTEGRATE A KASU!") {
             //COnvertimos el id del usuario en base64
@@ -225,9 +227,9 @@ if(isset($_POST['interno']) || isset($Evento)){
               echo "Error al enviar el mensaje: {$mail->ErrorInfo}";
           }
           //se registra el valor del correo enviado
-          $ValMail = Basicas::BuscarCampos($pros,'Seguimiento','correos','Asunto',$asunto);
+          $ValMail = $basicas->BuscarCampos($pros,'Seguimiento','correos','Asunto',$asunto);
           //Se inserta el estado en la base de datos
-          Basicas::ActCampo($pros,"prospectos","Estado",$ValMail,$IdProspecto);
+          $basicas->ActCampo($pros,"prospectos","Estado",$ValMail,$IdProspecto);
           //echo "Se ha enviado un email al correo registrado.";
           header('Location: https://kasu.com.mx'.$Host.'?Ml=1&name='.$name.'&Msg='.$Msg);
     }else{

@@ -40,9 +40,9 @@ $stat = ""; // Variable para redirección
 if (!empty($EnCoti)) {
     // Envío de presupuesto de cliente.
     // Se asume que $pros es la conexión correspondiente a la base de datos de prospectos.
-    $IdProspecto = Basicas::BuscarCampos($pros, "IdProspecto", "PrespEnviado", "Id", $EnCoti);
-    $FullName    = Basicas::BuscarCampos($pros, "FullName", "prospectos", "Id", $IdProspecto);
-    $Email       = Basicas::BuscarCampos($pros, "Email", "prospectos", "Id", $IdProspecto);
+    $IdProspecto = $basicas->BuscarCampos($pros, "IdProspecto", "PrespEnviado", "Id", $EnCoti);
+    $FullName    = $basicas->BuscarCampos($pros, "FullName", "prospectos", "Id", $IdProspecto);
+    $Email       = $basicas->BuscarCampos($pros, "Email", "prospectos", "Id", $IdProspecto);
     $Asunto      = "ENVIO ARCHIVO";
     $DirUrl      = "Cotizacion de servicios KASU";
     $imag1       = $EnCoti;
@@ -68,8 +68,8 @@ if (!empty($EnCoti)) {
 } elseif (!empty($EnFi)) {
     // Envío de fichas vía método GET
     $Asunto    = "PAGO PENDIENTE";
-    $Email     = Basicas::BuscarCampos($mysqli, "Mail", "Contacto", "id", $_SESSION["Cnc"]);
-    $FullName  = Basicas::BuscarCampos($mysqli, "Nombre", "Usuario", "IdContact", $_SESSION["Cnc"]);
+    $Email     = $basicas->BuscarCampos($mysqli, "Mail", "Contacto", "id", $_SESSION["Cnc"]);
+    $FullName  = $basicas->BuscarCampos($mysqli, "Nombre", "Usuario", "IdContact", $_SESSION["Cnc"]);
     $IdVenta   = $_SESSION["Cnc"];
     if ($EnFi == 1) {
         $DirUrl = "https://www.mercadopago.com.mx/checkout/v1/redirect?preference-id=" . $hash;
@@ -79,17 +79,17 @@ if (!empty($EnCoti)) {
     $stat = "3";
 } elseif (!empty($MxVta)) {
     // Cuando no se realiza el pago en MercadoPago
-    $FullName      = Basicas::BuscarCampos($mysqli, "Nombre", "Venta", "Id", $MxVta);
-    $CnTo          = Basicas::BuscarCampos($mysqli, "IdContact", "Venta", "Id", $MxVta);
-    $Email         = Basicas::BuscarCampos($mysqli, "Mail", "Contacto", "id", $CnTo);
-    $FechaRegistro = Basicas::BuscarCampos($mysqli, "FechaRegistro", "Venta", "Id", $MxVta);
+    $FullName      = $basicas->BuscarCampos($mysqli, "Nombre", "Venta", "Id", $MxVta);
+    $CnTo          = $basicas->BuscarCampos($mysqli, "IdContact", "Venta", "Id", $MxVta);
+    $Email         = $basicas->BuscarCampos($mysqli, "Mail", "Contacto", "id", $CnTo);
+    $FechaRegistro = $basicas->BuscarCampos($mysqli, "FechaRegistro", "Venta", "Id", $MxVta);
     $DirUrl        = base64_encode($MxVta);
     $dirUrl1       = base64_encode(date("d-m-Y", strtotime($FechaRegistro)));
     $Asunto        = "FICHAS DE PAGO KASU";
     $stat          = "2";
 } elseif (!empty($ProReIn)) {
     // Confirmación de registro de un prospecto.
-    $FullName = Basicas::BuscarCampos($pros, "FullName", "prospectos", "Id", $ProReIn);
+    $FullName = $basicas->BuscarCampos($pros, "FullName", "prospectos", "Id", $ProReIn);
     $Asunto   = "CONOCE KASU";
     $imag1    = strtolower($Servicio);
     $IdVenta  = $ProReIn;

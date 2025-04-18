@@ -3,6 +3,9 @@
 	session_start();
 	//Requerimos el archivo de librerias *JCCM
 	  require_once 'eia/librerias.php';
+	  // Instanciar la clase Basicas (asegúrate de que la clase esté definida en las librerías)
+      $basicas = new Basicas();
+      //echo "Instancia de Basicas creada.<br>";
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -196,37 +199,56 @@
                 </div>
             </div>
             <div class="row">
-           <?php
-            $OpAzr="SELECT * FROM patrocinios";
-               if ($resul=$mysqli->query($OpAzr)){
-                  while($Opn=$resul->fetch_row()){
-                    printf("
-                        <div class='col-md-4 col-sm-4 col-xs-12' >
-                          <div class='single-blog' >
-                              <div class='img' >
-                                  <a href='%s' target='_blank' rel='noopener nofollow' ><img src='%s' alt='%s' class='rounded img-fluid d-block mx-auto'></a>
-                              </div>
-                              <div class='blog-txt'>
-                                  <br>
-                                  <h2>
-                                      <a href='%s' target='_blank'>%s</a>
-                                  </h2>
-                                  <h3>
-                                      <a href='%s' target='_blank'>%s</a>
-                                  </h3>
-                                  <div class='text'>
-                                     %s
-                                  </div>
-                                  <br>
-                              </div>
-                          </div>
-                      </div>
-                      ",$Opn[7],$Opn[5],$Opn[1],$Opn[7],$Opn[1],$Opn[7],$Opn[2],$Opn[4]);
-											$DiaBenef = $DiaBenef+strtotime($Opn[13]);
-                    }
-                }
-								$Benef = $DiaBenef/604800;
-            ?>
+    <?php
+    // Initialize your accumulator
+    $DiaBenef = 0;
+    
+    $sql = "SELECT * FROM patrocinios";
+    if ($resul = $mysqli->query($sql)) {
+        while ($Opn = $resul->fetch_row()) {
+            // Your existing printf
+            printf("
+            <div class='col-md-4 col-sm-4 col-xs-12'>
+                <div class='single-blog'>
+                    <div class='img'>
+                        <a href='%s' target='_blank' rel='noopener nofollow'>
+                            <img src='%s' alt='%s' class='rounded img-fluid d-block mx-auto'>
+                        </a>
+                    </div>
+                    <div class='blog-txt'>
+                        <br>
+                        <h2><a href='%s' target='_blank'>%s</a></h2>
+                        <h3><a href='%s' target='_blank'>%s</a></h3>
+                        <div class='text'>%s</div>
+                        <br>
+                    </div>
+                </div>
+            </div>
+            ",
+            $Opn[7],  // link
+            $Opn[5],  // image URL
+            $Opn[1],  // alt text
+            $Opn[7],
+            $Opn[1],  // title
+            $Opn[7],
+            $Opn[2],  // subtitle
+            $Opn[4]   // body text
+            );
+    
+            // Safely convert your date string (column 13) to a timestamp
+            if ($ts = strtotime($Opn[13])) {
+                $DiaBenef += $ts;
+            }
+        }
+    }
+    
+    // Now do your division
+    // (604800 seconds = 1 week)
+    $Benef = $DiaBenef / 604800;
+    
+    // If you want to show it:
+    //echo "<p>Total weeks: " . number_format($Benef, 2) . "</p>";
+    ?>
             </div>
         </div>
     </section>
@@ -236,10 +258,10 @@
         <div class="content">
             <div class="container">
                 <div class="row">
-										<div class="col-lg-3 col-md-6 col-sm-12">
-												<div class="count-item decoration-top">
-												</div>
-										</div>
+					<div class="col-lg-3 col-md-6 col-sm-12">
+						<div class="count-item decoration-top">
+						</div>
+					</div>
                     <div class="col-lg-3 col-md-6 col-sm-12">
                         <div class="count-item decoration-bottom">
                             <strong><?PHP echo round($Benef);?></strong>
@@ -248,14 +270,14 @@
                     </div>
                     <div class="col-lg-3 col-md-6 col-sm-12">
                         <div class="count-item decoration-top">
-                            <strong><?PHP echo $basicas->MaxDat($mysqli,"	Id","patrocinios");?></strong>
+                            <strong><?PHP echo $basicas->MaxDat($mysqli,"Id","patrocinios");?></strong>
                             <span>Proyectos</span>
                         </div>
                     </div>
-										<div class="col-lg-3 col-md-6 col-sm-12">
-												<div class="count-item decoration-top">
-												</div>
-										</div>
+					<div class="col-lg-3 col-md-6 col-sm-12">
+						<div class="count-item decoration-top">
+						</div>
+					</div>
                 </div>
             </div>
         </div>

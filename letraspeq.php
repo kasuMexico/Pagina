@@ -19,7 +19,7 @@
 <body>
     <!-- Chat de Facebook -->
     <?
-    require_once 'html/CodeFb.php';
+    require_once 'hmtl/CodeFb.php';
     ?>
     <!-- La venta emergente debe de estar fuera del div que lo lanza *JCCM -->
     <div class="modal fade bd-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
@@ -31,7 +31,7 @@
         </div>
     </div>
     <!-- ***** Header Area Start ***** -->
-    <? require_once 'html/MenuPrincipal.php';?>
+    <? require_once 'hmtl/MenuPrincipal.php';?>
 <br>
 <br>
 <br>
@@ -592,7 +592,7 @@
 
     <!-- ***** Footer Start ***** -->
     <footer>
-      <? require_once 'html/footer.php';?>
+      <? require_once 'hmtl/footer.php';?>
     </footer>
     <!-- jQuery -->
     <script src="assets/js/jquery-2.1.0.min.js"></script>

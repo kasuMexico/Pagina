@@ -1,7 +1,4 @@
 <?php
-// Activar reporte de errores para depuración
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 
 // Iniciar la sesión
 session_start();

@@ -1,14 +1,28 @@
 <?php
+// Activar reporte de errores para depuración
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-//indicar que se inicia una sesion
+// Iniciar la sesión
 session_start();
-//creamos una variable general para las funciones
+
+// Requerir el archivo de librerías
+require_once 'eia/librerias.php';
+
+// Para depuración: confirmar carga de librerías
+//echo "Librerías cargadas correctamente.<br>";
+
+// Instanciar la clase Basicas (asegúrate de que la clase esté definida en las librerías)
 $basicas = new Basicas();
+$seguridad = new Seguridad();
+
+//echo "Instancia de Basicas creada.<br>";
+
 //inlcuir el archivo de funciones
 define('ROOT_PATH', $_SERVER['DOCUMENT_ROOT'].'/');
-require_once ($_SERVER['DOCUMENT_ROOT'].'/eia/Funciones/Funciones_Basicas.php');
-require_once ($_SERVER['DOCUMENT_ROOT'].'/eia/Funciones/Funciones_Seguridad.php');
-require_once ($_SERVER['DOCUMENT_ROOT'].'/eia/Conexiones/cn_prueba.php');
+//require_once ($_SERVER['DOCUMENT_ROOT'].'/eia/Funciones/Funciones_Basicas.php');
+//require_once ($_SERVER['DOCUMENT_ROOT'].'/eia/Funciones/Funciones_Seguridad.php');
+//require_once ($_SERVER['DOCUMENT_ROOT'].'/eia/Conexiones/cn_prueba.php');
 
 try {
 

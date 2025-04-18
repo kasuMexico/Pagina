@@ -1,8 +1,9 @@
 <?php
+//Contador de veces que se usa cada funcion para seguimiento *JCCM
+require_once __DIR__ . '/FunctionUsageTracker.php';
+require_once __DIR__ . '/Funciones_Basicas.php';
 //creamos una variable general para las funciones
 $basicas = new Basicas();
-//Contador de veces que se usa cada funcion para seguimiento *JCCM
-require_once 'FunctionUsageTracker.php';
 
 class Financieras {
     
@@ -14,7 +15,7 @@ class Financieras {
     /**
      * Sanitiza un valor para su uso en consultas SQL.
      */
-    private function esc($c0, $valor) {
+    public function esc($c0, $valor) {
         $this->trackUsage();  // Registra el uso de este método.
         return mysqli_real_escape_string($c0, $valor);
     }
@@ -22,7 +23,7 @@ class Financieras {
     /**
      * Obtiene el registro de venta dado su ID.
      */
-    private function getVenta($c0, $Vta) {
+    public function getVenta($c0, $Vta) {
         $this->trackUsage();  // Registra el uso de este método.
         $Vta = $this->esc($c0, $Vta);
         $sql = "SELECT * FROM `Venta` WHERE `Id` = '$Vta'";
@@ -36,8 +37,11 @@ class Financieras {
     /**
      * Obtiene datos del producto (por ejemplo, TasaAnual y PlazoPagos) usando la función Basicas.
      */
-    private function getProductoData($c0, $Producto) {
+    public function getProductoData($c0, $Producto) {
         $this->trackUsage();  // Registra el uso de este método.
+                    // 3) Instancio Basicas para poder llamar a BuscarCampos
+        require_once 'Funciones_Basicas.php';   // Ajusta la ruta
+        $basicas = new Basicas();
         // Se espera que $basicas->BuscarCampos retorne los valores necesarios.
         $TasaAnual = $basicas->BuscarCampos($c0, "TasaAnual", "Productos", "Producto", $Producto);
         $PlazoPagos = $basicas->BuscarCampos($c0, "PlazoPagos", "Productos", "Producto", $Producto);
@@ -140,6 +144,9 @@ class Financieras {
             return 0;
         }
         $Producto = $venta["Producto"];
+            // 3) Instancio Basicas para poder llamar a BuscarCampos
+        require_once 'Funciones_Basicas.php';   // Ajusta la ruta
+        $basicas = new Basicas();
         // Se obtiene la tasa anual del producto y se convierte a mensual
         $TasaAnual = $basicas->BuscarCampos($c0, "TasaAnual", "Productos", "Producto", $Producto);
         $tasaMensual = ($TasaAnual / 12);
@@ -149,48 +156,68 @@ class Financieras {
         return round($valorTotal, 2);
     }
 
-    /**
-     * Calcula el saldo actual de un crédito.
-     * Se toma el costo de venta y se descuenta el valor acumulado de los pagos, aplicando un factor de interés compuesto
-     * según los días transcurridos desde el último pago (o desde la venta si no hay pagos).
-     * Se usa 86400 segundos/día para la conversión.
-     */
-    public function SaldoCredito($c0, $Vta) {
-        $this->trackUsage();  // Registra el uso de este método.
-        if (!$venta = $this->getVenta($c0, $Vta)) {
-            return 0;
-        }
-        // Fechas relevantes: hoy, fecha de venta y fecha del último pago
-        $fechaHoy = strtotime(date("Y-m-d"));
-        $fechaVenta = strtotime($venta['FechaRegistro']);
-        $ultimoPago = $basicas->Max1Dat($c0, "FechaRegistro", "Pagos", "IdVenta", $venta['Id']);
-        $fechaUltimoPago = empty($ultimoPago) ? $fechaVenta : strtotime($ultimoPago);
+/**
+ * Calcula el saldo actual de un crédito.
+ * Se toma el costo de venta y se descuenta el valor acumulado de los pagos, aplicando un factor de interés compuesto
+ * según los días transcurridos desde el último pago (o desde la venta si no hay pagos).
+ * Se usa 86400 segundos/día para la conversión.
+ */
+public function SaldoCredito($c0, $Vta) {
+    $this->trackUsage();
 
-        // Número de días transcurridos desde la fecha de venta y desde el último pago
-        $diasDesdeVenta = floor(($fechaHoy - $fechaVenta) / 86400);
-        $diasDesdeUltimoPago = floor(($fechaHoy - $fechaUltimoPago) / 86400);
-
-        // Obtener datos del producto (tasa y plazo de pagos)
-        $datosProd = $this->getProductoData($c0, $venta["Producto"]);
-        // Ajustar tasa para el período (por ejemplo, tasa mensual dividida por número de días de pago)
-        $tasaDiaria = ($datosProd['TasaAnual'] / 12) / $basicas->BuscarCampos($c0, "PlazoPagos", "Productos", "Producto", $venta["Producto"]);
-        // Se convierte a decimal
-        $i = $tasaDiaria / 100;
-
-        // Calcular factores compuestos:
-        $factorUltimoPago = pow(1 + $i, $diasDesdeUltimoPago);
-        $factorVenta = pow(1 + $i, $diasDesdeVenta);
-
-        // Suma de pagos realizados
-        $totalPagos = $this->SumarPagos($c0, "Cantidad", "Pagos", "IdVenta", $venta["Id"]);
-        // Valor acumulado pagado, ajustado al factor desde el último pago
-        $valorAcumulado = $totalPagos / $factorUltimoPago;
-        // Capital pendiente
-        $capitalPendiente = $venta["CostoVenta"] - $valorAcumulado;
-        // Ajuste del capital pendiente según el tiempo transcurrido desde la venta
-        $saldoActual = $capitalPendiente * $factorVenta;
-        return round($saldoActual, 2);
+    // 1) Obtener la venta
+    if (! $venta = $this->getVenta($c0, $Vta)) {
+        return 0;
     }
+
+    // 2) Fechas: hoy, venta y último pago
+    $fechaHoy        = strtotime(date("Y-m-d"));
+    $fechaVenta      = strtotime($venta['FechaRegistro']);
+
+    require_once 'Funciones_Basicas.php';
+    $basicas         = new Basicas();
+    $ultimoPagoFecha = $basicas->Max1Dat($c0, "FechaRegistro", "Pagos", "IdVenta", $venta['Id']);
+    $fechaUltimoPago = $ultimoPagoFecha
+        ? strtotime($ultimoPagoFecha)
+        : $fechaVenta;
+
+    // 3) Días transcurridos
+    $diasDesdeVenta       = floor(($fechaHoy - $fechaVenta) / 86400);
+    $diasDesdeUltimoPago  = floor(($fechaHoy - $fechaUltimoPago) / 86400);
+
+    // 4) Datos del producto
+    $datosProd    = $this->getProductoData($c0, $venta["Producto"]);
+    $tasaAnual    = $datosProd['TasaAnual'];
+    $plazoPagos   = $datosProd['PlazoPagos'] ?: 1;  // evita división por cero
+
+    // 5) Tasa diaria en decimal
+    $tasaDiaria = ($tasaAnual / 12) / $plazoPagos;
+    $i          = $tasaDiaria / 100;
+
+    // 6) Factores de interés (asegurar base > 0)
+    $base = 1 + $i;
+    if ($base <= 0) {
+        // imposible o tasa = -100%
+        return round((float)$venta["CostoVenta"], 2);
+    }
+    $factorUltimoPago = pow($base, $diasDesdeUltimoPago);
+    $factorVenta      = pow($base, $diasDesdeVenta);
+
+    // 7) Acumulado de pagos y capital pendiente
+    $totalPagos      = $this->SumarPagos($c0, "Cantidad", "Pagos", "IdVenta", $venta["Id"]);
+    if ($factorUltimoPago == 0) {
+        // no crece nada
+        return 0;
+    }
+    $valorAcumulado  = $totalPagos / $factorUltimoPago;
+    $capitalPendiente= $venta["CostoVenta"] - $valorAcumulado;
+
+    // 8) Ajustar capital según factor de venta
+    $saldoActual = $capitalPendiente * $factorVenta;
+
+    return round($saldoActual, 2);
+}
+
 
     /**
      * Calcula el pago que debe dar el cliente, comparando el saldo, el valor total a pagar y otros parámetros.
@@ -201,6 +228,9 @@ class Financieras {
         $totalPagos = $this->SumarPagos($c0, "Cantidad", "Pagos", "IdVenta", $IdVta);
         $valorCredito = $this->PagoCredito($c0, $IdVta);
         $saldo = $this->SaldoCredito($c0, $IdVta);
+                    // 3) Instancio Basicas para poder llamar a BuscarCampos
+        require_once 'Funciones_Basicas.php';   // Ajusta la ruta
+        $basicas = new Basicas();
         $numPagos = $basicas->BuscarCampos($c0, "NumeroPagos", "Venta", "Id", $IdVta);
         $producto = $basicas->BuscarCampos($c0, "Producto", "Venta", "Id", $IdVta);
         $TasaAnual = $basicas->BuscarCampos($c0, "TasaAnual", "Productos", "Producto", $producto) / 12;
@@ -225,6 +255,9 @@ class Financieras {
         $IdVta = $this->esc($c0, $IdVta);
         $totalPagos = $this->SumarPagos($c0, "Cantidad", "Pagos", "IdVenta", $IdVta);
         $valorCredito = $this->PagoCredito($c0, $IdVta);
+                    // 3) Instancio Basicas para poder llamar a BuscarCampos
+        require_once 'Funciones_Basicas.php';   // Ajusta la ruta
+        $basicas = new Basicas();
         $numPagos = $basicas->BuscarCampos($c0, "NumeroPagos", "Venta", "Id", $IdVta);
         $producto = $basicas->BuscarCampos($c0, "Producto", "Venta", "Id", $IdVta);
         $CostoVenta = $basicas->BuscarCampos($c0, "CostoVenta", "Venta", "Id", $IdVta);

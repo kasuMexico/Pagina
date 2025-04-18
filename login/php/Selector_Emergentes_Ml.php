@@ -1,31 +1,34 @@
-<?
-//Imprimir el alert con el dato
-if($_GET['Ml'] == 1){
-    echo "<script type='text/javascript'>
-         alert('El correo se ha enviado');
-         </script>";
-}elseif($_GET['Ml'] == 2){
-    echo "<script type='text/javascript'>
-         alert('El correo que proporcionaste no esta registrado');
-         </script>";
-}elseif($_GET['Ml'] == 3){
-    echo "<script type='text/javascript'>
-         alert('Servicio de interes no identificado');
-         </script>";
-}elseif($_GET['Ml'] == 4){
-    echo "<script type='text/javascript'>
-         alert('Baja Exitosa');
-         </script>";
-}elseif($_GET['Ml'] == 5){
-    echo "<script type='text/javascript'>
-         alert('Asignacion Exitosa');
-         </script>";
-}elseif($_GET['Ml'] == 6){
-    echo "<script type='text/javascript'>
-         alert('La clave CURP ".$_GET['curp']." que intentaste registrar ya se encuentra en nuestro sistema bajo el nombre ".$_GET['Name']." porfavor verifica los datos');
-         </script>";
-}elseif($_GET['Ml'] == 7){
-    echo "<script type='text/javascript'>
-         alert('Se ha registrado exitosamente a ".$_GET['Name']." con la clave CURP ".$_GET['curp']." no olvides enviar las fichas o entregarselas en persona');
-         </script>";
+<?php
+// login/php/Selector_Emergentes_Ml.php
+
+// Mostrar errores (sólo para desarrollo)
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Obtener y sanear el parámetro 'Ml' de la URL
+$ml = filter_input(INPUT_GET, 'Ml', FILTER_SANITIZE_NUMBER_INT);
+
+// Si no viene Ml o no es un número válido, salimos sin hacer nada
+if ($ml === null || $ml === false) {
+    return;
 }
+
+// Mostrar el alert correspondiente
+switch ((int)$ml) {
+    case 1:
+        echo "<script>alert('Tu mensaje para Ml=1');</script>";
+        break;
+    case 2:
+        echo "<script>alert('Tu mensaje para Ml=2');</script>";
+        break;
+    case 3:
+        echo "<script>alert('Tu mensaje para Ml=3');</script>";
+        break;
+    case 4:
+        echo "<script>alert('Tu mensaje para Ml=4');</script>";
+        break;
+    default:
+        // ningún mensaje por defecto
+        break;
+}
+

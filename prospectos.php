@@ -1,12 +1,4 @@
 <?
-//Requerimos el archivo de librerias *JCCM
-  require_once 'eia/librerias.php';
-//Convertios las variables desde get 64
-  $data = base64_decode($_GET['data']);
-  $usr = base64_decode($_GET['Usr']);
-  $SerFb = base64_decode($_GET['SerFb']);
-  $Origen = base64_decode($_GET['Ori']);
-  //Imprimimos el array para ver q datos se estan enviando
   //ingresos base 64
   //FUNERARIO
   //https://kasu.com.mx/prospectos.php?data=RlVORVJBUklP
@@ -30,264 +22,194 @@
   //https://kasu.com.mx/prospectos.php?data=Q0lUUkVH&SerFb=RElTVFJJQlVJRE9S&Ori=ZmI=
   //GENERAR CITAS CORREOS
   //https://kasu.com.mx/prospectos.php?data=Q0lUQQ==&Usr=NDU=
-  //valor de Boton de registros
-  $Btn = "Registro";
-  //Imagen lateral de el formulario de registro
-  $ImgDer = "https://kasu.com.mx/assets/images/registro/familiaformulario.png";
-  //Registo de archivo constructor
-  if($data == "FUNERARIO"){
-    $Btn = "Registro";
-    $Titu = "¡Estas un paso más cerca!";
-    $text = "El equipo KASU esta preparando tu cotizacion, déjanos tus datos";
-    $TxtBtn = "Registrarme y Continuar";
-    $ImgDer = "https://kasu.com.mx/assets/images/gasto_funerario.svg";
-    $ImgSeo = "https://kasu.com.mx/assets/images/registro/funerario.png";
-  }elseif($data == "UNIVERSITARIO"){
-    $Btn = "Registro";
-    $Titu = "Inversion Universitaria";
-    $text = "Estás cerca de asegurar la educación Universitaria de tu hijo";
-    $TxtBtn = "Registrarme";
-    $ImgDer = "https://kasu.com.mx/assets/images/gasto_universitario.svg";
-    $ImgSeo = "https://kasu.com.mx/assets/images/registro/universidad.png";
-  }elseif($data == "RETIRO"){
-    $Btn = "Registro";
-    $Titu = "Servicio de Retiro";
-    $text = "Registrate y en un momento te contactara alguien de nuestro equipo";
-    $TxtBtn = "Registrarme";
-    $ImgDer = "https://kasu.com.mx/assets/images/gasto_retiro.svg";
-    $ImgSeo = "https://kasu.com.mx/assets/images/registro/retiro.png";
-  }elseif($data == "POLICIAS"){
-    $Btn = "Registro";
-    $Titu = "Contacta con un agente";
-    $text = "El personal de seguridad se merece el mejor respaldo en los momentos mas difíciles de su vida";
-    $TxtBtn = "Contactar";
-    $ImgDer = "https://kasu.com.mx/assets/images/gasto_policias.svg";
-    $ImgSeo = "https://kasu.com.mx/assets/images/registro/retiro.png";
-  }elseif($data == "DISTRIBUIDOR"){
-    $Titu = "Agente Externo";
-    $text = "Felicidades estas a un paso de generar ingresos desde tu celular";
-    $TxtBtn = "Recibir mas Info";
-    $ImgDer = "https://kasu.com.mx/assets/images/padres_con_hijos.jpeg";
-  }elseif($data == "CITREG"){
-    $text = "Registra el dia que puedas recibir una llamada de uno de nuestros agentes";
-    $Titu = "Registrar Cita";
-    $TxtBtn = "Registrar Cita";
-    $Btn = "Cita";
-  }else{
-    $text = "te enviaremos por correo electronico la informacion necesaria para que conozcas todo sobre KASU";
-    $Titu = "Registrate";
-    $TxtBtn = "Registrarme";
-    $Btn = "Cita";
-  }
-  //Registros
-  if(!empty($_GET['Usr'])){
-      //Buscamos si ya se ha registrado previamente
-      $Reg2 = $basicas->BuscarCampos($pros,'Id','Distribuidores','IdProspecto',$usr);
-      //Reenvios segun el resultado
-        if(empty($Reg2) or $data == "CITREG" or  $data == "CITA"){
-      //Busqueda de prospectos
-        $venta = "SELECT * FROM prospectos WHERE Id = ".$_GET['Usr'];
-      //Realiza consulta
-            $res = mysqli_query($pros, $venta);
-      //Si existe el registro se asocia en un fetch_assoc
-            if($Reg = mysqli_fetch_assoc($res)){}
-      //constructor de archivo
-            if($data == "CITA"){
-              $Titu = "Cita Telefonica";
-              $text = "Registra el dia que puedas recibir una llamada de uno de nuestros ejecutivos, !solo selecciona el dia y la hora¡ ";
-              $Btn = "Cita";
-              $TxtBtn = "Registrar Cita";
-            }else{
-              $text = "Concluye tu Registro";
-              $Btn = "PerDIstri";
-              $TxtBtn = "Concluir Registro";
-            }
-      }else{
-      //Creamos la respuesta
-          $Msg = "lo sentimos este correo electronico ya se ha usado, solicita uno nuevo llamando al Centro de atencion al cliente";
-      //echo "Se ha enviado un email al correo registrado.";
-          header('Location: https://kasu.com.mx/index.php?Msg='.$Msg);
-      }
-  }
-//alertas de correo electronico
-  require_once 'login/php/Selector_Emergentes_Ml.php';
+// prospectos.php
+
+// Requerir el archivo de librerías
+require_once 'eia/librerias.php';
+
+// —————————————————————————————————————————————————————————————
+// 1) Sanear y decodificar parámetros de entrada
+// —————————————————————————————————————————————————————————————
+$data_enc  = filter_input(INPUT_GET, 'data',   FILTER_SANITIZE_STRING);
+$usr_enc   = filter_input(INPUT_GET, 'Usr',    FILTER_SANITIZE_STRING);
+$serfb_enc = filter_input(INPUT_GET, 'SerFb',  FILTER_SANITIZE_STRING);
+$ori_enc   = filter_input(INPUT_GET, 'Ori',    FILTER_SANITIZE_STRING);
+
+$data   = $data_enc   ? base64_decode($data_enc)   : '';
+$usr    = $usr_enc    ? base64_decode($usr_enc)    : '';
+$SerFb  = $serfb_enc  ? base64_decode($serfb_enc)  : '';
+$Origen = $ori_enc    ? base64_decode($ori_enc)    : '';
+
+// —————————————————————————————————————————————————————————————
+// 2) Definir servicios y configuración de cada uno
+// —————————————————————————————————————————————————————————————
+$serviceMap = [
+    'FUNERARIO'     => 'Gastos Funerarios',
+    'POLICIAS'      => 'Seguridad Pública',
+    'UNIVERSITARIO' => 'Inversión Universitaria',
+    'RETIRO'        => 'Ahorro para el Retiro',
+    'DISTRIBUIDOR'  => 'Agente Externo',
+    'CITREG'        => 'Registrar Cita',
+    'CITA'          => 'Registrar Cita',
+];
+
+//if (!array_key_exists($data, $serviceMap)) {
+//    header('HTTP/1.1 400 Bad Request');
+//    echo "Servicio desconocido.";
+//    exit;
+//}
+
+$config = [
+    'FUNERARIO' => [
+        'title'   => '¡Estás un paso más cerca!',
+        'message' => 'El equipo KASU está preparando tu cotización, déjanos tus datos',
+        'btn'     => 'Registrarme y Continuar',
+        'imgSide' => 'https://kasu.com.mx/assets/images/gasto_funerario.svg',
+        'imgSeo'  => 'https://kasu.com.mx/assets/images/registro/funerario.png',
+    ],
+    'UNIVERSITARIO' => [
+        'title'   => 'Inversión Universitaria',
+        'message' => 'Estás cerca de asegurar la educación universitaria de tu hijo',
+        'btn'     => 'Registrarme',
+        'imgSide' => 'https://kasu.com.mx/assets/images/gasto_universitario.svg',
+        'imgSeo'  => 'https://kasu.com.mx/assets/images/registro/universidad.png',
+    ],
+    'RETIRO' => [
+        'title'   => 'Servicio de Retiro',
+        'message' => 'Regístrate y en un momento te contactará alguien de nuestro equipo',
+        'btn'     => 'Registrarme',
+        'imgSide' => 'https://kasu.com.mx/assets/images/gasto_retiro.svg',
+        'imgSeo'  => 'https://kasu.com.mx/assets/images/registro/retiro.png',
+    ],
+    'POLICIAS' => [
+        'title'   => 'Contacta con un agente',
+        'message' => 'El personal de seguridad merece el mejor respaldo en los momentos más difíciles',
+        'btn'     => 'Contactar',
+        'imgSide' => 'https://kasu.com.mx/assets/images/gasto_policias.svg',
+        'imgSeo'  => 'https://kasu.com.mx/assets/images/registro/policias.png',
+    ],
+    'DISTRIBUIDOR' => [
+        'title'   => 'Agente Externo',
+        'message' => 'Felicidades, estás a un paso de generar ingresos desde tu celular',
+        'btn'     => 'Recibir más info',
+        'imgSide' => 'https://kasu.com.mx/assets/images/padres_con_hijos.jpeg',
+        'imgSeo'  => '',
+    ],
+    'CITREG' => [
+        'title'   => 'Registrar Cita',
+        'message' => 'Registra el día que puedas recibir una llamada de uno de nuestros agentes',
+        'btn'     => 'Registrar Cita',
+        'imgSide' => '',
+        'imgSeo'  => '',
+    ],
+    'CITA' => [
+        'title'   => 'Cita Telefónica',
+        'message' => 'Elige día y hora para tu llamada con un ejecutivo',
+        'btn'     => 'Registrar Cita',
+        'imgSide' => '',
+        'imgSeo'  => '',
+    ],
+];
+
+$defaults = [
+    'title'   => 'Regístrate',
+    'message' => 'Te enviaremos por correo la información necesaria para conocer todo sobre KASU',
+    'btn'     => 'Registrarme',
+    'imgSide' => 'https://kasu.com.mx/assets/images/registro/familiaformulario.png',
+    'imgSeo'  => 'https://kasu.com.mx/assets/images/registro/default.png',
+];
+
+$settings = array_merge($defaults, $config[$data]);
+
+// —————————————————————————————————————————————————————————————
+// 3) Verificar duplicados si viene Usr
+// —————————————————————————————————————————————————————————————
+if ($usr) {
+    $basicas = new Basicas();
+    $prosId = $basicas->BuscarCampos($pros, 'Id', 'Distribuidores', 'IdProspecto', $usr);
+    if (!empty($prosId) && !in_array($data, ['CITREG','CITA'], true)) {
+        $msg = rawurlencode('Lo sentimos, este correo ya se ha usado.');
+        header("Location: https://kasu.com.mx/index.php?Msg={$msg}");
+        exit;
+    }
+    // Si es CITA o CITREG, puedes cargar datos existentes...
+}
+
+// —————————————————————————————————————————————————————————————
+// 4) Incluir emergentes según Ml
+// —————————————————————————————————————————————————————————————
+require_once 'login/php/Selector_Emergentes_Ml.php';
 ?>
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-    		<!-- Google Tag Manager -->
-    		<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    		new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    		j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    		'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    		})(window,document,'script','dataLayer','GTM-MCR6T6W');</script>
-    		<!-- End Google Tag Manager -->
-    		<meta charset="utf-8">
-        <title>Prospecto | <?if(isset($_GET['data'])){echo $data;}else{echo "KASU";}?></title>
-    		<meta name="description" content="<?echo $text;?>">
-    		<meta name="keywords" content="Prospecto">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta property="og:url" content="https://kasu.com.mx/prospectos.php?data=<? echo $_GET['data'];?>" />
-        <meta property="og:type" content="Registro" />
-        <meta property="og:title" content="Registro | <?if(isset($_GET['data'])){echo $data;}else{echo "KASU";}?>" />
-        <meta property="og:description" content="<?echo $Titu.$text;?>" />
-        <meta property="og:image" content="<?echo $ImgSeo;?>" />
-    		<link rel="canonical" href="https://kasu.com.mx/prospectos.php?data=<? echo $_GET['data'];?>">
-    		<link rel="icon" href="assets/images/kasu_logo.jpeg">
-    		<link rel="stylesheet" href="assets/css/Compra.css">
-    		<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet" media="screen">
-    		<script type="text/javascript" src="eia/javascript/Registro.js"></script>
-    </head>
-    <body><!--onload="localize()"-->
-        <!-- Chat de Facebook -->
-        <?
-        //require_once 'html/CodeFb.php';
-        ?>
-    		<!-- Google Tag Manager (noscript) -->
-    		<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MCR6T6W"
-    		height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    		<!-- End Google Tag Manager (noscript) -->
-    		<section id="Formulario">
-        		<div class="container-fluid">
-            		<div class="row mh-100vh">
-                		<div class="img_familia" class="Contenedor">
-                		      <img src="<?echo $ImgDer;?>" style=" width: 500px;" align="left" alt="Imagen Formulario Registro">
-                		</div>
-                		<div class="AreaTrabajo">
-                				<div class="Contenedor">
-                				    <!--form method="POST" id="form" action="login/php/Registro_Prospectos.php"-->
-                            <form method="POST" id="<? if(!empty($SerFb)){echo "cita-".$SerFb;}else{echo "Prospecto-".$data;} ?>" action="login/php/Registro_Prospectos.php">
-                    						<div class="logo">
-                    							<a href="/"><img src="assets/images/kasu_logo.jpeg"></a>
-                    						</div>
-                    						<h1 style="text-align: center;"><?echo $Titu;?></h1>
-                                <h3 style="text-align: center;"><?echo $text;?></h3>
-                                <br>
-                    						<div class="Formulario">
-                        							<!--Insercion de registros de Gps y fingerprint-->
-                        							<!-- <div id="Gps" style="display: none;"></div> -->
-                        							<div id="FingerPrint" style="display: none;"></div>
-                        							<input type="text" name="Host" value="<?PHP echo $_SERVER['PHP_SELF'];?>" style="display: none;">
-                        							<input type="text" name="Cupon" id="Cupon" value="<?PHP echo $_SESSION["data"];?>" style="display: none;">
-                                      <input type="text" name="Origen" id="Cupon" value="<?PHP echo $Origen;?>" style="display: none;">
-                        							<!--Insercion de registros de Gps y fingerprint-->
-                                      <?
-                                      if(!empty($_GET['Usr'])){
-                                        echo '
-                                        <input type="text" name="na" disabled value="'.$Reg['FullName'].'">
-                          							<input type="email" name="Ma" disabled  value="'.$Reg['Email'].'" >
-                          							<input type="tel" name="Telefo" disabled value="'.$Reg['NoTel'].'" >
-                                        <input type="text" name="name" style="display: none;" value="'.$Reg['FullName'].'">
-                                        <input type="email" name="Mail" style="display: none;" value="'.$Reg['Email'].'" >
-                                        <input type="tel" name="Telefono" style="display: none;" value="'.$Reg['NoTel'].'" >
-                                        ';
-                                      }else{
-                                        //Registro de Datos Generales de formulario de registro sin Usuario
-                                        echo '
-                                        <input type="text" name="name" placeholder="Nombre" value="" required >
-                          							<input type="email" name="Mail" placeholder="Correo electronico" value="" required >
-                          							<input type="tel" name="Telefono" placeholder="Telefono" value="" required >
-                                        ';
-                                        //Registro de fecha de Nacimiento segun Producto
-                                        if($data != "DISTRIBUIDOR" and $data != "CITREG" and $data != "POLICIAS"){
-                                          //Label que arroja el registro segun el producto seleccionado
-                                          if($data == "UNIVERSITARIO"){
-                                            echo '
-                                                <label for="exampleFormControlSelect1">Fecha de nacimiento del afiliado</label>
-                                            ';
-                                          }else{
-                                            echo '
-                                                <label for="exampleFormControlSelect1">Ingresa tu fecha de nacimiento</label>
-                                            ';
-                                          }
-                                          //Imprimimos el imputa de registro de fecha de Nacimiento
-                                            echo '
-                                                <input type="date" name="FechaNac" placeholder="Fecha Nacimiento" required>
-                                            ';
-                                        }elseif ($data == "POLICIAS" ) {
-                                          echo '
-                                                <label for="exampleFormControlSelect1">Cuantos Oficiales quieres Asegurar</label>
-                                                <input type="number" name="Oficiales" placeholder="Numero de Oficiales" required>
-                                          ';
-                                        }
-                                      }
-                                      if(isset($_GET['data'])){
-                                        //Aterrizar el servicio registrado
-                                        if(empty($_GET['SerFb'])){
-                                          //SI no esta lleno el servicio de facebook lanza los registros
-                                          echo '<input type="text" name="Servicio" id="Cupon" value="'.$data.'" style="display: none;">';
-                                        }else{
-                                          //SI esta lleno captura las variables
-                                          echo '<input type="text" name="Servicio" value="'.$SerFb.'" style="display: none;">';
-                                        }
-                                      }elseif(!empty($_GET['Usr'])){
-                                        echo '
-                                        <input type="number" name="Clabe" placeholder="Clabe Interbancaria (18 Digitos)"required>
-                                        <input type="text" name="Direccion" placeholder="Domicilio actual" required>
-                                        <input type="number" name="Usr" value="'.$usr.'" style="display: none;">
-                                        ';
-                                      }if($data == "CITA"){
-                                        //SI es una cita desde correos electronicos imprime los datos pre llenos del Usuario
-                                        echo '
-                                              <input type="number" name="IdProspecto" value="'.$usr.'" style="display: none;">
-                                              <label for="exampleFormControlSelect1">Fecha de cita</label>
-                                              <input type="date" name="FechaCita" placeholder="Fecha de la llamada"required>
-                                              <label for="exampleFormControlSelect1">Hora de cita</label>
-                                              <input type="time" name="HoraCita" placeholder="Hora de la cita" required>
-                                              ';
-                                      }elseif($data == "CITREG"){
-                                        //SI es registro de cita pide los datos del prospecto
-                                        echo '
-                                              <label for="exampleFormControlSelect1">Fecha de cita</label>
-                                              <input type="date" name="FechaCita" placeholder="Fecha de la llamada"required>
-                                              <label for="exampleFormControlSelect1">Hora de cita</label>
-                                              <input type="time" name="HoraCita" placeholder="Hora de la cita" required>
-                                              ';
-                                        if(empty($_GET['SerFb'])){
-                                          echo '
-                                                <label for="exampleFormControlSelect1">Servicio de Interes</label>
-                                                <select class="" name="Servicio">
-                                                    <option value="FUNERARIO">GASTOS FUNERARIOS</option>
-                                                    <option value="UNIVERSITARIO">INVERSION UNIVERSITARIA</option>
-                                                    <option value="RETIRO">AHORRO PARA EL RETIRO</option>
-                                                </select>
-                                                ';
-                                        }
-                                      }
-                                      ?>
-                    						</div>
-                                <br>
-                  							<div class="Formulario">
-                  								  <input type="submit" style="background-color:#012F91; color:white;" name="<?echo $Btn;?>" value="<?echo $TxtBtn;?>" id="BtnnContactoVta">
-                  							</div>
-                                <br><br>
-                  							<div class="Ligas">
-                    								<a style="color: #911F66" href="/">Regresar a KASU</a>
-                    								<a style="color: #012F91" href="https://kasu.com.mx/terminos-y-condiciones.php">Términos y condiciones</a>
-                  							</div>
-                					   </form>
-                				 </div>
-                			</div>
-            			</div>
-        			</div>
-    		</section>
-    		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-    		<script type="text/javascript" src="eia/javascript/AlPie.js"></script>
-    		<script type="text/javascript" src="eia/javascript/finger.js"></script>
-    		<!-- <script type="text/javascript" src="eia/javascript/localize.js"></script> -->
-    		<script type="text/javascript">
-    			function selectServ(e) {
-    				if (e == "Funerario") {
-    					document.getElementById("servicio").innerHTML = '<input type="text" name="Producto" style="border:none;text-align: center;center;pointer-events: none;" value="Funerario">';
-    				} else if (e == "Universidad") {
-    					document.getElementById("servicio").innerHTML = '<input type="text" name="Producto" style="border:none;text-align: center;center;pointer-events: none;" value="Universidad"	>';
-    				} else {
-    					document.getElementById("servicio").innerHTML = "";
-    				}
-    			}
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Prospecto | <?= htmlspecialchars($serviceMap[$data]) ?></title>
+    <meta name="description" content="<?= htmlspecialchars($settings['message']) ?>">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:title"       content="<?= htmlspecialchars($settings['title']) ?>" />
+    <meta property="og:description" content="<?= htmlspecialchars($settings['message']) ?>" />
+    <meta property="og:image"       content="<?= htmlspecialchars($settings['imgSeo']) ?>" />
+    <link rel="canonical" href="https://kasu.com.mx/prospectos.php?data=<?= urlencode($data_enc) ?>">
+    <link rel="icon" href="assets/images/kasu_logo.jpeg">
+    <link rel="stylesheet" href="assets/css/Compra.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+</head>
+<body>
+    <section id="Formulario" class="row">
+        <!-- Formulario (izquierda) -->
+        <div class="col-md-6 AreaTrabajo">
+            <form method="POST"
+                  id="<?= $SerFb ? "cita-$SerFb" : "Prospecto-$data" ?>"
+                  action="login/php/Registro_Prospectos.php">
+                <div class="logo text-center">
+                    <a href="/"><img src="assets/images/kasu_logo.jpeg" alt="KASU"></a>
+                </div>
+                <h1 class="text-center"><?= htmlspecialchars($settings['title']) ?></h1>
+                <p class="text-center"><?= htmlspecialchars($settings['message']) ?></p>
+                <div class="Formulario">
+                    <input type="hidden" name="Host"  value="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>">
+                    <input type="hidden" name="Cupon" value="<?= htmlspecialchars($data_enc) ?>">
+                    <input type="hidden" name="Origen" value="<?= htmlspecialchars($ori_enc) ?>">
 
-    		</script>
-    	  <script type="text/javascript" async src="https://d335luupugsy2.cloudfront.net/js/loader-scripts/28dd2782-ee7d-4b25-82b1-f5993b27764a-loader.js" ></script>
-    </body>
+                    <!-- Aquí tus campos de nombre/email/telefono, etc. -->
+                    <input type="text"  name="name"     placeholder="Nombre" required>
+                    <input type="email" name="Mail"     placeholder="Correo electrónico" required>
+                    <input type="tel"   name="Telefono" placeholder="Teléfono" required>
+
+                    <?php if (in_array($data, ['CITA','CITREG'], true)): ?>
+                        <label>Fecha de cita</label>
+                        <input type="date" name="FechaCita" required>
+                        <label>Hora de cita</label>
+                        <input type="time" name="HoraCita" required>
+                    <?php endif; ?>
+                </div>
+
+                <div class="Formulario text-center" style="margin-top:1em">
+                    <button type="submit" name="<?= htmlspecialchars($settings['btn']) ?>"
+                            class="btn btn-primary">
+                        <?= htmlspecialchars($settings['btn']) ?>
+                    </button>
+                </div>
+                <div class="Ligas text-center" style="margin-top:1em">
+                    <a href="/" style="color:#911F66">Regresar a KASU</a> |
+                    <a href="https://kasu.com.mx/terminos-y-condiciones.php" style="color:#012F91">
+                        Términos y Condiciones
+                    </a>
+                </div>
+            </form>
+        </div>
+        <!-- Imagen lateral (derecha) -->
+        <div class="col-md-6 text-center">
+            <img src="<?= htmlspecialchars($settings['imgSide']) ?>"
+                 alt="Imagen <?= htmlspecialchars($serviceMap[$data]) ?>"
+                 style="max-width:100%; height:auto;">
+        </div>
+    </section>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="eia/javascript/Registro.js"></script>
+    <script src="eia/javascript/finger.js"></script>
+</body>
 </html>

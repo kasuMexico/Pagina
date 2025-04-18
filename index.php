@@ -1,32 +1,53 @@
 <?php
-// Iniciar la sesión *JCCM
+// Activar reporte de errores para depuración
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Iniciar la sesión
 session_start();
-// Requerir el archivo de librerías *JCCM
+
+// Requerir el archivo de librerías
 require_once 'eia/librerias.php';
 
-// Si se recibe un mensaje en la URL, se muestra un alert en JavaScript
+// Para depuración: confirmar carga de librerías
+echo "Librerías cargadas correctamente.<br>";
+
+// Instanciar la clase Basicas (asegúrate de que la clase esté definida en las librerías)
+$basicas = new Basicas();
+echo "Instancia de Basicas creada.<br>";
+
+// Si se recibe un mensaje en la URL, mostrar un alert en JavaScript y también imprimirlo en pantalla
 if (isset($_GET['Msg'])) {
-    echo "<script type='text/javascript'>
-            alert('" . addslashes($_GET['Msg']) . "');
-          </script>";
+    $msg = addslashes($_GET['Msg']);
+    echo "<script type='text/javascript'>alert('$msg');</script>";
+    echo "Mensaje recibido: $msg<br>";
+} else {
+    echo "No se recibió mensaje (Msg) en la URL.<br>";
 }
 
-// Verificar que el parámetro 'Ml' existe y es igual a 4
+// Verificar que el parámetro 'Ml' exista y sea igual a 4
 if (isset($_GET['Ml']) && $_GET['Ml'] == 4) {
-    // Se utiliza el parámetro 'dat' para determinar en qué tabla actualizar
+    echo "Parámetro Ml es igual a 4.<br>";
+    
+    // Verificar si se recibió 'dat' para determinar en qué tabla actualizar
     if (empty($_GET['dat'])) {
-        // Actualiza el campo 'Cancelacion' en la tabla 'Contacto'
-        $basicas->ActCampo($mysqli, "Contacto", "Cancelacion", 1, $_GET['Id']);
+        echo "No se recibió el parámetro 'dat'. Actualizando tabla 'Contacto'.<br>";
+        $result = $basicas->ActCampo($mysqli, "Contacto", "Cancelacion", 1, $_GET['Id']);
+        echo "Resultado de ActCampo en Contacto: " . var_export($result, true) . "<br>";
     } else {
-        // Actualiza el campo 'Cancelacion' en la tabla 'prospectos'
-        $basicas->ActCampo($pros, "prospectos", "Cancelacion", 1, $_GET['Id']);
+        echo "Se recibió el parámetro 'dat'. Actualizando tabla 'prospectos'.<br>";
+        // Asegúrate de que la variable $pros esté definida y sea una conexión válida
+        $result = $basicas->ActCampo($pros, "prospectos", "Cancelacion", 1, $_GET['Id']);
+        echo "Resultado de ActCampo en prospectos: " . var_export($result, true) . "<br>";
     }
-    // Imprimir un alert indicando que se ha dado de baja el email
-    echo "<script type='text/javascript'>
-            alert('Se ha dado de baja tu email de nuestro News Letter');
-          </script>";
+    
+    echo "<script type='text/javascript'>alert('Se ha dado de baja tu email de nuestro News Letter');</script>";
+    echo "Alerta de baja enviada.<br>";
+} else {
+    echo "El parámetro Ml no está definido o no es igual a 4.<br>";
 }
 ?>
+
 
 
 <!DOCTYPE html>

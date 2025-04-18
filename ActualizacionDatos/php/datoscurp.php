@@ -1,16 +1,18 @@
 <?php
 session_start();
 require_once '../../eia/librerias.php';
-require_once('../../vendor/autoload.php');
+//require_once('../../vendor/autoload.php');
 
-$txtNom_ActCur = $_POST['txtNom_ActCur'];
-$txtDir_ActCur = $_POST['txtDir_ActCur'];
-$txtTel_ActCur = $_POST['txtTel_ActCur'];
-$txtCor_ActCur = $_POST['txtCor_ActCur'];
-$txtCodMai_ModVerCod = $_POST['txtCodMai_ModVerCod'];
-$txtCodTel_ModVerCod = $_POST['txtCodTel_ModVerCod'];
+// Sanitizar y asignar con valor por defecto vacío si no llega en el POST
+$txtNom_ActCur        = filter_input(INPUT_POST, 'txtNom_ActCur',        FILTER_SANITIZE_SPECIAL_CHARS) ?: '';
+$txtDir_ActCur        = filter_input(INPUT_POST, 'txtDir_ActCur',        FILTER_SANITIZE_SPECIAL_CHARS) ?: '';
+$txtTel_ActCur        = filter_input(INPUT_POST, 'txtTel_ActCur',        FILTER_SANITIZE_NUMBER_INT)   ?: '';
+$txtCor_ActCur        = filter_input(INPUT_POST, 'txtCor_ActCur',        FILTER_SANITIZE_EMAIL)        ?: '';
+$txtCodMai_ModVerCod  = filter_input(INPUT_POST, 'txtCodMai_ModVerCod',  FILTER_SANITIZE_SPECIAL_CHARS) ?: '';
+$txtCodTel_ModVerCod  = filter_input(INPUT_POST, 'txtCodTel_ModVerCod',  FILTER_SANITIZE_NUMBER_INT)   ?: '';
 
-$txt_ActCur = $_POST['txtNom_ActCur'];
+// Alias si lo necesitas
+$txt_ActCur = $txtNom_ActCur;
 
 $htmlVerCorTel = '<!DOCTYPE html>
 <html lang="en" dir="ltr">

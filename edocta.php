@@ -30,7 +30,7 @@
                     <nav class="main-nav">
                         <!-- ***** Logo Start ***** -->
                         <a href="index.php" class="logo">
-                            <img src="assets/images/logo.png" alt="Logo Kasu"/>
+                            <img src="assets/images/kasu_logo.jpeg" alt="Logo Kasu"/>
                         </a>
                         <!-- ***** Logo End ***** -->
                         <!-- ***** Menu Start ***** -->

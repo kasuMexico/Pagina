@@ -10,11 +10,11 @@ session_start();
 require_once 'eia/librerias.php';
 
 // Para depuración: confirmar carga de librerías
-echo "Librerías cargadas correctamente.<br>";
+//echo "Librerías cargadas correctamente.<br>";
 
 // Instanciar la clase Basicas (asegúrate de que la clase esté definida en las librerías)
 $basicas = new Basicas();
-echo "Instancia de Basicas creada.<br>";
+//echo "Instancia de Basicas creada.<br>";
 
 // Si se recibe un mensaje en la URL, mostrar un alert en JavaScript y también imprimirlo en pantalla
 if (isset($_GET['Msg'])) {

@@ -1,3 +1,14 @@
+<?php
+// Activar reporte de errores para depuración
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Iniciar la sesión
+session_start();
+
+// Requerir el archivo de librerías
+require_once 'eia/librerias.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 

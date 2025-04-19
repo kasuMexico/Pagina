@@ -2,30 +2,54 @@
 /************************************************************************
             Recuerda ajustar tu api en el archivo de librerias
 ************************************************************************/
+
 //indicar que se inicia una sesion *JCCM
-	session_start();
-//Requerimos el archivo de librerias *JCCM
-  require_once 'eia/librerias.php';
-//Si esta vacio el get se asigna el servicio 1
-    if(!isset($_GET['Art'])){
-      $_GET['Art'] = 1;
+    session_start();
+    //Requerimos el archivo de librerias *JCCM
+    require_once __DIR__ . '/eia/librerias.php';
+    // Instanciar la clase Basicas (asegúrate de que la clase esté definida en las librerías)
+    $basicas = new Basicas();
+    echo "Instancia de Basicas creada.<br>";
+    // 1) Artículo a mostrar (default = 1)
+    $artId = filter_input(INPUT_GET, 'Art', FILTER_VALIDATE_INT, [
+        'options' => ['default' => 1, 'min_range' => 1]
+    ]);
+    // 2) Máximo de productos para validación
+    $maxProd = $basicas->MaxDat($mysqli, "Id", "ContProd");
+    if ($artId > $maxProd) {
+        header('Location: https://kasu.com.mx/error');
+        exit;
     }
-//Buscamos el maximo Id de los productos
-		$MaxProd = $basicas->MaxDat($mysqli,"Id","ContProd");
-//Si estan buscando un archivo que no existe te redirecciona a la pagina de error 404
-		if ($_GET['Art'] > $MaxProd) {
-			//Hacemos el comparativo
-			header('Location: https://kasu.com.mx/error');
-		}
-//Extraemos el valor de Mercado pago
-		$LigaMP = $basicas->BuscarCampos($mysqli,"Liga","MercadoPago","Referencia",$_GET['Pro']);
-//Seleccionamos la liga de Suscripcion o pago unico
-		$MediPago = $basicas->BuscarCampos($mysqli,"Plazo","MercadoPago","Referencia",$_GET['Pro']);
-		if($MediPago == 1){
-			$PreLig = "https://www.mercadopago.com.mx/checkout/v1/redirect?preference-id=";
-		}else{
-			$PreLig = "https://www.mercadopago.com.mx/subscriptions/checkout?preapproval_plan_id=";
-		}
+    // 3) Carga del artículo
+    $stmt   = $mysqli->prepare("SELECT * FROM ContProd WHERE Id = ?");
+    $stmt->bind_param('i', $artId);
+    $stmt->execute();
+    $result  = $stmt->get_result();
+    $Reg     = $result->fetch_assoc();
+    $stmt->close();
+    if (!$Reg) {
+        header('Location: https://kasu.com.mx/error');
+        exit;
+    }
+    // 4) MercadoPago (solo si 'Pro' viene definido)
+    $preference = '';
+    $proRef     = filter_input(INPUT_GET, 'Pro', FILTER_SANITIZE_STRING);
+    if ($proRef !== null) {
+        // Liga y plazo
+        $ligamp   = $basicas->BuscarCampos($mysqli, "Liga",  "MercadoPago", "Referencia", $proRef);
+        $mediPago = (int)$basicas->BuscarCampos($mysqli, "Plazo", "MercadoPago", "Referencia", $proRef);
+    
+        // Elegir URL base
+        if ($mediPago === 1) {
+            $preference = "https://www.mercadopago.com.mx/checkout/v1/redirect?preference-id=" . urlencode($ligamp);
+        } else {
+            $preference = "https://www.mercadopago.com.mx/subscriptions/checkout?preapproval_plan_id=" . urlencode($ligamp);
+        }
+    }
+		
+	// 5) Corrección de ruta al chat de Facebook
+$fbChatInclude = __DIR__ . '/html/CodeFb.php';
+		
 //Se protege el valor a insertar en la base de datos
 		$dat = $mysqli -> real_escape_string($_GET['Art']);
 //Creamos la consulta en la base de datos apra los datos del blog
@@ -65,10 +89,6 @@
 		<script src="assets/js/js_productos.js"></script>
 </head>
 <body>
-		<!-- Chat de Facebook -->
-		<?
-		require_once 'html/CodeFb.php';
-		?>
 		<!-- Google Tag Manager (noscript) -->
 		<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MCR6T6W"
 		height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -145,7 +165,21 @@
                     <div class="left-text">
                         <? echo $Reg['DesIni_Producto'];
 												//Boton de compra debajo de texto
-												$Desc = $basicas->BuscarCampos($mysqli,"Descuento","PostSociales","Id",$_SESSION["tarjeta"]);
+												// antes de usarlo, comprueba que exista la clave en la sesión
+if (isset($_SESSION['tarjeta']) && $_SESSION['tarjeta'] !== '') {
+    // devuelve el descuento para este cupón
+    $Desc = $basicas->BuscarCampos(
+        $mysqli,
+        "Descuento",
+        "PostSociales",
+        "Id",
+        $_SESSION['tarjeta']
+    );
+} else {
+    // sin tarjeta de descuento activa
+    $Desc = null;
+}
+												//$Desc = $basicas->BuscarCampos($mysqli,"Descuento","PostSociales","Id",$_SESSION["tarjeta"]);
 												if(!empty($Desc)){
 													//IMPRIMIOS LA IMAGEN
 													echo '
@@ -243,7 +277,21 @@
 									<? echo $Reg['Precios_Producto'];?>
 								</div>
 								<?
-								$Desc = $basicas->BuscarCampos($mysqli,"Descuento","PostSociales","Id",$_SESSION["tarjeta"]);
+								// antes de usarlo, comprueba que exista la clave en la sesión
+if (isset($_SESSION['tarjeta']) && $_SESSION['tarjeta'] !== '') {
+    // devuelve el descuento para este cupón
+    $Desc = $basicas->BuscarCampos(
+        $mysqli,
+        "Descuento",
+        "PostSociales",
+        "Id",
+        $_SESSION['tarjeta']
+    );
+} else {
+    // sin tarjeta de descuento activa
+    $Desc = null;
+}
+								//$Desc = $basicas->BuscarCampos($mysqli,"Descuento","PostSociales","Id",$_SESSION["tarjeta"]);
 								if(!empty($Desc)){
 									//iMPRIMIOS LA IMAGEN
 									echo '

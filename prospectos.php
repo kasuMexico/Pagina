@@ -1,27 +1,4 @@
-<?
-  //ingresos base 64
-  //FUNERARIO
-  //https://kasu.com.mx/prospectos.php?data=RlVORVJBUklP
-  //SEGURIDAD PUBLICA
-  //https://kasu.com.mx/prospectos.php?data=UE9MSUNJQVM=
-  //UNIVERSITARIO
-  //https://kasu.com.mx/prospectos.php?data=VU5JVkVSU0lUQVJJTw==
-  //RETIRO
-  //https://kasu.com.mx/prospectos.php?data=UkVUSVJP
-  //DISTRIBUIDOR
-  //https://kasu.com.mx/prospectos.php?data=RElTVFJJQlVJRE9S
-  //GENERAR CITAS
-  //https://kasu.com.mx/prospectos.php?data=Q0lUUkVH
-  //GENERAR CITAS SERVICIO RETIRO
-  //https://kasu.com.mx/prospectos.php?data=Q0lUUkVH&SerFb=UkVUSVJP&Ori=ZmI=
-  //GENERAR CITAS SERVICIO FUNERARIO
-  //https://kasu.com.mx/prospectos.php?data=Q0lUUkVH&SerFb=RlVORVJBUklP&Ori=ZmI=
-  //GENERAR CITAS INVERSION UNIVERSITARIA
-  //https://kasu.com.mx/prospectos.php?data=Q0lUUkVH&SerFb=VU5JVkVSU0lUQVJJTw==&Ori=ZmI=
-  //GENERAR CITAS DISTRIBUIDOR
-  //https://kasu.com.mx/prospectos.php?data=Q0lUUkVH&SerFb=RElTVFJJQlVJRE9S&Ori=ZmI=
-  //GENERAR CITAS CORREOS
-  //https://kasu.com.mx/prospectos.php?data=Q0lUQQ==&Usr=NDU=
+<?php
 // prospectos.php
 
 // Requerir el archivo de librerías

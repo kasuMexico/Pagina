@@ -23,6 +23,10 @@
 	}
 	//Php que realiza el analisis de las metas de venta y colocacion
 	require_once 'php/Analisis_Metas.php';
+	// Crear un formateador para el locale de México, estilo decimal
+	$fmt = new NumberFormatter('es_MX', NumberFormatter::DECIMAL);
+	// Asegurarnos de que no muestre decimales
+	$fmt->setAttribute(NumberFormatter::FRACTION_DIGITS, 0);
 	//Inicio de las ventas
 	$FeIniVtas = date("d-M-Y", strtotime($basicas->MinDat($mysqli,"FechaRegistro","Venta")));
 	//$sqal = "alter table Productos add (PlazoPagos varchar (20)  null)";
@@ -429,11 +433,16 @@
             <div class="card">
                 <div class="card-header bg-secondary text-light">Generales de Prospeccion </div>
                 <div class="card-body">
-                  Prospectos Tierra en el mes : <strong><? echo round($ProsTier); ?></strong>
-                  <br>Prospectos Digitales en el mes : <strong><? echo round($ProsDgt); ?></strong>
-                  <br>Registros Generados en el mes : <strong><? echo round($ProsGen); ?></strong>
-                  <br>Registros Digitales Generados : <strong><? echo round($ProsDig); ?></strong>
-                  <br>Clientes Generados en el mes : <strong><? echo round($Ventas); ?></strong>
+				Prospectos Tierra en el mes : 
+				<strong><?= $fmt->format($ProsTier) ?></strong>
+			  <br>Prospectos Digitales en el mes : 
+				<strong><?= $fmt->format($ProsDgt) ?></strong>
+			  <br>Registros Generados en el mes : 
+				<strong><?= $fmt->format($ProsGen) ?></strong>
+			  <br>Registros Digitales Generados : 
+				<strong><?= $fmt->format($ProsDig) ?></strong>
+			  <br>Clientes Generados en el mes : 
+				<strong><?= $fmt->format($Ventas) ?></strong>			  
                 </div>
             </div>
         </div>

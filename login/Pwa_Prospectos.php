@@ -8,7 +8,7 @@ require_once '../eia/librerias.php';
         header('Location: https://kasu.com.mx/login');
       }else{
         //Seleccionamos el Id de el usuario
-        $IdAsignacion = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+        echo $IdAsignacion = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
       }
       if(!empty($_POST['CreaProsp'])){
         //Lanzamos Ventana emergente

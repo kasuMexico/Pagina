@@ -218,7 +218,7 @@ require_once 'php/Selector_Emergentes_Ml.php';
                 </div>
             </form>
             <form method="POST" enctype="multipart/form-data" action="php/Funcionalidad_Pwa.php">
-                <label for="subirImg" id="RegCurBen" class='btn btn-secondary btn-sm btn-block' style="display:;">Nueva Foto de Perfil</label>
+                <label for="subirImg" id="RegCurBen" class='btn btn-secondary btn-sm btn-block' >Nueva Foto de Perfil</label>
                 <input type="file" id="subirImg" name="subirImg" onchange='cambiar()' onclick="OcuForCurp(this)" style="display:none">
                 <div id="info"></div>
                 <input type="submit" id="RegCurCli" class='btn btn-secondary btn-sm btn-block' name="btnEnviar" value="Cargar Foto" style="display:none;">

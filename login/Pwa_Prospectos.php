@@ -65,8 +65,7 @@ require_once '../eia/librerias.php';
     <script src='https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js' integrity='sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy' crossorigin='anonymous'></script>
     <!-- Fin Librerias prara las ventanas emergentes automaticas-->
 </head>
-<body>
-  <!--onload="localize();"-->
+<body onload="localize();"> <!-- Se lanza la funcion de localizacion -->
   <!--Inicio de menu principal fijo-->
     <section id="Menu">
       <?require_once 'html/Menuprinc.php';?>

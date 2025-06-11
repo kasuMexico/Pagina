@@ -37,7 +37,8 @@ require_once '../eia/librerias.php';
         $Lanzar = "#Ventana";
       }elseif(!empty($_POST['CreaCte'])){
         //Lanzamos Ventana emergente
-          $Ventana = "#Ventana4";
+        $Ventana = "Ventana4";
+        $Lanzar = "#Ventana";
       }
   //Buscar el id de el vendedor
       $IdVen = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
@@ -61,9 +62,8 @@ require_once '../eia/librerias.php';
     <script src='https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js' integrity='sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy' crossorigin='anonymous'></script>
     <!-- Fin Librerias prara las ventanas emergentes automaticas-->
 </head>
-<body>
-  <!--onload="localize();"-->
-  <!--Inicio de menu principal fijo-->
+<body onload="localize();"> <!-- Se lanza la funcion de localizacion -->
+    <!--Inicio de menu principal fijo-->
     <section id="Menu">
       <?require_once 'html/Menuprinc.php';?>
     </section>

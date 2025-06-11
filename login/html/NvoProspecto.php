@@ -1,9 +1,9 @@
-<?
-echo '
+
 <form action="https://kasu.com.mx/login/php/Registro_Prospectos.php" method="post">
-  <input type="text" name="Host" value="'.$_SERVER['PHP_SELF'].'" style="display: none;">
-  <input type="text" name="IdAsignacion" value="'.$IdAsignacion.'" style="display: none;">
-  <input type="text" name="name" value="'.$name.'" style="display: none;">
+  <div id="Gps"></div> <!-- Input que muestra el GPS -->
+  <input type="text" name="Host" value="'<?$_SERVER['PHP_SELF']?>'" style="display: none;">
+  <input type="text" name="IdAsignacion" value="'<?$IdAsignacion?>'" style="display: none;">
+  <input type="text" name="name" value="'<?$name?>'" style="display: none;">
       <div class="modal-header">
           <h5 class="modal-title" id="exampleModalLabel">Registrar Nuevo Prospecto</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -21,12 +21,11 @@ echo '
         <label>Tipo de Servicio</label>
         <select class="form-control" name="Servicio">
             <option value="FUNERARIO">GASTOS FUNERARIOS</option>
-            <option value="UNIVERSITARIO">INVERSION UNIVERSITARIA</option>
+            <option value="POLICIA">GASTOS FUNERARIOS OFICIALES</option>
             <option value="RETIRO">AHORRO PARA EL RETIRO</option>
             <option value="DISTRIBUIDOR">DISTRIBUIDORES</option>
         </select>
-        ';
-        if(empty($name)){
+        <?if(empty($name)){
           echo '
           <input type="text" name="Origen" value="vta" style="display: none;">
           ';
@@ -40,11 +39,9 @@ echo '
               <option value="vta">Vendedor</option>
           </select>
           ';
-        }
-        echo '
+        }?>
         <div class="modal-footer">
             <input type="submit" name="prospectoNvo" class="btn btn-primary" value="Registrar y enviar">
         </div>
   </form>
-  ';
-?>
+

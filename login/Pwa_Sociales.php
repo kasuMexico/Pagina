@@ -34,11 +34,16 @@ require_once '../eia/librerias.php';
       <?require_once 'html/Menuprinc.php';?>
     </section>
     <!-- Start: Login Form Clean -->
-    <section class="container"  style="width: 99%;">
-        <div class="form-group">
-            <h2>Sociales</h2>
-            <hr>
+    <section class="container" style="width: 99%;">
+      <div class="form-group">
+        <div class="row align-items-center">
+          <div class="col text-center">
+            <h4 class="mb-0">Post para Facebook</h4>
+            <hr style="margin:auto;">
+          </div>
         </div>
+      </div>
+    </section>
         <?
         $a = 1;
         $b = $basicas->Max1Dat($mysqli,"Id","PostSociales","Tipo","Vta");

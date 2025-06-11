@@ -71,22 +71,16 @@ require_once '../eia/librerias.php';
     <section id="Menu">
       <?require_once 'html/Menuprinc.php';?>
     </section>
-    <form class="BtnSocial" method='POST' action='<? echo $_SERVER['PHP_SELF'];?>'  style='padding-top: 5px; padding-left: 5px;'>
-        <!-- Crear nuevo prospecto -->
-        <input type='text' name='Host' value='<? echo $_SERVER['PHP_SELF'];?>' style='display: none;'>
-        <label for='400' title='Crear nuevo prospecto' class='btn' style='background: #F7DC6F; color: #F8F9F9;' ><i class='material-icons'>person_add</i></label>
-        <input id='400' type='submit' name='CreaProsp' class='hidden' style='display: none ;' />
-    </form>
     <!--Final de menu principal fijo-->
     <section class="VentanasEMergentes">
-      <!--Inicio Creacion de las ventanas emergentes-->
-      <script type='text/javascript'>
-          $( document ).ready(function() {
-              $('<? echo $Lanzar; ?>').modal('toggle')
-          });
-      </script>
-      <!-- Modal que Muestra la informacion de el cliente -->
-      <div class="modal fade" id="Ventana1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <!--Inicio Creacion de las ventanas emergentes-->
+    <script type='text/javascript'>
+        $( document ).ready(function() {
+            $('<? echo $Lanzar; ?>').modal('toggle')
+        });
+    </script>
+    <!-- Modal que Muestra la informacion de el cliente -->
+    <div class="modal fade" id="Ventana1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
           <div class="modal-dialog" role="document">
               <div class="modal-content">
                     <div class="modal-header">
@@ -134,9 +128,9 @@ require_once '../eia/librerias.php';
                     </div>
               </div>
           </div>
-      </div>
-      <!-- Modal que envia Presupuesto de Venta -->
-      <div class="modal fade" id="Ventana3" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    </div>
+    <!-- Modal que envia Presupuesto de Venta -->
+    <div class="modal fade" id="Ventana3" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
           <div class="modal-dialog" role="document">
               <div class="modal-content">
                     <div class="modal-header">
@@ -146,21 +140,34 @@ require_once '../eia/librerias.php';
                   <? require_once 'html/Presupuesto.php'; ?>
               </div>
           </div>
-      </div>
-      <!-- Modal que Muestra la informacion de el cliente -->
-      <div class="modal fade" id="Ventana2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    </div>
+    <!-- Modal que Muestra la informacion de el cliente -->
+    <div class="modal fade" id="Ventana2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
           <div class="modal-dialog" role="document">
               <div class="modal-content">
                 <? require_once 'html/NvoProspecto.php'; ?>
               </div>
           </div>
-      </div>
+    </div>
     </section>
     <!-- Start: Login Form Clean -->
     <section class="container"  style="width: 99%;">
             <div class="form-group">
-                <h2>Prospectos Asignados</h2>
-                <hr>
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <form class="BtnSocial" method="POST" action="<?php echo $_SERVER['PHP_SELF']; ?>" style="padding-top: 5px; padding-left: 5px;">
+                            <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;">
+                            <label for="400" title="Crear nuevo prospecto" class="btn" style="background: #F7DC6F; color: #F8F9F9;">
+                                <i class="material-icons">person_add</i>
+                            </label>
+                            <input id="400" type="submit" name="CreaProsp" class="hidden" style="display: none;" />
+                        </form>
+                    </div>
+                    <div class="col">
+                        <h4 class="mb-0">Prospectos Asignados</h4>
+                        <hr>
+                    </div>
+                </div>
             </div>
             <div class="form-group">
                 <div class="table-responsive" >

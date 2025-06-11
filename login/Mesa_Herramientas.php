@@ -76,6 +76,8 @@ require_once 'php/Selector_Emergentes_Ml.php';
                     <form method="POST" action="php/Funcionalidad_Empleados.php">
                         <div class="modal-header">
                             <h5 class="modal-title" id="exampleModalLabel">Actualizar mis Datos</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
                         </div>
                         <div class="modal-body">
                             <input type="number" name="IdContact" value="<?php echo isset($RegCt['id']) ? $RegCt['id'] : ''; ?>" style="display:none;">
@@ -108,6 +110,8 @@ require_once 'php/Selector_Emergentes_Ml.php';
                     <form method="POST" action="php/Funcionalidad_Empleados.php">
                         <div class="modal-header">
                             <h5 class="modal-title" id="exampleModalLabel"><?php echo isset($Reg['Nombre']) ? $Reg['Nombre'] : ''; ?></h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
                         </div>
                         <div class="modal-body">
                             <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;">

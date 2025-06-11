@@ -35,6 +35,9 @@ require_once '../eia/librerias.php';
         //Variables para lanzar las ventanas emergentes
         $Ventana = "Ventana".$_GET['Vt'];
         $Lanzar = "#Ventana";
+      }elseif(!empty($_POST['CreaCte'])){
+        //Lanzamos Ventana emergente
+          $Ventana = "#Ventana4";
       }
   //Buscar el id de el vendedor
       $IdVen = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
@@ -51,6 +54,7 @@ require_once '../eia/librerias.php';
     <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="/login/assets/css/styles.min.css">
+    <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons'>
     <!-- Inicio Librerias prara las ventanas emergentes automaticas-->
     <script src='https://code.jquery.com/jquery-3.3.1.slim.min.js' integrity='sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo' crossorigin='anonymous'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js' integrity='sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49' crossorigin='anonymous'></script>
@@ -80,6 +84,8 @@ require_once '../eia/librerias.php';
                 require 'html/EmPago.php';
               }elseif($Ventana == "Ventana3"){
                 require 'html/EmPagoEx.php';
+              }elseif($Ventana == "Ventana4"){
+                require 'html/NvoCliente.php';
               }
               ?>
             </div>
@@ -88,8 +94,21 @@ require_once '../eia/librerias.php';
     <!-- Start: Login Form Clean -->
     <section class="container"  style="width: 99%;">
         <div class="form-group">
-            <h2>Cartera de clientes</h2>
-            <hr>
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <form class="BtnSocial" method="POST" action="<?php echo $_SERVER['PHP_SELF']; ?>" style="padding-top: 5px; padding-left: 5px;">
+                        <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;">
+                        <label for="400" title="Crear nuevo prospecto" class="btn" style="background: #58D68D; color: #F8F9F9;">
+                            <i class="material-icons">person_add</i>
+                        </label>
+                        <input id="400" type="submit" name="CreaCte" class="hidden" style="display: none;" />
+                    </form>
+                </div>
+                <div class="col">
+                    <h4 class="mb-0">Cartera de Clientes</h4>
+                    <hr>
+                </div>
+            </div>
         </div>
         <div class="form-group">
             <div class="table-responsive">

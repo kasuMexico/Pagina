@@ -45,7 +45,7 @@ $IdVen = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Cartera Clientes</title>
+    <title>Registros de Pagos</title>
     <!-- CODELAB: Add meta theme-color -->
     <meta name="theme-color" content="#2F3BA2" />
     <link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png">
@@ -81,10 +81,16 @@ $IdVen = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["
     </div>
     <section class="container"  style="width: 99%;">
         <form  method="post">
-            <div class="form-group">
-                <h2>Registro de pagos y promesas</h2>
-                <hr>
-            </div>
+			<section class="container" style="width: 99%;">
+				<div class="form-group">
+					<div class="row align-items-center">
+					<div class="col text-center">
+						<h4 class="mb-0">Pagos y promesas</h4>
+						<hr style="margin:auto;">
+					</div>
+					</div>
+				</div>
+			</section>
             <div class="form-group">
                 <div class="table-responsive" >
                    <?PHP
@@ -102,7 +108,17 @@ $IdVen = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["
 												$cd = '+ 15';
 												$Ya = '+ 8';
 											}else{
-												echo "<h2>Pagos del periodo</h2>";
+												echo '    
+												<section class="container" style="width: 99%;">
+												<div class="form-group">
+													<div class="row align-items-center">
+													<div class="col text-center">
+														<h4 class="mb-0">Pagos del Periodo</h4>
+														<hr style="margin:auto;">
+													</div>
+													</div>
+												</div>
+												</section>';
 												$cd = '+ 2';
 												$Ya = '- 1';
 											}

@@ -7,8 +7,10 @@ require_once '../eia/librerias.php';
     if(!isset($_SESSION["Vendedor"])){
         header('Location: https://kasu.com.mx/login');
       }else{
-        //Seleccionamos el Id de el usuario
+        //Seleccionamos el Id de el usuario ###############
         echo $IdAsignacion = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+        //Asignamos valor a la variable no definida
+        if(!isset($name)) $name = '';
       }
       if(!empty($_POST['CreaProsp'])){
         //Lanzamos Ventana emergente
@@ -89,6 +91,8 @@ require_once '../eia/librerias.php';
               <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="exampleModalLabel"><?PHP echo $Reg['FullName'];?></h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
                     </div>
                     <div class="modal-body">
                         <div id="Gps" style="display: none;"></div>
@@ -117,13 +121,15 @@ require_once '../eia/librerias.php';
                         <h2><strong><? echo $Var?> %</strong></h2>
                     </div>
                     <div class="modal-footer">
-                        <a target="_blank" rel="noopener noreferrer" class="btn btn-primary" href="https://api.whatsapp.com/send?phone=52<? echo $Reg['NoTel'];?>?texto=Hola mi nombre es <? echo $nomVd;?> te contacto debido a que te intereso nuestra publicidad y nos enviaste tus datos">Whatsapp</a>
-                        <form method="POST" action="<?PHP echo $_SERVER['PHP_SELF'];?>">
-                          <input type='text' name='IdVendedor' style='display:  none;' value='<?PHP echo $_POST['IdVendedor'];?>' />
-                          <input type="number" name="IdPros" value="<?PHP echo $Reg['Id'];?>" style="display: none;" />
-                          <input type="submit" name="ArmaPres" class="btn btn-primary" value="Presupuesto" />
-                          <input type="number" name="IdPros" value="<?PHP echo $Reg['Id'];?>" style="display: none;" />
-                          <input type="submit" name="Cancelar" class="btn btn-danger" value="Cancelar" />
+                        <a target="_blank" rel="noopener noreferrer" class="btn btn-primary mr-2"
+                        href="https://api.whatsapp.com/send?phone=+52<?php echo $Reg['NoTel']; ?>&text=Hola mi nombre es <?php echo $nomVd; ?> te contacto debido a que te interesaron nuestros productos de KASU">
+                            Whatsapp
+                        </a>
+                        <form method="POST" action="<?php echo $_SERVER['PHP_SELF']; ?>" style="display:inline;">
+                            <input type="hidden" name="IdVendedor" value="<?php echo $_POST['IdVendedor']; ?>" />
+                            <input type="hidden" name="IdPros" value="<?php echo $Reg['Id']; ?>" />
+                            <input type="submit" name="ArmaPres" class="btn btn-primary mr-2" value="Presupuesto" />
+                            <input type="submit" name="Cancelar" class="btn btn-danger" value="Cancelar" />
                         </form>
                     </div>
               </div>

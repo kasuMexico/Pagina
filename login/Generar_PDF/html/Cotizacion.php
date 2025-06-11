@@ -47,8 +47,8 @@ echo '
                         <td>'.date("d-m-Y", strtotime($Propuest['FechaRegistro'])).'</td>
                         <td>Servicio 02 a 29 años</td>
                         <td> '.$Propuest['a0a29'].' </td>
-                        <td> '.money_format('%.2n',$Pra0a29).' </td>
-                        <td>'.money_format('%.2n',$Pa0a29).'</td>
+                        <td> $'.number_format($Pra0a29, 2).' </td>
+                        <td> $'.number_format($Pa0a29, 2).'</td>
                       </tr>
                       ';
                       }
@@ -60,8 +60,8 @@ echo '
                         <td>'.date("d-m-Y", strtotime($Propuest['FechaRegistro'])).'</td>
                         <td>Servicio 30 a 49 años</td>
                         <td> '.$Propuest['a30a49'].' </td>
-                        <td> '.money_format('%.2n',$Pra30a49).' </td>
-                        <td>'.money_format('%.2n',$Pa30a49).'</td>
+                        <td> $'.number_format($Pra30a49, 2).' </td>
+                        <td> $'.number_format($Pa30a49, 2).'</td>
                       </tr>
                       ';
                       }
@@ -73,8 +73,8 @@ echo '
                         <td>'.date("d-m-Y", strtotime($Propuest['FechaRegistro'])).'</td>
                         <td>Servicio 50 a 54 años</td>
                         <td> '.$Propuest['a50a54'].' </td>
-                        <td> '.money_format('%.2n',$Pra50a54).' </td>
-                        <td>'.money_format('%.2n',$Pa50a54).'</td>
+                        <td> $'.number_format($Pra50a54, 2).' </td>
+                        <td> $'.number_format($Pa50a54, 2).'</td>
                       </tr>
                       ';
                       }
@@ -86,8 +86,8 @@ echo '
                         <td>'.date("d-m-Y", strtotime($Propuest['FechaRegistro'])).'</td>
                         <td>Servicio 55 a 59 años</td>
                         <td> '.$Propuest['a55a59'].' </td>
-                        <td> '.money_format('%.2n',$Pra55a59).' </td>
-                        <td>'.money_format('%.2n',$Pa55a59).'</td>
+                        <td> $'.number_format($Pra55a59, 2).' </td>
+                        <td> $'.number_format($Pa55a59, 2).'</td>
                       </tr>
                       ';
                       }
@@ -99,8 +99,8 @@ echo '
                         <td>'.date("d-m-Y", strtotime($Propuest['FechaRegistro'])).'</td>
                         <td>Servicio 60 a 64 años</td>
                         <td> '.$Propuest['a60a64'].' </td>
-                        <td> '.money_format('%.2n',$Pra60a64).' </td>
-                        <td>'.money_format('%.2n',$Pa60a64).'</td>
+                        <td> $'.number_format($Pra60a64, 2).' </td>
+                        <td> $'.number_format($Pa60a64, 2).'</td>
                       </tr>
                       ';
                       }
@@ -112,13 +112,19 @@ echo '
                         <td>'.date("d-m-Y", strtotime($Propuest['FechaRegistro'])).'</td>
                         <td>Servicio 65 a 69 años</td>
                         <td> '.$Propuest['a65a69'].' </td>
-                        <td> '.money_format('%.2n',$Pra65a69).' </td>
-                        <td>'.money_format('%.2n',$Pa65a69).'</td>
+                        <td> $'.number_format($Pra65a69, 2).' </td>
+                        <td> $'.number_format($Pa65a69, 2).'</td>
                       </tr>
                       ';
                       }
                       //SE suman los valores
-                      $sal = $Pa0a29+$Pa30a49+$Pa50a54+$Pa55a59+$Pa60a64+$Pa65a69;
+                      if (!isset($Pa0a29)) $Pa0a29 = 0;
+                      if (!isset($Pa30a49)) $Pa30a49 = 0;
+                      if (!isset($Pa50a54)) $Pa50a54 = 0;
+                      if (!isset($Pa55a59)) $Pa55a59 = 0;
+                      if (!isset($Pa60a64)) $Pa60a64 = 0;
+                      if (!isset($Pa65a69)) $Pa65a69 = 0;
+                      $sal = $Pa0a29 + $Pa30a49 + $Pa50a54 + $Pa55a59 + $Pa60a64 + $Pa65a69;
                       //Se suman las cantidades
                       $Canti = $Propuest['a0a29']+$Propuest['a30a49']+$Propuest['a50a54']+$Propuest['a55a59']+$Propuest['a60a64']+$Propuest['a65a69'];
                       //Si es poliza de ayuntamiento se calcula tasa en 0
@@ -156,7 +162,7 @@ echo '
                           <td></td>
                           <td></td>
                           <td><strong>TOTAL</strong></td>
-                          <td><strong>'.money_format('%.2n',$sal).'</strong></td>
+                          <td><strong> $'.number_format($sal, 2).'</strong></td>
                         </tr>
                         ';
                       }else{
@@ -166,16 +172,16 @@ echo '
                             <td></td>
                             <td></td>
                             <td><strong>'.$Propuest['plazo'].' Pagos mensuales de</strong></td>
-                            <td><strong>'.money_format('%.2n',$pagm).'</strong></td>
+                            <td><strong>'.number_format($pagm, 2).'</strong></td>
                           </tr>';
-                          if($Propuest['Origen'] == "mpio"){
+                          if (isset($Propuest['Origen']) && $Propuest['Origen'] == "mpio") {
                               echo '
                               <tr>
                                 <td></td>
                                 <td></td>
                                 <td></td>
                                 <td><strong>Descuento ayuntamiento</strong></td>
-                                <td>'.money_format('%.2n',$DesCt).'</td>
+                                <td>' . number_format($DesCt, 2) . '</td>
                               </tr>';
                           }
                           echo '
@@ -184,7 +190,7 @@ echo '
                             <td></td>
                             <td></td>
                             <td><strong>TOTAL</strong></td>
-                            <td>'.money_format('%.2n',$saldo).'</td>
+                            <td>'.number_format($saldo, 2).'</td>
                           </tr>
                           ';
                       }

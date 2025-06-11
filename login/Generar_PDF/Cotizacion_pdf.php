@@ -2,7 +2,8 @@
 try {
 	ob_start(); // inicia la creacion de los documentos
 	//Se incluyen lo archivos prinicipales
-	require_once '../../eia/Conexiones/cn_prosp.php';
+	//require_once '../../eia/Conexiones/cn_prosp.php';
+	require_once '../../eia/librerias.php'; //Cargamos las funciones Basicas
 	require_once 'dompdfMaster/dompdf_config.inc.php';//Bloqeuado para impresion
 	require_once 'dompdfMaster/include/autoload.inc.php'; //se carga el autoload para poder tener disponible la case DOMPDF
     // datos de la fecha en php JOSE CARLOS CABRERA MONROY
@@ -30,16 +31,21 @@ try {
 					$html = ob_get_clean();
 				}
 		}
-		//quitamos espacios al nombre cte para el documento
-		$NomFichas = str_replace(' ', '',$Prospecto['FullName']);//se crea el PDF
-		$datospdf->set_option('enable_html5_parser', TRUE);      // Se modifico -> $datospdf = new DOMPDF(); con $datospdf->set_option('enable_html5_parser', TRUE);
-		$datospdf->set_paper("A4", "portrait"); 				 // Tamaño de la hoja
-		$datospdf->load_html($html);   							 // Obtiene el contenido - Se modifico ob_get_clean() por la variable $html
-		$datospdf->render(); 									 // Renderizamos el documento PDF
-		$output = $datospdf->output(); 							 // Datos de salida del PDF
-		$nombrePdf = "Propuesta_".$NomFichas.".pdf"; 			 // Nombre del archivo personalizado
-		file_put_contents(("DATES/" . $nombrePdf), $output); 	 // Escribir datos en un fichero
-		$datospdf->stream($nombrePdf);
+		// Quitamos espacios al nombre del cliente para el nombre del archivo PDF
+		$NomFichas = str_replace(' ', '', $Prospecto['FullName']);
+		// Opciones para DOMPDF
+		$datospdf->set_option('enable_html5_parser', TRUE);        // Habilita el parser HTML5
+		$datospdf->set_paper("A4", "portrait");                    // Tamaño y orientación del papel
+		// Carga el HTML y renderiza el PDF
+		$datospdf->load_html($html);                               // Carga el contenido HTML
+		$datospdf->render();                                       // Renderiza el PDF
+		// Obtiene el contenido del PDF y define el nombre de archivo
+		$output = $datospdf->output();
+		$nombrePdf = "Propuesta_" . $NomFichas . ".pdf";
+		// Guarda el archivo en la carpeta DATES (opcional)
+		file_put_contents("DATES/" . $nombrePdf, $output);
+		// Fuerza la descarga automática del PDF al usuario
+		$datospdf->stream($nombrePdf, array("Attachment" => 1));
 		//Codigo agregado por Ivan
 		} catch (\Throwable $e) {
 			echo $e->getMessage();

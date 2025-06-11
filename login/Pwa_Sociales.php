@@ -87,7 +87,7 @@ require_once '../eia/librerias.php';
                       </a>
                       <div class="ContCupon">
                           <h2>
-                          Com/Vta '.money_format('%.2n',$Comis).'
+                          Com/Vta $'.number_format($Comis, 2).'
                           </h2>
                           <h3>'.$Reg['TitA'].'</h3>
                           <p>'.$Reg['DesA'].'</p>
@@ -166,7 +166,7 @@ require_once '../eia/librerias.php';
                       </a>
                       <div class="ContCupon">
                           <h2>
-                          Lectura '.money_format('%.2n',$Comis).'
+                          Lectura $'.number_format($Comis, 2).'
                           </h2>
                           <h3>'.$Reg['TitA'].'</h3>
                           <p>'.$Reg['DesA'].'</p>

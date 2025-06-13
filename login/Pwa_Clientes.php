@@ -198,6 +198,7 @@ require_once '../eia/librerias.php';
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="Javascript/finger.js"></script>
+        <script type="text/javascript" src="Javascript/Seleccionar.js"></script>
     <script type="text/javascript" src="Javascript/localize.js"></script>
 </body>
 

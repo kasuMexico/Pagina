@@ -19,10 +19,10 @@ require_once '../eia/librerias.php';
                     $s56 = $financieras->SaldoCredito($mysqli,$_POST['IdVenta']);
                     //Se obtieneel valor del pago
                     $Pago1 = $financieras->Pago($mysqli,$_POST['IdVenta']);
-                    $Pago = money_format('%.2n', $Pago1);
+                    $Pago = '$'.number_format($Pago1, 2);
                     //Saldo de la cuenta
                     $Saldo = $financieras->SaldoCredito($mysqli,$_POST['IdVenta']);
-                    $Saldo = money_format('%.2n', $Saldo);
+                    $Saldo = '$'.number_format($Saldo, 2);
                     //Se obtiene el numero de pagos pendientes
                     $PagoPend = $financieras->PagosPend($mysqli,$_POST['IdVenta']);
                 }

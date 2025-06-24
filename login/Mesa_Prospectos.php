@@ -4,15 +4,21 @@
 //inlcuir el archivo de funciones
   require_once '../eia/librerias.php';
   //Variables de los periodos
-  $FechIni = date("d-m-Y", strtotime('first day of this month'.date()));
+  $FechIni = date("d-m-Y", strtotime('first day of this month'));
   $FechFin = date("d-m-Y");
 //Validar si existe la session y redireccionar
   if(!isset($_SESSION["Vendedor"])){
       header('Location: https://kasu.com.mx/login');
   }else{
     //SE separa el $_POST para seleccionar la Ventana
-    $Vtn = substr($_POST['IdProspecto'], 0, 1);
-    $Cte = substr($_POST['IdProspecto'], 1, 5);
+    $IdProspecto = $_POST['IdProspecto'] ?? $_GET['IdProspecto'] ?? null;
+    if ($IdProspecto !== null) {
+        $Vtn = substr($IdProspecto, 0, 1);
+        $Cte = substr($IdProspecto, 1, 5);
+    } else {
+        $Vtn = '';
+        $Cte = '';
+    }
     //realizamos la consulta
     $venta = "SELECT * FROM prospectos WHERE Id = '".$Cte."'";
     //Realiza consulta

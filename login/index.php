@@ -4,7 +4,7 @@ session_start();
 
 // Incluir el archivo de funciones
 require_once '../eia/librerias.php';
-$_SESSION["Vendedor"] = 'EDRUZ';
+$_SESSION["Vendedor"] = 'JCarlos';
 // Redirigir si el usuario ya tiene sesión activa
 if (isset($_SESSION["Vendedor"])) {
     header('Location: https://kasu.com.mx/login/Pwa_Principal.php');

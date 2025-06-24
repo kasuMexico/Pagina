@@ -8,7 +8,7 @@ require_once '../eia/librerias.php';
         header('Location: https://kasu.com.mx/login');
       }else{
         //Seleccionamos el Id de el usuario ###############
-        echo $IdAsignacion = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+        $IdAsignacion = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
         //Asignamos valor a la variable no definida
         if(!isset($name)) $name = '';
       }

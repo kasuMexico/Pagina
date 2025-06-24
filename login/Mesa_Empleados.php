@@ -4,39 +4,61 @@
 //inlcuir el archivo de funciones
   require_once '../eia/librerias.php';
   //Variables de los periodos
-  $FechIni = date("d-m-Y", strtotime('first day of this month'.date()));
+  $FechIni = date("d-m-Y", strtotime('first day of this month'));
   $FechFin = date("d-m-Y");
-//Validar si existe la session y redireccionar
-  if(!isset($_SESSION["Vendedor"])){
-      header('Location: https://kasu.com.mx/login');
-  }else{
-    //SE separa el $_POST para seleccionar la Ventana
-    $Vtn = substr($_POST['IdEmpleado'], 0, 1);
-    $Cte = substr($_POST['IdEmpleado'], 1, 5);
-    //realizamos la consulta
+
+// Validar si existe la sesión y redireccionar
+if (!isset($_SESSION["Vendedor"])) {
+    header('Location: https://kasu.com.mx/login');
+    exit; // Siempre es recomendable
+}
+
+// Obtener IdEmpleado desde POST o GET (o null si no existe)
+$IdEmpleado = $_POST['IdEmpleado'] ?? $_GET['IdEmpleado'] ?? null;
+
+if ($IdEmpleado !== null) {
+    // SE separa el $_POST/$_GET para seleccionar la Ventana
+    $Vtn = substr($IdEmpleado, 0, 1);
+    $Cte = substr($IdEmpleado, 1, 5);
+
+    // Realizamos la consulta
     $venta = "SELECT * FROM Empleados WHERE Id = '".$Cte."'";
-    //Realiza consulta
-        $res = mysqli_query($mysqli, $venta);
-    //Si existe el registro se asocia en un fetch_assoc
-        if($Reg=mysqli_fetch_assoc($res)){
-        }
+    $res = mysqli_query($mysqli, $venta);
+
+    // Si existe el registro se asocia en un fetch_assoc
+    if ($Reg = mysqli_fetch_assoc($res)) {
+        // Aquí puedes trabajar con los datos de $Reg
+    }
+
     $Ventana = "Ventana".$Vtn;
-  }
+} else {
+    // Si no recibes IdEmpleado, puedes definir Ventana como vacío
+    $Ventana = "";
+    // O manejar un mensaje de error si lo necesitas
+    // echo "No se recibió el parámetro IdEmpleado.";
+}
   //Buscamos el Id de la venta
   $Vende = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
   //Seleccionamos el nivel de el usuario
   $Nivel = $basicas->BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$_SESSION["Vendedor"]);
   //Buscamos el correo del usuario
-  $Email = $basicas->BuscarCampos($mysqli,"Mail","Contacto","Id",$Reg["IdContacto"]);
-  //Ajuste de formato
-  $Fec1hFin = date("Y-m-d",strtotime($FechFin));
-  $Fec1hIni = date("Y-m-d",strtotime($FechIni));
-  //Pagos del periodo
-  $PagosPerio = $basicas->SumarFechas($mysqli,"Cantidad","Comisiones_pagos","IdVendedor",$Reg['IdUsuario'],"fechaRegistro",$Fec1hFin,"fechaRegistro",$Fec1hIni);
-  //variables bancarias
-  $Cont = rand(1, 9);
-  $RefDepo = hash('adler32', $FechFin."-".$Reg['IdUsuario']."-".$Cont);
-  $Cuenta = $Reg["Cuenta"];
+  if (isset($Reg) && is_array($Reg)) {
+    $Email = $basicas->BuscarCampos($mysqli,"Mail","Contacto","Id",$Reg["IdContacto"]);
+    $Fec1hFin = date("Y-m-d",strtotime($FechFin));
+    $Fec1hIni = date("Y-m-d",strtotime($FechIni));
+    $PagosPerio = $basicas->SumarFechas($mysqli,"Cantidad","Comisiones_pagos","IdVendedor",$Reg['IdUsuario'],"fechaRegistro",$Fec1hFin,"fechaRegistro",$Fec1hIni);
+    $Cont = rand(1, 9);
+    $RefDepo = hash('adler32', $FechFin."-".$Reg['IdUsuario']."-".$Cont);
+    $Cuenta = $Reg["Cuenta"];
+} else {
+    // Opcional: Puedes definir valores vacíos o mostrar un mensaje
+    $Email = "";
+    $PagosPerio = 0;
+    $RefDepo = "";
+    $Cuenta = "";
+    // También puedes mostrar un mensaje de error personalizado si lo necesitas
+    // echo "No se encontró información del empleado.";
+}
   if(!empty($_POST['CambiNivl'])){
     //Actualizar la tabla de ventas
     $basicas->ActCampo($mysqli,"Empleados","Nivel",$_POST['NvoNivel'],$_POST['IdEmpleado']);
@@ -60,7 +82,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=no">
-        <title>clientes</title>
+        <title>Empleados</title>
         <meta name="theme-color" content="#2F3BA2" />
         <link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png">
         <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
@@ -93,10 +115,13 @@
             <!-- Pagar comisiones de un periodo -->
             <div class="modal fade" id="Ventana1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
                   <div class="modal-dialog" role="document">
+
                       <div class="modal-content">
                           <form method="POST" action="php/Funcionalidad_Empleados.php">
                               <div class="modal-header">
                                   <h5 class="modal-title" id="exampleModalLabel"><?PHP echo $Reg['Nombre'];?></h5>
+                                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                  <span aria-hidden="true">&times;</span>
                               </div>
                               <div class="modal-body">
                                   <input type="text" name="Host" value="<?PHP echo $_SERVER['PHP_SELF'];?>" style="display: none;">
@@ -107,7 +132,7 @@
                                   <p>Comisiones generadas del</p>
                                   <h2><strong><? echo $FechIni; ?></strong> al <strong><? echo $FechFin; ?></strong></h2>
                                   <p>Saldo a pagar</p>
-                                  <h2><strong><? echo money_format('%.2n', $_POST['Saldo']); ?></strong></h2>
+                                  <h2><strong> <p>$<? echo number_format($_POST['Saldo'], 2); ?></p></strong></h2>
                                   <p>Clabe Registrada</p>
                                   <h2><strong><? echo $Cuenta; ?></strong></h2>
                                   <p>Referencia del pago </p>
@@ -133,36 +158,41 @@
                           <form method="POST" action="php/Funcionalidad_Empleados.php">
                               <div class="modal-header">
                                   <h5 class="modal-title" id="exampleModalLabel"><?PHP echo $Reg['Nombre'];?></h5>
+                                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                  <span aria-hidden="true">&times;</span>
                               </div>
                               <div class="modal-body">
                                 <input type="text" name="Host" value="<?PHP echo $_SERVER['PHP_SELF'];?>" style="display: none;">
                                 <input type="text" name="name" value="<?PHP echo $name;?>" style="display: none;">
                                 <input type="number" name="IdEmpleado" value="<?PHP echo $Reg['Id'];?>" style="display: none;">
                                 <p>Este ejecutivo esta asignado a</p>
-                                <p><strong><?PHP
-                                              if($Reg['Equipo'] == ""){
-                                                echo "Sistema";
-                                              }else{
-                                                $Id = $basicas->BuscarCampos($mysqli,"Id","Empleados","Id",$Reg['Equipo']);
-                                                //Consulta para encontrar al lider
-                                                $lid = "SELECT * FROM Empleados WHERE Id = '".$Id."'";
-                                                //Realiza consulta
-                                                    $rds = mysqli_query($mysqli, $lid);
-                                                //Si existe el registro se asocia en un fetch_assoc
-                                                    if($dis=mysqli_fetch_assoc($rds)){
-                                                        $Sucur = $basicas->BuscarCampos($mysqli,"nombreSucursal","Sucursal","Id",$dis['Sucursal']);
-                                                        $Stats = $basicas->BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$dis['Nivel']);
-                                                        echo $dis['Nombre']." - ".$Stats." - ".$Sucur;
-                                                      }
-                                              }
-                                              //Comparativo de registro de nivel para reasignar
-                                              if($Reg['Nivel'] >= 5){
-                                                $nue = 4;
-                                              }else{
-                                                $nue = $Reg['Nivel']--;
-                                              }
-                                          ?>
-                                </strong></p>
+                                <p>
+                                  <strong>
+                                    <?PHP
+                                    if($Reg['Equipo'] == ""){
+                                      echo "Sistema";
+                                    }else{
+                                      $Id = $basicas->BuscarCampos($mysqli,"Id","Empleados","Id",$Reg['Equipo']);
+                                      //Consulta para encontrar al lider
+                                      $lid = "SELECT * FROM Empleados WHERE Id = '".$Id."'";
+                                      //Realiza consulta
+                                      $rds = mysqli_query($mysqli, $lid);
+                                      //Si existe el registro se asocia en un fetch_assoc
+                                      if($dis=mysqli_fetch_assoc($rds)){
+                                        $Sucur = $basicas->BuscarCampos($mysqli,"nombreSucursal","Sucursal","Id",$dis['Sucursal']);
+                                        $Stats = $basicas->BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$dis['Nivel']);
+                                        echo $dis['Nombre']." - ".$Stats." - ".$Sucur;
+                                      }
+                                    }
+                                    //Comparativo de registro de nivel para reasignar
+                                    if($Reg['Nivel'] >= 5){
+                                      $nue = 4;
+                                    }else{
+                                      $nue = $Reg['Nivel']--;
+                                    }
+                                    ?>
+                                  </strong>
+                                </p>
                                 <label for="exampleFormControlSelect1">Selecciona a quien se asignara</label>
                                 <select class="form-control" name="NvoVend">
                                 <?
@@ -193,6 +223,8 @@
                           <form method="POST" action="php/Funcionalidad_Empleados.php">
                               <div class="modal-header">
                                   <h5 class="modal-title" id="exampleModalLabel">Registrar Nuevo Empleado</h5>
+                                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                  <span aria-hidden="true">&times;</span>
                               </div>
                               <div class="modal-body">
                                 <input type="text" name="Host" value="<?PHP echo $_SERVER['PHP_SELF'];?>" style="display: none;">
@@ -257,6 +289,8 @@
                         <form method="POST" action="php/Funcionalidad_Empleados.php">
                             <div class="modal-header">
                                 <h5 class="modal-title" id="exampleModalLabel">Reenviar contraseña</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
                             </div>
                             <div class="modal-body">
                               <input type="text" name="Host" value="<?PHP echo $_SERVER['PHP_SELF'];?>" style="display: none;">
@@ -285,6 +319,8 @@
                         <form method="POST" action="php/Funcionalidad_Empleados.php">
                             <div class="modal-header">
                                 <h5 class="modal-title" id="exampleModalLabel"><?PHP echo $Reg['Nombre'];?></h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
                             </div>
                             <div class="modal-body">
                                 <input type="text" name="Host" value="<?PHP echo $_SERVER['PHP_SELF'];?>" style="display: none;">
@@ -314,6 +350,8 @@
                         <form method="POST" action="<?PHP echo $_SERVER['PHP_SELF'];?>">
                             <div class="modal-header">
                                 <h5 class="modal-title" id="exampleModalLabel"><?PHP echo $Reg['Nombre'];?></h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
                             </div>
                             <div class="modal-body">
                               <input type="text" name="nombre" value="<?PHP echo $name;?>" style="display: none;">
@@ -354,6 +392,7 @@
             <div class="d-flex flex-row-reverse" >
                   <div class="p-2">
                   <?
+                  $ids = uniqid(); // O cualquier valor único que desees
                   echo "
                       <form method='POST' action='".$_SERVER['PHP_SELF']."'>
                           <!-- Crear nuevo Empleado -->
@@ -377,39 +416,44 @@
                   </tr>
               <?
               if(!empty($name)){
-                  $buscar = $basicas->BLikes($mysqli,"Empleados","Nombre",$name);
-                  foreach ($buscar as $row){
-                  //Se restan los pagos de las comisiones a las comisiones generadas
-                  $sj1 = $basicas->Sumar1cond($mysqli,"ComVtas","Comisiones","IdVendedor",$row['IdUsuario']);
-                  $sj2 = $basicas->Sumar1cond($mysqli,"ComCob","Comisiones","IdVendedor",$row['IdUsuario']);
-                  $tj = $basicas->Sumar1cond($mysqli,"Cantidad","Comisiones_pagos","IdVendedor",$row['IdUsuario']);
-                  //Se restan los valores
-                  $sj = $sj1+$sj2;
-                  $Saldo = $sj-$tj;
-                  if($Saldo <= 0){
-                    $Saldo = 0;
-                  }
-                  /************************************* seccion de comiisones por contacto ******************************************/
-                      $Niv =  $basicas->BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$row['IdUsuario']);
-                      //Buscamos la comision de el usuario
-                      $PorCom = $basicas->BuscarCampos($mysqli,"N".$Niv,"Comision","Id",2);
-                      //Reducimos el porcentaje a centecimas
-                      $as = $PorCom/100;
-                      //aterrizamos la fecha de ayer
-                      $Ayer = date("Y-m-d",strtotime(date("Y-m-d").'-1 day'));
-                      //Buscamos mi finger print
-                      $IdContacto = $basicas->BuscarCampos($mysqli,"IdContacto","Empleados","IdUsuario",$row['IdUsuario']);
-                      //Buscamos el fingerprint de el usuario
-                      $IdFing = $basicas->Max2Dat($mysqli,"Id","Eventos","Evento","Ingreso","Contacto",$IdContacto);
-                      //Obtenemos el fingerprint
-                      $Fingerprint = $basicas->BuscarCampos($mysqli,"IdFInger","Eventos","Id",$IdFing);
-                      //Crear consulta
-                      $sqal2 = "SELECT * FROM Eventos WHERE Evento = 'Tarjeta' AND IdFInger != '".$Fingerprint."' AND Usuario = '".$row["IdUsuario"]."' AND FechaRegistro >= $FechIni";
-                      //Realiza consulta
-                      $r4e9s2 = $mysqli->query($sqal2);
-                      $ComGenHoy = 0;
-                      //Si existe el registro se asocia en un fetch_assoc
-                      foreach ($r4e9s2 as $Resd52){
+                $buscar = $basicas->BLikes($mysqli, "Empleados", "Nombre", $name);
+                foreach ($buscar as $row){
+                    // ----------- FILTRO PARA NO MOSTRAR VACANTES -----------
+                    if (trim($row['Nombre']) == 'Vacante') {
+                        continue; // Salta esta fila y sigue con la siguiente
+                    }
+                    // -------------------------------------------------------
+                    //Se restan los pagos de las comisiones a las comisiones generadas
+                    $sj1 = $basicas->Sumar1cond($mysqli,"ComVtas","Comisiones","IdVendedor",$row['IdUsuario']);
+                    $sj2 = $basicas->Sumar1cond($mysqli,"ComCob","Comisiones","IdVendedor",$row['IdUsuario']);
+                    $tj = $basicas->Sumar1cond($mysqli,"Cantidad","Comisiones_pagos","IdVendedor",$row['IdUsuario']);
+                    //Se restan los valores
+                    $sj = $sj1+$sj2;
+                    $Saldo = $sj-$tj;
+                    if($Saldo <= 0){
+                        $Saldo = 0;
+                    }
+                    /************************************* seccion de comiisones por contacto ******************************************/
+                    $Niv =  $basicas->BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$row['IdUsuario']);
+                    //Buscamos la comision de el usuario
+                    $PorCom = $basicas->BuscarCampos($mysqli,"N".$Niv,"Comision","Id",2);
+                    //Reducimos el porcentaje a centecimas
+                    $as = $PorCom/100;
+                    //aterrizamos la fecha de ayer
+                    $Ayer = date("Y-m-d",strtotime(date("Y-m-d").'-1 day'));
+                    //Buscamos mi finger print
+                    $IdContacto = $basicas->BuscarCampos($mysqli,"IdContacto","Empleados","IdUsuario",$row['IdUsuario']);
+                    //Buscamos el fingerprint de el usuario
+                    $IdFing = $basicas->Max2Dat($mysqli,"Id","Eventos","Evento","Ingreso","Contacto",$IdContacto);
+                    //Obtenemos el fingerprint
+                    $Fingerprint = $basicas->BuscarCampos($mysqli,"IdFInger","Eventos","Id",$IdFing);
+                    //Crear consulta
+                    $sqal2 = "SELECT * FROM Eventos WHERE Evento = 'Tarjeta' AND IdFInger != '".$Fingerprint."' AND Usuario = '".$row["IdUsuario"]."' AND FechaRegistro >= $FechIni";
+                    //Realiza consulta
+                    $r4e9s2 = $mysqli->query($sqal2);
+                    $ComGenHoy = 0;
+                    //Si existe el registro se asocia en un fetch_assoc
+                    foreach ($r4e9s2 as $Resd52){
                         //Obnemos el producto de cada cupon
                         $Prducto = $basicas->Buscar2Campos($mysqli,"Producto","PostSociales","Id",$Resd52["Cupon"],"Tipo","Art");
                         //Buscamos el valor de la comision sobre la venta segun el nivel
@@ -418,65 +462,65 @@
                         $Comis = $ComGen*$as;
                         //Selector de pago de comisiones
                         if($Prducto == "Universidad"){
-                          //Comisiones por universitario
-                          $Comis = $Comis/2500;
+                            //Comisiones por universitario
+                            $Comis = $Comis/2500;
                         }elseif($Prducto == "Retiro"){
-                          //Comisiones por Retiro
-                          $Comis = $Comis/1000;
+                            //Comisiones por Retiro
+                            $Comis = $Comis/1000;
                         }else{
-                          //Comisiones por funerario
-                          $Comis = $Comis/100;
+                            //Comisiones por funerario
+                            $Comis = $Comis/100;
                         }
                         //solo cuenta una vez por dia
                         $CatLeid = $basicas->Cuenta1Fec1Cond($mysqli,"Eventos","IdFInger",$Resd52["IdFInger"],"Usuario",$row['IdUsuario'],"FechaRegistro",$Ayer);
                         if($CatLeid == 1){
-                          //Sumamos las comisiones para obtener el general
-                          $ComGenHoy = $ComGenHoy+$Comis;
+                            //Sumamos las comisiones para obtener el general
+                            $ComGenHoy = $ComGenHoy+$Comis;
                         }
-                      }
-                      $NvoSal = $Saldo+$ComGenHoy;
-                  //Se busca si el cliente ya esta no debe nada
-                        echo "
-                        <tr>
-                            <th>".$row['Nombre']."</th>
-                            <th>".$basicas->BuscarCampos($mysqli,"IdUsuario","Empleados","Id",$row['Equipo'])."</th>
-                            <th>".$basicas->BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$row['Nivel'])."</th>
-                            <th>".$basicas->BuscarCampos($mysqli,"nombreSucursal","Sucursal","Id",$row['Sucursal'])."</th>
-                            <th>".money_format('%.2n', $Saldo)."</th>
-                            <th>".money_format('%.2n', $ComGenHoy)."</th>
-                            <th>
-                            <div style='display: flex;'>
-                            <form method='POST' action='' style='padding-right: 5px;'>
-                                <!-- Ver estado de Comisiones
-                                <label for='0".$row['Id']."' title='Ver Estado de Cuenta de Comisiones' class='btn' style='background: #AAB7B8; color: #F8F9F9;' ><i class='material-icons'>contact_page</i></label>
-                                <input type='text' value='".$row['Id']."' name='busqueda' style='display: none ;' >
-                                <input id='0".$row['Id']."' type='submit' name='enviar' class='hidden' style='display: none;' />
-                                -->
+                    }
+                    $NvoSal = $Saldo+$ComGenHoy;
+                    //Se busca si el cliente ya esta no debe nada
+                    echo "
+                    <tr>
+                        <th>".$row['Nombre']."</th>
+                        <th>".$basicas->BuscarCampos($mysqli,"IdUsuario","Empleados","Id",$row['Equipo'])."</th>
+                        <th>".$basicas->BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$row['Nivel'])."</th>
+                        <th>".$basicas->BuscarCampos($mysqli,"nombreSucursal","Sucursal","Id",$row['Sucursal'])."</th>
+                        <th> $".number_format($Saldo, 2)."</th>
+                        <th> $".number_format($ComGenHoy, 2)."</th>
+                        <th>
+                        <div style='display: flex;'>
+                        <form method='POST' action='' style='padding-right: 5px;'>
+                            <!-- Ver estado de Comisiones
+                            <label for='0".$row['Id']."' title='Ver Estado de Cuenta de Comisiones' class='btn' style='background: #AAB7B8; color: #F8F9F9;' ><i class='material-icons'>contact_page</i></label>
+                            <input type='text' value='".$row['Id']."' name='busqueda' style='display: none ;' >
+                            <input id='0".$row['Id']."' type='submit' name='enviar' class='hidden' style='display: none;' />
+                            -->
+                        </form>
+                        <form method='POST' action='".$_SERVER['PHP_SELF']."'>
+                                <input type='text' name='nombre' value='".$name."' style='display: none;'>
+                                <!-- Pagar comisiones del periodo -->
+                                <label for='1".$row['Id']."' title='Pagar comisiones del periodo' class='btn' style='background: #58D68D; color: #F8F9F9;' ><i class='material-icons'>attach_money</i></label>
+                                <input type='text' value='".$NvoSal."' name='Saldo' class='hidden' style='display: none;' />
+                                <input id='1".$row['Id']."' type='submit' value='1".$row['Id']."' name='IdEmpleado' class='hidden' style='display: none;' />
+                                <!-- Cambiar De supervisor al ejecutivo-->
+                                <label for='3".$row['Id']."' title='Reasigna a un nuevo superior' class='btn' style='background: #AF7AC5; color: #F8F9F9;' ><i class='material-icons'>people_alt</i></label>
+                                <input id='3".$row['Id']."' type='submit' value='3".$row['Id']."' name='IdEmpleado' class='hidden' style='display: none;' />
+                                <!--Reenviar contraseña-->
+                                <label for='5".$row['Id']."' title='Reenviar contraseña' class='btn' style='background: #3498DB; color: #F8F9F9;' ><i class='material-icons'>outbox</i></label>
+                                <input id='5".$row['Id']."' type='submit' value='5".$row['Id']."' name='IdEmpleado' class='hidden' style='display: none;' />
+                                <!-- Dar de baja al Vendedor -->
+                                <label for='6".$row['Id']."' title='Dar de baja al Colaborador' class='btn' style='background: #E74C3C; color: #F8F9F9;' ><i class='material-icons'>cancel</i></label>
+                                <input id='6".$row['Id']."' type='submit' value='6".$row['Id']."' name='IdEmpleado' class='hidden' style='display: none;' />
+                                <!-- Ascender-->
+                                <label for='7".$row['Id']."' title='Cambia de Puesto' class='btn' style='background: #C0392B; color: #F8F9F9;' ><i class='material-icons'>swap_vert</i></label>
+                                <input id='7".$row['Id']."' type='submit' value='7".$row['Id']."' name='IdEmpleado' class='hidden' style='display: none;' />
                             </form>
-                            <form method='POST' action='".$_SERVER['PHP_SELF']."'>
-                                    <input type='text' name='nombre' value='".$name."' style='display: none;'>
-                                    <!-- Pagar comisiones del periodo -->
-                                    <label for='1".$row['Id']."' title='Pagar comisiones del periodo' class='btn' style='background: #58D68D; color: #F8F9F9;' ><i class='material-icons'>attach_money</i></label>
-                                    <input type='text' value='".$NvoSal."' name='Saldo' class='hidden' style='display: none;' />
-                                    <input id='1".$row['Id']."' type='submit' value='1".$row['Id']."' name='IdEmpleado' class='hidden' style='display: none;' />
-                                    <!-- Cambiar De supervisor al ejecutivo-->
-                                    <label for='3".$row['Id']."' title='Reasigna a un nuevo superior' class='btn' style='background: #AF7AC5; color: #F8F9F9;' ><i class='material-icons'>people_alt</i></label>
-                                    <input id='3".$row['Id']."' type='submit' value='3".$row['Id']."' name='IdEmpleado' class='hidden' style='display: none;' />
-                                    <!--Reenviar contraseña-->
-                                    <label for='5".$row['Id']."' title='Reenviar contraseña' class='btn' style='background: #3498DB; color: #F8F9F9;' ><i class='material-icons'>outbox</i></label>
-                                    <input id='5".$row['Id']."' type='submit' value='5".$row['Id']."' name='IdEmpleado' class='hidden' style='display: none;' />
-                                    <!-- Dar de baja al Vendedor -->
-                                    <label for='6".$row['Id']."' title='Dar de baja al Colaborador' class='btn' style='background: #E74C3C; color: #F8F9F9;' ><i class='material-icons'>cancel</i></label>
-                                    <input id='6".$row['Id']."' type='submit' value='6".$row['Id']."' name='IdEmpleado' class='hidden' style='display: none;' />
-                                    <!-- Ascender-->
-                                    <label for='7".$row['Id']."' title='Cambia de Puesto' class='btn' style='background: #C0392B; color: #F8F9F9;' ><i class='material-icons'>swap_vert</i></label>
-                                    <input id='7".$row['Id']."' type='submit' value='7".$row['Id']."' name='IdEmpleado' class='hidden' style='display: none;' />
-                                </form>
-                            <div>
-                        </th>
-                    </tr>
-                                    ";
-                  }
+                        <div>
+                    </th>
+                </tr>
+                    ";
+                }
               }
               ?>
             </table>

@@ -88,4 +88,4 @@ try {
 		echo $e->getLine();
 		var_dump($e->getTrace());
 	}
-		?>
+?>

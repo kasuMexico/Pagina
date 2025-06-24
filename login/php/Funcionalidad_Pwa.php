@@ -1,19 +1,24 @@
-<?php
+<?php 
+// DEBUG: Activar todos los errores y mostrar datos importantes (eliminar en producción)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // Iniciar la sesión
 session_start();
 
-// Incluir el archivo de librerías que contiene las definiciones de las clases (Basicas, Seguridad, Financieras, etc.) y las conexiones a la base de datos
-require_once '../eia/librerias.php';
+require_once '../../eia/librerias.php';
 
 // Si no existe la variable de sesión "Vendedor", redirigir a la página de login
 if (!isset($_SESSION["Vendedor"])) {
     header('Location: https://kasu.com.mx/login/');
     exit();
 }
-// Crear una instancia de la clase Basicas (para usar sus métodos no estáticos, por ejemplo, para trackUsage)
+
+// Instancia de la clase Basicas (asegúrate de que $basicas sea instancia)
 $basicas = new Basicas();
 
-// Incluir el archivo que realiza el análisis de las metas de venta y colocación
+// Incluir el análisis de metas (asegúrate que define todas las variables usadas más abajo)
 require_once 'php/Analisis_Metas.php';
 
 // Obtener el identificador del vendedor de la sesión
@@ -21,17 +26,14 @@ $Vend = $_SESSION["Vendedor"];
 
 // Definir la ruta de la carpeta de imágenes de perfil
 $ruta = "assets/img/perfil";
-// Valor predeterminado para la extensión (en caso de no encontrarse)
-$file_ext = "jpg";
+$file_ext = "jpg"; // Predeterminado
 
-// Verificar si la ruta es un directorio y, de ser así, buscar el archivo que corresponda al vendedor
+// Buscar el archivo de imagen de perfil
 if (is_dir($ruta)) {
     if ($gestor = opendir($ruta)) {
         while (($archivo = readdir($gestor)) !== false) {
-            // Solo se consideran archivos y no directorios
             if (is_file($ruta . "/" . $archivo)) {
                 $partes = explode('.', $archivo);
-                // Si el nombre (la parte antes del punto) coincide con el identificador del vendedor
                 if (count($partes) >= 2 && $partes[0] === $Vend) {
                     $file_ext = end($partes);
                     break;
@@ -57,7 +59,6 @@ if (is_dir($ruta)) {
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <link rel="stylesheet" href="assets/css/styles.min.css">
     <link rel="stylesheet" href="assets/css/Grafica.css">
-    <!-- Función que genera la gráfica de cartera -->
     <script src="Javascript/GenGrafica.js"></script>
 </head>
 <body>
@@ -90,7 +91,6 @@ if (is_dir($ruta)) {
                 $su2     = $basicas->BuscarCampos($mysqli, "NombreSucursal", "Sucursal", "Id", $suc);
                 $SL2     = $basicas->BuscarCampos($mysqli, "NombreNivel", "Nivel", "Id", $nivelId);
 
-                // Imprimir la información de forma segura
                 echo "<p>" . htmlspecialchars($SL1) . "</p>";
                 echo "<p>" . htmlspecialchars($SL2) . " - " . htmlspecialchars($su2) . "</p>";
                 ?>
@@ -105,12 +105,23 @@ if (is_dir($ruta)) {
                 </div>
                 <div class="col-md-6">
                     <?php
-                    // Se muestra información en función del nivel del usuario (por ejemplo, información de comisiones o metas)
+                    // NOTA: Asegúrate que estas variables existan y estén definidas antes de usarlas.
+                    // Si no, define valores predeterminados antes
+                    $Niv = isset($Niv) ? $Niv : (isset($nivelId) ? $nivelId : 0);
+                    $spv = isset($spv) ? $spv : '#000';
+                    $bxo = isset($bxo) ? $bxo : '#000';
+                    $ComGenHoy = isset($ComGenHoy) ? $ComGenHoy : 0;
+                    $AvCob = isset($AvCob) ? $AvCob : 0;
+                    $MetaCob = isset($MetaCob) ? $MetaCob : 0;
+                    $CobHoy = isset($CobHoy) ? $CobHoy : 0;
+                    $MetaVta = isset($MetaVta) ? $MetaVta : 0;
+                    $AvVtas = isset($AvVtas) ? $AvVtas : 0;
+
                     if ($Niv == 7) {
                         echo '
                         <div class="col-md-12">
                             <p>Comisiones Acumuladas</p>
-                            <h3 style="color:' . htmlspecialchars($spv) . ';">' . money_format('%.2n', $ComGenHoy) . '</h3>
+                            <h3 style="color:' . htmlspecialchars($spv) . ';">$' . number_format($ComGenHoy, 2) . '</h3>
                         </div>
                         ';
                     } else {
@@ -127,9 +138,9 @@ if (is_dir($ruta)) {
                         <div class="col-md-6">
                             <hr>
                             <p><strong>Meta de Cobranza</strong></p>
-                            <h3>' . money_format('%.2n', $MetaCob) . '</h3>
+                            <h3>$' . number_format($MetaCob, 2) . '</h3>
                             <p>Avance de Cobranza</p>
-                            <a href="Pwa_Registro_Pagos.php"><h3 style="color:' . htmlspecialchars($spv) . ';">' . money_format('%.2n', $CobHoy) . '</h3></a>
+                            <a href="Pwa_Registro_Pagos.php"><h3 style="color:' . htmlspecialchars($spv) . ';">$' . number_format($CobHoy, 2) . '</h3></a>
                         </div>
                         ';
                     }
@@ -138,7 +149,7 @@ if (is_dir($ruta)) {
                         <div class="col-md-6">
                             <hr>
                             <p><strong>Meta de Venta</strong></p>
-                            <h3>' . money_format('%.2n', $MetaVta) . '</h3>
+                            <h3>$' . number_format($MetaVta, 2) . '</h3>
                             <p>Avance de Venta</p>
                             <a href="registro.php"><h3 style="color:' . htmlspecialchars($bxo) . ';">' . round($AvVtas) . ' %</h3></a>
                         </div>

@@ -1,16 +1,11 @@
 <?php
-// Inicia la sesión y establece la zona horaria
 session_start();
 date_default_timezone_set('America/Mexico_City');
 
-// Se incluye el archivo que carga las clases, funciones y conexiones necesarias
 require_once 'librerias.php';
+$Correo = new Correo();
 
-// ====================
-// Filtrado de Variables
-// ====================
-// Para evitar el uso de eval y problemas de seguridad, se accede directamente a los datos.
-// Se pueden utilizar filtros para GET y POST según convenga:
+// === Filtrado de Variables ===
 $EnCoti       = filter_input(INPUT_GET, 'EnCoti', FILTER_SANITIZE_STRING);
 $hash         = filter_input(INPUT_GET, 'hash', FILTER_SANITIZE_STRING);
 $MxVta        = filter_input(INPUT_GET, 'MxVta', FILTER_SANITIZE_STRING);
@@ -18,81 +13,104 @@ $EnFi         = filter_input(INPUT_GET, 'EnFi', FILTER_SANITIZE_STRING);
 $ProReIn      = filter_input(INPUT_GET, 'ProReIn', FILTER_SANITIZE_STRING);
 $Servicio     = filter_input(INPUT_GET, 'Servicio', FILTER_SANITIZE_STRING);
 
-// Para los botones que se envían vía POST
 $EnviarPoliza = filter_input(INPUT_POST, 'EnviarPoliza', FILTER_SANITIZE_STRING);
 $EnviarFichas = filter_input(INPUT_POST, 'EnviarFichas', FILTER_SANITIZE_STRING);
 $EnviarEdoCta = filter_input(INPUT_POST, 'EnviarEdoCta', FILTER_SANITIZE_STRING);
 
-// También se pueden obtener otras variables POST directamente
 $Descripcion  = filter_input(INPUT_POST, 'Descripcion', FILTER_SANITIZE_STRING);
 $IdVenta      = filter_input(INPUT_POST, 'IdVenta', FILTER_SANITIZE_STRING);
 $Usuario      = filter_input(INPUT_POST, 'Usuario', FILTER_SANITIZE_STRING);
 $Event        = filter_input(INPUT_POST, 'Event', FILTER_SANITIZE_STRING);
 $Cupon        = filter_input(INPUT_POST, 'Cupon', FILTER_SANITIZE_STRING);
 
-// Inicializamos variables opcionales (si no están definidas, las dejamos vacías)
-$Titulo1 = $Desc1 = $dirUrl2 = $imag2 = $Titulo2 = $Desc2 = $dirUrl3 = $imag3 = $Titulo3 = $Desc3 = $dirUrl4 = $imag4 = $Titulo4 = $Desc4 = "";
-$stat = ""; // Variable para redirección
+$stat = ""; // para redirección
+$Asunto = "";
+$Email = "";
+$FullName = "";
+$Id = "";
+// Recibe datos POST correctamente del formulario
+echo $FullName = filter_input(INPUT_POST, 'FullName', FILTER_SANITIZE_STRING);
+echo $Email    = filter_input(INPUT_POST, 'Email', FILTER_SANITIZE_EMAIL);
+echo $Descripcion = filter_input(INPUT_POST, 'Descripcion', FILTER_SANITIZE_STRING);
+echo $IdVenta  = filter_input(INPUT_POST, 'IdVenta', FILTER_SANITIZE_STRING);
 
-// ====================
-// Selección de la rama de acción
-// ====================
+// ==============================
+// Selección de la acción y datos
+// ==============================
+$data = []; // Inicializa array de datos para el cuerpo del correo
+
 if (!empty($EnCoti)) {
-    // Envío de presupuesto de cliente.
-    // Se asume que $pros es la conexión correspondiente a la base de datos de prospectos.
+    // Presupuesto de cliente
     $IdProspecto = $basicas->BuscarCampos($pros, "IdProspecto", "PrespEnviado", "Id", $EnCoti);
     $FullName    = $basicas->BuscarCampos($pros, "FullName", "prospectos", "Id", $IdProspecto);
     $Email       = $basicas->BuscarCampos($pros, "Email", "prospectos", "Id", $IdProspecto);
-    $Asunto      = "ENVIO ARCHIVO";
-    $DirUrl      = "Cotizacion de servicios KASU";
-    $imag1       = $EnCoti;
-    $Msg         = "Se ha enviado la cotización al correo registrado de tu cliente";
-    $dirUrl1     = "https://kasu.com.mx/login/Generar_PDF/Cotizacion_pdf.php";
+    $Asunto      = "ENVÍO DE ARCHIVO";
+    $data = [
+        'Cte'    => $FullName,
+        'DirUrl' => "https://kasu.com.mx/login/Generar_PDF/Cotizacion_pdf.php?coti={$EnCoti}",
+    ];
+    $Id = $EnCoti;
+    $Msg = "Se ha enviado la cotización al correo registrado de tu cliente";
 } elseif (!empty($EnviarPoliza)) {
-    // Correo que envía la póliza del cliente.
-    $Asunto  = "ENVIO POLIZA";
-    $DirUrl  = $Descripcion; 
-    $dirUrl1 = "https://kasu.com.mx/login/Generar_PDF/Poliza_pdf.php";
-    $imag1   = base64_encode($IdVenta);
+    $Asunto  = "¡BIENVENIDO A KASU!";
+    $FullName = $Usuario; // O de donde corresponda
+    $Email = $Email; // Define desde tu lógica
+    $data = [
+        'Cte'    => $FullName,
+        'DirUrl' => $Descripcion,
+    ];
+    $Id = $IdVenta;
 } elseif (!empty($EnviarFichas)) {
-    // Correo que envía las fichas de pago.
-    $Asunto  = "ENVIO FICHAS";
-    $DirUrl  = base64_encode($IdVenta);
-    // Se pueden definir $dirUrl1 y otros parámetros si se requiere.
+    $Asunto  = "PAGO PENDIENTE";
+    $FullName = $Usuario;
+    $Email = $Email; // Define desde tu lógica
+    $data = [
+        'Cte'    => $FullName,
+        'DirUrl' => $Descripcion, // O lo que corresponda
+    ];
+    $Id = $IdVenta;
 } elseif (!empty($EnviarEdoCta)) {
-    // Correo que envía el estado de cuenta.
-    $Asunto  = "ENVIO ESTADO DE CUENTA";
-    $dirUrl1 = "https://kasu.com.mx/login/Generar_PDF/Estado_Cuenta_pdf.php";
-    $DirUrl  = $Descripcion;
-    $imag1   = $IdVenta;
+    $Asunto  = "ENVIO DE ESTADO DE CUENTA";
+    $FullName = $Usuario;
+    $Email = $Email;
+    $data = [
+        'Cte'    => $FullName,
+        'DirUrl' => "https://kasu.com.mx/login/Generar_PDF/Estado_Cuenta_pdf.php?busqueda=" . base64_encode($IdVenta),
+    ];
+    $Id = $IdVenta;
 } elseif (!empty($EnFi)) {
-    // Envío de fichas vía método GET
     $Asunto    = "PAGO PENDIENTE";
     $Email     = $basicas->BuscarCampos($mysqli, "Mail", "Contacto", "id", $_SESSION["Cnc"]);
     $FullName  = $basicas->BuscarCampos($mysqli, "Nombre", "Usuario", "IdContact", $_SESSION["Cnc"]);
-    $IdVenta   = $_SESSION["Cnc"];
+    $Id = $_SESSION["Cnc"];
     if ($EnFi == 1) {
         $DirUrl = "https://www.mercadopago.com.mx/checkout/v1/redirect?preference-id=" . $hash;
     } else {
         $DirUrl = "https://www.mercadopago.com.mx/subscriptions/checkout?preapproval_plan_id=" . $hash;
     }
+    $data = [
+        'Cte'    => $FullName,
+        'DirUrl' => $DirUrl,
+    ];
     $stat = "3";
 } elseif (!empty($MxVta)) {
-    // Cuando no se realiza el pago en MercadoPago
     $FullName      = $basicas->BuscarCampos($mysqli, "Nombre", "Venta", "Id", $MxVta);
     $CnTo          = $basicas->BuscarCampos($mysqli, "IdContact", "Venta", "Id", $MxVta);
     $Email         = $basicas->BuscarCampos($mysqli, "Mail", "Contacto", "id", $CnTo);
     $FechaRegistro = $basicas->BuscarCampos($mysqli, "FechaRegistro", "Venta", "Id", $MxVta);
     $DirUrl        = base64_encode($MxVta);
-    $dirUrl1       = base64_encode(date("d-m-Y", strtotime($FechaRegistro)));
-    $Asunto        = "FICHAS DE PAGO KASU";
-    $stat          = "2";
+    $Asunto        = "PAGO PENDIENTE";
+    $data = [
+        'Cte'    => $FullName,
+        'DirUrl' => $DirUrl,
+    ];
+    $Id = $MxVta;
+    $stat = "2";
 } elseif (!empty($ProReIn)) {
-    // Confirmación de registro de un prospecto.
     $FullName = $basicas->BuscarCampos($pros, "FullName", "prospectos", "Id", $ProReIn);
-    $Asunto   = "CONOCE KASU";
-    $imag1    = strtolower($Servicio);
-    $IdVenta  = $ProReIn;
+    $Email    = $basicas->BuscarCampos($pros, "Email", "prospectos", "Id", $ProReIn);
+    $Asunto   = "¡BIENVENIDO A KASU!";
+    $Id = $ProReIn;
     if ($Servicio === "UNIVERSITARIO") {
         $DirUrl = "https://kasu.com.mx/productos.php?Art=2";
     } elseif ($Servicio === "RETIRO") {
@@ -102,41 +120,24 @@ if (!empty($EnCoti)) {
     } else {
         $DirUrl = "https://kasu.com.mx/productos.php?Art=1";
     }
-    $dirUrl1 = "https://kasu.com.mx/prospectos.php?data=Q0lUQQ==&Usr=" . $IdVenta;
+    $data = [
+        'Cte'    => $FullName,
+        'DirUrl' => $DirUrl,
+    ];
+    $stat = "3";
 } else {
-    // Si ninguna condición se cumple, se asignan valores por defecto.
     $Asunto  = "SIN ASUNTO";
     $FullName = "Usuario";
     $Email   = "";
-    $DirUrl  = "";
-    $dirUrl1 = "";
-    $imag1   = "";
+    $data = [
+        'Cte'    => $FullName,
+        'DirUrl' => "",
+    ];
+    $Id = "";
 }
 
-// Generar el contenido del correo mediante la función Mensaje de la clase Correo.
-// Se pasan todos los parámetros requeridos; en caso de que alguna variable no esté definida se asume como cadena vacía.
-$mensa = Correo::Mensaje(
-    $Asunto,
-    $FullName,
-    $DirUrl,
-    $dirUrl1,
-    $imag1,
-    $Titulo1,
-    $Desc1,
-    $dirUrl2,
-    $imag2,
-    $Titulo2,
-    $Desc2,
-    $dirUrl3,
-    $imag3,
-    $Titulo3,
-    $Desc3,
-    $dirUrl4,
-    $imag4,
-    $Titulo4,
-    $Desc4,
-    $IdVenta
-);
+// === Generar el mensaje HTML del correo ===
+echo $mensa = $Correo->Mensaje($Asunto, $data, $Id);
 
 // ================================
 // Envío de correo mediante PHPMailer
@@ -151,8 +152,7 @@ use PHPMailer\PHPMailer\Exception;
 
 $mail = new PHPMailer(true);
 try {
-    // Configuración del servidor SMTP
-    $mail->SMTPDebug = 0; // Cambiar a 2 para ver mensajes de depuración durante el desarrollo.
+    $mail->SMTPDebug = 0;
     $mail->isSMTP();
     $mail->Host       = 'smtp.hostinger.mx';
     $mail->SMTPAuth   = true;
@@ -160,33 +160,28 @@ try {
     $mail->Password   = '01J76e90@';
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
     $mail->Port       = 465;
-    
-    // Configurar remitente y destinatario
     $mail->setFrom('atncliente@kasu.com.mx', 'KASU');
     $mail->addAddress($Email, $FullName);
-    
-    // Contenido del correo
     $mail->isHTML(true);
     $mail->Subject = $Asunto;
     $mail->Body    = $mensa;
-    
     $mail->send();
 } catch (Exception $e) {
     echo "Error al enviar el mensaje: {$mail->ErrorInfo}";
 }
 
-// ================================
-// Redireccionamientos y finalización
-// ================================
+// =========== Redirección y cierre ===========
 if (!empty($_GET)) {
     if (!empty($EnCoti)) {
-        // $Host se asume definido en Telcto.php u otro archivo incluido
         header('Location: ' . $Host . '&Msg=' . urlencode($Msg));
+        exit;
     } elseif (!empty($ProReIn)) {
         header('Location: https://kasu.com.mx/index.php?Msg=' . urlencode("Felicidades, ya te hemos enviado un correo y en breve un ejecutivo te contactará"));
+        exit;
     }
     session_destroy();
-    header('Location: https://kasu.com.mx/registro.php?stat=' . urlencode($stat) . '&Cte=' . urlencode($FullName) . '&liga=' . urlencode($DirUrl));
+    header('Location: https://kasu.com.mx/registro.php?stat=' . urlencode($stat) . '&Cte=' . urlencode($FullName) . '&liga=' . urlencode($data['DirUrl']));
+    exit;
 } else {
     echo "<script>
             alert('Se ha enviado el correo electrónico');

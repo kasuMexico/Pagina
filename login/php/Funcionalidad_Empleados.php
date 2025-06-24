@@ -1,9 +1,13 @@
 <?php
+// DEBUG: Activar todos los errores y mostrar datos importantes
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 // Iniciar sesión
 session_start();
 
 // Incluir el archivo de librerías que contiene las clases actualizadas
-require_once 'librerias.php';
+require_once '../../eia/librerias.php';
 
 // Configurar zona horaria
 date_default_timezone_set('America/Mexico_City');

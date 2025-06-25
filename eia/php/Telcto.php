@@ -25,13 +25,13 @@ if (isset($mysqli)) {
     if ($resQueDF) {
         // Cuenta el número de registros que coinciden con la fecha actual
         $cont = mysqli_num_rows($resQueDF);
-        echo "DEBUG: Número de días festivos encontrados: " . $cont . "<br>";
+        //echo "DEBUG: Número de días festivos encontrados: " . $cont . "<br>";
     } else {
         error_log("Error en la consulta de días festivos: " . $mysqli->error);
-        echo "DEBUG: Error en consulta de días festivos.<br>";
+        //echo "DEBUG: Error en consulta de días festivos.<br>";
     }
 } else {
-    echo "DEBUG: Conexión a la base de datos no definida.<br>";
+    //echo "DEBUG: Conexión a la base de datos no definida.<br>";
 }
 
 // -------------------------------------------------------------------------
@@ -52,26 +52,26 @@ if ($cont === 0) {
             $res = mysqli_query($mysqli, $venta);
             if ($res && $Reg = mysqli_fetch_assoc($res)) {
                 // Si el empleado tiene 'Telefono' igual a 0, se asigna un teléfono de oficina predeterminado
-                $tel = ($Reg['Telefono'] == 0) ? "7122612898" : $Reg['Telefono'];
+                $tel = ($Reg['Telefono'] == 0) ? "7208177632" : $Reg['Telefono'];
                 //echo "DEBUG: Empleado encontrado: " . htmlspecialchars($Reg['Nombre']) . ", teléfono asignado: " . $tel . "<br>";
             } else {
                 // Si no se encuentra empleado o hay error, asignar teléfono por defecto
-                $tel = "7122612898";
+                $tel = "3123091366";
                 //echo "DEBUG: No se encontró empleado o error en la consulta; se asigna teléfono por defecto: " . $tel . "<br>";
             }
         } else {
             // Fuera del horario de oficina
-            $tel = "7121977370";
+            $tel = "3123091366";
             //echo "DEBUG: Fuera del horario de oficina; teléfono asignado: " . $tel . "<br>";
         }
     } else {
         // Fin de semana (sábado o domingo)
-        $tel = "7122612898";
+        $tel = "3123091366";
         //echo "DEBUG: Es fin de semana; teléfono asignado: " . $tel . "<br>";
     }
 } else {
     // Es día festivo
-    $tel = "7121977370";
+    $tel = "3123091366";
     //echo "DEBUG: Es día festivo; teléfono asignado: " . $tel . "<br>";
 }
 

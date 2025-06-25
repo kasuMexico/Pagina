@@ -5,25 +5,15 @@ session_start();
 
 // Requerir el archivo de librerías
 require_once 'eia/librerias.php';
-
-// Para depuración: confirmar carga de librerías
-//echo "Librerías cargadas correctamente.<br>";
-
-// Instanciar la clase Basicas (asegúrate de que la clase esté definida en las librerías)
-$basicas = new Basicas();
-//echo "Instancia de Basicas creada.<br>";
-
+//Se establecen el numero de contacto
+require_once 'eia/php/Telcto.php';
 // Si se recibe un mensaje en la URL, mostrar un alert en JavaScript y también imprimirlo en pantalla
 if (isset($_GET['Msg'])) {
     $msg = addslashes($_GET['Msg']);
     echo "<script type='text/javascript'>alert('$msg');</script>";
     echo "Mensaje recibido: $msg<br>";
-} else {
-    echo "No se recibió mensaje (Msg) en la URL.<br>";
-}
-
-// Verificar que el parámetro 'Ml' exista y sea igual a 4
-if (isset($_GET['Ml']) && $_GET['Ml'] == 4) {
+    // Verificar que el parámetro 'Ml' exista y sea igual a 4
+}elseif(isset($_GET['Ml']) && $_GET['Ml'] == 4) {
     echo "Parámetro Ml es igual a 4.<br>";
     
     // Verificar si se recibió 'dat' para determinar en qué tabla actualizar
@@ -40,12 +30,8 @@ if (isset($_GET['Ml']) && $_GET['Ml'] == 4) {
     
     echo "<script type='text/javascript'>alert('Se ha dado de baja tu email de nuestro News Letter');</script>";
     echo "Alerta de baja enviada.<br>";
-} else {
-    echo "El parámetro Ml no está definido o no es igual a 4.<br>";
 }
 ?>
-
-
 
 <!DOCTYPE html>
 <html lang="es">
@@ -133,9 +119,17 @@ if (isset($_GET['Ml']) && $_GET['Ml'] == 4) {
             <div class="col-md-4 col-md-12 col-sm-12 align-self-center">
                 <h2>LÍNEA DE ATENCIÓN INMEDIATA</h2>
                 <br>
-                <a href="tel:<? echo $tel; ?>" class="btn btn-dark btn-lg"> EMERGENCIA FUNERARIA </a>
+                <!-- Botón para llamada -->
+                <a href="tel:<?php echo $tel; ?>" class="btn btn-dark btn-lg" style="margin-bottom: 10px;">
+                    📞 EMERGENCIA FUNERARIA
+                </a>
                 <br>
-                <br>
+                <!-- Botón para WhatsApp -->
+                <a href="https://wa.me/<?php echo preg_replace('/\D/', '', $tel); ?>?text=Hola,%20requiero%20atención%20inmediata%20de%20KASU" 
+                class="btn btn-success btn-lg" target="_blank">
+                    💬 WhatsApp Inmediato
+                </a>
+                <br><br>
             </div>
         </div>
     </div>
@@ -252,7 +246,7 @@ if (isset($_GET['Ml']) && $_GET['Ml'] == 4) {
             <div class="row">
                 <div class="offset-lg-3 col-lg-6">
                     <div class="center-heading">
-                        <p>Conoce las <strong><a target="_blank" href="/testimonios.php">Opiniones</a></strong> de nuestros clientes. </p>
+                        <p>en KASU no inventamos buenas reseñas; conoce las <strong><a target="_blank" href="/testimonios.php">Opiniones Reales</a></strong> de nuestros clientes. </p>
                         <br>
                     </div>
                 </div>
@@ -281,20 +275,20 @@ if (isset($_GET['Ml']) && $_GET['Ml'] == 4) {
                         $art = $ResArti->fetch_assoc();
                         //print_r($art);
                         echo "
-																			<div class='col-lg-4 col-md-6 col-sm-12'>
-																					<div class='team-item'>
-																							<div class='team-content'>
-																									<div class='team-info'>
-																										 <br>
-																										 <img src='" . $art['foto'] . "' alt='" . $art['Nombre'] . "'>
-																										 <p>" . $art['Opinion'] . "</p>
-																										 <h3 class='user-name'>" . $art['Nombre'] . "</h3>
-																										 <span>" . $art['Servicio'] . "</span>
-																									</div>
-																							</div>
-																					</div>
-																			</div>
-																	";
+							<div class='col-lg-4 col-md-6 col-sm-12'>
+								<div class='team-item'>
+									<div class='team-content'>
+										<div class='team-info'>
+											 <br>
+											 <img src='" . $art['foto'] . "' alt='" . $art['Nombre'] . "'>
+											 <p>" . $art['Opinion'] . "</p>
+											 <h3 class='user-name'>" . $art['Nombre'] . "</h3>
+											 <span>" . $art['Servicio'] . "</span>
+										</div>
+									</div>
+								</div>
+							</div>
+						";
                     }
                     $Arts++;
                 }
@@ -339,5 +333,4 @@ if (isset($_GET['Ml']) && $_GET['Ml'] == 4) {
         }
     </script>
 </body>
-
 </html>

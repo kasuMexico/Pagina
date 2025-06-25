@@ -1,5 +1,7 @@
 <?php
-// Requerimos el archivo de librerías *JCCM
+// Iniciar la sesión
+session_start();
+// Requerir el archivo de librerías
 require_once 'eia/librerias.php';
 ?>
 <!DOCTYPE html>
@@ -33,59 +35,20 @@ require_once 'eia/librerias.php';
     <link rel="stylesheet" href="assets/css/templatemo-softy-pinko.css">
 </head>
 <body>
-    <!-- Facebook Pixel Code -->
-    <script>
-    !function(f,b,e,v,n,t,s){
-        if(f.fbq)return;
-        n=f.fbq=function(){
-            n.callMethod? n.callMethod.apply(n,arguments):n.queue.push(arguments);
-        };
-        if(!f._fbq) f._fbq=n;
-        n.push=n;
-        n.loaded=!0;
-        n.version='2.0';
-        n.queue=[];
-        t=b.createElement(e);
-        t.async=!0;
-        t.src=v;
-        s=b.getElementsByTagName(e)[0];
-        s.parentNode.insertBefore(t,s);
-    }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '186990709965368');
-    fbq('track', 'PageView');
-    </script>
-    <noscript>
-        <img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=186990709965368&ev=PageView&noscript=1"/>
-    </noscript>
-    <!-- End Facebook Pixel Code -->
-
     <!-- Chat de Facebook -->
     <?php require_once 'html/CodeFb.php'; ?>
 
     <!-- Google Tag Manager (noscript) -->
     <noscript>
-        <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MCR6T6W"
-                height="0" width="0" style="display:none;visibility:hidden"></iframe>
+        <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MCR6T6W" height="0" width="0" style="display:none;visibility:hidden"></iframe>
     </noscript>
     <!-- End Google Tag Manager (noscript) -->
 
-    <!-- La venta emergente debe de estar fuera del div que lo lanza *JCCM -->
-    <div class="modal fade bd-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-sm">
-            <div class="modal-content" style="height:auto; padding:1em;">
-                <div id="datos">
-                    <!-- Aquí se cargarán los datos dinámicos -->
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- ***** Header Area Start ***** -->
     <?php require_once 'html/MenuPrincipal.php'; ?>
-
     <br><br><br><br><br>
-    <section class="section" id="testimonials" style="display: none;">
-        <div class="container" style="display: none;">
+    <section class="section" id="testimonials">
+        <div class="container">
             <!-- ***** Section Title Start ***** -->
             <div class="row">
                 <div class="col-lg-12">
@@ -96,6 +59,15 @@ require_once 'eia/librerias.php';
                 <div class="offset-lg-3 col-lg-6">
                     <div class="center-text">
                         <!-- Puedes agregar una descripción adicional aquí -->
+                         <p>
+                            En KASU, creemos en la transparencia y la confianza. Por eso, aquí solo encontrarás opiniones reales de clientes que han vivido la experiencia de nuestro servicio.
+                        </p>
+                        <p>
+                            A diferencia de otras empresas, en KASU no simulamos ni inventamos testimonios: cada comentario aquí es auténtico y representa la voz de quienes nos eligieron para proteger a su familia.
+                        </p>
+                        <h2>
+                            ¡Conoce sus historias y descubre por qué cada vez más personas confían en KASU!
+                        </h2>
                     </div>
                 </div>
             </div>
@@ -109,22 +81,20 @@ require_once 'eia/librerias.php';
                     while ($art = $result->fetch_assoc()) {
                         // Asegúrate de que los índices coincidan con los nombres de columna en tu tabla
                         printf("
-                        <div class='col-lg-4 col-md-6 col-sm-12'>
-                            <div class='team-item'>
-                                <div class='team-content'>
-                                    <i><img src='assets/images/testimonial-icon.png' alt='Imagen de comentario'></i>
-                                    <p>%s</p>
-                                    <div class='user-image'>
-                                        <img src='%s' alt='Imagen del usuario'>
-                                    </div>
-                                    <div class='team-info'>
-                                        <h3 class='user-name'>%s</h3>
-                                        <span>%s</span>
+                            <div class='col-lg-4 col-md-6 col-sm-12'>
+                                <div class='team-item'>
+                                    <div class='team-content'>
+                                        <div class='team-info'>
+                                            <br>
+                                            <img src='" . htmlspecialchars($art['foto']) . "' alt='" . htmlspecialchars($art['Nombre']) . "'>
+                                            <p>" . htmlspecialchars($art['Opinion']) . "</p>
+                                            <h3 class='user-name'>" . htmlspecialchars($art['Nombre']) . "</h3>
+                                            <span>" . htmlspecialchars($art['Servicio']) . "</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                        ", $art['comentario'], $art['ruta_imagen'], $art['nombre'], $art['cargo']);
+                            </div>"
+                        );
                     }
                 }
                 ?>

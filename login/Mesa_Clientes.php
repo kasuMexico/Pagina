@@ -100,7 +100,7 @@ require_once 'php/Selector_Emergentes_Ml.php';
     <div class="modal fade" id="Ventana1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-                <?php require 'html/EmPago.php'; ?>
+                <?php require 'html/Emergente_Registrar_Pago.php'; ?>
             </div>
         </div>
     </div>
@@ -108,41 +108,7 @@ require_once 'php/Selector_Emergentes_Ml.php';
     <div class="modal fade" id="Ventana2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-                <form method="POST" action="php/Funcionalidad_Pwa.php">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel"><?php echo $Reg['Nombre'] ?? ''; ?></h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </div>
-                    <div class="modal-body">
-                        <?php
-                        $mora = number_format($financieras->Mora($Pago1), 2);
-                        if (empty($_POST['Promesa'])) {
-                            echo '
-                                <p>Pagos pendientes <strong>' . ($PagoPend ?? '0') . ' Pagos</strong></p>
-                                <p>Pago Normal periodo <strong>' . ($Pago ?? '0.00') . '</strong></p>
-                                <p>Pago con Mora <strong>' . $mora . '</strong></p>
-                            ';
-                        } else {
-                            echo '
-                                <p>Promesa de pago <strong>' . number_format($_POST['Promesa'], 2) . '</strong></p>
-                            ';
-                        }
-                        ?>
-                        <div id="Gps" style="display: none;"></div>
-                        <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;">
-                        <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;">
-                        <input type="text" name="name" value="<?php echo $name; ?>" style="display: none;">
-                        <input type="text" name="Status" value="<?php echo $Reg['Status'] ?? ''; ?>" style="display: none;">
-                        <label>Promesa de Pago</label>
-                        <input class="form-control" type="date" name="Promesa" value="<?php echo date("Y-m-d", strtotime("+14 days")); ?>" required>
-                        <label>Cantidad a pagar</label>
-                        <input class="form-control" type="number" name="Cantidad" placeholder="Cantidad" required>
-                    </div>
-                    <div class="modal-footer">
-                        <input type="submit" name="PromPago" class="btn btn-primary" value="Registrar promesa de pago">
-                    </div>
-                </form>
+                <?php require 'html/Emergente_Promesa_Pago.php'; ?>
             </div>
         </div>
     </div>
@@ -247,6 +213,7 @@ require_once 'php/Selector_Emergentes_Ml.php';
         } else {
             $buscar = [];
         }
+        //Reccoremos los clientes segun los resultados de la busqueda
         foreach ($buscar as $row) {
             echo "
             <tr>
@@ -259,6 +226,7 @@ require_once 'php/Selector_Emergentes_Ml.php';
                     <form method='POST' action='Mesa_Estado_Cuenta.php' style='padding-right: 5px;'>
                         <input type='text' name='nombre' value='" . htmlspecialchars($name) . "' style='display: none;'>
             ";
+            //estos son los bonotes mostrados segun el STATUS de el cliente ; ACTIVO o COBRANZA o CANCELADO 
             if ($row['Status'] == "ACTIVO" || $row['Status'] == "COBRANZA" || $row['Status'] == "CANCELADO") {
                 echo "
                         <label for='0" . $row['Id'] . "' title='Ver estado de cuenta' class='btn' style='background: #F7DC6F; color: #F8F9F9;' ><i class='material-icons'>contact_page</i></label>
@@ -271,12 +239,14 @@ require_once 'php/Selector_Emergentes_Ml.php';
                     <form method='POST' action='" . $_SERVER['PHP_SELF'] . "'>
                         <input type='text' name='nombre' value='" . htmlspecialchars($name) . "' style='display: none;'>
             ";
+            //estos son los bonotes mostrados segun el STATUS de el cliente ; COBRANZA 
             if ($row['Status'] == "COBRANZA") {
                 echo "
                         <label for='7" . $row['Id'] . "' title='Generar Fichas' class='btn' style='background: #EB984E; color: #F8F9F9;' ><i class='material-icons'>send_to_mobile</i></label>
                         <input id='7" . $row['Id'] . "' type='submit' value='7" . $row['Id'] . "' name='IdCliente' class='hidden' style='display: none;' />
                 ";
             }
+            //estos son los bonotes mostrados segun el STATUS de el cliente ; DIFERENTE A ACTIVO,  DIFERENTE A ACTIVACION ; o es; COBRANZA y FALLECIDO
             if ($row['Status'] != "ACTIVO" && $row['Status'] != "ACTIVACION" || $row['Status'] == "COBRANZA" && $row['Status'] != "FALLECIDO") {
                 echo "
                         <label for='1" . $row['Id'] . "' title='Agregar un pago a el cliente' class='btn' style='background: #58D68D; color: #F8F9F9;' ><i class='material-icons'>attach_money</i></label>

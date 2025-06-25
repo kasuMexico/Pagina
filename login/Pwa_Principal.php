@@ -1,8 +1,4 @@
 <?php
-/*/ Habilitar reporte completo de errores para depuración
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-*/
 // Iniciar la sesión y cargar las librerías necesarias
 session_start();
 require_once '../eia/librerias.php';

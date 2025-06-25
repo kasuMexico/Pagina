@@ -154,8 +154,8 @@ if (isset($_POST['ReenCOntra'])) {
     $dirUrl1 = base64_encode($dRc);
     $DirUrl = "https://kasu.com.mx/login/index.php?data=" . $dirUrl1 . "&Usr=" . $Id;
     $basicas->ActCampo($mysqli, "Empleados", "Pass", $dRc, $Id);
-    $Mensaje = Correo::Mensaje('RESTABLECIMIENTO DE CONTRASEÑA', $Nombre, $DirUrl, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '');
-    Correo::EnviarCorreo($Nombre, $Email, 'RESTABLECIMIENTO DE CONTRASEÑA', $Mensaje);
+    $Mensaje = $Correo->Mensaje('RESTABLECIMIENTO DE CONTRASEÑA', $Nombre, $DirUrl, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '');
+    $Correo->EnviarCorreo($Nombre, $Email, 'RESTABLECIMIENTO DE CONTRASEÑA', $Mensaje);
     header('Location: https://kasu.com.mx' . $Host . '?Ml=1&name=' . $name);
     exit();
 }
@@ -266,8 +266,8 @@ if (isset($_POST['CamDat'])) {
         }
     }
     // Enviar correo de actualización
-    $Mensaje = Correo::Mensaje("ACTUALIZACION DE DATOS", $Nombre, 'https://kasu.com.mx/ActualizacionDatos/index.php', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', $IdVenta);
-    Correo::EnviarCorreo($Nombre, $Mail, "ACTUALIZACION DE DATOS", $Mensaje);
+    $Mensaje = $Correo->Mensaje("ACTUALIZACION DE DATOS", $Nombre, 'https://kasu.com.mx/ActualizacionDatos/index.php', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', $IdVenta);
+    $Correo->EnviarCorreo($Nombre, $Mail, "ACTUALIZACION DE DATOS", $Mensaje);
     header('Location: https://kasu.com.mx' . $Host);
     exit();
 }

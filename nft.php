@@ -11,7 +11,11 @@ if(isset($_GET['Msg'])){
 				</script>";
 }
 //Pasamos el get a variable
-$Lgj = $_GET['Lg'];
+if(isset($_GET['Lg'])){
+	$Lgj = $_GET['Lg'];
+}else{
+	$Lgj = "Espanol";
+}
 //Creamos la funcion de conversion
 function some_function($VAr) {
 	 	$Lenguaje = require_once 'html/EspanolNFT.php';

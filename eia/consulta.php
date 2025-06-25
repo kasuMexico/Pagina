@@ -1,10 +1,6 @@
 <?php
 require_once '../eia/librerias.php';
 
-// Instancias de las clases
-$basicas    = new Basicas();
-$financieras = new Financieras();
-
 // Si vienen datos
 if (isset($_GET['value'])) {
     // Desencriptar y sanear

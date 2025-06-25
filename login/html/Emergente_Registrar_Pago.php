@@ -10,7 +10,7 @@
         <input type="hidden" name="IdVenta" value="<?php echo $Reg['Id']; ?>">
         <input type="hidden" name="IdVendedor" value="<?php echo isset($_POST['IdVendedor']) ? $_POST['IdVendedor'] : ''; ?>">
         <input type="hidden" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>">
-        <input type="hidden" name="NombreVenta" value="<?php echo $name; ?>">
+        <input type="hidden" name="NombreBuscado" value="<?php echo $name; ?>">
 
         <?php
         $mora = '$' . number_format($financieras->Mora($Pago1), 2);

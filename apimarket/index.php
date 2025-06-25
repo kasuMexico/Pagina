@@ -1,7 +1,6 @@
 <?php
     //Consulta para los artiulos
-    require_once '../eia/librerias.php';
-    //Creamos la variables pricipales
+    //require_once '../eia/librerias.php';
     //Javascript que imprime el mensaje de alerta de recepcion de comentario
     if(isset($_GET['Msg'])){
     	echo "<script type='text/javascript'>
@@ -43,32 +42,6 @@
     height="0" width="0" style="display:none;visibility:hidden"></iframe>
     </noscript>
     <!-- End Google Tag Manager (noscript) -->
-    <!-- Load Facebook SDK for JavaScript -->
-    <div id="fb-root"></div>
-    <script>
-        window.fbAsyncInit = function() {
-          FB.init({
-            xfbml            : true,
-            version          : 'v5.0'
-          });
-        };
-
-        (function(d, s, id) {
-        var js, fjs = d.getElementsByTagName(s)[0];
-        if (d.getElementById(id)) return;
-        js = d.createElement(s); js.id = id;
-        js.src = 'https://connect.facebook.net/es_LA/sdk/xfbml.customerchat.js';
-        fjs.parentNode.insertBefore(js, fjs);
-      }(document, 'script', 'facebook-jssdk'));
-    </script>
-      <!-- Your customer chat code -->
-      <div class="fb-customerchat"
-        attribution=setup_tool
-        page_id="404668209882209"
-        theme_color="#7646ff"
-        logged_in_greeting="En que puedo ayudarte?"
-        logged_out_greeting="En que puedo ayudarte?">
-      </div>
     <!-- La venta emergente debe de estar fuera del div que lo lanza *JCCM -->
     <div class="modal fade bd-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-sm">

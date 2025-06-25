@@ -4,7 +4,6 @@
 	//inlcuir el archivo de funciones
 	require_once '../eia/librerias.php';
 	//Validar si existe la session y redireccionar
-	//Validar si existe la session y redireccionar
 	if(!isset($_SESSION["Vendedor"])){
 	  //Validamos el GET de la presentacion https://kasu.com.mx/login/analisis.php?dataP=VmFsaWRKQ0NN
 	  if(isset($_GET['dataP'])){

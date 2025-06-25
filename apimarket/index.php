@@ -205,23 +205,6 @@ if (isset($_GET['Msg'])) {
     </section>
     <!-- Autenticación -->
     <?php require_once 'html/Autenticacion.php'; ?>
-    <!-- Opiniones de clientes y productos -->
-    <section class="section">
-        <div class="col-lg-12">
-            <div class="center-heading">
-                <br><br>
-                <h2 class="section-title">Conoce los productos <strong>KASU</strong> y ofrécelos a tus clientes</h2>
-            </div>
-        </div>
-        <br>
-        <div class="container">
-            <div class="row">
-                <!-- Aquí puedes insertar tu código para mostrar productos u opiniones -->
-
-                
-            </div>
-        </div>
-    </section>
     <!-- Contacto -->
     <section class="section colored" id="contact-us">
         <div class="container">

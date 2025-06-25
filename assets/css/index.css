@@ -36,3 +36,10 @@ div.backg {height: 100vh;}
     bottom: 5vh;
   }
     }
+/* Clases para dar viñetas en el contrato y Letras Pequeñas pagina*/
+ol.viñeta > li::before {
+  content: "• ";
+  color: #666;      /* opcional: color de la viñeta */
+  font-weight: bold;
+  margin-right: 4px;
+}

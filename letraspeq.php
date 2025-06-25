@@ -19,7 +19,7 @@
 <body>
     <!-- Chat de Facebook -->
     <?
-    require_once 'hmtl/CodeFb.php';
+    require_once 'html/CodeFb.php';
     ?>
     <!-- La venta emergente debe de estar fuera del div que lo lanza *JCCM -->
     <div class="modal fade bd-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
@@ -31,7 +31,7 @@
         </div>
     </div>
     <!-- ***** Header Area Start ***** -->
-    <? require_once 'hmtl/MenuPrincipal.php';?>
+    <? require_once 'html/MenuPrincipal.php';?>
 <br>
 <br>
 <br>
@@ -40,8 +40,8 @@
         <div class="container">
             <div class="row">
               <?
-                if($_GET['Ser'] == "FUNERARIO" OR !isset($_GET['Ser'])){
-                  echo '
+                if($_GET['Ser'] == "UNIVERSITARIO BASE"){
+                  echo ' 
                   <!-- ***** Pricing Item Start ***** -->
                   <div class="pricing-item">
                           <div class="pricing-header">
@@ -280,23 +280,13 @@
                                             nulo para los efectos legales que tenga a lugar.
                                     </p>
                                     <p style="text-align: justify;">
-                                      <strong>D&Eacute;CIMA. ACEPTACI&Oacute;N. -</strong> Al recibir la tarjeta <strong>EL CLIENTE</strong> se
-                                      hace del conocimiento que <strong>KASU SERVICIOS A FUTURO, S.A. DE C.V.</strong>, cuenta con el conocimiento
-                                       de la operativa del servicio, los procesos y los procedimientos mediante los cuales puede hacer valido el
-                                        servicio, as&iacute; como todas las accesorias que este les brinda y las responsabilidades que el mismo le exige
-                                        para el cumplimiento de los descritos en la cl&aacute;usula primera del presente.
+                                      <strong>D&Eacute;CIMA. ACEPTACI&Oacute;N. -</strong> Al recibir la tarjeta <strong>EL CLIENTE</strong> se hace del conocimiento que <strong>KASU SERVICIOS A FUTURO, S.A. DE C.V.</strong>, cuenta con el conocimiento de la operativa del servicio, los procesos y los procedimientos mediante los cuales puede hacer valido el servicio, as&iacute; como todas las accesorias que este les brinda y las responsabilidades que el mismo le exige para el cumplimiento de los descritos en la cl&aacute;usula primera del presente.
                                     </p>
                                     <p style="text-align: justify;">
-                                      <strong>D&Eacute;CIMA PRIMERA. AUTONOM&Iacute;A DE LAS DISPOSICIONES. -</strong> La invalidez, la ilegalidad o falta
-                                       de coercibilidad de cualquiera de las disposiciones contenidas del contrato no afectar&aacute; la validez y
-                                       exigibilidad de las dem&aacute;s disposiciones acordadas por <strong>LAS PARTES</strong>.
+                                      <strong>D&Eacute;CIMA PRIMERA. AUTONOM&Iacute;A DE LAS DISPOSICIONES. -</strong> La invalidez, la ilegalidad o falta de coercibilidad de cualquiera de las disposiciones contenidas del contrato no afectar&aacute; la validez y exigibilidad de las dem&aacute;s disposiciones acordadas por <strong>LAS PARTES</strong>.
                                     </p>
                                     <p style="text-align: justify;">
-                                      <strong>D&Eacute;CIMA SEGUNDA. JURISDICCI&Oacute;N Y TRIBUNALES COMPETENTES. -</strong> Para la
-                                       interpretaci&oacute;n y cumplimiento del presente instrumento las partes se someten a la jurisdicci&oacute;n
-                                       y competencia de los Tribunales que correspondan al lugar en que se suscribe este contrato o a los Tribunales
-                                        de la Ciudad de M&Eacute;xico, renunciando a cualquier otro fuero que por raz&oacute;n de su domicilio presente
-                                         o futuro les pudiera corresponder.
+                                      <strong>D&Eacute;CIMA SEGUNDA. JURISDICCI&Oacute;N Y TRIBUNALES COMPETENTES. -</strong> Para la interpretaci&oacute;n y cumplimiento del presente instrumento las partes se someten a la jurisdicci&oacute; y competencia de los Tribunales que correspondan al lugar en que se suscribe este contrato o a los Tribunales de la Ciudad de M&Eacute;xico, renunciando a cualquier otro fuero que por raz&oacute;n de su domicilio presente o futuro les pudiera corresponder.
                                     </p>
                               </div>
                           </div>
@@ -582,7 +572,124 @@
                   <!-- ***** Pricing Item End ***** -->
                   ';
                 }else {
-                  $_GET['Ser'] = "FUNERARIO";
+                   echo ' 
+                  <!-- ***** Pricing Item Start ***** -->
+                  <div class="pricing-item">
+                          <div class="pricing-header">
+                          </div>
+                          <div class="pricing-body">
+                              <i>
+                                  <img style="height: 80px;" src="assets/images/Index/funer.png" alt="">
+                              </i>
+                              <br><br>
+                              <h6><strong>Servico de Gastos funerario a futuro </strong></h6>
+                              <br><br>
+                              <div class = "dudasfun">
+                                <div class="container" >
+                                    <h1 class="hd-tit">CONTRATO DE PRESTACI&Oacute;N DE SERVICIOS</h1>
+                                    <br>
+                                    <h2 class="hd-sub"><strong>A N T E C E D E N T E S</strong></h2>
+                                    <p style="text-align: justify;">
+                                        Mediante el contrato de fideicomiso protocolizado en fecha veinte (20) de mayo de dos mil dieciséis (2016) denominado a partir de este y para el presente como <strong>FIDEICOMISO F/0003</strong>, se nombró a <strong>KASU SERVICIOS A FUTURO, S.A. DE C.V.</strong> como fideicomitente y fideicomisario en tercer lugar y a <strong>CAPITAL & FONDEO MÉXICO S. A. DE C. V. SOFOM ENR</strong> fiduciaria y fideicomisaria en primer lugar y que mediante contrato de cesión de aportaciones firmado por <strong>KASU SERVICIOS A FUTURO S.A. DE C.V y CAPITAL & FONDEO MÉXICO S.A. DE C. V. SOFOM ENR</strong> se protocolizan las solicitudes de acceso al <strong>FIDEICOMISO F/0003</strong> y con la aceptación de los mismo se les nombra a toda persona descrita en el contrato de aportación como fideicomisario en segundo lugar.
+                                    </p>
+                                    <br>
+                                    <p style="text-align: justify;">
+                                      Por lo que al momento de firmarse en contrato <strong>EL CLIENTE</strong> será:
+                                    </p>
+                                    <p style="text-align: justify;">
+                                      <ol>
+                                        <li style="text-align: justify;">
+                                        <strong>A)</strong> Acreedor a los beneficios que el fideicomiso señala tomando en consideración los servicios específicos en la solicitud de <strong>SERVICIO A FUTURO</strong> de cada <strong>CLIENTE</strong>.
+                                        </li>
+                                        <li style="text-align: justify;">
+                                        <strong>B)</strong> Las aportaciones de cada <strong>CLIENTE</strong> al mencionado <strong>FIDEICOMISO F/0003</strong> son documentados por <strong>KASU SERVICIOS A FUTURO, S.A. DE C.V.</strong> mediante un recibo impreso o digital donde se especificará lo siguiente:
+                                        <li>
+                                          <ol type="a" class="viñeta">
+                                            <li style="text-align: justify;"> Contrato de cesión al cual pertenece <strong>EL CLIENTE</strong>.</li>
+                                            <li style="text-align: justify;"> Nombre de <strong>EL CLIENTE</strong>.</li>
+                                            <li style="text-align: justify;"> Clave única de registro de población de <strong>EL CLIENTE</strong>.</li>
+                                            <li style="text-align: justify;"> Contrato de servicio a futuro de <strong>EL CLIENTE</strong>.</li>
+                                            <li style="text-align: justify;"> Recibo de depósito de valor unitario de servicio a futuro de <strong>EL CLIENTE</strong>.</li>
+                                          </ol>
+                                        <li style="text-align: justify;">
+                                          <strong>C)</strong> Que el contrato <strong>FIDEICOMISO F/0003</strong> se especifica que <strong>KASU SERVICIOS A FUTURO, S.A. DE C.V.</strong> Será el único distribuidor y comercializador con autorizaciones para realizar los contratos de aportación descritos en las cláusulas anteriores.
+                                        </li>
+                                      </ol>
+                                    </p>
+                                    <h2 class="hd-sub"><strong>D E C L A R A C I O N E S</strong></h2>
+                                    <p style="text-align: justify;">
+                                      Declara la sociedad denominada <strong>KASU SERVICIOS A FUTURO, S.A. DE C.V.</strong> a través de su presentante;
+                                    </p>
+                                    <p style="text-align: justify;">
+                                      <ol class="viñeta">
+                                        <li style="text-align: justify;">
+                                          Que es una sociedad constituida al amparo de las leyes mexicanas a partir del día veintidós (22) de octubre de dos mil veinte (2020), otorgada ante la fe de la licenciada en derecho NORMA VÉLEZ BAUTISTA, titular de la notaría pública número 83 del Estado de MÉxico, con residencia en el municipio de Atlacomulco, mediante escritura pública número 38,169 (treinta y ocho mil ciento sesenta).
+                                        </li>
+                                        <li style="text-align: justify;">
+                                          Cuenta con registro federal de contribuyentes el cual es el siguiente KSF201022441.
+                                        </li>
+                                        <li style="text-align: justify;">
+                                          Su representante que cuenta con las facultades suficientes para celebrar el presente contrato en su nombre y representación así como para obligarla en los términos y condiciones del presente con sus anexos y referencias a otros instrumentos, según consta en el día 40,853 volumen ordinario 713 (SETESCIENTOS TRECE) firmada el veinticuatro (24) de septiembre de dos mil veintidos (2022), otorgada ante la fe de la licenciada en derecho NORMA VÉLEZ BAUTISTA, titular de la notaría pública número 83 del Estado de Mexico, con residencia en el municipio de Atlacomulco.
+                                        </li>
+                                        <li style="text-align: justify;">
+                                          En este acto se constituye como PRESTADOR DE SERVICIOS.
+                                        </li>
+                                        <li style="text-align: justify;">
+                                        No ha iniciado ni se tiene conocimiento de que se haya iniciado procedimiento alguno tendiente a declarar en concurso mercantil, en estado de insolvencia o liquidación respectivamente.
+                                        </li>
+                                        <li style="text-align: justify;">
+                                          No tiene ningún conocimiento de que se haya iniciado acción o procedimiento alguno ante cualquier órgano jurisdiccional ante que:
+                                            <ol type="a" class="viñeta">
+                                            <li style="text-align: justify;"> 
+                                              Afecte o pudiera afectar materialmente la legalidad, validez o exigibilidad del presente contrato o de los demás documentos de la operación o cualquiera de sus obligaciones derivadas o relacionadas con el presente contrato o con los demás documentos de la operación de los que parte. 
+                                            </li>
+                                            <li style="text-align: justify;">
+                                              Pudiera anular o impedir la transición de los derechos de cobro cedidos al patrimonio del fideicomiso conforme al presente contrato y al contrato de sesión original o subsecuente. 
+                                            </li>
+                                            <li style="text-align: justify;">
+                                              Pudiera impugnar o impedir la emisión o cualquier reapertura subsecuente.
+                                            </li>
+                                            <li style="text-align: justify;"> 
+                                              Conduce su negocio y operaciones de acuerdo a las leyes aplicables correspondientes, cuenta con todos los permisos necesarios para llevar a cabo las operaciones a que hay lugar, así como estar dentro de los reglamentos, leyes, decretos y órdenes de cualquier autoridad gubernamental que le sean aplicables al bien y a sus propiedades. 
+                                            </li>
+                                          </ol>
+                                        </li>
+                                        <li style="text-align: justify;">
+                                          Reconoce y acepta que:
+                                          <ol type="a" class="viñeta">
+                                            <li style="text-align: justify;"> 
+                                              Afecte o pudiera afectar materialmente la legalidad, validez o exigibilidad del presente contrato o de los demás documentos de la operación o cualquiera de sus obligaciones derivadas o relacionadas con el presente contrato o con los demás documentos de la operación de los que parte. 
+                                            </li>
+                                            <li style="text-align: justify;">
+                                              La validez y exigibilidad del presente contrato y así como de los demás documentos de la operación de los que son parte, 
+                                            </li>
+                                            <li style="text-align: justify;">
+                                              La validez y exigibilidad de la transmisión de la propiedad y titularidad de los derechos de cobro cedidos a favor del fiduciario, motivo determinante de la voluntad del fiduciario para llevar a cabo el presente, Que es propietario de los derechos de cobro de materia del presente
+                                            </li>
+                                            <li style="text-align: justify;"> 
+                                              A la fecha del presente contrato no existe huelga, paro, suspensión o reducción de labores, procedimientos colectivos de trabajo u otro procedimiento laboral similar en curso, que afecte o pudiere llegar a afectar materialmente cualquiera de sus activos e instalaciones correspondientes.
+                                            </li>
+                                          </ol>
+                                        </li>
+                                        <li style="text-align: justify;">
+                                        </li>
+                                      </ol>
+                                    </p>
+                                    <p style="text-align: justify;">
+                                      Declara <strong>EL CLIENTE</strong> por propia cuenta:
+                                    </p>
+
+
+
+
+
+
+
+
+
+
+                  <!-- ***** Pricing Item End ***** -->
+                  ';
                 }
               ?>
             </div>
@@ -592,7 +699,7 @@
 
     <!-- ***** Footer Start ***** -->
     <footer>
-      <? require_once 'hmtl/footer.php';?>
+      <? require_once 'html/footer.php';?>
     </footer>
     <!-- jQuery -->
     <script src="assets/js/jquery-2.1.0.min.js"></script>

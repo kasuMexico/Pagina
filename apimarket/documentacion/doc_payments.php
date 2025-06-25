@@ -2,18 +2,18 @@
 //indicar que se inicia una sesion *JCCM
 	session_start();
 //se insertan las funciones
-		require_once '../../eia/librerias.php';
+	require_once '../librerias_api.php';
 //realizamos la busqueda en la base de datos
-		$filename = basename($_SERVER['PHP_SELF']); // Obtiene el nombre del archivo "doc_accounts.php"
-		$extension = pathinfo($filename, PATHINFO_EXTENSION); // Obtiene la extensión del archivo "php"
-		$basename = basename($filename, "." . $extension); // Obtiene el nombre del archivo sin la extensión "doc_accounts"
-		$word = substr($basename, strpos($basename, "_") + 1); // Obtiene la palabra "accounts"
+	$filename = basename($_SERVER['PHP_SELF']); // Obtiene el nombre del archivo "doc_accounts.php"
+	$extension = pathinfo($filename, PATHINFO_EXTENSION); // Obtiene la extensión del archivo "php"
+	$basename = basename($filename, "." . $extension); // Obtiene el nombre del archivo sin la extensión "doc_accounts"
+	$word = substr($basename, strpos($basename, "_") + 1); // Obtiene la palabra "accounts"
 //Crear consulta
-		$sql = "SELECT * FROM ContApiMarket WHERE Nombre = '$word'";
+	$sql = "SELECT * FROM ContApiMarket WHERE Nombre = '$word'";
 //Realiza consulta
-		$res = mysqli_query($mysqli, $sql);
+	$res = mysqli_query($mysqli, $sql);
 //Si existe el registro se asocia en un fetch_assoc
-		if($Reg=mysqli_fetch_assoc($res)){}
+	if($Reg=mysqli_fetch_assoc($res)){}
 
 ?>
 <!DOCTYPE html>

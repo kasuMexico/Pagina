@@ -22,7 +22,6 @@
               <li><a class="capital" target="_blank" href="https://apimarket.kasu.com.mx">| Desarrollador |</a></li>
               <li><a class="capital" href="/terminos-y-condiciones">| Términos&amp;Condiciones |</a></li>
               <li><a class="capital" href="/privacidad">| Politica de Privacidad |</a></li>
-              <li><a class="capital" target="_blank"  href="/letraspeq">| Legal |</a></li>
           </ul>
         </div>
         <div class="row">

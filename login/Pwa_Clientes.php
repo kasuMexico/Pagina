@@ -41,7 +41,7 @@ require_once '../eia/librerias.php';
         $Lanzar = "#Ventana";
       }
   //Buscar el id de el vendedor
-      $IdVen = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+      $IdVen = $basicas -> BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
 ?>
 <!DOCTYPE html>
 <html lang="es">

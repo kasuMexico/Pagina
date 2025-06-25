@@ -1,33 +1,74 @@
 <?
-	//indicar que se inicia una sesion
 	session_start();
-	//inlcuir el archivo de funciones
+
+	// Incluir funciones y conexiones
 	require_once '../eia/librerias.php';
-	//Validar si existe la session y redireccionar
-	if(!isset($_SESSION["Vendedor"])){
-	  //Validamos el GET de la presentacion https://kasu.com.mx/login/analisis.php?dataP=VmFsaWRKQ0NN
-	  if(isset($_GET['dataP'])){
-	      $sua = base64_decode($_GET['dataP']);
-	      if($sua == "ValidJCCM"){
-	        $_SESSION["dataP"] = $sua;
-	      }else{
-	        header('Location: https://kasu.com.mx/login');
-	      }
-	  }else{
-	    header('Location: https://kasu.com.mx/login');
-	  }
-	}else{
-	  //Se comprueba el nivel del usuario
-	  $Niv = $basicas->BuscarCampos($mysqli,"Nivel","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+
+	// Validar sesión o redireccionar
+	if (!isset($_SESSION["Vendedor"])) {
+		if (isset($_GET['dataP'])) {
+			$sua = base64_decode($_GET['dataP']);
+			if ($sua == "ValidJCCM") {
+				$_SESSION["dataP"] = $sua;
+			} else {
+				header('Location: https://kasu.com.mx/login');
+				exit;
+			}
+		} else {
+			header('Location: https://kasu.com.mx/login');
+			exit;
+		}
+	} else {
+		$Niv = $basicas -> BuscarCampos($mysqli, "Nivel", "Empleados", "IdUsuario", $_SESSION["Vendedor"]);
 	}
-	//Php que realiza el analisis de las metas de venta y colocacion
+
+	// Incluir lógica de análisis
 	require_once 'php/Analisis_Metas.php';
-	// Crear un formateador para el locale de México, estilo decimal
-	$fmt = new NumberFormatter('es_MX', NumberFormatter::DECIMAL);
-	// Asegurarnos de que no muestre decimales
-	$fmt->setAttribute(NumberFormatter::FRACTION_DIGITS, 0);
-	//Inicio de las ventas
-	$FeIniVtas = date("d-M-Y", strtotime($basicas->MinDat($mysqli,"FechaRegistro","Venta")));
+
+	// Declarar todas las variables necesarias
+	$Fec0 = date("Y-m-01");
+	$vTtOT = 0;
+	$F0003 = 0;
+	$VaF0003 = 0;
+	$CarteCol = 0;
+	$SaldCre1 = 0;
+	$PagEr = 0;
+	$PagEnMor3 = 0;
+	$PagEnMor = 0;
+	$ft = 0;
+	$V = 0;
+	$ed = 0;
+	$Ed1Cte = 0;
+	$tuArray = [];
+	$pagoHoy = 0;
+	$pagPero = 0;
+	$AvCob = 0;
+	$SUeldos = 0;
+	$comisiones = 0;
+	$CacVta = 0;
+	$CicVta = 0;
+	$EdadCte = 0;
+	$ModaClie = 0;
+	$SerPagados = 0;
+	$Prod = [];
+	$Año = [];
+	$UVen = [];
+	$NombreGraf = '';
+	$ini = '';
+	$in2 = '';
+	$Med = '';
+	$Me2 = '';
+	$Fin = '';
+	$Fi2 = '';
+	$Nu = 0;
+	$Ne = 0;
+	$Uv = 0;
+
+	// Crear un formateador para valores monetarios y numéricos en México
+	$fmtMoney = new NumberFormatter('es_MX', NumberFormatter::CURRENCY);
+
+	// Obtener fecha inicial de ventas
+	$FeIniVtas = date("d-M-Y", strtotime($basicas->MinDat($mysqli, "FechaRegistro", "Venta")));
 	//$sqal = "alter table Productos add (PlazoPagos varchar (20)  null)";
 	//$sqal = "SHOW TABLES FROM u176240951_web";
 	$sqal = "SELECT * FROM Productos";
@@ -78,39 +119,39 @@
 	foreach ($r4e9 as $Resd7){
 	  $V++;
 	  if($Resd7['Status'] == "ACTIVO"){
-	      //Tasa de interes para la venta
-	      $TiFide = $basicas->BuscarCampos($mysqli,"TFideicomiso","Productos","Producto",$Resd7['Producto']);
-	      $TiFide = $TiFide/100;
-	      //Calculamos la tasa de interes diaria
-	      $TiD = $TiFide/365;
-	      $Bta = $TiD+1;
-	      //Fecha inicial
-	      $fecRegis = strtotime($Resd7['FechaRegistro']);
-	      //Calculamos los periodos
-	      $FeUnix = $hoy-$fecRegis;
-	      $Dias = $FeUnix/86400;
-	      //Calculamos la tasa con la cual se operara
-	      $TasaF = pow($Bta, $Dias);
-	      //Calculamos el valor de hoy de el producto
-	      $FideAho = $basicas->BuscarCampos($mysqli,"Fideicomiso","Productos","Producto",$Resd7['Producto']);
-	      $FideAho = $FideAho/100;
-	      //Precio de venta por tasa para obtener lo q se fue al fideicomiso
-	      $ValFPr = $Resd7['CostoVenta']*$FideAho;
-	      //Obtenemos el valor actual del producto
-	      $VFPVta = $ValFPr*$TasaF;
-	      //Valor general acumulado
-	      $VaF0003 = $VaF0003+$VFPVta;
-	      //Calculamos la edad promedio de el cliente
-	      $CurpCte = $basicas->BuscarCampos($mysqli,"ClaveCurp","Usuario","IdContact",$Resd7['Id']);
-	      $EdCte = $basicas->ObtenerEdad($CurpCte);
-	      //Sumamos las edades
-	      if($EdCte != "CURP invalid"){
-	          $tuArray = array($EdCte);
-	          //Contamos edades validas
-	          $ed++;
-	          //SUmamos edades
-	          $Ed1Cte = $Ed1Cte+$EdCte;
-	      }
+
+		// Obtener y limpiar tasa de fideicomiso
+		$TiFideRaw = $basicas->BuscarCampos($mysqli, "TFideicomiso", "Productos", "Producto", $Resd7['Producto']);
+		$TiFideClean = str_replace([',', '%', '$', 'MXN', ' '], '', $TiFideRaw);
+
+		// Validar y convertir a número
+		$TiFide = is_numeric($TiFideClean) ? floatval($TiFideClean) / 100 : 0.0;
+
+		// Calcular tasa diaria
+		$TiD = $TiFide / 365;
+		$Bta = $TiD + 1;
+
+		// Fecha inicial
+		$fecRegis = strtotime($Resd7['FechaRegistro']);
+		$FeUnix = $hoy - $fecRegis;
+		$Dias = $FeUnix / 86400;
+
+		// Calcular tasa compuesta
+		$TasaF = pow($Bta, $Dias);
+
+		// Obtener y limpiar porcentaje de fideicomiso
+		$FideAhoRaw = $basicas->BuscarCampos($mysqli, "Fideicomiso", "Productos", "Producto", $Resd7['Producto']);
+		$FideAhoClean = str_replace([',', '%', '$', 'MXN', ' '], '', $FideAhoRaw);
+		$FideAho = is_numeric($FideAhoClean) ? floatval($FideAhoClean) / 100 : 0.0;
+
+		// Calcular valor actual
+		$ValFPr = floatval($Resd7['CostoVenta']) * $FideAho;
+		$VFPVta = $ValFPr * $TasaF;
+
+		// Acumular valor
+		$VaF0003 += $VFPVta;
+
+
 	}elseif($Resd7['Status'] == "PREVENTA"){
 	  //Ventas no concretadas
 	  $ft++;
@@ -410,8 +451,8 @@
             <div class="card">
                 <div class="card-header bg-secondary text-light">Generales KASU</div>
                 <div class="card-body">
-                  Ventas Activas :  <strong><? echo money_format('%.2n',$vTtOT); ?></strong>
-                  <br>Cobros Totales :  <strong><? echo money_format('%.2n',$CObTo); ?></strong>
+                  Ventas Activas :  <strong><? echo number_format($vTtOT,2); ?></strong>
+                  <br>Cobros Totales :  <strong><? echo number_format($CObTo,2); ?></strong>
                   <br>Ventas no Concretadas :  <strong><? echo round($dcv); ?> de 10</strong>
                   <br>Ventas Concretadas :  <strong><? echo round($dc1v); ?> de 10</strong>
                 </div>
@@ -421,10 +462,10 @@
             <div class="card">
                 <div class="card-header bg-secondary text-light">Gastos Mensuales</div>
                 <div class="card-body">
-                  Sueldos a pagar :  <strong><? echo money_format('%.2n',$SUeldos); ?></strong>
-                  <br>Comisiones pendientes por pagar : <strong><? echo money_format('%.2n',$comisiones); ?></strong>
-                  <br>Costo de adquisicion de el cliente : <strong><? echo money_format('%.2n',$CacVta); ?></strong>
-                  <br>Promedio de Venta por cliente :  <strong><? echo money_format('%.2n',$CicVta); ?></strong>
+                  Sueldos a pagar :  <strong><? echo number_format($SUeldos,2); ?></strong>
+                  <br>Comisiones pendientes por pagar : <strong><? echo number_format($comisiones,2); ?></strong>
+                  <br>Costo de adquisicion de el cliente : <strong><? echo number_format($CacVta,2); ?></strong>
+                  <br>Promedio de Venta por cliente :  <strong><? echo number_format($CicVta,2); ?></strong>
                 </div>
             </div>
         </div>
@@ -452,11 +493,11 @@
               <div class="card">
                   <div class="card-header bg-secondary text-light">Comportamiento Mensual</div>
                   <div class="card-body">
-                       Cobranza de el dia :  <strong><? echo money_format('%.2n',$pagoHoy); ?></strong>
-                       <br>Cobranza del mes : <strong><? echo money_format('%.2n',$pagPero); ?></strong>
+                       Cobranza de el dia :  <strong><? echo number_format($pagoHoy,2); ?></strong>
+                       <br>Cobranza del mes : <strong><? echo number_format($pagPero,2); ?></strong>
                        <br>Normalidad : <strong><? echo round($AvCob); ?> %</strong>
-                       <br>Mora generada en el Mes:  <strong><? echo money_format('%.2n',$PagEnMor3); ?></strong>
-                       <br>Ventas del Mes : <strong><? echo money_format('%.2n',$VtaDine); ?></strong>
+                       <br>Mora generada en el Mes:  <strong><? echo number_format($PagEnMor3,2); ?></strong>
+                       <br>Ventas del Mes : <strong><? echo number_format($VtaDine,2); ?></strong>
 
                   </div>
               </div>
@@ -465,11 +506,11 @@
               <div class="card">
                   <div class="card-header bg-secondary text-light">Datos Crediticios</div>
                   <div class="card-body">
-                       Valor Cartera  : <strong><? echo money_format('%.2n',$SaldCre1); ?></strong>
-                       <br>Capital colocado : <strong><? echo money_format('%.2n',$CarteCol); ?></strong>
-                       <br>Cartera en Cobranza : <strong><? echo money_format('%.2n',$PagEr); ?></strong>
-                       <br>Cartera en Mora : <strong><? echo money_format('%.2n',0); ?></strong>
-                       <br>Cartera dictaminada : <strong><? echo money_format('%.2n',$PagEnMor); ?></strong>
+                       Valor Cartera  : <strong><? echo number_format($SaldCre1,2); ?></strong>
+                       <br>Capital colocado : <strong><? echo number_format($CarteCol,2); ?></strong>
+                       <br>Cartera en Cobranza : <strong><? echo number_format($PagEr,2); ?></strong>
+                       <br>Cartera en Mora : <strong><? echo number_format(0); ?></strong>
+                       <br>Cartera dictaminada : <strong><? echo number_format($PagEnMor,2); ?></strong>
                   </div>
               </div>
           </div>
@@ -477,9 +518,9 @@
               <div class="card">
                   <div class="card-header bg-secondary text-light">Datos Fideicomiso</div>
                   <div class="card-body">
-                       Valor del fideicomiso : <strong><? echo money_format('%.2n',$F0003); ?></strong>
-                       <br>Valor Actual F/0003: <strong><? echo money_format('%.2n',$VaF0003); ?></strong>
-                       <br>Servicios Pagados : <strong><? echo money_format('%.2n',$SerPagados); ?></strong>
+                       Valor del fideicomiso : <strong><? echo number_format($F0003,2); ?></strong>
+                       <br>Valor Actual F/0003: <strong><? echo number_format($VaF0003,2); ?></strong>
+                       <br>Servicios Pagados : <strong><? echo number_format($SerPagados,2); ?></strong>
                        <br>Edad promedio Cliente : <strong><? echo round($EdadCte); ?></strong>
                        <br>Moda Edad : <strong><? echo round($ModaClie); ?></strong>
                   </div>

@@ -2,6 +2,7 @@
 //Contador de veces que se usa cada funcion para seguimiento *JCCM
 require_once __DIR__ . '/FunctionUsageTracker.php';
 require_once __DIR__ . '/Funciones_Basicas.php';
+
 //creamos una variable general para las funciones
 $basicas = new Basicas();
 

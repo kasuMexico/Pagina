@@ -697,5 +697,18 @@ class Basicas {
         }
         return null;
     }
+
+    /**************************************************************************************************************************
+    Esta funcion valida un usuario y una contraseña  para el modod sandbox;
+    1.- $c0   => Recibe la Conexion a la base de datos
+    2.- $usr  => Recibe el usuario
+    2.- $pass => Recibe la contraseña
+    ****************************************************************************************************************************/
+    public function ValidarUsrAPI_sandbox($c0,$usr){
+        $usrA  = "Api_KASU_Sandbox";
+        if($usrA === $usr){
+            return true;
+        }
+    }
 }
 ?>

@@ -1,6 +1,7 @@
 <?php
 //Contador de veces que se usa cada funcion para seguimiento *JCCM
 require_once 'FunctionUsageTracker.php';
+
 //creamos una variable general para las funciones
 $basicas = new Basicas();
 class Seguridad {

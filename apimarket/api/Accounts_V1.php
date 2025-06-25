@@ -1,15 +1,11 @@
 <?php
+// Incluye la librería de funciones y conexiones (asegúrate de que la ruta es correcta)
+require_once 'librerias_api.php';
 //Este código busca todos los archivos con extensión ".php" en la carpeta "Funciones"  con un array los requiere
 foreach (glob("../Funciones/*.php") as $archivo) {
     require_once $archivo;
 }
-//creamos una variable general para las funciones
-$basicas = new Basicas();
-$seguridad = new Seguridad();
-//Requerir las conexiones
-//require_once '../Conexiones/cn_vtas.php';
-require_once '../Conexiones/cn_pruebas.php';
-//require_once '../Conexiones/cn_prosp.php';
+
 // Iniciar el almacenamiento en búfer
 ob_start();
 
@@ -189,18 +185,6 @@ if ($data['tipo_peticion'] === 'new_service') { // if tipo_peticion
           exit;
       }
   }// if tipo_peticion
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 ob_end_flush(); // Enviar la salida almacenada en búfer al cliente

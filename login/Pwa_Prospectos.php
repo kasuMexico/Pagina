@@ -3,6 +3,9 @@
 session_start();
 //inlcuir el archivo de funciones
 require_once '../eia/librerias.php';
+echo "<br>imprime lo que trae el la variable mysqli -> en Pwa_Prospectos <br>";
+var_dump($mysqli);
+
 //Validar si existe la session y redireccionar
     if(!isset($_SESSION["Vendedor"])){
         header('Location: https://kasu.com.mx/login');
@@ -72,82 +75,82 @@ require_once '../eia/librerias.php';
     </section>
     <!--Final de menu principal fijo-->
     <section class="VentanasEMergentes">
-    <!--Inicio Creacion de las ventanas emergentes-->
-    <script type='text/javascript'>
-        $( document ).ready(function() {
-            $('<? echo $Lanzar; ?>').modal('toggle')
-        });
-    </script>
-    <!-- Modal que Muestra la informacion de el cliente -->
-    <div class="modal fade" id="Ventana1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-          <div class="modal-dialog" role="document">
-              <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel"><?PHP echo $Reg['FullName'];?></h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </div>
-                    <div class="modal-body">
-                        <div id="Gps" style="display: none;"></div>
-                        <input type="number" name="IdVenta" value="<?PHP echo $Reg['Id'];?>" style="display: none;">
-                        <input type="text" name="Host" value="<?PHP echo $_SERVER['PHP_SELF'];?>" style="display: none;">
-                        <input type="text" name="name" value="<?PHP echo $name;?>" style="display: none;">
-                        <p>Captado en </p>
-                        <h2><strong><? echo $Reg['Origen']?></strong></h2>
-                        <p>Fecha Alta </p>
-                        <h2><strong><? echo date("d-M-Y",strtotime($Reg['Alta']))?></strong></h2>
-                        <p>Producto </p>
-                        <h2><strong><? echo $Reg['Servicio_Interes']?></strong></h2>
-                        <p> Avance de Venta </p>
-                        <?
-                        //Buscamos si se ha enviado un presupuesto
-                        $sum = $basicas->BuscarCampos($pros,"Id","PrespEnviado","IdProspecto",$Reg['Id']);
-                        //SI se ha enviado el presupuesto se avanza el 50% de la venta
-                        if(!empty($sum)){
-                          $Va5r = $Reg['Estado']*10;
-                          $Var = $Va5r+50;
-                        }else{
-                          //Si no se ha enviado presupuesto se lleva el seguimineto por los correos
-                          $Var = $Reg['Estado']*10;
-                        }
-                        ?>
-                        <h2><strong><? echo $Var?> %</strong></h2>
-                    </div>
-                    <div class="modal-footer">
-                        <a target="_blank" rel="noopener noreferrer" class="btn btn-primary mr-2"
-                        href="https://api.whatsapp.com/send?phone=+52<?php echo $Reg['NoTel']; ?>&text=Hola mi nombre es <?php echo $nomVd; ?> te contacto debido a que te interesaron nuestros productos de KASU">
-                            Whatsapp
-                        </a>
-                        <form method="POST" action="<?php echo $_SERVER['PHP_SELF']; ?>" style="display:inline;">
-                            <input type="hidden" name="IdVendedor" value="<?php echo $_POST['IdVendedor']; ?>" />
-                            <input type="hidden" name="IdPros" value="<?php echo $Reg['Id']; ?>" />
-                            <input type="submit" name="ArmaPres" class="btn btn-primary mr-2" value="Presupuesto" />
-                            <input type="submit" name="Cancelar" class="btn btn-danger" value="Cancelar" />
-                        </form>
-                    </div>
-              </div>
-          </div>
-    </div>
-    <!-- Modal que envia Presupuesto de Venta -->
-    <div class="modal fade" id="Ventana3" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-          <div class="modal-dialog" role="document">
-              <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel"> Presupuesto de Venta</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    </div>
-                  <? require_once 'html/Presupuesto.php'; ?>
-              </div>
-          </div>
-    </div>
-    <!-- Modal que Muestra la informacion de el cliente -->
-    <div class="modal fade" id="Ventana2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-          <div class="modal-dialog" role="document">
-              <div class="modal-content">
-                <? require_once 'html/NvoProspecto.php'; ?>
-              </div>
-          </div>
-    </div>
+        <!--Inicio Creacion de las ventanas emergentes-->
+        <script type='text/javascript'>
+            $( document ).ready(function() {
+                $('<? echo $Lanzar; ?>').modal('toggle')
+            });
+        </script>
+        <!-- Modal que Muestra la informacion de el cliente -->
+        <div class="modal fade" id="Ventana1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel"><?PHP echo $Reg['FullName'];?></h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <div id="Gps" style="display: none;"></div>
+                            <input type="number" name="IdVenta" value="<?PHP echo $Reg['Id'];?>" style="display: none;">
+                            <input type="text" name="Host" value="<?PHP echo $_SERVER['PHP_SELF'];?>" style="display: none;">
+                            <input type="text" name="name" value="<?PHP echo $name;?>" style="display: none;">
+                            <p>Captado en </p>
+                            <h2><strong><? echo $Reg['Origen']?></strong></h2>
+                            <p>Fecha Alta </p>
+                            <h2><strong><? echo date("d-M-Y",strtotime($Reg['Alta']))?></strong></h2>
+                            <p>Producto </p>
+                            <h2><strong><? echo $Reg['Servicio_Interes']?></strong></h2>
+                            <p> Avance de Venta </p>
+                            <?
+                            //Buscamos si se ha enviado un presupuesto
+                            $sum = $basicas->BuscarCampos($pros,"Id","PrespEnviado","IdProspecto",$Reg['Id']);
+                            //SI se ha enviado el presupuesto se avanza el 50% de la venta
+                            if(!empty($sum)){
+                            $Va5r = $Reg['Estado']*10;
+                            $Var = $Va5r+50;
+                            }else{
+                            //Si no se ha enviado presupuesto se lleva el seguimineto por los correos
+                            $Var = $Reg['Estado']*10;
+                            }
+                            ?>
+                            <h2><strong><? echo $Var?> %</strong></h2>
+                        </div>
+                        <div class="modal-footer">
+                            <a target="_blank" rel="noopener noreferrer" class="btn btn-primary mr-2"
+                            href="https://api.whatsapp.com/send?phone=+52<?php echo $Reg['NoTel']; ?>&text=Hola mi nombre es <?php echo $nomVd; ?> te contacto debido a que te interesaron nuestros productos de KASU">
+                                Whatsapp
+                            </a>
+                            <form method="POST" action="<?php echo $_SERVER['PHP_SELF']; ?>" style="display:inline;">
+                                <input type="hidden" name="IdVendedor" value="<?php echo $_POST['IdVendedor']; ?>" />
+                                <input type="hidden" name="IdPros" value="<?php echo $Reg['Id']; ?>" />
+                                <input type="submit" name="ArmaPres" class="btn btn-primary mr-2" value="Presupuesto" />
+                                <input type="submit" name="Cancelar" class="btn btn-danger" value="Cancelar" />
+                            </form>
+                        </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal que envia Presupuesto de Venta -->
+        <div class="modal fade" id="Ventana3" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel"> Presupuesto de Venta</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        </div>
+                    <? require_once 'html/Presupuesto.php'; ?>
+                </div>
+            </div>
+        </div>
+        <!-- Modal que Muestra la informacion de el cliente -->
+        <div class="modal fade" id="Ventana2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <? require_once 'html/NvoProspecto.php'; ?>
+                </div>
+            </div>
+        </div>
     </section>
     <!-- Start: Login Form Clean -->
     <section class="container"  style="width: 99%;">

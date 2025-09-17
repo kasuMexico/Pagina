@@ -3,7 +3,6 @@
 
 	// Incluir funciones y conexiones
 	require_once '../eia/librerias.php';
-
 	// Validar sesión o redireccionar
 	if (!isset($_SESSION["Vendedor"])) {
 		if (isset($_GET['dataP'])) {
@@ -22,10 +21,12 @@
 		$Niv = $basicas -> BuscarCampos($mysqli, "Nivel", "Empleados", "IdUsuario", $_SESSION["Vendedor"]);
 	}
 
-	// Incluir lógica de análisis
-	require_once 'php/Analisis_Metas.php';
-
+	// Crear formateador decimal
+	$fmt = new NumberFormatter('es_MX', NumberFormatter::DECIMAL);
+	$fmt->setAttribute(NumberFormatter::FRACTION_DIGITS, 0);
+	
 	// Declarar todas las variables necesarias
+	$_SESSION["dataP"] = 0;
 	$Fec0 = date("Y-m-01");
 	$vTtOT = 0;
 	$F0003 = 0;

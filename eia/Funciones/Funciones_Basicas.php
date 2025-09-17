@@ -3,7 +3,6 @@
 require_once 'FunctionUsageTracker.php';
 
 class Basicas {
-
     // Usa el trait para poder registrar el uso de los métodos.
     use UsageTrackerTrait;
 
@@ -503,6 +502,8 @@ class Basicas {
      * $d6 >= $d7.
      *********************************************************************************/
     public function Cuenta0Fec($c0, $d1, $d6, $d7) {
+        //echo "<br>imprime lo que trae el la variable mysqli -> dentro de la Funcion Cuenta0Fec<br>";
+        //var_dump($c0);
         $this->trackUsage();  // Registra el uso de este método.
         $d7 = $c0->real_escape_string($d7);
         $sql = "SELECT COUNT(*) AS total FROM `$d1` WHERE `$d6` >= '$d7'";
@@ -513,6 +514,40 @@ class Basicas {
         }
         return 0;
     }
+
+    /*********************************************************************************
+     * Cuenta los registros en la tabla $d1 que cumplen: $d6 >= $d7.
+     *********************************************************************************/
+    /*public function Cuenta0Fec($c0, $d1, $d6, $d7) {
+        $this->trackUsage();  // Registra el uso de este método.
+        
+        // Validar el objeto de conexión
+        if (!($c0 instanceof mysqli)) {
+            error_log("Cuenta0Fec: conexión inválida");
+            return 0;
+        }
+
+        // Sanitizar valores: tabla y campo
+        // (Idealmente solo usarlos hardcodeados, si vienen de usuario usar una lista blanca)
+        $tabla = $c0->real_escape_string($d1);
+        $campo = $c0->real_escape_string($d6);
+        $valor = $c0->real_escape_string($d7);
+
+        // Armar la consulta
+        $sql = "SELECT COUNT(*) AS total FROM `$tabla` WHERE `$campo` >= '$valor'";
+
+        $res = $c0->query($sql);
+
+        if ($res) {
+            $Reg = $res->fetch_assoc();
+            return $Reg['total'];
+        } else {
+            // Opcional: log del error para debug
+            error_log("Cuenta0Fec: error en consulta [$sql] : ".$c0->error);
+        }
+        return 0;
+    }*/
+
 
     /*********************************************************************************
      * Cuenta los registros en la tabla $d1 que cumplen:
@@ -711,4 +746,6 @@ class Basicas {
         }
     }
 }
+    //echo "<br>imprime lo que trae el la variable mysqli -> en Finciones Basicas <br>";
+    //var_dump($mysqli);
 ?>

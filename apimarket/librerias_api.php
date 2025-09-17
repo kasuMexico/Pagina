@@ -1,12 +1,12 @@
 <?PHP
+//incluir la conexion a la base de datos
+    require __DIR__ . '/../eia/Conexiones/cn_vtas.php';
+    //require __DIR__ . '../eia/Conexiones/cn_pruebas.php';    
 //inlcuir los archivos de funciones
     require_once('/home/u557645733/domains/kasu.com.mx/public_html/eia/Funciones/Funciones_Basicas.php');
     require_once('/home/u557645733/domains/kasu.com.mx/public_html/eia/Funciones/Funciones_Correo.php');
     require_once('/home/u557645733/domains/kasu.com.mx/public_html/eia/Funciones/Funciones_Financieras.php');
     require_once('/home/u557645733/domains/kasu.com.mx/public_html/eia/Funciones/Funciones_Seguridad.php');
-//incluir la conexion a la base de datos
-    require __DIR__ . '/../eia/Conexiones/cn_vtas.php';
-    //require __DIR__ . '../eia/Conexiones/cn_pruebas.php';    
 //datos locales
     date_default_timezone_set('America/Mexico_City');
     setlocale(LC_MONETARY, 'es_MX');

@@ -1,14 +1,14 @@
 <?PHP
-//inlcuir los archivos de funciones
-    require_once 'Funciones/Funciones_Basicas.php';
-    require_once 'Funciones/Funciones_Correo.php';
-    require_once 'Funciones/Funciones_Financieras.php';
-    require_once 'Funciones/Funciones_Seguridad.php';
 //incluir la conexion a la base de datos
     require_once 'Conexiones/cn_blog.php';
     require_once 'Conexiones/cn_prosp.php';
     require_once 'Conexiones/cn_vtas.php';
     //require_once 'Conexiones/cn_prueba.php';  //Conexion para hacer pruebas la base es una copia exacta de la Real
+//inlcuir los archivos de funciones
+    require_once 'Funciones/Funciones_Basicas.php';
+    require_once 'Funciones/Funciones_Correo.php';
+    require_once 'Funciones/Funciones_Financieras.php';
+    require_once 'Funciones/Funciones_Seguridad.php';
 //datos locales
     date_default_timezone_set('America/Mexico_City');
     setlocale(LC_MONETARY, 'es_MX');

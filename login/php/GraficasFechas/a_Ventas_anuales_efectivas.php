@@ -18,7 +18,7 @@ $Fecha = date("d-m-Y",strtotime('first day of january '.date("Y",strtotime($Fech
         $Prod[$i] = $Reg1['Producto'];
         //Buscamos los años que se ha vendido
         $c = 0;
-        while ($c <= 6) {
+        while ($c <= 4) {
           //primer dia
           $Fe2a = date("Y-m-d",strtotime($Fecha.'+ '.$c.' Year'));
           //Ultimo dia de el año

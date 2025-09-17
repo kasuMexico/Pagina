@@ -255,9 +255,16 @@
 	// Servicios pagados
 	$SerPagados = $basicas->Sumar($mysqli,"Costo","EntregaServicio");
 
+    // años límite
+    $minDate   = $basicas->MinDat($mysqli,'FechaRegistro','Venta');          // p.ej. 2017-01-06
+    $maxDateDb = $basicas->MaxDat($mysqli,'FechaRegistro','Venta') ?? '';    // si tienes este helper
+    $startYear = (int)date('Y', strtotime($minDate));
+    $endYearDb = $maxDateDb ? (int)date('Y', strtotime($maxDateDb)) : (int)date('Y');
+    $endYear   = max($startYear, $endYearDb, (int)date('Y')); // fallback a año actual
+
 	// POST para rango
 	if (!empty($_POST['ConsulVect'])){
-		$NombreGraf = "Ventas Totales Efectivas de ".$_POST['Periodo'];
+		$NombreGraf_LG = "Ventas Totales Efectivas de ".$_POST['Periodo'];
 		$Fech0 = date("Y",strtotime($_POST['Periodo']."-01-01"));
 		$Fecha = date("d-m-Y",strtotime('first day of january '.$Fech0));
 
@@ -288,38 +295,37 @@
 		$Ne = count($Año);
 		$Uv = count($UVen);
 
-	} else {
-		$NombreGraf = "Ventas Totales Efectivas";
-		$Fech0 = $basicas->MinDat($mysqli,'FechaRegistro','Venta');
-		$Fecha = date("d-m-Y",strtotime('first day of january '.date("Y",strtotime($Fech0))));
+} else {
+    $NombreGraf_LG = "Ventas Totales Efectivas";
 
-		$i = 0;
-		$sql1 = "SELECT * FROM Productos ";
-		$res1 = $mysqli->query($sql1);
-		foreach ($res1 as $Reg1){
-			$Prod[$i] = $Reg1['Producto'];
-			$c = 0;
-			while ($c <= 4) {
-				$Fe2a   = date("Y-m-d",strtotime($Fecha.'+ '.$c.' Year'));
-				$Fecha2 = date("Y-m-d",strtotime('last day of December'.date("Y",strtotime($Fe2a))));
-				$UVen[] = $basicas->CuentaFechas($mysqli,'Venta','Producto',$Reg1['Producto'],'FechaRegistro',$Fecha2,'FechaRegistro',$Fe2a,'Status','PREVENTA');
-				$Año[$c]= date("Y",strtotime($Fe2a));
-				$c++;
-			}
-			$i++;
-		}
+    $Fecha = date("Y-m-d", strtotime("first day of january $startYear"));
+    $years = $endYear - $startYear;  // span dinámico
 
-		$ini = "['Base','";
-		$in2 = "['";
-		$Med = "','";
-		$Me2 = ",";
-		$Fin = "'],";
-		$Fi2 = "],";
+    $i = 0;
+    $sql1 = "SELECT * FROM Productos";
+    $res1 = $mysqli->query($sql1);
+    foreach ($res1 as $Reg1){
+        $Prod[$i] = $Reg1['Producto'];
+        $c = 0;
+        while ($c <= $years) {
+            // inicio y fin de cada año
+            $Fe2a   = date("Y-m-d", strtotime("$Fecha + $c year"));
+            $y      = date("Y", strtotime($Fe2a));
+            $Fecha2 = date("Y-m-d", strtotime("last day of december $y"));
 
-		$Nu = count($Prod);
-		$Ne = count($Año);
-		$Uv = count($UVen);
-	}
+            $UVen[] = $basicas->CuentaFechas(
+                $mysqli,'Venta','Producto',$Reg1['Producto'],
+                'FechaRegistro',$Fecha2,'FechaRegistro',$Fe2a,'Status','PREVENTA'
+            );
+            $Año[$c] = $y;
+            $c++;
+        }
+        $i++;
+    }
+    $ini = "['Base','"; $in2 = "['"; $Med = "','"; $Me2 = ","; $Fin = "'],"; $Fi2 = "],";
+    $Nu = count($Prod); $Ne = count($Año); $Uv = count($UVen);
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -377,10 +383,8 @@
 		);
 
 		var options = {
-			title: '<?echo $NombreGraf;?>',
+			title: '<?echo $NombreGraf_LG;?>',
 			curveType: 'function',
-			width: 1250,
-			height: 400,
 			legend: { position: 'bottom' }
 		};
 
@@ -531,36 +535,35 @@
 			}
 			?>
 		</div>
-		<hr>
-
 		<div class="row">
-			<div class="col-lg-12">
-				<hr>
-				<div class="center-heading">
-					<form method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
-						<select name='Periodo' class="form-control">
-							<option value='0' selected>selecciona un rango para analizar</option>
-							<option value='2017'>Año 2017</option>
-							<option value='2018'>Año 2018</option>
-							<option value='2019'>Año 2019</option>
-							<option value='2020'>Año 2020</option>
-							<option value='2021'>Año 2021</option>
-							<option value='2022'>Año 2022</option>
-						</select>
-						<br>
-						<input type="submit" name="ConsulVect" class="form-control" value="Consultar periodo">
-					</form>
-				</div>
-				<hr>
-				<div class="col-lg-12">
-					<div id="curve_chart" style="max-width: 100%;"></div>
-				</div>
+		<div class="col-lg-12">
+			<hr>
+			<div class="center-heading">
+			<form method="POST" action="<?=htmlspecialchars($_SERVER['PHP_SELF'])?>">
+				<select name="Periodo" class="form-control">
+				<option value="0" selected>selecciona un rango para analizar</option>
+				<?php for($y=$startYear; $y<=$endYear; $y++): ?>
+				<option value="<?=$y?>">Año <?=$y?></option>
+				<?php endfor; ?>
+				</select>
+				<br>
+				<input type="submit" name="ConsulVect" class="btn btn-primary btn-block" value="Consultar periodo">
+			</form>
+			</div>
+			<br>
+			<!-- NO metas .col dentro de .col; usa un div normal -->
+			<div class="Grafica">
+				<div id="curve_chart"></div>
 			</div>
 		</div>
+		</div>
+
 	</div>
 
 	<br><br><br>
-	<script defer type="text/javascript" src="Javascript/finger.js" defer async></script>
-	<script defer type="text/javascript" src="Javascript/localize.js"></script>
+	<script src="https://www.gstatic.com/charts/loader.js"></script>
+	<!--script defer src="Javascript/grafica.js"></script-->
+	<script defer src="Javascript/finger.js"></script>
+	<script defer src="Javascript/localize.js"></script>
 </body>
 </html>

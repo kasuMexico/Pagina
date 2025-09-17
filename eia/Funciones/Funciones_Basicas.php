@@ -485,68 +485,46 @@ class Basicas {
      * $d2 = $d3 y $d6 >= $d7.
      *********************************************************************************/
     public function Cuenta1Fec($c0, $d1, $d2, $d3, $d6, $d7) {
-        $this->trackUsage();  // Registra el uso de este método.
-        $d3 = $c0->real_escape_string($d3);
-        $d7 = $c0->real_escape_string($d7);
+        $this->trackUsage();
+
+        // Guardia sin warnings
+        $conn = ($c0 instanceof mysqli && @ $c0->ping()) ? $c0 : null;
+        if (!$conn) return 0;
+
+        // Validar identificadores
+        foreach ([$d1, $d2, $d6] as $id) {
+            if (!preg_match('/^[A-Za-z0-9_]+$/', (string)$id)) return 0;
+        }
+
+        // Escapar valores
+        $d3 = $conn->real_escape_string((string)$d3);
+        $d7 = $conn->real_escape_string((string)$d7);
+
         $sql = "SELECT COUNT(*) AS total FROM `$d1` WHERE `$d2` = '$d3' AND `$d6` >= '$d7'";
-        $res = $c0->query($sql);
-        if ($res) {
-            $Reg = $res->fetch_assoc();
-            return $Reg['total'];
-        }
-        return 0;
+        $res = $conn->query($sql);
+        $row = $res ? $res->fetch_assoc() : null;
+        return (int)($row['total'] ?? 0);
     }
 
-    /*********************************************************************************
-     * Cuenta los registros en la tabla $d1 que cumplen:
-     * $d6 >= $d7.
-     *********************************************************************************/
-    public function Cuenta0Fec($c0, $d1, $d6, $d7) {
-        //echo "<br>imprime lo que trae el la variable mysqli -> dentro de la Funcion Cuenta0Fec<br>";
-        //var_dump($c0);
-        $this->trackUsage();  // Registra el uso de este método.
-        $d7 = $c0->real_escape_string($d7);
-        $sql = "SELECT COUNT(*) AS total FROM `$d1` WHERE `$d6` >= '$d7'";
-        $res = $c0->query($sql);
-        if ($res) {
-            $Reg = $res->fetch_assoc();
-            return $Reg['total'];
-        }
-        return 0;
+
+    // Funcion que cuenta las fechas 
+    function Cuenta0Fec($db, $tabla, $campoFec, $fecIni){
+        // Guardia sin warnings
+        $conn = ($db instanceof mysqli && @ $db->ping()) ? $db : null;
+        if (!$conn) return 0;
+
+        // Validar identificadores (evita inyección en nombres de tabla/campo)
+        if (!preg_match('/^[A-Za-z0-9_]+$/', (string)$tabla))     return 0;
+        if (!preg_match('/^[A-Za-z0-9_]+$/', (string)$campoFec))  return 0;
+
+        // Escapar valores
+        $fecIni = $conn->real_escape_string((string)$fecIni);
+
+        $sql = "SELECT COUNT(*) AS c FROM `$tabla` WHERE `$campoFec` >= '$fecIni'";
+        $res = $conn->query($sql);
+        $row = $res ? $res->fetch_assoc() : null;
+        return (int)($row['c'] ?? 0);
     }
-
-    /*********************************************************************************
-     * Cuenta los registros en la tabla $d1 que cumplen: $d6 >= $d7.
-     *********************************************************************************/
-    /*public function Cuenta0Fec($c0, $d1, $d6, $d7) {
-        $this->trackUsage();  // Registra el uso de este método.
-        
-        // Validar el objeto de conexión
-        if (!($c0 instanceof mysqli)) {
-            error_log("Cuenta0Fec: conexión inválida");
-            return 0;
-        }
-
-        // Sanitizar valores: tabla y campo
-        // (Idealmente solo usarlos hardcodeados, si vienen de usuario usar una lista blanca)
-        $tabla = $c0->real_escape_string($d1);
-        $campo = $c0->real_escape_string($d6);
-        $valor = $c0->real_escape_string($d7);
-
-        // Armar la consulta
-        $sql = "SELECT COUNT(*) AS total FROM `$tabla` WHERE `$campo` >= '$valor'";
-
-        $res = $c0->query($sql);
-
-        if ($res) {
-            $Reg = $res->fetch_assoc();
-            return $Reg['total'];
-        } else {
-            // Opcional: log del error para debug
-            error_log("Cuenta0Fec: error en consulta [$sql] : ".$c0->error);
-        }
-        return 0;
-    }*/
 
 
     /*********************************************************************************

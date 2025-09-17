@@ -16,22 +16,29 @@ if (is_dir($uploadFileDir)){
           $b++;
       }
 }
+
 //Imprimimos las funciones de las graficas
 $a = 1;
 while ($a <= $b){
-  //Bajamos el inicio de a para igualar el array
-  $Ar=$a-1;
+  $Ar = $a - 1;
+
+  // evita índices fuera de rango
+  if (!isset($arrayName[$Ar])) { $a++; continue; }
+
   //Nombramos el archivo a buscar
-  $Archivo = $uploadFileDir.$arrayName[$Ar];
-  //Asignamos el nombre de la grafica con el nombre de el archivo
-  $eps = explode("/", $Archivo);
-  $sla = explode(".", $eps[2]);
-  $scy = explode("_", $sla[0]);
-  $TituloGrafica = $scy[1]." ".$scy[2]." ".$scy[3]." ".$scy[4]." ".$scy[5]." ".$scy[6];
+  $Archivo = $uploadFileDir . $arrayName[$Ar];
+
+  //Título robusto a partir del nombre del archivo
+  $filename = basename($Archivo);                           // p.ej. "grafica_Ventas_Mes_2025.json"
+  $base     = pathinfo($filename, PATHINFO_FILENAME);       // "grafica_Ventas_Mes_2025"
+  $parts    = explode('_', $base);
+  $TituloGrafica = (count($parts) > 1) ? implode(' ', array_slice($parts, 1)) : $base;
+
   //Generamos las graficas en automatico
   $DivImpresion = "Grafica_".$a;
-  $Grafica = "jsonData_".$a;
-  $Funcion = "Funcion_".$a;
+  $Grafica      = "jsonData_".$a;
+  $Funcion      = "Funcion_".$a;
+
   // Imprimimos los script
   echo "
     <script type='text/javascript'>
@@ -43,7 +50,10 @@ while ($a <= $b){
             }).responseText;
             var data = new google.visualization.DataTable(".$Grafica.");
             var chart = new google.visualization.PieChart(document.getElementById('".$DivImpresion."'));
-            chart.draw(data, { width: 400, height: 300, title:'".$TituloGrafica."'});
+            chart.draw(
+              data,
+              { width: 400, height: 300, title: ".json_encode($TituloGrafica)." }
+            );
         }
         google.charts.load('current', {'packages':['corechart']});
         google.charts.setOnLoadCallback(".$Funcion.");

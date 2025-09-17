@@ -432,6 +432,20 @@ class Basicas {
     }
 
     /*********************************************************************************
+     * Cuenta los registros de una Tabla.
+     *********************************************************************************/
+    public function ContarTabla($c0, $d1) {
+        $this->trackUsage();  // Registra el uso de este método.
+        $sql = "SELECT COUNT(*) AS total FROM `$d1`";
+        $res = $c0->query($sql);
+        if ($res) {
+            $Reg = $res->fetch_assoc();
+            return $Reg['total'];
+        }
+        return 0;
+    }
+
+    /*********************************************************************************
      * Cuenta los registros en la tabla $d1 donde $d2 = $d3.
      *********************************************************************************/
     public function ConUno($c0, $d1, $d2, $d3) {

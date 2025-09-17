@@ -112,7 +112,7 @@ require_once 'php/Selector_Emergentes_Ml.php';
             </div>
         </div>
     </div>
-    <!-- Reasignar cliente -->
+    <!-- Reasignar cliente un nuevo ejecutivo -->
     <div class="modal fade" id="Ventana3" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -168,7 +168,7 @@ require_once 'php/Selector_Emergentes_Ml.php';
             </div>
         </div>
     </div>
-    <!-- Reasignar cliente -->
+    <!-- Cambiar los datos del cliente  -->
     <div class="modal fade" id="Ventana4" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -187,6 +187,57 @@ require_once 'php/Selector_Emergentes_Ml.php';
                     </div>
                     <div class="modal-footer">
                         <input type="submit" name="CambiVend" class="btn btn-primary" value="Reasignar">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Cambiar los datos del cliente  -->
+    <div class="modal fade" id="Ventana5" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form method="POST" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel"><?php echo $Reg['Nombre'] ?? ''; ?></h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;">
+                        <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;">
+                        <input type="text" name="Status" value="<?php echo $_POST['Status'] ?? ''; ?>" style="display: none;">
+                        <p>Aqui van los formularios de cambio de datos de el cliente</p>
+                        <br>
+                    </div>
+                    <div class="modal-footer">
+                        <input type="submit" name="CambiVend" class="btn btn-primary" value="Reasignar">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Cancela la venta  -->
+    <div class="modal fade" id="Ventana6" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form method="POST" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel"><?php echo $Reg['Nombre'] ?? ''; ?></h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-warning" role="alert">
+                            <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;">
+                            <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;">
+                            <input type="text" name="Status" value="<?php echo $_POST['Status'] ?? ''; ?>" style="display: none;">
+                            <p>¿Estás seguro que deseas cancelar esta venta?</p>
+                            <p>Esta acción no se puede deshacer.</p>
+                            <br>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <input type="submit" name="CancelaCte" class="btn btn-danger" value="Cancelar">
                     </div>
                 </form>
             </div>

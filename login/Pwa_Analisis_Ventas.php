@@ -79,6 +79,9 @@
 	$Nu = 0;
 	$Ne = 0;
 	$Uv = 0;
+	$TotCtesACT = 0;
+	$CtesMesCob = 0;
+	$ServOtCte = 0;
 
 	// Formateador monetario
 	$fmtMoney = new NumberFormatter('es_MX', NumberFormatter::CURRENCY);
@@ -105,15 +108,18 @@
 	$VtaDine = $basicas->Sumar0Fecha($mysqli,"CostoVenta","Venta","FechaRegistro",$Fec0);
 
 	// Valores acumulados por producto
-	$sqal = "SELECT * FROM Productos";
-	$r4e9s = $mysqli->query($sqal);
-	foreach ($r4e9s as $Resd6){
-		$vTAStOT = $basicas->Sumar2cond($mysqli,"CostoVenta","Venta","Status","ACTIVO","Producto",$Resd6['Producto']);
-		$vTtOT += $vTAStOT;
+	// Inicializa acumulados
+	$F0003 = 0.0;
+	$VaF0003 = 0.0;
 
-		$TFid  = $Resd6['Fideicomiso']/100;
-		$Fide0 = $vTAStOT * $TFid;
-		$F0003 += $Fide0;
+	// Cache de tasas por producto
+	$prodRates = [];
+	$resP = $mysqli->query("SELECT Producto, Fideicomiso, TFideicomiso FROM Productos");
+	foreach ($resP as $p) {
+	$prodRates[$p['Producto']] = [
+		'fide' => ((float)$p['Fideicomiso'])/100.0,     // porcentaje a fideicomiso
+		'tf'   => ((float)$p['TFideicomiso'])/100.0     // tasa anual de inversión
+	];
 	}
 
 	// Recorrido de ventas para valor F/0003 actual
@@ -123,32 +129,33 @@
 		$V++;
 		if ($Resd7['Status'] == "ACTIVO") {
 
-			// Tasa fideicomiso anual del producto
-			$TiFideRaw   = $basicas->BuscarCampos($mysqli, "TFideicomiso", "Productos", "Producto", $Resd7['Producto']);
-			$TiFideClean = str_replace([',','%','$','MXN',' '], '', $TiFideRaw);
-			$TiFide      = is_numeric($TiFideClean) ? (float)$TiFideClean/100 : 0.0;
+			$prod = $Resd7['Producto'];
+			if (!isset($prodRates[$prod])) { continue; }  // no return
 
-			$TiD = $TiFide / 365;
-			$Bta = $TiD + 1;
+			$deposito = (float)$Resd7['CostoVenta'] * (float)$prodRates[$prod]['fide'];
+			$F0003 += $deposito;
 
-			// Fecha inicial del registro
-			$fecRegis =
-				DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $Resd7['FechaRegistro'], $tz)
-			?: DateTimeImmutable::createFromFormat('Y-m-d',        $Resd7['FechaRegistro'], $tz);
+			/* días transcurridos: usa strtotime para evitar fallas de formato */
+			$tsVenta = strtotime((string)$Resd7['FechaRegistro']);           // soporta 'Y-m-d H:i:s' y 'Y-m-d'
+			$tsHoy   = strtotime('today');                                   // medianoche local
+			$dias    = $tsVenta ? max(0, intdiv($tsHoy - $tsVenta, 86400)) : 0;
 
-			$Dias  = ($fecRegis === false) ? 0 : max(0, (int)$fecRegis->diff($hoy)->days);
-			$TasaF = pow($Bta, $Dias);
+			/* tasa diaria: asegúrate que TFideicomiso venga > 0 */
+			$tfAnual = (float)$prodRates[$prod]['tf'];                       // ej. 0.22
+			$rateDay = $tfAnual / 365.0;
+			$factor  = ($rateDay > 0 && $dias > 0) ? pow(1.0 + $rateDay, $dias) : 1.0;
 
-			// Porcentaje de fideicomiso del producto
-			$FideAhoRaw   = $basicas->BuscarCampos($mysqli, "Fideicomiso", "Productos", "Producto", $Resd7['Producto']);
-			$FideAhoClean = str_replace([',','%','$','MXN',' '], '', $FideAhoRaw);
-			$FideAho      = is_numeric($FideAhoClean) ? (float)$FideAhoClean/100 : 0.0;
+			$VaF0003 += $deposito * $factor;
 
-			// Valor actual
-			$ValFPr = (float)$Resd7['CostoVenta'] * $FideAho;
-			$VFPVta = $ValFPr * $TasaF;
-
-			$VaF0003 += $VFPVta;
+			/* DEPURACIÓN OPCIONAL: quita después */
+			if ($dias === 0 || $rateDay === 0.0) {
+			error_log(sprintf(
+				'Fide debug -> Id:%s Prod:%s Costo:%s TF:%0.4f dias:%d tsVenta:%s',
+				$Resd7['Id'] ?? '-', $prod, $Resd7['CostoVenta'], $tfAnual, $dias, $Resd7['FechaRegistro']
+			));
+			}
+			//Contamos los clientes Activos Totales
+			$TotCtesACT++;
 
 		} elseif ($Resd7['Status'] == "PREVENTA") {
 			$ft++; // ventas no concretadas
@@ -188,7 +195,7 @@
 				$PenaMo   = $pago * $NPOi;
 				$PagEnMor += $PenaMo;
 			}
-		}
+		} 
 	}
 
 	// Comparaciones de fecha con timestamps
@@ -240,7 +247,8 @@
 	// Venta promedio por cliente
 	$CicVta  = div_safe($CObTo,  $ed, 0);
 
-	// Edad promedio
+	// Calcular la Edad promedio
+	
 	$EdadCte = div_safe($Ed1Cte, $ed, 0);
 
 	// Moda de edad
@@ -253,7 +261,11 @@
 	$Ta = $Ti/100;
 
 	// Servicios pagados
-	$SerPagados = $basicas->Sumar($mysqli,"Costo","EntregaServicio");
+	$SerPagados = $basicas->Sumar($mysqli,"Costo","EntregaServicio"); //Valor de los servicios pagados
+	$ServOtCte = $basicas->ContarTabla($mysqli, "EntregaServicio"); //Cantidad de servicios Realizados
+
+	// Valor real del fondo menos los servicios pagados
+	$VaF0003 = $VaF0003 - (float)$SerPagados;
 
     // años límite
     $minDate   = $basicas->MinDat($mysqli,'FechaRegistro','Venta');          // p.ej. 2017-01-06
@@ -419,29 +431,41 @@
 
 	<div class="card-body">
 		<div class="row">
-			<div class="col">
+			<div class="col-lg-4">
 				<div class="card">
 					<div class="card-header bg-secondary text-light">Generales KASU</div>
 					<div class="card-body">
-						Ventas Activas :  <strong><? echo number_format($vTtOT,2); ?></strong>
-						<br>Cobros Totales :  <strong><? echo number_format($CObTo,2); ?></strong>
-						<br>Ventas no Concretadas :  <strong><? echo round($dcv); ?> de 10</strong>
-						<br>Ventas Concretadas :  <strong><? echo round($dc1v); ?> de 10</strong>
+						Ventas Activas :  
+						<strong><? echo number_format($vTtOT,2); ?></strong>
+						<br>Clientes Totales ACTIVOS :  
+						<strong><? echo number_format($TotCtesACT,0); ?></strong> <!-- Pendiente Ingresar el numero de clientes activos totales-->
+						<br>Cobros Totales :  
+						<strong><? echo number_format($CObTo,2); ?></strong>
+						<br>Ventas no Concretadas :  
+						<strong><? echo round($dcv); ?> de 10</strong>
+						<br>Ventas Concretadas :  
+						<strong><? echo round($dc1v); ?> de 10</strong>
 					</div>
 				</div>
 			</div>
-			<div class="col">
+			<div class="col-lg-4">
 				<div class="card">
 					<div class="card-header bg-secondary text-light">Gastos Mensuales</div>
 					<div class="card-body">
-						Sueldos a pagar :  <strong><? echo number_format($SUeldos,2); ?></strong>
-						<br>Comisiones pendientes por pagar : <strong><? echo number_format($comisiones,2); ?></strong>
-						<br>Costo de adquisicion de el cliente : <strong><? echo number_format($CacVta,2); ?></strong>
-						<br>Promedio de Venta por cliente :  <strong><? echo number_format($CicVta,2); ?></strong>
+						Sueldos a pagar :  
+						<strong><? echo number_format($SUeldos,2); ?></strong>
+						<br>Clientes en COBRANZA : 
+						<strong><? echo number_format($CtesMesCob,0); ?></strong>
+						<br>Comisiones pendientes por pagar : 
+						<strong><? echo number_format($comisiones,2); ?></strong>
+						<br>Costo de adquisicion de el cliente : 
+						<strong><? echo number_format($CacVta,2); ?></strong>
+						<br>Promedio de Venta por cliente :  
+						<strong><? echo number_format($CicVta,2); ?></strong>
 					</div>
 				</div>
 			</div>
-			<div class="col">
+			<div class="col-lg-4">
 				<div class="card">
 					<div class="card-header bg-secondary text-light">Generales de Prospeccion </div>
 					<div class="card-body">
@@ -462,39 +486,54 @@
 		<br>
 
 		<div class="row">
-			<div class="col">
+			<div class="col-lg-4">
 				<div class="card">
 					<div class="card-header bg-secondary text-light">Comportamiento Mensual</div>
 					<div class="card-body">
-						Cobranza de el dia :  <strong><? echo number_format($pagoHoy,2); ?></strong>
-						<br>Cobranza del mes : <strong><? echo number_format($pagPero,2); ?></strong>
-						<br>Normalidad : <strong><? echo round($AvCob); ?> %</strong>
-						<br>Mora generada en el Mes:  <strong><? echo number_format($PagEnMor3,2); ?></strong>
-						<br>Ventas del Mes : <strong><? echo number_format($VtaDine,2); ?></strong>
+						Cobranza de el dia :  
+						<strong><? echo number_format($pagoHoy,2); ?></strong>
+						<br>Cobranza del mes : 
+						<strong><? echo number_format($pagPero,2); ?></strong>
+						<br>Normalidad : 
+						<strong><? echo round($AvCob); ?> %</strong>
+						<br>Mora generada en el Mes:  
+						<strong><? echo number_format($PagEnMor3,2); ?></strong>
+						<br>Ventas del Mes : 
+						<strong><? echo number_format($VtaDine,2); ?></strong>
 					</div>
 				</div>
 			</div>
-			<div class="col">
+			<div class="col-lg-4">
 				<div class="card">
 					<div class="card-header bg-secondary text-light">Datos Crediticios</div>
 					<div class="card-body">
-						Valor Cartera  : <strong><? echo number_format($SaldCre1,2); ?></strong>
-						<br>Capital colocado : <strong><? echo number_format($CarteCol,2); ?></strong>
-						<br>Cartera en Cobranza : <strong><? echo number_format($PagEr,2); ?></strong>
-						<br>Cartera en Mora : <strong><? echo number_format(0); ?></strong>
-						<br>Cartera dictaminada : <strong><? echo number_format($PagEnMor,2); ?></strong>
+						Valor Cartera  : 
+						<strong><? echo number_format($SaldCre1,2); ?></strong>
+						<br>Capital colocado : 
+						<strong><? echo number_format($CarteCol,2); ?></strong>
+						<br>Cartera en Cobranza : 
+						<strong><? echo number_format($PagEr,2); ?></strong>
+						<br>Cartera en Mora : 
+						<strong><? echo number_format(0); ?></strong>
+						<br>Cartera dictaminada : 
+						<strong><? echo number_format($PagEnMor,2); ?></strong>
 					</div>
 				</div>
 			</div>
-			<div class="col">
+			<div class="col-lg-4">
 				<div class="card">
 					<div class="card-header bg-secondary text-light">Datos Fideicomiso</div>
 					<div class="card-body">
-						Valor del fideicomiso : <strong><? echo number_format($F0003,2); ?></strong>
-						<br>Valor Actual F/0003: <strong><? echo number_format($VaF0003,2); ?></strong>
-						<br>Servicios Pagados : <strong><? echo number_format($SerPagados,2); ?></strong>
-						<br>Edad promedio Cliente : <strong><? echo round($EdadCte); ?></strong>
-						<br>Moda Edad : <strong><? echo round($ModaClie); ?></strong>
+						Valor del fideicomiso : 
+						<strong><? echo number_format($F0003,2); ?></strong>
+						<br>Valor Actual F/0003: 
+						<strong><? echo number_format($VaF0003,2); ?></strong>
+						<br>Servicios Pagados : 
+						<strong><? echo number_format($SerPagados,2); ?></strong>
+						<br>Servicios Otorgados : 
+						<strong><? echo round($ServOtCte); ?></strong>
+						<br>Edad promedio Cliente : 
+						<strong><? echo round($EdadCte); ?></strong>
 					</div>
 				</div>
 			</div>

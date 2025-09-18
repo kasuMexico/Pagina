@@ -91,25 +91,26 @@ require_once '../eia/librerias.php';
             </div>
         </div>
     </div>
+        <div class="principal">
+        <div class="d-flex align-items-center py-2 pe-3">
+            <!-- Título centrado -->
+            <h4 class="flex-grow-1 text-center mb-0">Cartera de Clientes</h4>
+
+            <!-- Botón registrar prospecto -->
+            <form class="BtnSocial m-0" method="POST" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+                <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;">
+                <label for="400" title="Crear nuevo prospecto" class="btn" style="background: #58D68D; color: #F8F9F9;">
+                    <i class="material-icons">person_add</i>
+                </label>
+                <input id="400" type="submit" name="CreaCte" class="hidden" style="display: none;" />
+                <input id="400" type="submit" name="CreaProsp" style="display: none;" />
+            </form>
+            <p>&nbsp&nbsp&nbsp</p>
+        </div>
+        <hr>
+    </div>
     <!-- Start: Login Form Clean -->
     <section class="container"  style="width: 99%;">
-        <div class="form-group">
-            <div class="row align-items-center">
-                <div class="col-auto">
-                    <form class="BtnSocial" method="POST" action="<?php echo $_SERVER['PHP_SELF']; ?>" style="padding-top: 5px; padding-left: 5px;">
-                        <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;">
-                        <label for="400" title="Crear nuevo prospecto" class="btn" style="background: #58D68D; color: #F8F9F9;">
-                            <i class="material-icons">person_add</i>
-                        </label>
-                        <input id="400" type="submit" name="CreaCte" class="hidden" style="display: none;" />
-                    </form>
-                </div>
-                <div class="col">
-                    <h4 class="mb-0">Cartera de Clientes</h4>
-                    <hr>
-                </div>
-            </div>
-        </div>
         <div class="form-group">
             <div class="table-responsive">
                    <?PHP

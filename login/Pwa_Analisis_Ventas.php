@@ -82,6 +82,7 @@
 	$TotCtesACT = 0;
 	$CtesMesCob = 0;
 	$ServOtCte = 0;
+	$EdPrmcte = 0;
 
 	// Formateador monetario
 	$fmtMoney = new NumberFormatter('es_MX', NumberFormatter::CURRENCY);
@@ -156,6 +157,15 @@
 			}
 			//Contamos los clientes Activos Totales
 			$TotCtesACT++;
+			//Obtenemos la clave curp de cada venta
+			$ClaveCurp = $basicas->BuscarCampos($mysqli, "ClaveCurp", "Usuario", 'IdContact', $Resd7['IdContact']);
+			//Calculamos la edad de cada Usuario
+			$edad = $basicas->ObtenerEdad($ClaveCurp);
+			if (is_numeric($edad)) {
+				$EdPrmcte += (int)$edad;
+			}
+			//Obtenemos la edad promedio de los clientes
+			$EdadCte = div_safe($EdPrmcte, $TotCtesACT, 0);
 
 		} elseif ($Resd7['Status'] == "PREVENTA") {
 			$ft++; // ventas no concretadas
@@ -246,10 +256,6 @@
 
 	// Venta promedio por cliente
 	$CicVta  = div_safe($CObTo,  $ed, 0);
-
-	// Calcular la Edad promedio
-	
-	$EdadCte = div_safe($Ed1Cte, $ed, 0);
 
 	// Moda de edad
 	$cuenta    = array_count_values($tuArray);
@@ -420,11 +426,6 @@
 		<div calss="row" style="display:flex;">
 			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 			<img alt="perfil" class="img-fluid" style="padding-left: 10px;" src="/login/assets/img/logoKasu.png" alt="Carga tu foto de perfil">
-			<div style="transform: translate(0, 25px)">
-				<p style="transform: scaleY(2);">
-					<strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Protege a Quien Amas</strong>
-				</p>
-			</div>
 		</div>
 		<hr>
 	</div>

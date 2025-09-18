@@ -67,19 +67,16 @@ if ($files && count($files) > 0) {
         <?php require_once 'html/Menuprinc.php'; ?>
     </section>
     
-    <!-- Contenedor principal -->
-    <div class="principal">
-        <!-- Encabezado: logo y eslogan -->
-        <div class="row" style="display:flex; align-items: center;">
-            <img alt="logo" class="img-fluid" style="padding-left: 10px;" src="/login/assets/img/logoKasu.png">
-            <div style="transform: translate(0, 25px);">
-                <p style="transform: scaleY(2);">
-                    <strong>Protege a Quien Amas</strong>
-                </p>
+        <!-- Contenedor principal -->
+        <div class="principal">
+            <div class="d-flex align-items-center py-2 pe-3">
+                <!-- Título centrado -->
+                <h4 class="flex-grow-1 text-center mb-0">
+                    <img alt="logo" class="img-fluid" style="padding-left: 10px;" src="/login/assets/img/logoKasu.png">
+                </h4>
             </div>
+            <hr>
         </div>
-        <hr>
-
         <!-- Sección de información del perfil del usuario -->
         <div class="dpersonales">
             <div class="imgPerfil">

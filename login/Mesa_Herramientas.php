@@ -128,6 +128,14 @@ require_once 'php/Selector_Emergentes_Ml.php';
             </div>
         </div>
     </section>
+    <!-- Menu de Descripcion-->
+    <div class="principal">
+        <div class="d-flex align-items-center py-2 pe-3">
+            <!-- Título centrado -->
+            <h4 class="flex-grow-1 text-center mb-0">Herramientas</h4>
+        </div>
+        <hr>
+    </div>
     <section class="container"  style="width: 99%;">
         <br>
         <div class='mw-100'>

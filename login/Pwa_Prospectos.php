@@ -3,18 +3,17 @@
 session_start();
 //inlcuir el archivo de funciones
 require_once '../eia/librerias.php';
-echo "<br>imprime lo que trae el la variable mysqli -> en Pwa_Prospectos <br>";
-var_dump($mysqli);
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 //Validar si existe la session y redireccionar
     if(!isset($_SESSION["Vendedor"])){
         header('Location: https://kasu.com.mx/login');
       }else{
-        //Seleccionamos el Id de el usuario ###############
+        //Seleccionamos el Id de el usuario 
         $IdAsignacion = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
-        //Asignamos valor a la variable no definida
-        if(!isset($name)) $name = '';
+        //Asigamos el nivel a el Usuario -> no se busca el nivel ya que se busca en el Menu
       }
+      //Este IF lanza las ventanas Emergentes para acciones concretas
       if(!empty($_POST['CreaProsp'])){
         //Lanzamos Ventana emergente
           $Lanzar = "#Ventana2";
@@ -81,7 +80,7 @@ var_dump($mysqli);
                 $('<? echo $Lanzar; ?>').modal('toggle')
             });
         </script>
-        <!-- Modal que Muestra la informacion de el cliente -->
+        <!-- Modal que Muestra la informacion de el Prospecto -->
         <div class="modal fade" id="Ventana1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
@@ -143,7 +142,7 @@ var_dump($mysqli);
                 </div>
             </div>
         </div>
-        <!-- Modal que Muestra la informacion de el cliente -->
+        <!-- Modal que Muestra la informacion de el Prospecto -->
         <div class="modal fade" id="Ventana2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
@@ -153,24 +152,25 @@ var_dump($mysqli);
         </div>
     </section>
     <!-- Start: Login Form Clean -->
+    <div class="principal">
+        <div class="d-flex align-items-center py-2 pe-3">
+            <!-- Título centrado -->
+            <h4 class="flex-grow-1 text-center mb-0">Prospectos Asignados</h4>
+
+            <!-- Botón registrar prospecto -->
+            <form class="BtnSocial m-0" method="POST" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+                <input type="hidden" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>">
+                <label for="400" title="Crear nuevo prospecto" class="btn mb-0" 
+                        style="background: #F7DC6F; color: #000;">
+                    <i class="material-icons">person_add</i>
+                </label>
+                <input id="400" type="submit" name="CreaProsp" style="display: none;" />
+            </form>
+            <p>&nbsp&nbsp&nbsp</p>
+        </div>
+        <hr>
+    </div>
     <section class="container"  style="width: 99%;">
-            <div class="form-group">
-                <div class="row align-items-center">
-                    <div class="col-auto">
-                        <form class="BtnSocial" method="POST" action="<?php echo $_SERVER['PHP_SELF']; ?>" style="padding-top: 5px; padding-left: 5px;">
-                            <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;">
-                            <label for="400" title="Crear nuevo prospecto" class="btn" style="background: #F7DC6F; color: #F8F9F9;">
-                                <i class="material-icons">person_add</i>
-                            </label>
-                            <input id="400" type="submit" name="CreaProsp" class="hidden" style="display: none;" />
-                        </form>
-                    </div>
-                    <div class="col">
-                        <h4 class="mb-0">Prospectos Asignados</h4>
-                        <hr>
-                    </div>
-                </div>
-            </div>
             <div class="form-group">
                 <div class="table-responsive" >
                    <?PHP
@@ -228,7 +228,7 @@ var_dump($mysqli);
                           //Buscamos el nombre de la sucursal
                           $NomSuc = $basicas->BuscarCampos($mysqli,"NombreSucursal","Sucursal","Id",$IdSuc);
                           //Crear consulta
-                          $sqal = "SELECT * FROM Empleados WHERE Nombre != 'Vacante' AND Nivel >= '$Niv'";
+                          $sqal = "SELECT Id, IdUsuario FROM Empleados WHERE Nombre != 'Vacante' AND Nivel >= '$Niv'";
                           //Realiza consulta
                           $r4e9s = $mysqli->query($sqal);
                           //Si existe el registro se asocia en un fetch_assoc

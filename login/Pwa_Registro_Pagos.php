@@ -79,18 +79,15 @@ $IdVen = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["
             </div>
         </div>
     </div>
+	<div class="principal">
+        <div class="d-flex align-items-center py-2 pe-3">
+            <!-- Título centrado -->
+            <h4 class="flex-grow-1 text-center mb-0">Pagos y Promesas de Pago</h4>
+        </div>
+        <hr>
+    </div>
     <section class="container"  style="width: 99%;">
         <form  method="post">
-			<section class="container" style="width: 99%;">
-				<div class="form-group">
-					<div class="row align-items-center">
-					<div class="col text-center">
-						<h4 class="mb-0">Pagos y promesas</h4>
-						<hr style="margin:auto;">
-					</div>
-					</div>
-				</div>
-			</section>
             <div class="form-group">
                 <div class="table-responsive" >
                    <?PHP

@@ -318,26 +318,25 @@ require_once 'php/Selector_Emergentes_Ml.php';
     <div class="modal fade" id="Ventana8" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-                <form method="POST" action="<?php echo $_SERVER['PHP_SELF']; ?>">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel"><?php echo $Reg['Nombre'] ?? ''; ?></h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="alert alert-warning" role="alert">
-                            <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;">
-                            <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;">
-                            <input type="text" name="Status" value="<?php echo $_POST['Status'] ?? ''; ?>" style="display: none;">
-                            <p>Generar Poliza</p>
-                            <br>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <input type="submit" name="CancelaCte" class="btn btn-danger" value="Cancelar">
-                    </div>
-                </form>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel"><?php echo $Reg['Nombre'] ?? ''; ?></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;">
+                    <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;">
+                    <input type="text" name="Status" value="<?php echo $_POST['Status'] ?? ''; ?>" style="display: none;">
+                    <p><strong>Elige una opción para entregar la póliza al cliente</strong></p>
+                    <br>
+                </div>
+                <div class="modal-footer">
+                    <form method="POST" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+                        <input type="submit" name="CancelaCte" class="btn btn-secondary" value="Enviar por Email">
+                    </form>
+                    <a href="https://kasu.com.mx/login/Generar_PDF/Poliza_pdf.php?busqueda=<? echo base64_encode($Recg['id']); ?>" class="btn btn-success" download>Descargar</a>
+                </div>
             </div>
         </div>
     </div>
@@ -394,7 +393,6 @@ require_once 'php/Selector_Emergentes_Ml.php';
         </div>
     </div>
     <!-- Los demás modales los puedes copiar aquí siguiendo la misma estructura -->
-    <!-- ... -->
 </section>
 <section name="impresion de datos finales">
     <table class="table">

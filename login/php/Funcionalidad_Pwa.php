@@ -99,8 +99,6 @@ if (!empty($_POST['AltaTicket'])){
     exit();
 }
 
-
-
 /********************************* BLOQUE: REGISTRAR SERVICIO FUNERARIO *********************************/
 if (!empty($_POST['RegisFun'])){
     echo '<pre>';
@@ -111,7 +109,15 @@ if (!empty($_POST['RegisFun'])){
 
 }
 
+/********************************* BLOQUE: ENVIAR POLIZA POR EMAIL *********************************/
+if (!empty($_POST['RegisFun'])){
+    echo '<pre>';
+    print_r($_POST);
+    echo '</pre>';
 
+
+
+}
 
 
 /********************************* BLOQUE: PAGO DE CLIENTE *********************************/

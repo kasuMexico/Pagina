@@ -94,6 +94,76 @@ class Seguridad {
         }
         return "Certificado no encontrado";
     }
-    
+
+    // Requiere $basicas->BuscarCampos() y ->InsertCampo()
+    public function auditoria_registrar($mysqli, $basicas, array $post, string $evento, string $host): array {
+        // 1) Fingerprint: idempotente por valor
+        $fpVal = $post['fingerprint'] ?? null;
+        $fpId  = null;
+        if ($fpVal) {
+            $fpId = $basicas->BuscarCampos($mysqli, "id", "FingerPrint", "fingerprint", $fpVal);
+            if (empty($fpId)) {
+                $datFinger = [
+                    "fingerprint"   => $fpVal,
+                    "browser"       => $post['browser']    ?? '',
+                    "flash"         => $post['flash']      ?? '',
+                    "canvas"        => $post['canvas']     ?? '',
+                    "connection"    => $post['connection'] ?? '',
+                    "cookie"        => $post['cookie']     ?? '',
+                    "display"       => $post['display']    ?? '',
+                    "fontsmoothing" => $post['fontsmoothing'] ?? '',
+                    "fonts"         => $post['fonts']      ?? '',
+                    "formfields"    => $post['formfields'] ?? '',
+                    "java"          => $post['java']       ?? '',
+                    "language"      => $post['language']   ?? '',
+                    "silverlight"   => $post['silverlight']?? '',
+                    "os"            => $post['os']         ?? '',
+                    "timezone"      => $post['timezone']   ?? '',
+                    "touch"         => $post['touch']      ?? '',
+                    "truebrowser"   => $post['truebrowser']?? '',
+                    "plugins"       => $post['plugins']    ?? '',
+                    "useragent"     => $post['useragent']  ?? ''
+                ];
+                $fpId = $basicas->InsertCampo($mysqli, "FingerPrint", $datFinger);
+            }
+        }
+
+        // 2) GPS (acepta Precision o Presicion)
+        $lat = $post['Latitud']   ?? null;
+        $lon = $post['Longitud']  ?? null;
+        $pre = $post['Precision'] ?? ($post['Presicion'] ?? null);
+        $gpsId = null;
+        if ($lat !== null && $lon !== null && $pre !== null) {
+            $datGps = ["Latitud"=>$lat, "Longitud"=>$lon, "Presicion"=>$pre];
+            $gpsId = $basicas->InsertCampo($mysqli, "gps", $datGps);
+        }
+
+        // Captamos las variables de la venta
+        $ventaId    = isset($post['IdVenta'])   ? (int)$post['IdVenta']   : null;
+        $contactoId = isset($post['IdContact']) ? (int)$post['IdContact'] : null;
+        $IdUsuario  = isset($post['IdUsuario']) ? (int)$post['IdUsuario'] : null;
+
+        // 3) Evento
+        $now = date('Y-m-d H:i:s');
+        $datEvt = [
+            "IdFInger"      => $fpId,
+            "Contacto"      => $contactoId,
+            "IdVta"         => $ventaId,
+            "IdUsr"         => $IdUsuario,
+            "Idgps"         => $gpsId,
+            "Host"          => $host,
+            "Evento"        => $evento,
+            "Usuario"       => $_SESSION["Vendedor"],
+            "FechaRegistro" => $now
+        ];
+
+        $evtId = $basicas->InsertCampo($mysqli, "Eventos", $datEvt);
+
+        return [
+            "fingerprint_id"=>$fpId, 
+            "gps_id"=>$gpsId, 
+            "evento_id"=>$evtId
+        ];    
+    }
 }
 ?>

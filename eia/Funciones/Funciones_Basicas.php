@@ -329,7 +329,11 @@ class Basicas {
 
     /*********************************************************************************
      * Actualiza el campo $Val de la tabla $n1 con el valor $act para el registro identificado 
-     * por Id = $IdD.
+        $c0  =   conexion usada a base de datos
+        $Val = nombre de la columna a actualizar.
+        $act = nuevo valor que se asignará a esa columna.
+        $IdD = Id de la fila objetivo.
+        $n1 = nombre de la tabla.
      *********************************************************************************/
     public function ActCampo($c0, $n1, $Val, $act, $IdD) {
         $this->trackUsage();  // Registra el uso de este método.

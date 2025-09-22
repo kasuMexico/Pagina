@@ -64,7 +64,7 @@ if (!empty($_POST['CambiVend'])) {
 // Captura nombre desde POST o GET
 $name = $_POST['nombre'] ?? $_GET['name'] ?? "";
 //Lanzamos las alertas por las actualizaciones
-if($_GET['Vt'] == 1){
+if (isset($_GET['Vt']) && (int)$_GET['Vt'] === 1) {
       echo "<script>window.addEventListener('load',()=>alert('".$_GET['Msg']."'));</script>";
 }
 // Alertas de correo electrónico

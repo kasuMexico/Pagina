@@ -8,10 +8,9 @@ if (empty($_SESSION['Vendedor'])) {
     header('Location: https://kasu.com.mx/login');
     exit();
 }
-
 // Variables principales
-$busqueda = $_POST['busqueda'] ?? '';
-$tel = ''; // Si tienes el teléfono de la empresa, puedes colocarlo aquí
+$busqueda = $_POST['busqueda'] ?? $_GET['busqueda'] ?? '';
+$tel = '7208177632'; // Si tienes el teléfono de la empresa, puedes colocarlo aquí
 
 // Consulta de la venta
 $Ct3 = "SELECT * FROM Venta WHERE Id = '".$mysqli->real_escape_string($busqueda)."'";
@@ -41,6 +40,16 @@ if ($venta = mysqli_fetch_assoc($Ct3a)) {
             } else {
                 $Credito = "Compra de contado";
             }
+
+    //Token para no duplicar correos
+    $_SESSION['mail_token'] = bin2hex(random_bytes(16));
+    
+    // Captura nombre desde POST o GET
+    $name = $_POST['nombre'] ?? $_GET['name'] ?? "";
+    //Lanzamos las alertas por las actualizaciones
+    if (isset($_GET['Vt']) && (int)$_GET['Vt'] === 1) {
+        echo "<script>window.addEventListener('load',()=>alert('".$_GET['Msg']."'));</script>";
+    }
 ?>
 <!DOCTYPE html>
 <html lang="es" dir="ltr">
@@ -53,24 +62,35 @@ if ($venta = mysqli_fetch_assoc($Ct3a)) {
    <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons'>
    <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
 </head>
-<body>
+<body onload="localize()">
     <nav class="navbar navbar-expand-lg text-white  justify-content-between " style="background-color:#8D70E3;">
         <a class="navbar-brand">Estado Cuenta</a>
         <div class="form-inline">
             <!--Retorna a la ventana anterior-->
             <form action="Mesa_Clientes.php" method="post" style="padding-right: 5px;">
-                <input type='text' name='nombre' value='<?php echo htmlspecialchars($_POST['nombre'] ?? ''); ?>' style='display: none;'/>
+                <input type='text' name='nombre' value='<?php echo $name; ?>' style='display: none;'/>
                 <label for='Regresar' title='Regresar a cliente' class='btn' style='background: #F5B041; color: #F8F9F9;' ><i class='material-icons'>undo</i></label>
                 <input id='Regresar' type='submit' value='Regresar' name='Accion' class='hidden' style='display: none;'/>
             </form>
             <!--Enviar Datos para envio de correo electronico con el estado de cuenta-->
             <form action="../eia/EnviarCorreo.php" method="post" style="padding-right: 5px;">
+                <!-- *********************************************** Bloque de registro de Eventos ************************************************************************* -->
+                <div id="Gps" style="display: none;"></div> <!-- Div que lanza el GPS -->
+                <div data-fingerprint-slot ></div> <!-- DIV que lanza el Finger Print -->
+                <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
+                <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;"> <!-- Host de donde estoy enviando la peticion -->
+                <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;"> <!-- Id de Venta Seleccionado -->
+                <input type="number" name="IdContact" value="<?php echo $Recg['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Contacto Seleccionado -->
+                <input type="number" name="IdUsuario" value="<?php echo $Recg1['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Usuario Seleccionado -->
+                <input type="text" name="Producto" value="<?php echo $Reg['Producto'] ?? ''; ?>" style="display: none;"> <!-- Producto de el cliente Seleccionado -->
+                <!-- ********************************************** Bloque de registro de Eventos ************************************************************************* -->
                 <input type='text' name='IdVenta' value='<?php echo htmlspecialchars($busqueda); ?>' style='display: none;'/>
                 <input type="text" name="FullName" value="<?php echo htmlspecialchars($persona['Nombre']); ?>" style="display: none;">
                 <input type="text" name="Email" value="<?php echo htmlspecialchars($datos['Mail']); ?>" style="display: none;">
                 <input type="text" name="Asunto" value="ENVIO ARCHIVO" style="display: none;">
                 <input type="text" name="Descripcion" value="Estado de Cuenta" style="display: none;">
                 <label for='Enviar' title='Enviar estado de cuenta' class='btn' style='background: #2980B9; color: #F8F9F9;' ><i class='material-icons'>email</i></label>
+                <input type="hidden" name="mail_token" value="<?php echo $_SESSION['mail_token']; ?>">
                 <input id='Enviar' type='submit' value='Enviar' name='EnviarEdoCta' class='hidden' style='display: none;' />
             </form>
             <!--Descargar el estado de cuenta-->
@@ -114,7 +134,7 @@ if ($venta = mysqli_fetch_assoc($Ct3a)) {
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col">
-										Dirección : <?php echo isset($datos['Direccion']) ? htmlspecialchars($datos['Direccion']) : '<span class="text-danger">No disponible</span>'; ?> <br>
+										Dirección : <?php echo isset($datos['calle']) ? htmlspecialchars($datos['calle']) : '<span class="text-danger">No disponible</span>'; ?> <br>
                                         Teléfono : <?php echo htmlspecialchars($datos['Telefono']); ?> <br>
                                         Email : <?php echo htmlspecialchars($datos['Mail']); ?> <br>
                                         Producto : <?php echo htmlspecialchars($venta['Producto']); ?><br>
@@ -203,5 +223,7 @@ if ($venta = mysqli_fetch_assoc($Ct3a)) {
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="Javascript/localize.js"></script>
+<script src="Javascript/fingerprint-core-y-utils.js"></script>
+<script src="Javascript/finger.js" defer></script>
 </html>
-<?php

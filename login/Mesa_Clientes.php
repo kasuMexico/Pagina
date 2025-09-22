@@ -69,6 +69,10 @@ if (isset($_GET['Vt']) && (int)$_GET['Vt'] === 1) {
 }
 // Alertas de correo electrónico
 require_once 'php/Selector_Emergentes_Ml.php';
+
+//Token para no duplicar correos
+$_SESSION['mail_token'] = bin2hex(random_bytes(16));
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -186,14 +190,16 @@ require_once 'php/Selector_Emergentes_Ml.php';
                         </button>
                     </div>
                     <div class="modal-body">
-                        <div id="Gps"></div>
-                        <div data-fingerprint-slot></div>
-                        <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;">
-                        <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;">
+                        <!-- *********************************************** Bloque de registro de Eventos ************************************************************************* -->
+                        <div id="Gps"></div> <!-- Div que lanza el GPS -->
+                        <div data-fingerprint-slot></div> <!-- DIV que lanza el Finger Print -->
+                        <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
+                        <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;"> <!-- Host de donde estoy enviando la peticion -->
                         <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;"> <!-- Id de Venta Seleccionado -->
                         <input type="number" name="IdContact" value="<?php echo $Recg['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Contacto Seleccionado -->
-                        <input type="number" name="IdUsuario" value="<?php echo $Recg1['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Contacto Seleccionado -->
-                        <input type="text" name="Producto" value="<?php echo $Reg['Producto'] ?? ''; ?>" style="display: none;"> <!-- Id de Usuario Seleccionado -->
+                        <input type="number" name="IdUsuario" value="<?php echo $Recg1['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Usuario Seleccionado -->
+                        <input type="text" name="Producto" value="<?php echo $Reg['Producto'] ?? ''; ?>" style="display: none;"> <!-- Producto de el cliente Seleccionado -->
+                         <!-- ********************************************** Bloque de registro de Eventos ************************************************************************* -->
                         <p>Nombre del Cliente:</p>
                         <h4 class="text-center"><strong><?php echo $Reg['Nombre'] ?? ''; ?></strong></h4>
                         <p>Tipo de servicio Contratado:</p>
@@ -325,16 +331,40 @@ require_once 'php/Selector_Emergentes_Ml.php';
                     </button>
                 </div>
                 <div class="modal-body">
-                    <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;">
-                    <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;">
-                    <input type="text" name="Status" value="<?php echo $_POST['Status'] ?? ''; ?>" style="display: none;">
-                    <p><strong>Elige una opción para entregar la póliza al cliente</strong></p>
-                    <br>
+                        <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;">
+                        <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;">
+                        <input type="text" name="Status" value="<?php echo $_POST['Status'] ?? ''; ?>" style="display: none;">
+                        <p><strong>Elige una opción para entregar la póliza al cliente</strong></p>
+                        <?
+                            if(empty($Recg['Mail'])){
+                                echo '<h5 class="alert alert-danger" id="exampleModalLabel">Este cliente no cuenta con un Email Registrado</h5>';
+                            }
+                        ?>
+                        <br>
                 </div>
                 <div class="modal-footer">
-                    <form method="POST" action="<?php echo $_SERVER['PHP_SELF']; ?>">
-                        <input type="submit" name="CancelaCte" class="btn btn-secondary" value="Enviar por Email">
+                    <!--Enviar Datos para envio de correo electronico con el estado de cuenta   ../eia/EnviarCorreo.php    -->
+                    <form action="../eia/EnviarCorreo.php" method="post" style="padding-right: 5px;">
+                        <!-- *********************************************** Bloque de registro de Eventos ************************************************************************* -->
+                        <div id="Gps"></div> <!-- Div que lanza el GPS -->
+                        <div data-fingerprint-slot></div> <!-- DIV que lanza el Finger Print -->
+                        <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
+                        <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;"> <!-- Host de donde estoy enviando la peticion -->
+                        <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;"> <!-- Id de Venta Seleccionado -->
+                        <input type="number" name="IdContact" value="<?php echo $Recg['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Contacto Seleccionado -->
+                        <input type="number" name="IdUsuario" value="<?php echo $Recg1['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Usuario Seleccionado -->
+                        <input type="text" name="Producto" value="<?php echo $Reg['Producto'] ?? ''; ?>" style="display: none;"> <!-- Producto de el cliente Seleccionado -->
+                        <!-- ********************************************** Bloque de registro de Eventos ************************************************************************* -->
+                        <input type="text" name="FullName" value="<?php echo $Reg['Nombre'] ?? ''; ?>" style="display: none;">
+                        <input type="text" name="Email" value="<?php echo $Recg['Mail'] ?? ''; ?>" style="display: none;">
+                        <input type="hidden" name="mail_token" value="<?php echo $_SESSION['mail_token']; ?>">
+                        <?
+                        if(!empty($Recg['Mail'])){
+                            echo '<input type="submit" name="EnviarPoliza" class="btn btn-secondary" value="Enviar por Email">';
+                        }
+                        ?>
                     </form>
+                    <!-- Descargar poliza por el ejecutivo que atendio al cliente-->
                     <a href="https://kasu.com.mx/login/Generar_PDF/Poliza_pdf.php?busqueda=<? echo base64_encode($Recg['id']); ?>" class="btn btn-success" download>Descargar</a>
                 </div>
             </div>

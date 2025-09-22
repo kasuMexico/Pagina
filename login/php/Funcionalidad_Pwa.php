@@ -70,7 +70,8 @@ if (!empty($_POST['AltaTicket'])){
     $Prioridad      = isset($_POST['Prioridad'])        ? $mysqli->real_escape_string($_POST['Prioridad']) : '';
     $Descripcion    = isset($_POST['Descripcion'])    ? $mysqli->real_escape_string($_POST['Descripcion']) : '';
     $Telefono       = isset($_POST['Telefono'])         ? $mysqli->real_escape_string($_POST['Telefono'])     : '';
-    //Se registran los datos de el finger print, gps y Evento
+
+    //************************* Funcion: de Registros de Eventos, GPS y Fingerprint ********************************//
     $ids = $seguridad->auditoria_registrar(
         $mysqli,                     // conexión principal
         $basicas,                    // tu helper Basicas
@@ -78,6 +79,7 @@ if (!empty($_POST['AltaTicket'])){
         'Ticket_Atencion',           // nombre del evento
         $_POST['Host'] ?? $_SERVER['PHP_SELF']  // host/origen
     );
+    //************************* Funcion: de Registros de Eventos, GPS y Fingerprint ********************************//
     // Insertar datos para ticket
     $NvoRegistroarray = [
         "IdVta"         => $_POST["IdVenta"],
@@ -108,17 +110,6 @@ if (!empty($_POST['RegisFun'])){
 
 
 }
-
-/********************************* BLOQUE: ENVIAR POLIZA POR EMAIL *********************************/
-if (!empty($_POST['RegisFun'])){
-    echo '<pre>';
-    print_r($_POST);
-    echo '</pre>';
-
-
-
-}
-
 
 /********************************* BLOQUE: PAGO DE CLIENTE *********************************/
 if (isset($_POST['Pago'])) {

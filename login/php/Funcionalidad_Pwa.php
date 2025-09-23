@@ -103,47 +103,124 @@ if (!empty($_POST['AltaTicket'])){
 
 /********************************* BLOQUE: REGISTRAR SERVICIO FUNERARIO *********************************/
 if (!empty($_POST['RegisFun'])){
-    echo '<pre>';
-    print_r($_POST);
-    echo '</pre>';
 
+    // Extraer y sanitizar las variables necesarias
+    $Prestador      = isset($_POST['Prestador'])    ? $mysqli->real_escape_string($_POST['Prestador']) : '';
+    $RFC            = isset($_POST['RFC'])          ? $mysqli->real_escape_string($_POST['RFC']) : '';
+    $CodigoPostal   = isset($_POST['CodigoPostal']) ? $mysqli->real_escape_string($_POST['CodigoPostal']) : '';
+    $Firma          = isset($_POST['Firma'])        ? $mysqli->real_escape_string($_POST['Firma']) : '';
+    $Costo          = isset($_POST['Costo'])        ? $mysqli->real_escape_string($_POST['Costo']) : '';
+    $EmpFune        = isset($_POST['EmpFune'])      ? $mysqli->real_escape_string($_POST['EmpFune']) : '';
 
-
+    //************************* Funcion: de Registros de Eventos, GPS y Fingerprint ********************************//
+    $ids = $seguridad->auditoria_registrar(
+        $mysqli,                     // conexión principal
+        $basicas,                    // tu helper Basicas
+        $_POST,                      // datos del form (fingerprint, gps, etc.)
+        'Servicio_Funerario',           // nombre del evento
+        $_POST['Host'] ?? $_SERVER['PHP_SELF']  // host/origen
+    );
+    //************************* Funcion: de Registros de Eventos, GPS y Fingerprint ********************************//
+    //Buscamos el nombre de el cliente
+    $NombreCte = $basicas->BuscarCampos($mysqli,'Nombre','Venta','Id',$_POST['IdVenta']);
+    // Insertar datos para ticket
+    $NvoRegistroarray = [
+        "Usuario"       => $_SESSION["Vendedor"],
+        "IdVenta"       => $_POST['IdVenta'],
+        "Nombre"        => $NombreCte,
+        "Prestador"     => $Prestador,
+        "CodigoPostal"  => $CodigoPostal,
+        "CFDI"          => $Firma,
+        "Costo"         => $Costo,
+        "EmpFune"       => $EmpFune
+    ];
+    //Registramos en la base de datos la leyenda
+    $NvoRegistro = $basicas->InsertCampo($mysqli, "EntregaServicio", $NvoRegistroarray);
+    //Actualizamos el status de la Venta 
+    $basicas->ActCampo($mysqli, "Venta", "Status", "FALLECIDO", $_POST['IdVenta']);
+    //mensaje de alert para usuario
+    $Msg = "Se ha registrado correctamente el SERVICIO";
+    //Redireccionar a pagina de donde venimos
+    header('Location: https://kasu.com.mx' . $_POST['Host'] . '?Vt=1&Msg='.$Msg.'&name=' . $_POST['nombre']);
+    exit();
 }
 
 /********************************* BLOQUE: PAGO DE CLIENTE *********************************/
 if (isset($_POST['Pago'])) {
-    // Extraer y sanitizar las variables necesarias desde POST
-    $IdVenta        = isset($_POST['IdVenta'])   ? $mysqli->real_escape_string($_POST['IdVenta'])   : '';
-    $IdVendedor     = isset($_POST['IdVendedor']) ? $mysqli->real_escape_string($_POST['IdVendedor']) : '';
-    $Host           = isset($_POST['Host'])     ? $mysqli->real_escape_string($_POST['Host'])     : '';
-    $NombreBuscado  = isset($_POST['NombreBuscado'])    ? $mysqli->real_escape_string($_POST['NombreBuscado'])    : '';
-    $Cantidad       = isset($_POST['Cantidad'])       ? $mysqli->real_escape_string($_POST['Cantidad'])       : '';
-    $Status         = isset($_POST['Status'])       ? $mysqli->real_escape_string($_POST['Status'])       : '';
-    $Promesa        = isset($_POST['Promesa'])       ? $mysqli->real_escape_string($_POST['Promesa'])       : '';
+    // ====== Inputs (sanitiza / castea) ======
+    $IdVenta   = isset($_POST['IdVenta'])   ? $mysqli->real_escape_string($_POST['IdVenta'])   : '';
+    $Metodo    = isset($_POST['Metodo'])    ? $mysqli->real_escape_string($_POST['Metodo'])    : '';
+    $status    = isset($_POST['Status'])    ? $mysqli->real_escape_string($_POST['Status'])    : '';
+    $PromesPga = isset($_POST['PromesPga'])   ? $mysqli->real_escape_string($_POST['PromesPga'])   : null;
+    $Promesa   = isset($_POST['Promesa'])   ? $mysqli->real_escape_string($_POST['Promesa'])   : null;
 
+    $PagoProm  = isset($_POST['PagoProm'])  ? (float)$_POST['PagoProm']  : 0.0;  // cuota sin mora
+    $PagoMora  = isset($_POST['PagoMora'])  ? (float)$_POST['PagoMora']  : 0.0;  // cuota con mora
+    $Cantidad  = isset($_POST['Cantidad'])  ? (float)$_POST['Cantidad']  : 0.0;  // lo que pagó el cliente
 
-    // Crear array de datos para el registro de comisión
-    $DatGps = [
-        "UsrResgistra"  => $_SESSION["Vendedor"],
-        "Cantidad"      => $IdVenta,
-        "IdVendedor"    => $IdVendedor,
-        "Banco"         => $Host,
-        "Referencia"    => $NombreBuscado,
-        "Referencia"    => $Cantidad,
-        "Referencia"    => $Status,
-        "Referencia"    => $Promesa,
-        "fechaRegistro" => $hoy . " " . $HoraActual
-    ];
+    $hoy        = date('Y-m-d');
+    $HoraActual = date('H:i:s');
 
-    echo '<pre>';
-    print_r($DatGps);
-    echo '</pre>';
+    // ====== Auditoría (GPS / fingerprint) ======
+    $ids = $seguridad->auditoria_registrar(
+        $mysqli,
+        $basicas,
+        $_POST,
+        'Pago_Servicio',
+        $_POST['Host'] ?? $_SERVER['PHP_SELF']
+    );
 
-    // Insertar datos en la tabla Comisiones_pagos
-    //$basicas->InsertCampo($mysqli, "Comisiones_pagos", $DatGps);
+    // ====== Cálculo de mora a aplicar en este pago ======
+    // Mora teórica de la cuota: (cuota con mora) - (cuota normal)
+    $moraTeorica = max(0, round($PagoMora - $PagoProm, 2));
 
-    // Redireccionar a la pantalla del empleado
-    //header('Location: https://kasu.com.mx' . $Host . '?Vt=1&name=' . $name);
-    //exit();
+    // Si el estatus indica mora, del dinero recibido primero se abona a la mora
+    $aplicaMora = 0.00;
+    if (strcasecmp($status, 'Mora') === 0 && $moraTeorica > 0) {
+        // No puedes aplicar más mora de lo pagado
+        $aplicaMora = min($Cantidad, $moraTeorica);
+        if ($aplicaMora > 0) {
+            $basicas->InsertCampo($mysqli, "Pagos", [
+                "IdVenta"  => $IdVenta,
+                "Usuario"  => $_SESSION["Vendedor"],
+                "Idgps"    => $ids['gps_id'] ?? null,
+                "Cantidad" => $aplicaMora,
+                "Metodo"   => $Metodo,
+                "status"   => "Mora"
+            ]);
+        }
+    }
+
+    // Resto del pago que va al capital/cuota normal
+    $importePago = round($Cantidad - $aplicaMora, 2);
+    if ($importePago > 0) {
+        $basicas->InsertCampo($mysqli, "Pagos", [
+            "IdVenta"  => $IdVenta,
+            "Usuario"  => $_SESSION["Vendedor"],
+            "Idgps"    => $ids['gps_id'] ?? null,
+            "Cantidad" => $importePago,
+            "Metodo"   => $Metodo,
+            "status"   => "Pago"
+        ]);
+    }
+
+    // ====== (Opcional) Guardar promesa de pago ======
+    if (!empty($Promesa)) {
+        //Buscamos el vendedor que vendio la poliza
+        $Vendedor = $basicas->BuscarCampos($mysqli,'Usuario','Venta','Id',$IdVenta);
+        //insertamos los datos en las promesas de pago
+        $basicas->InsertCampo($mysqli, "PromesaPago", [
+                                                        "IdVta"     => $IdVenta,
+                                                        "Promesa"   => $PromesPga,
+                                                        "FechaProm" => $Promesa,
+                                                        "Usuario"   => $_SESSION["Vendedor"],
+                                                        "Vendedor"  => $Vendedor
+                                                    ]);
+    }
+    // registramos la comision de la cobranza
+    //mensaje de alert para usuario
+    $Msg = "Pago Registrado correctamente";
+    //Redireccionar a pagina de donde venimos
+    header('Location: https://kasu.com.mx' . $_POST['Host'] . '?Vt=1&Msg='.$Msg.'&name=' . $_POST['nombre']);
+    exit();
 }

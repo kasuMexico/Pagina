@@ -450,6 +450,51 @@ HTML;
           </td>
         </tr>
         HTML;
+
+        case 'ENVIO DE FICHAS':
+            return <<<HTML
+        <tr>
+          <td align="center" style="padding:2px; font-size:25px; color:#153643; font-family:Arial, sans-serif;">
+            <a href="https://kasu.com.mx" style="text-decoration:none; color:whitesmoke;">
+              <img src="https://kasu.com.mx/assets/images/Correo/florredonda.png" alt="KASU" width="100px" height="100px" style="display:block;" />
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td bgcolor="#ffffff" align="justify" style="padding:20px 15px 5px 25px; font-family:Arial, sans-serif; font-size:16px; color:#153643;">
+            <b>{$data['Cte']}</b>
+          </td>
+        </tr>
+        <tr>
+          <td align="left" bgcolor="#ffffff" style="padding:10px 30px 5px 30px;">
+            <p style="font-size:16px; font-family:arial, sans-serif; line-height:24px; color:#666666;">
+              Te enviamos tus <b>Fichas de Pago</b>.<br>
+              Puedes descargarlas  haciendo clic en el siguiente boton:
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td bgcolor="#ffffff" align="center" style="padding:30px;">
+            <span style="border:solid #ee3a87; background:#ee3a87; border-width:20px; display:inline-block; border-radius:5px;">
+              <a href="{$data['DirUrl']}" class="es-button" target="_blank" style="text-decoration:none; font-family:Arial, sans-serif; font-size:30px; color:#FFFFFF; background:#ee3a87; border-radius:5px; line-height:30px;">
+                Descargar Fichas
+              </a>
+            </span>
+          </td>
+        </tr>
+        <tr>
+          <td bgcolor="#ffffff" align="justify" style="padding:5px 25px 30px 25px; font-family:Arial, sans-serif; font-size:16px; line-height:20px; color:#153643;">
+            <p style="font-size:16px; font-family:Arial, sans-serif; line-height:24px; color:#666666;">
+              Si tienes alguna duda o necesitas asistencia, por favor comunicate a nuestro centro de atencion:<br>
+              <b>720 817 7632</b>
+            </p>
+            <p style="font-size:12px; font-family:Arial, sans-serif; line-height:24px; color:#666666;">
+              Saludos<br>Equipo KASU
+            </p>
+          </td>
+        </tr>
+        HTML;
+
               default:
                   return "<tr><td>No se encontró plantilla para el asunto especificado.</td></tr>";
           }

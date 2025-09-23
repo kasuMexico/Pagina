@@ -25,12 +25,21 @@ require_once '../eia/librerias.php';
                     $Saldo = '$'.number_format($Saldo, 2);
                     //Se obtiene el numero de pagos pendientes
                     $PagoPend = $financieras->PagosPend($mysqli,$_POST['IdVenta']);
+                    //Calculamos si el cliente esta en mora o al corriente
+                    $StatVtas = $financieras->estado_mora_corriente( (int)$Reg['Id'] );
+                    //Reasignamos valor con base en el si el cliente esta en mora o al corriente
+                    if($StatVtas['estado'] == "AL CORRIENTE"){
+                        $Status = "Pago";
+                    }else{
+                        $Status = "Mora";
+                    }
                 }
             }
             //Variables para lanzar las ventanas emergentes
             $Ventana = "Ventana1";
             $Lanzar = "#Ventana";
       }
+
       if(!empty($_GET['Vt'])){
         //Variables para lanzar las ventanas emergentes
         $Ventana = "Ventana".$_GET['Vt'];

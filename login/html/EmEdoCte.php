@@ -15,8 +15,9 @@
          if($s56 > 0){
            $BtnPago = '<input type="submit" name="SelCte" class="btn btn-primary" value="Agregar Pago">';
          }
-         $BtnCta = '<a type="button" class="btn btn-primary" href="Pwa_Estado_Cuenta.php?Id='.$Reg['Id'].'">Estado de Cuenta</a>';
+         $BtnCta = '<a type="button" class="btn btn-primary" href="Pwa_Estado_Cuenta.php?busqueda='.base64_encode($Reg['Id']).'">Estado de Cuenta</a>';
        }
+
         if($Niv <= 4){
             echo "<p> Ejecutivo de Ventas </p> <h2>".$Reg['Usuario']."</h2>";
         }

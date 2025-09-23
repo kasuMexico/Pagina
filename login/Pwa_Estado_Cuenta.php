@@ -8,7 +8,7 @@ require_once '../eia/librerias.php';
         header('Location: https://kasu.com.mx/login');
       }
         //realizamos la consulta
-        $venta = "SELECT * FROM Venta WHERE Id = '".$_GET['Id']."'";
+        $venta = "SELECT * FROM Venta WHERE Id = '".base64_decode($_GET['busqueda'])."'";
         //Realiza consulta
             $res = mysqli_query($mysqli, $venta);
         //Si existe el registro se asocia en un fetch_assoc
@@ -37,37 +37,58 @@ require_once '../eia/librerias.php';
         <p>&nbsp&nbsp&nbsp<strong><?PHP echo $Reg['Nombre'];?></strong></p>
 				<p>&nbsp&nbsp&nbsp <strong>Producto;</strong> <?PHP echo $Reg['Producto'];?>
 					&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <strong>Status;</strong> <? echo $Reg['Status'];?>
-				  &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <strong>Costo de compra;</strong> <?PHP echo money_format('%.2n',$Reg['CostoVenta']);?></p>
+				  &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <strong>Costo de compra;</strong> <?PHP echo number_format($Reg['CostoVenta'],2);?></p>
     </div>
     <div class="historial">
       <table class="table">
                 <tbody>
-										<tr>
-												<td><strong>Fecha</strong></td>
-												<td><strong>Cantidad</strong></td>
-												<td><strong>Status</strong></td>
-										</tr>
+					<tr>
+						<td><strong>Fecha</strong></td>
+						<td><strong>Cantidad</strong></td>
+						<td><strong>Status</strong></td>
+					</tr>
                 </tbody>
                 <tbody>
-                <?PHP
-                //Crear consulta
-                $Pagos = "SELECT * FROM Pagos WHERE IdVenta = '".$_GET['Id']."'";
-                    //Realiza consulta
-                        if ($resul = $mysqli->query($Pagos)){
-                    // obtener el array de objetos
-                            while ($Pago = $resul->fetch_row()) {
+                <?php
+                // Asume $mysqli ya conectado
+                $mysqli->set_charset('utf8mb4');
 
-                                printf("
-                                    <tr>
-                                        <td>%s</td>
-                                        <td>%s</td>
-																				<td>%s</td>
-                                    </tr>
-                                ",substr($Pago[10], 0 , 10),money_format('%.2n', $Pago[5]),$Pago[7]);
+                if (!isset($_GET['busqueda'])) { exit; }
 
-                            }
-                        }
-                    ?>
+                $dec = base64_decode($_GET['busqueda'], true);
+                if ($dec === false) { exit; }
+
+                $IdVenta = trim($dec);
+                if (!ctype_digit($IdVenta)) { exit; }
+                $IdVenta = (int)$IdVenta;
+
+                $sql  = "SELECT * FROM Pagos WHERE IdVenta = ?";
+                $stmt = $mysqli->prepare($sql);
+                $stmt->bind_param('i', $IdVenta);
+                $stmt->execute();
+                $res  = $stmt->get_result();
+
+                // Formateador de moneda MXN
+                $fmt = class_exists('NumberFormatter') ? new NumberFormatter('es_MX', NumberFormatter::CURRENCY) : null;
+
+                while ($Pago = $res->fetch_row()) {
+                    // Ajusta índices según tu esquema: [10]=fecha, [5]=monto, [7]=estatus
+                    $fecha  = htmlspecialchars(substr((string)$Pago[10], 0, 10), ENT_QUOTES, 'UTF-8');
+                    $monto  = (float)$Pago[5];
+                    $estatus= htmlspecialchars((string)$Pago[7], ENT_QUOTES, 'UTF-8');
+
+                    $montoFmt = $fmt ? $fmt->formatCurrency($monto, 'MXN') : ('$' . number_format($monto, 2, '.', ','));
+
+                    printf(
+                        "<tr>\n  <td>%s</td>\n  <td>%s</td>\n  <td>%s</td>\n</tr>\n",
+                        $fecha,
+                        $montoFmt,
+                        $estatus
+                    );
+                }
+
+                $stmt->close();
+                ?>
                 </tbody>
         </table>
     </div>
@@ -78,33 +99,33 @@ require_once '../eia/librerias.php';
                     <tr>
                         <td>Pagos Realizados</td>
                         <td>
-													<?PHP
-														$PagsRe = $financieras->SumarPagos($mysqli,"cantidad","Pagos","IdVenta",$_GET['Id']);
-														echo money_format('%.2n', $PagsRe);
+							<?PHP
+								$PagsRe = $financieras->SumarPagos($mysqli,"cantidad","Pagos","IdVenta",$IdVenta);
+								echo number_format($PagsRe,2);
                         	?>
-												</td>
+						</td>
                     </tr>
-										<tr>
-                        <td>Moras Pagadas</td>
-                        <td>
-													<?PHP
-														$MorRe = $financieras->SumarMora($mysqli,"cantidad","Pagos","IdVenta",$_GET['Id']);
-														echo money_format('%.2n', $MorRe);
+						<tr>
+                            <td>Moras Pagadas</td>
+                            <td>
+							<?PHP
+								$MorRe = $financieras->SumarMora($mysqli,"cantidad","Pagos","IdVenta",$IdVenta);
+								echo number_format($MorRe,2);
                         	?>
-												</td>
+							</td>
                     </tr>
                     <tr>
                         <td>Para liquidar Hoy</td>
                         <td>
-													<?PHP
-													//Si el status del cliente esta en activacon no muestra el pago
-													if($Reg['Status'] != "ACTIVO" AND $Reg['Status'] != "ACTIVACION" ){
-															//Se imprime el valor para liquidar el credito
-															$doa = $financieras->SaldoCredito($mysqli,$_GET['Id']);
-															echo money_format('%.2n', $doa);
-													}
-													?>
-												</td>
+						<?PHP
+						//Si el status del cliente esta en activacon no muestra el pago
+						if($Reg['Status'] != "ACTIVO" AND $Reg['Status'] != "ACTIVACION" ){
+							//Se imprime el valor para liquidar el credito
+							$doa = $financieras->SaldoCredito($mysqli,$IdVenta);
+							echo number_format($doa,2);
+						}
+						?>
+						</td>
                     </tr>
                 </tbody>
             </table>

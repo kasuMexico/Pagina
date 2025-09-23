@@ -32,7 +32,14 @@ if (isset($_POST['IdCliente'])) {
         $PagoPend = $financieras->PagosPend($mysqli, $Cte);
         $Saldo = $financieras->SaldoCredito($mysqli, $Cte);
         $Saldo = number_format($Saldo, 2);
-
+        //Calculamos si el cliente esta en mora o al corriente
+        $StatVtas = $financieras->estado_mora_corriente( (int)$Reg['Id'] );
+        //Reasignamos valor con base en el si el cliente esta en mora o al corriente
+        if($StatVtas['estado'] == "AL CORRIENTE"){
+             $Status = "Pago";
+        }else{
+             $Status = "Mora";
+        }
         // Buscar usuario relacionado
         $sql1 = "SELECT * FROM Usuario WHERE IdContact = '".$Reg['IdContact']."'";
         $recs1 = mysqli_query($mysqli, $sql1);
@@ -57,8 +64,20 @@ if (!empty($_POST['CambiVend'])) {
     $basicas->ActTab($mysqli, "PromesaPago", "User", $_POST['NvoVend'], "IdVta", $_POST['IdVenta']);
     $basicas->ActTab($mysqli, "Pagos", "Usuario", $_POST['NvoVend'], "IdVenta", $_POST['IdVenta']);
 } elseif (!empty($_POST['CancelaCte'])) {
+    //************* Funcion: de Registros de Eventos, GPS y Fingerprint *************************//
+    $ids = $seguridad->auditoria_registrar(
+        $mysqli,                     // conexión principal
+        $basicas,                    // tu helper Basicas
+        $_POST,                      // datos del form (fingerprint, gps, etc.)
+        'Cancelar_Venta',           // nombre del evento
+        $_POST['Host'] ?? $_SERVER['PHP_SELF']  // host/origen
+    );
+    //************ Funcion: de Registros de Eventos, GPS y Fingerprint *************************//
     //Actualiza el status de la venta a CANCELADO
     $basicas->ActCampo($mysqli, "Venta", "Status", "CANCELADO", $_POST['IdVenta']);
+    //Mensaje de Cancelacion de Cliente
+    $_GET['Vt'] =1;
+    $_GET['Msg'] = "Se ha cancelado la Venta";
 }
 
 // Captura nombre desde POST o GET
@@ -72,7 +91,8 @@ require_once 'php/Selector_Emergentes_Ml.php';
 
 //Token para no duplicar correos
 $_SESSION['mail_token'] = bin2hex(random_bytes(16));
-
+//Registro de metodo para pagos / mesa de control/
+$Metodo = "Mesa";
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -121,7 +141,7 @@ $_SESSION['mail_token'] = bin2hex(random_bytes(16));
             </div>
         </div>
     </div>
-    <!-- Reasignar al cliente a un nuevo ejecutivo -->
+    <!-- Reasignar al cliente a un nuevo ejecutivo Funcionando 22/09/25-->
     <div class="modal fade" id="Ventana3" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -178,7 +198,7 @@ $_SESSION['mail_token'] = bin2hex(random_bytes(16));
             </div>
         </div>
     </div>
-    <!-- Cambiar los datos del cliente  -->
+    <!-- Cambiar los datos del cliente  Funcionando 22/09/25-->
     <div class="modal fade" id="Ventana4" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -220,7 +240,7 @@ $_SESSION['mail_token'] = bin2hex(random_bytes(16));
             </div>
         </div>
     </div>
-    <!-- Asignar Servicio - Marcar persona como fallecida-->
+    <!-- Asignar Servicio - Marcar persona como fallecida Funcionando 22/09/25-->
     <div class="modal fade" id="Ventana5" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -232,15 +252,24 @@ $_SESSION['mail_token'] = bin2hex(random_bytes(16));
                         </button>
                     </div>
                     <div class="modal-body">
-                        <input type="number" name="Usuario" value="<?php echo $_SESSION["Vendedor"] ?? ''; ?>" style="display: none;"> <!-- Usuario de Venta Seleccionado -->
+                        <!-- *********************************************** Bloque de registro de Eventos ************************************************************************* -->
+                        <div id="Gps"></div> <!-- Div que lanza el GPS -->
+                        <div data-fingerprint-slot></div> <!-- DIV que lanza el Finger Print -->
+                        <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
+                        <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;"> <!-- Host de donde estoy enviando la peticion -->
                         <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;"> <!-- Id de Venta Seleccionado -->
-                        <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;"> <!-- Nombre buscado -->
+                        <input type="number" name="IdContact" value="<?php echo $Recg['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Contacto Seleccionado -->
+                        <input type="number" name="IdUsuario" value="<?php echo $Recg1['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Usuario Seleccionado -->
+                        <input type="text" name="Producto" value="<?php echo $Reg['Producto'] ?? ''; ?>" style="display: none;"> <!-- Producto de el cliente Seleccionado -->
+                        <!-- ********************************************** Bloque de registro de Eventos ************************************************************************* -->
                         <p>Nombre del Cliente:</p>
                         <h4 class="text-center"><strong><?php echo $Reg['Nombre'] ?? ''; ?></strong></h4>
                         <p>Tipo de servicio Contratado:</p>
                         <h4 class="text-center"><strong><?php echo $Reg['Producto'] ?? ''; ?> años</strong></h4>
-                        <p>Registra los datos de la Factura:</p>
+                        <p>Registra los datos de el Servicio Funerario:</p>
                         <div class="vstack gap-3">
+                            <input type="text" class="form-control" name="EmpFune" placeholder="Empleado funerario que atendio el servicio" required>
+                            </br>
                             <input type="text" class="form-control" name="Prestador" placeholder="Funeraria que realizo el Servicio" required>
                         </br>
                             <div class="row g-3">
@@ -265,24 +294,32 @@ $_SESSION['mail_token'] = bin2hex(random_bytes(16));
             </div>
         </div>
     </div>
-    <!-- Cancela la venta -->
+    <!-- Cancela la venta Funcionando 22/09/25-->
     <div class="modal fade" id="Ventana6" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <form method="POST" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+                    <!-- *********************************************** Bloque de registro de Eventos ************************************************************************* -->
+                    <div id="Gps"></div> <!-- Div que lanza el GPS -->
+                    <div data-fingerprint-slot></div> <!-- DIV que lanza el Finger Print -->
+                    <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
+                    <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;"> <!-- Host de donde estoy enviando la peticion -->
+                    <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;"> <!-- Id de Venta Seleccionado -->
+                    <input type="number" name="IdContact" value="<?php echo $Recg['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Contacto Seleccionado -->
+                    <input type="number" name="IdUsuario" value="<?php echo $Recg1['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Usuario Seleccionado -->
+                    <input type="text" name="Producto" value="<?php echo $Reg['Producto'] ?? ''; ?>" style="display: none;"> <!-- Producto de el cliente Seleccionado -->
+                    <!-- ********************************************** Bloque de registro de Eventos ************************************************************************* -->
                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel"><?php echo $Reg['Nombre'] ?? ''; ?></h5>
+                        <h5 class="modal-title" id="exampleModalLabel">Cancelar Venta</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
                     <div class="modal-body">
                         <div class="alert alert-warning" role="alert">
-                            <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;">
-                            <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;">
                             <input type="text" name="Status" value="<?php echo $_POST['Status'] ?? ''; ?>" style="display: none;">
-                            <p>¿Estás seguro que deseas cancelar esta venta?</p>
-                            <p>Esta acción no se puede deshacer.</p>
+                            <p>¿Estás seguro que deseas cancelar la poliza de el cliente</p>
+                            <h4 class="text-center"><strong><?php echo $Reg['Nombre'] ?? ''; ?></strong></h4>
                             <br>
                         </div>
                     </div>
@@ -293,34 +330,56 @@ $_SESSION['mail_token'] = bin2hex(random_bytes(16));
             </div>
         </div>
     </div>
-    <!-- Generar fichas -->
+    <!-- Generar fichas Funcionando 22/09/25-->
     <div class="modal fade" id="Ventana7" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-                <form method="POST" action="<?php echo $_SERVER['PHP_SELF']; ?>">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel"><?php echo $Reg['Nombre'] ?? ''; ?></h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="alert alert-warning" role="alert">
-                            <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;">
-                            <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;">
-                            <input type="text" name="Status" value="<?php echo $_POST['Status'] ?? ''; ?>" style="display: none;">
-                            <p>Generar fichas</p>
-                            <br>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <input type="submit" name="CancelaCte" class="btn btn-danger" value="Cancelar">
-                    </div>
-                </form>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel"><?php echo $Reg['Nombre'] ?? ''; ?></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                        <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;">
+                        <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;">
+                        <input type="text" name="Status" value="<?php echo $_POST['Status'] ?? ''; ?>" style="display: none;">
+                        <p><strong>Elige una opción para entregar las fichas al cliente</strong></p>
+                        <?
+                            if(empty($Recg['Mail'])){
+                                echo '<h5 class="alert alert-danger" id="exampleModalLabel">Este cliente no cuenta con un Email Registrado</h5>';
+                            }
+                        ?>
+                        <br>
+                </div>
+                <div class="modal-footer">
+                    <!--Enviar Datos para envio de correo electronico con el estado de cuenta   ../eia/EnviarCorreo.php    -->
+                    <form action="../eia/EnviarCorreo.php" method="post" style="padding-right: 5px;">
+                        <!-- *********************************************** Bloque de registro de Eventos ************************************************************************* -->
+                        <div id="Gps"></div> <!-- Div que lanza el GPS -->
+                        <div data-fingerprint-slot></div> <!-- DIV que lanza el Finger Print -->
+                        <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
+                        <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;"> <!-- Host de donde estoy enviando la peticion -->
+                        <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;"> <!-- Id de Venta Seleccionado -->
+                        <input type="number" name="IdContact" value="<?php echo $Recg['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Contacto Seleccionado -->
+                        <input type="number" name="IdUsuario" value="<?php echo $Recg1['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Usuario Seleccionado -->
+                        <input type="text" name="Producto" value="<?php echo $Reg['Producto'] ?? ''; ?>" style="display: none;"> <!-- Producto de el cliente Seleccionado -->
+                        <!-- ********************************************** Bloque de registro de Eventos ************************************************************************* -->
+                        <input type="text" name="Email" value="<?php echo $Recg['Mail'] ?? ''; ?>" style="display: none;">
+                        <input type="hidden" name="mail_token" value="<?php echo $_SESSION['mail_token']; ?>">
+                        <?
+                        if(!empty($Recg['Mail'])){
+                            echo '<input type="submit" name="EnviarFichas" class="btn btn-secondary" value="Enviar por Email">';
+                        }
+                        ?>
+                    </form>
+                    <!-- Descargar poliza por el ejecutivo que atendio al cliente-->
+                    <a href="https://kasu.com.mx/login/Generar_PDF/Fichas_Pago_pdf.php?Cte=<? echo base64_encode($Reg['Id']); ?>" class="btn btn-success" download>Descargar</a>
+                </div>
             </div>
         </div>
     </div>
-    <!-- Generar Poliza -->
+    <!-- Generar Poliza Funcionando 22/09/25-->
     <div class="modal fade" id="Ventana8" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -346,7 +405,7 @@ $_SESSION['mail_token'] = bin2hex(random_bytes(16));
                     <!--Enviar Datos para envio de correo electronico con el estado de cuenta   ../eia/EnviarCorreo.php    -->
                     <form action="../eia/EnviarCorreo.php" method="post" style="padding-right: 5px;">
                         <!-- *********************************************** Bloque de registro de Eventos ************************************************************************* -->
-                        <div id="Gps"></div> <!-- Div que lanza el GPS -->
+                        <div id="Gps" style="display: none;"></div> <!-- Div que lanza el GPS -->
                         <div data-fingerprint-slot></div> <!-- DIV que lanza el Finger Print -->
                         <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
                         <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;"> <!-- Host de donde estoy enviando la peticion -->
@@ -370,11 +429,21 @@ $_SESSION['mail_token'] = bin2hex(random_bytes(16));
             </div>
         </div>
     </div>
-    <!-- Ticket de Atencion al cliente -->
+    <!-- Ticket de Atencion al cliente Funcionando 22/09/25 -->
     <div class="modal fade" id="Ventana9" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <form method="POST" action="php/Funcionalidad_Pwa.php">
+                    <!-- *********************************************** Bloque de registro de Eventos ************************************************************************* -->
+                    <div id="Gps"></div> <!-- Div que lanza el GPS -->
+                    <div data-fingerprint-slot></div> <!-- DIV que lanza el Finger Print -->
+                    <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
+                    <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;"> <!-- Host de donde estoy enviando la peticion -->
+                    <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;"> <!-- Id de Venta Seleccionado -->
+                    <input type="number" name="IdContact" value="<?php echo $Recg['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Contacto Seleccionado -->
+                    <input type="number" name="IdUsuario" value="<?php echo $Recg1['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Usuario Seleccionado -->
+                    <input type="text" name="Producto" value="<?php echo $Reg['Producto'] ?? ''; ?>" style="display: none;"> <!-- Producto de el cliente Seleccionado -->
+                    <!-- ********************************************** Bloque de registro de Eventos ************************************************************************* -->
                     <div class="modal-header">
                         <h5 class="modal-title" id="exampleModalLabel">Ticket de <?php echo $Reg['Nombre'] ?? ''; ?></h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -382,14 +451,6 @@ $_SESSION['mail_token'] = bin2hex(random_bytes(16));
                         </button>
                     </div>
                     <div class="modal-body">
-                        <div id="Gps"></div>
-                        <div data-fingerprint-slot></div>
-                        <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;">
-                        <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;">
-                        <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;"> <!-- Id de Venta Seleccionado -->
-                        <input type="number" name="IdContact" value="<?php echo $Recg['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Contacto Seleccionado -->
-                        <input type="number" name="IdUsuario" value="<?php echo $Recg1['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Usuario Seleccionado -->
-                        <input type="text" name="Producto" value="<?php echo $Reg['Producto'] ?? ''; ?>" style="display: none;"> <!-- Producto  -->
                         <div class="form-group">
                             <label for="Descripcion">Descripción</label>
                             <textarea class="form-control" id="Descripcion" name="Descripcion" rows="3" required></textarea>

@@ -75,21 +75,34 @@ if (!empty($EnCoti)) {
     $Email    = $EmailPost;
     $FullName = $FullNamePost;
     $data = [
-        'Cte'    => $FullNamePost,
+        'Cte'    => $FullName,
         'DirUrl' => base64_encode($IdContactPost),
     ];
     $Id  = $IdVenta;
     $Msg = "Se ha enviado la poliza de tu cliente";
 
-} elseif (!empty($EnviarFichas)) {
-    $Asunto   = "PAGO PENDIENTE";
-    $FullName = $Usuario;
+} elseif (!empty($EnviarFichas)) { //Enivar fichas de pago para descargar al usuario
+    // Auditoría/GPS/Fingerprint
+    $ids = $seguridad->auditoria_registrar(
+        $mysqli,
+        $basicas,
+        $_POST,
+        'Envio_Fichas',
+        $HostPost ?? $_SERVER['PHP_SELF']
+    );
+    
+    //Armado de Correo para envio
+    $Asunto   = "ENVIO DE FICHAS";
     $Email    = $EmailPost;
+    $FullName = $basicas->BuscarCampos($mysqli, "Nombre", "Venta", "Id", $IdVenta);
+;
     $data = [
         'Cte'    => $FullName,
-        'DirUrl' => $Descripcion,
+        'DirUrl' => "https://kasu.com.mx/login/Generar_PDF/Fichas_Pago_pdf.php?Cte=" . base64_encode($IdVenta),
     ];
     $Id = $IdVenta;
+    
+    $Msg = "Se han enviado las fichas de pago de tu cliente";
 
 } elseif (!empty($EnviarEdoCta)) { //Enviar estado de cuenta de Cliente
     // Auditoría/GPS/Fingerprint

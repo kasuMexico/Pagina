@@ -443,5 +443,96 @@ public function SaldoCredito($c0, $Vta) {
             }
         }
     }
+    /**
+     * Estado de pago por vencimientos.
+     * Requiere $mysqli, $financieras = new Financieras(), $basicas = new Basicas().
+     * Devuelve:
+     *  - estado: 'AL CORRIENTE' | 'MORA'
+     *  - esperado_cuotas, esperado_importe, pagado_importe, pendiente_importe
+     *  - cuota, cuotas_vencidas, cuotas_atraso, proximo_vencimiento, total_cuotas
+     */
+    public function estado_mora_corriente(int $idVenta): array {
+            global $mysqli, $financieras, $basicas;
+
+            // --- Venta ---
+            $venta = $financieras->getVenta($mysqli, $idVenta);
+            if (!$venta) return ['ok'=>false,'error'=>'Venta no encontrada'];
+
+            $numMeses   = max(1, (int)$venta['NumeroPagos']);
+            $producto   = $venta['Producto'];
+            $fechaAlta  = new DateTime($venta['FechaRegistro']);
+            $hoy        = new DateTime('today');
+
+            // --- Periodicidad (pagos por mes) ---
+            // Productos.Perido: 1=mensual, 2=quincenal, 4=semanal, etc.
+            $rf = (int)$basicas->BuscarCampos($mysqli, "Perido", "Productos", "Producto", $producto);
+            if ($rf <= 0) $rf = 1;
+
+            // --- Cuota normal (usa tu lógica existente) ---
+            if ($numMeses <= 1) {
+                // contado: la “cuota” es todo el saldo
+                $cuota = (float)$financieras->SaldoCredito($mysqli, $idVenta);
+                $totalCuotas = 1;
+            } else {
+                // crédito: tu Pago() ya devuelve el importe por periodo (p.ej. quincenal)
+                $cuota = (float)$financieras->Pago($mysqli, $idVenta);
+                $totalCuotas = $numMeses * $rf;
+            }
+            $cuota = round($cuota, 2);
+
+            // --- Primera fecha de vencimiento (quincena/periodo SIGUIENTE a la venta) ---
+            $stepDias = max(1, (int)floor(30 / $rf));
+            $y = (int)$fechaAlta->format('Y');
+            $m = (int)$fechaAlta->format('m');
+            $d = (int)$fechaAlta->format('d');
+
+            if ($rf === 1) {
+                // mensual: último día del mes de la venta; si ya pasó, último día del mes siguiente
+                $venc = new DateTime(date('Y-m-t', $fechaAlta->getTimestamp()));
+                if ($venc <= $fechaAlta) $venc = (new DateTime("$y-$m-01"))->modify('last day of next month');
+            } elseif ($rf === 2) {
+                // quincenal: siguiente quincena (15 o fin de mes)
+                if ($d <= 15)      $venc = new DateTime("$y-$m-15");
+                else               $venc = new DateTime(date('Y-m-t', $fechaAlta->getTimestamp()));
+                if ($venc <= $fechaAlta) $venc->modify("+{$stepDias} days");
+            } else {
+                // genérico: pasos iguales dentro del mes
+                $venc = new DateTime("$y-$m-01");
+                while ($venc <= $fechaAlta) { $venc->modify("+{$stepDias} days"); }
+            }
+
+            // --- Contar cuotas vencidas a hoy ---
+            $cuotasVencidas = 0;
+            $v = clone $venc;
+            while ($v <= $hoy && $cuotasVencidas < $totalCuotas) {
+                $cuotasVencidas++;
+                $v->modify("+{$stepDias} days");
+            }
+            $proximo = ($cuotasVencidas >= $totalCuotas) ? 'COMPLETADO' : $v->format('Y-m-d');
+
+            // --- Pagos reales ---
+            $pagado = (float)$financieras->SumarPagos($mysqli, "Cantidad", "Pagos", "IdVenta", $idVenta);
+
+            // --- Esperado y estado ---
+            $esperado = round($cuota * $cuotasVencidas, 2);
+            $pend     = max(0, round($esperado - $pagado, 2));
+            $estado   = ($pend <= 0.01) ? 'AL CORRIENTE' : 'MORA';
+            $atraso   = ($cuota > 0) ? (int)ceil($pend / $cuota) : 0;
+
+            return [
+                'ok'               => true,
+                'estado'           => $estado,
+                'pagado_importe'   => round($pagado, 2),
+                'esperado_cuotas'  => $cuotasVencidas,
+                'esperado_importe' => $esperado,
+                'pendiente_importe'=> $pend,
+                'cuota'            => $cuota,
+                'cuotas_vencidas'  => $cuotasVencidas,
+                'cuotas_atraso'    => $atraso,
+                'proximo_vencimiento' => $proximo,
+                'total_cuotas'     => $totalCuotas,
+            ];
+    }
+
 }
 ?>

@@ -2,7 +2,7 @@
                     <!-- *********************************************** Bloque de registro de Eventos ************************************************************************* -->
                     <div id="Gps"></div> <!-- Div que lanza el GPS -->
                     <div data-fingerprint-slot></div> <!-- DIV que lanza el Finger Print -->
-                    <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
+                    <input type="text" name="nombre" value="<?php echo $nombre; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
                     <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;"> <!-- Host de donde estoy enviando la peticion -->
                     <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;"> <!-- Id de Venta Seleccionado -->
                     <input type="number" name="IdContact" value="<?php echo $Recg['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Contacto Seleccionado -->
@@ -18,24 +18,38 @@
                         <p>Nombre del Cliente:</p>
                         <h4 class="text-center"><strong><?php echo $Reg['Nombre'] ?? ''; ?></strong></h4>
                         <?php
-                        $mora = number_format($financieras->Mora($Pago1), 2);
-                        if (empty($_POST['Promesa'])) {
+                            $mora = number_format($financieras->Mora($Pago1), 2);
+                            if (empty($_POST['Promesa'])) {
+                                echo '
+                                    <p>Pagos pendientes</p>
+                                    <h4 class="text-center">'.$PagoPend.'</h4>
+                                    <p>Status del Cliente:</p>
+                                    <h4 class="text-center">'.$StatVtas['estado'].'</h4>
+                                ';
+                            //Si el cliente esta en mora muestra el pago con mora caso contrato pago normal
+                            if($StatVtas['estado'] != "AL CORRIENTE"){
+                                $Pago = $mora;
                             echo '
-                                <p>Pagos pendientes <strong>' . ($PagoPend ?? '0') . ' Pagos</strong></p>
-                                <p>Pago Normal periodo <strong>' . ($Pago ?? '0.00') . '</strong></p>
-                                <p>Pago con Mora <strong>' . $mora . '</strong></p>
+                                <p>Pago minimo el periodo:</p>
+                                <h4 class="text-center"><strong>$'. $Pago .'</strong></h4>
                             ';
+                            }else{
+                            echo '
+                                <p>Pago minimo el periodo:</p>
+                                <h4 class="text-center"><strong>$'. $Pago .'</strong></h4>
+                            ';   
+                            }
                         } else {
                             echo '
-                                <p>Promesa de pago <strong>' . number_format($_POST['Promesa'], 2) . '</strong></p>
+                                <p>Promesa de pago</p>
+                                <h4 class="text-center">'.$number_format($_POST['Promesa'], 2).'</h4>
                             ';
                         }
                         ?>
-                        <input type="text" name="name" value="<?php echo $name; ?>" style="display: none;">
-                        <input type="text" name="Status" value="<?php echo $Reg['Status'] ?? ''; ?>" style="display: none;">
-                        <label>Promesa de Pago</label>
+                        <input type="text" name="PagoMinimo" value="<?php echo $Pago ?>" style="display: none;">
+                        <label>Fecha Promesa de Pago</label>
                         <input class="form-control" type="date" name="Promesa" value="<?php echo date("Y-m-d", strtotime("+14 days")); ?>" required>
-                        <label>Cantidad a pagar</label>
+                        <label>Promesa de Pago</label>
                         <input class="form-control" type="number" name="Cantidad" placeholder="Cantidad" required>
                     </div>
                     <div class="modal-footer">

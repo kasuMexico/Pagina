@@ -2,7 +2,7 @@
     <!-- *********************************************** Bloque de registro de Eventos ************************************************************************* -->
     <div id="Gps"></div> <!-- Div que lanza el GPS -->
     <div data-fingerprint-slot></div> <!-- DIV que lanza el Finger Print -->
-    <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
+    <input type="text" name="nombre" value="<?php echo $nombre; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
     <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;"> <!-- Host de donde estoy enviando la peticion -->
     <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;"> <!-- Id de Venta Seleccionado -->
     <input type="number" name="IdContact" value="<?php echo $Recg['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Contacto Seleccionado -->
@@ -23,7 +23,7 @@
         <input type="hidden" name="Status" value="<?php echo $Status ?>">
         <input type="hidden" name="Metodo" value="<?php echo $Metodo ?>">
         <input type="hidden" name="IdVendedor" value="<?php echo $Reg['Usuario'] ?>">
-        <input type="hidden" name="NombreBuscado" value="<?php echo $name; ?>">
+        <input type="hidden" name="nombre" value="<?php echo $nombre; ?>">
         <?php
         //Calculamos la mora de un pago atrasado
         $mora = number_format($financieras->Mora($Pago1), 2);

@@ -58,7 +58,7 @@ if (!empty($_POST['ActDatosCTE'])){
     //mensaje de alert para usuario
     $Msg = "Se han actualizado los datos de el cliente";
     //Redireccionar a pagina de donde venimos
-    header('Location: https://kasu.com.mx' . $_POST['Host'] . '?Vt=1&Msg='.$Msg.'&name=' . $_POST['nombre']);
+    header('Location: https://kasu.com.mx' . $_POST['Host'] . '?Vt=1&Msg='.$Msg.'&nombre=' . $_POST['nombre']);
     exit();
 }
 /********************************* BLOQUE: REGISTRAR UN TICKET DE ATENCION AL CLIENTE *********************************/
@@ -97,7 +97,7 @@ if (!empty($_POST['AltaTicket'])){
     //mensaje de alert para usuario
     $Msg = "Se ha registrado correctamente el Ticket";
     //Redireccionar a pagina de donde venimos
-    header('Location: https://kasu.com.mx' . $_POST['Host'] . '?Vt=1&Msg='.$Msg.'&name=' . $_POST['nombre']);
+    header('Location: https://kasu.com.mx' . $_POST['Host'] . '?Vt=1&Msg='.$Msg.'&nombre=' . $_POST['nombre']);
     exit();
 }
 
@@ -141,7 +141,7 @@ if (!empty($_POST['RegisFun'])){
     //mensaje de alert para usuario
     $Msg = "Se ha registrado correctamente el SERVICIO";
     //Redireccionar a pagina de donde venimos
-    header('Location: https://kasu.com.mx' . $_POST['Host'] . '?Vt=1&Msg='.$Msg.'&name=' . $_POST['nombre']);
+    header('Location: https://kasu.com.mx' . $_POST['Host'] . '?Vt=1&Msg='.$Msg.'&nombre=' . $_POST['nombre']);
     exit();
 }
 
@@ -160,6 +160,13 @@ if (isset($_POST['Pago'])) {
 
     $hoy        = date('Y-m-d');
     $HoraActual = date('H:i:s');
+
+    // Sanitiza y normaliza el host a SOLO la ruta
+    $hostRaw = $_POST['Host'] ?? '';
+    $host    = parse_url($hostRaw, PHP_URL_PATH) ?? '';
+    $host    = $host ?: '/login/Mesa_Herramientas.php';
+    $host    = preg_replace('/[\r\n]/', '', $host); // quita CR/LF
+    $nombre = $_POST['nombre'] ?? '';
 
     // ====== Auditoría (GPS / fingerprint) ======
     $ids = $seguridad->auditoria_registrar(
@@ -186,7 +193,8 @@ if (isset($_POST['Pago'])) {
                 "Idgps"    => $ids['gps_id'] ?? null,
                 "Cantidad" => $aplicaMora,
                 "Metodo"   => $Metodo,
-                "status"   => "Mora"
+                "status"   => "Mora",
+                "FechaRegistro" => $hoy." ".$HoraActual
             ]);
         }
     }
@@ -195,12 +203,13 @@ if (isset($_POST['Pago'])) {
     $importePago = round($Cantidad - $aplicaMora, 2);
     if ($importePago > 0) {
         $basicas->InsertCampo($mysqli, "Pagos", [
-            "IdVenta"  => $IdVenta,
-            "Usuario"  => $_SESSION["Vendedor"],
-            "Idgps"    => $ids['gps_id'] ?? null,
-            "Cantidad" => $importePago,
-            "Metodo"   => $Metodo,
-            "status"   => "Pago"
+            "IdVenta"       => $IdVenta,
+            "Usuario"       => $_SESSION["Vendedor"],
+            "Idgps"         => $ids['gps_id'] ?? null,
+            "Cantidad"      => $importePago,
+            "Metodo"        => $Metodo,
+            "status"        => "Pago",
+            "FechaRegistro" => $hoy." ".$HoraActual
         ]);
     }
 
@@ -210,17 +219,67 @@ if (isset($_POST['Pago'])) {
         $Vendedor = $basicas->BuscarCampos($mysqli,'Usuario','Venta','Id',$IdVenta);
         //insertamos los datos en las promesas de pago
         $basicas->InsertCampo($mysqli, "PromesaPago", [
-                                                        "IdVta"     => $IdVenta,
-                                                        "Promesa"   => $PromesPga,
-                                                        "FechaProm" => $Promesa,
-                                                        "Usuario"   => $_SESSION["Vendedor"],
-                                                        "Vendedor"  => $Vendedor
-                                                    ]);
+            "IdVenta"       => $IdVenta,
+            "Cantidad"      => $PromesPga,
+            "Promesa"       => $Promesa,
+            "Usuario"       => $_SESSION["Vendedor"],
+            "Vendedor"      => $Vendedor,
+            "FechaRegistro" => $hoy." ".$HoraActual
+        ]);
     }
-    // registramos la comision de la cobranza
     //mensaje de alert para usuario
     $Msg = "Pago Registrado correctamente";
     //Redireccionar a pagina de donde venimos
-    header('Location: https://kasu.com.mx' . $_POST['Host'] . '?Vt=1&Msg='.$Msg.'&name=' . $_POST['nombre']);
+    header('Location: https://kasu.com.mx' . $host. '?Vt=1&Msg='.$Msg.'&nombre=' . rawurlencode($nombre));
+    exit();
+}
+
+/********************************* BLOQUE: Registrar Promesa de Pago *********************************/
+if (isset($_POST['PromPago'])) {
+
+    // ====== Inputs (sanitiza / castea) ======
+    $IdVenta    = isset($_POST['IdVenta'])   ? $mysqli->real_escape_string($_POST['IdVenta'])   : '';
+    $Promesa    = isset($_POST['Promesa'])   ? $mysqli->real_escape_string($_POST['Promesa'])   : null; //fecha en que promete pagar el cliente
+    $Cantidad   = isset($_POST['Cantidad'])  ? (float)$_POST['Cantidad']  : 0.0;  // lo que promete el cliente pagar
+    $PagoMinimo = isset($_POST['PagoMinimo'])  ? (float)$_POST['PagoMinimo']  : 0.0;  // lo que promete el cliente pagar
+    $hoy        = date('Y-m-d');
+    $HoraActual = date('H:i:s');
+    // Se registra la promesa de pago
+    if ($PagoMinimo < $Cantidad) {
+    // ====== Auditoría (GPS / fingerprint) ======
+    $ids = $seguridad->auditoria_registrar(
+        $mysqli,
+        $basicas,
+        $_POST,
+        'Promesa_Pago',
+        $_POST['Host'] ?? $_SERVER['PHP_SELF']
+    );
+    //Se busca el Vendedor que realizo la venta
+    $Vendedor = $basicas->BuscarCampos($mysqli,'Usuario','Venta','Id',$IdVenta);
+    //Insertamos el registro de la promesa
+        $basicas->InsertCampo($mysqli, "PromesaPago", [
+            "IdVenta"       => $IdVenta,
+            "Cantidad"      => $Cantidad,
+            "Promesa"       => $Promesa,
+            "Vendedor"      => $Vendedor,
+            "Usuario"       => $_SESSION["Vendedor"],
+            "FechaRegistro" => $hoy." ".$HoraActual
+        ]);
+        //mensaje de alert para usuario
+        $Msg = "Promesa de pago registrada correctamente";
+    }else{
+        // ====== Auditoría (GPS / fingerprint) ======
+        $ids = $seguridad->auditoria_registrar(
+            $mysqli,
+            $basicas,
+            $_POST,
+            'Promesa_No_Registrada',
+            $_POST['Host'] ?? $_SERVER['PHP_SELF']
+        );
+        //Mensaje de error de registro de promesa de pago
+        $Msg = "No se puede registrar una promesa menor al pago minimo";
+    }
+    //Redireccionar a pagina de donde venimos
+    header('Location: https://kasu.com.mx' . $_POST['Host'] . '?Vt=1&Msg='.$Msg.'&nombre=' . $_POST['nombre']);
     exit();
 }

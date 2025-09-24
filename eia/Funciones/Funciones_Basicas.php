@@ -328,6 +328,27 @@ class Basicas {
     }
 
     /*********************************************************************************
+     * Retorna el código de producto para Transporte basado en el rango de edad.
+     *********************************************************************************/
+    public function ProdTrans($d16) {
+        $this->trackUsage();  // Registra el uso de este método.
+        if ($d16 >= 2 && $d16 <= 29) {
+            return "T02a29";
+        } elseif ($d16 >= 30 && $d16 <= 49) {
+            return "T30a49";
+        } elseif ($d16 >= 50 && $d16 <= 54) {
+            return "T50a54";
+        } elseif ($d16 >= 55 && $d16 <= 59) {
+            return "T55a59";
+        } elseif ($d16 >= 60 && $d16 <= 64) {
+            return "T60a64";
+        } elseif ($d16 >= 65 && $d16 <= 69) {
+            return "T65a69";
+        }
+        return null;
+    }
+
+    /*********************************************************************************
      * Actualiza el campo $Val de la tabla $n1 con el valor $act para el registro identificado 
         $c0  =   conexion usada a base de datos
         $Val = nombre de la columna a actualizar.

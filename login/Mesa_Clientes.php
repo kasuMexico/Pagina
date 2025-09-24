@@ -81,7 +81,7 @@ if (!empty($_POST['CambiVend'])) {
 }
 
 // Captura nombre desde POST o GET
-$name = $_POST['nombre'] ?? $_GET['name'] ?? "";
+$nombre = $_POST['nombre'] ?? $_GET['nombre'] ?? "";
 //Lanzamos las alertas por las actualizaciones
 if (isset($_GET['Vt']) && (int)$_GET['Vt'] === 1) {
       echo "<script>window.addEventListener('load',()=>alert('".$_GET['Msg']."'));</script>";
@@ -125,7 +125,7 @@ $Metodo = "Mesa";
             $('#<?php echo $Ventana; ?>').modal('toggle')
         });
     </script>
-    <!-- Agregar pago a un cliente -->
+    <!-- Agregar pago a un cliente Funcionando 22/09/25 -->
     <div class="modal fade" id="Ventana1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -133,7 +133,7 @@ $Metodo = "Mesa";
             </div>
         </div>
     </div>
-    <!-- Generar Promesa de pago -->
+    <!-- Generar Promesa de pago Funcionando 23/s09/2025-->
     <div class="modal fade" id="Ventana2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -154,7 +154,7 @@ $Metodo = "Mesa";
                     </div>
                     <div class="modal-body">
                         <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;">
-                        <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;">
+                        <input type="text" name="nombre" value="<?php echo $nombre; ?>" style="display: none;">
                         <input type="text" name="Status" value="<?php echo $_POST['Status'] ?? ''; ?>" style="display: none;">
                         <p>Este cliente esta asignado a</p>
                         <p><strong>
@@ -213,7 +213,7 @@ $Metodo = "Mesa";
                         <!-- *********************************************** Bloque de registro de Eventos ************************************************************************* -->
                         <div id="Gps"></div> <!-- Div que lanza el GPS -->
                         <div data-fingerprint-slot></div> <!-- DIV que lanza el Finger Print -->
-                        <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
+                        <input type="text" name="nombre" value="<?php echo $nombre; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
                         <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;"> <!-- Host de donde estoy enviando la peticion -->
                         <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;"> <!-- Id de Venta Seleccionado -->
                         <input type="number" name="IdContact" value="<?php echo $Recg['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Contacto Seleccionado -->
@@ -255,7 +255,7 @@ $Metodo = "Mesa";
                         <!-- *********************************************** Bloque de registro de Eventos ************************************************************************* -->
                         <div id="Gps"></div> <!-- Div que lanza el GPS -->
                         <div data-fingerprint-slot></div> <!-- DIV que lanza el Finger Print -->
-                        <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
+                        <input type="text" name="nombre" value="<?php echo $nombre; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
                         <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;"> <!-- Host de donde estoy enviando la peticion -->
                         <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;"> <!-- Id de Venta Seleccionado -->
                         <input type="number" name="IdContact" value="<?php echo $Recg['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Contacto Seleccionado -->
@@ -302,7 +302,7 @@ $Metodo = "Mesa";
                     <!-- *********************************************** Bloque de registro de Eventos ************************************************************************* -->
                     <div id="Gps"></div> <!-- Div que lanza el GPS -->
                     <div data-fingerprint-slot></div> <!-- DIV que lanza el Finger Print -->
-                    <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
+                    <input type="text" name="nombre" value="<?php echo $nombre; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
                     <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;"> <!-- Host de donde estoy enviando la peticion -->
                     <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;"> <!-- Id de Venta Seleccionado -->
                     <input type="number" name="IdContact" value="<?php echo $Recg['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Contacto Seleccionado -->
@@ -342,7 +342,7 @@ $Metodo = "Mesa";
                 </div>
                 <div class="modal-body">
                         <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;">
-                        <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;">
+                        <input type="text" name="nombre" value="<?php echo $nombre; ?>" style="display: none;">
                         <input type="text" name="Status" value="<?php echo $_POST['Status'] ?? ''; ?>" style="display: none;">
                         <p><strong>Elige una opción para entregar las fichas al cliente</strong></p>
                         <?
@@ -358,7 +358,7 @@ $Metodo = "Mesa";
                         <!-- *********************************************** Bloque de registro de Eventos ************************************************************************* -->
                         <div id="Gps"></div> <!-- Div que lanza el GPS -->
                         <div data-fingerprint-slot></div> <!-- DIV que lanza el Finger Print -->
-                        <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
+                        <input type="text" name="nombre" value="<?php echo $nombre; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
                         <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;"> <!-- Host de donde estoy enviando la peticion -->
                         <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;"> <!-- Id de Venta Seleccionado -->
                         <input type="number" name="IdContact" value="<?php echo $Recg['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Contacto Seleccionado -->
@@ -391,7 +391,7 @@ $Metodo = "Mesa";
                 </div>
                 <div class="modal-body">
                         <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;">
-                        <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;">
+                        <input type="text" name="nombre" value="<?php echo $nombre; ?>" style="display: none;">
                         <input type="text" name="Status" value="<?php echo $_POST['Status'] ?? ''; ?>" style="display: none;">
                         <p><strong>Elige una opción para entregar la póliza al cliente</strong></p>
                         <?
@@ -407,7 +407,7 @@ $Metodo = "Mesa";
                         <!-- *********************************************** Bloque de registro de Eventos ************************************************************************* -->
                         <div id="Gps" style="display: none;"></div> <!-- Div que lanza el GPS -->
                         <div data-fingerprint-slot></div> <!-- DIV que lanza el Finger Print -->
-                        <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
+                        <input type="text" name="nombre" value="<?php echo $nombre; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
                         <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;"> <!-- Host de donde estoy enviando la peticion -->
                         <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;"> <!-- Id de Venta Seleccionado -->
                         <input type="number" name="IdContact" value="<?php echo $Recg['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Contacto Seleccionado -->
@@ -437,7 +437,7 @@ $Metodo = "Mesa";
                     <!-- *********************************************** Bloque de registro de Eventos ************************************************************************* -->
                     <div id="Gps"></div> <!-- Div que lanza el GPS -->
                     <div data-fingerprint-slot></div> <!-- DIV que lanza el Finger Print -->
-                    <input type="text" name="nombre" value="<?php echo $name; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
+                    <input type="text" name="nombre" value="<?php echo $nombre; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
                     <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;"> <!-- Host de donde estoy enviando la peticion -->
                     <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;"> <!-- Id de Venta Seleccionado -->
                     <input type="number" name="IdContact" value="<?php echo $Recg['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Contacto Seleccionado -->
@@ -498,8 +498,8 @@ $Metodo = "Mesa";
         //Busqueda de clientes
         if (!empty($_POST['Status'])) {
             $buscar = $basicas->BLikes($mysqli, "Venta", "Status", $_POST['Status']);
-        } elseif (!empty($name)) {
-            $buscar = $basicas->BLikes($mysqli, "Venta", "Nombre", $name);
+        } elseif (!empty($nombre)) {
+            $buscar = $basicas->BLikes($mysqli, "Venta", "Nombre", $nombre);
         } else {
             $buscar = [];
         }
@@ -514,7 +514,7 @@ $Metodo = "Mesa";
                 <th>
                 <div style='display: flex;'>
                     <form method='POST' action='Mesa_Estado_Cuenta.php' style='padding-right: 5px;'>
-                        <input type='text' name='nombre' value='" . htmlspecialchars($name) . "' style='display: none;'>
+                        <input type='text' name='nombre' value='" . htmlspecialchars($nombre) . "' style='display: none;'>
             ";
             //estos son los bonotes mostrados segun el STATUS de el cliente ; ACTIVO o COBRANZA o CANCELADO 
             if ($row['Status'] == "ACTIVO" || $row['Status'] == "COBRANZA" || $row['Status'] == "CANCELADO") {
@@ -527,7 +527,7 @@ $Metodo = "Mesa";
                 echo "
                     </form>
                     <form method='POST' action='" . $_SERVER['PHP_SELF'] . "'>
-                        <input type='text' name='nombre' value='" . htmlspecialchars($name) . "' style='display: none;'>
+                        <input type='text' name='nombre' value='" . htmlspecialchars($nombre) . "' style='display: none;'>
                 ";
             //estos son los bonotes mostrados segun el STATUS de el cliente ; COBRANZA 
             //teniamos esta consfiguracion previa; revisar cuando los clientes esten en cobranza

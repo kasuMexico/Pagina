@@ -190,11 +190,15 @@ require_once 'php/Selector_Emergentes_Ml.php';
                       </div>
                   </form>
                   <hr>
+                  <label for='basic-url'>Carga masiva de clientes</label>
+                  <small id='emailHelp' class='form-text text-muted'>Descarga el archivo muestra y llenalo con los datos de tus clientes y cargalo para crear masivamente clientes</small>
                   <form method='POST' action='Lote_Clientes.php' enctype='multipart/form-data'>
                       <div class='input-group mb-3'>
                           <input  type='file'  name='archivo_csv' id ='nombre'  class='form-control' placeholder='Subir archivo' />
                           <div class='input-group-append'>
-                              <button class='btn btn-outline-secondary' type='submit' name='action' value='buscar'>Subir</button>
+                                <button class='btn btn-outline-secondary' type='submit' name='action' value='buscar'>Subir</button>
+                                <!--Archivo Muestra para clientes masivos-->
+                                <a class='btn btn-outline-secondary' href='https://kasu.com.mx/login/assets/Plantilla_Ctes_Masivos_KASU.csv' class='btn btn-success' download>Descargar</a>
                           </div>
                       </div>
                   </form>
@@ -206,6 +210,7 @@ require_once 'php/Selector_Emergentes_Ml.php';
             <?php
             if($Vende <= 1){
                 echo "
+                <label for='basic-url'>Metas de Colocacion y Cobranza del mes corriente</label>
                 <div class='form-group'>
                     <input class='form-control form-control-sm'  type='number' name='MetaMes' value='' placeholder='Meta de colocacion del Mes de ". $meses[date('n')]."'>
                     <small id='emailHelp' class='form-text text-muted'>No agregues porcentajes ni puntos decimales</small>

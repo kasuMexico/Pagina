@@ -496,9 +496,9 @@ function fingerprint_plugins(){ "use strict";
       + "<input name='os' type='hidden' value='"+fingerprint_os()+"'>"
       + "<input name='timezone' type='hidden' value='"+fingerprint_timezone()+"'>"
       + "<input name='touch' type='hidden' value='"+fingerprint_touch()+"'>"
-      + "<input name='truebrowser' type='hidden' value='"+fingerprint_plugins()+"'>"
-      + "<input name='plugins' type='hidden' value='"+fingerprint_useragent()+"'>"
-      + "<input name='useragent' type='hidden' value='"+fingerprint_truebrowser()+"'>";
+      + "<input name='plugins'     type='hidden' value='"+fingerprint_plugins()+"'>"
+      + "<input name='useragent'   type='hidden' value='"+fingerprint_useragent()+"'>"
+      + "<input name='truebrowser' type='hidden' value='"+fingerprint_truebrowser()+"'>";
   }
 
   function renderFingerprint(ctx){

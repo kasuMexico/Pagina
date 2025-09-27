@@ -83,6 +83,7 @@
 	$CtesMesCob = 0;
 	$ServOtCte = 0;
 	$EdPrmcte = 0;
+	$VtasCacelTot = 0;
 
 	// Formateador monetario
 	$fmtMoney = new NumberFormatter('es_MX', NumberFormatter::CURRENCY);
@@ -109,9 +110,6 @@
 	$VtaDine = $basicas->Sumar0Fecha($mysqli,"CostoVenta","Venta","FechaRegistro",$Fec0);
 
 	// Valores acumulados por producto
-	// Inicializa acumulados
-	$F0003 = 0.0;
-	$VaF0003 = 0.0;
 
 	// Cache de tasas por producto
 	$prodRates = [];
@@ -133,6 +131,11 @@
 			$prod = $Resd7['Producto'];
 			if (!isset($prodRates[$prod])) { continue; }  // no return
 
+			//Calculamos el valor de las ventas
+			$pagado = (float)$Resd7['CostoVenta'];
+			$vTtOT += $pagado;
+
+			//Calculamos el monto enviado al fideicomiso
 			$deposito = (float)$Resd7['CostoVenta'] * (float)$prodRates[$prod]['fide'];
 			$F0003 += $deposito;
 
@@ -189,7 +192,11 @@
 		} elseif ($Resd7['Status'] == "CANCELADO") {
 			$IniMs   = strtotime($Fec0);
 			$fecRegis = strtotime($basicas->Max1Dat($mysqli,"FechaRegistro","Pagos","Id",$Resd7['Id']));
-
+			//Calculamos el valor de las ventas
+			$CancelTot = (float)$Resd7['CostoVenta'];
+			$VtasCacelTot += $CancelTot;
+			
+			//Calculamos el valor de la cartera de el mes en mora
 			if ($fecRegis >= $IniMs){
 				$NPOi3   = $financieras->PagosPend($mysqli, $Resd7['Id']);
 				$pago3   = $financieras->Pago($mysqli, $Resd7['Id']);
@@ -198,7 +205,8 @@
 					$PagEnMor3 += $PenaMo3;
 				}
 			}
-
+			
+			//Calculamos el valor total de los pagos pendientes de pago
 			$NPOi = $financieras->PagosPend($mysqli, $Resd7['Id']);
 			$pago = $financieras->Pago($mysqli, $Resd7['Id']);
 			if ($NPOi > 0){
@@ -346,18 +354,31 @@
 
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-MX">
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, user-scalable=no">
-	<title>Analisis</title>
-	<meta name="theme-color" content="#2F3BA2" />
-	<link rel="apple-touch-icon" href="../images/logo.png">
-	<link rel="icon" href="../images/logo.png">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-	<link rel="stylesheet" href="assets/css/styles.min.css">
-	<link rel="stylesheet" href="assets/css/Grafica.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#F2F2F2">
+    <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
+    <title>Analisis Ventas</title>
+
+    <!-- Manifest / iOS -->
+    <link rel="manifest" href="/login/manifest.webmanifest">
+    <link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/login/assets/css/styles.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?echo $VerCache;?>">
+    <link rel="stylesheet" href="assets/css/Grafica.css">
+
+    <!-- JS externos -->
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+
 	<!--Load the AJAX API-->
 	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
@@ -434,16 +455,16 @@
 		<div class="row">
 			<div class="col-lg-4">
 				<div class="card">
-					<div class="card-header bg-secondary text-light">Generales KASU</div>
+					<div class="card-header bg-secondary text-light">Generales KASU</div> <!-- Funcionando completamente -->
 					<div class="card-body">
-						Ventas Activas :  
+						Cobros Totales :  
+						<strong><? echo number_format($CObTo,2); ?></strong>
+						<br>Ventas Totales ACTIVAS :  
 						<strong><? echo number_format($vTtOT,2); ?></strong>
+						<br>Ventas Totales CANCELADAS :  
+						<strong><? echo number_format($VtasCacelTot,2); ?></strong>
 						<br>Clientes Totales ACTIVOS :  
 						<strong><? echo number_format($TotCtesACT,0); ?></strong> <!-- Pendiente Ingresar el numero de clientes activos totales-->
-						<br>Cobros Totales :  
-						<strong><? echo number_format($CObTo,2); ?></strong>
-						<br>Ventas no Concretadas :  
-						<strong><? echo round($dcv); ?> de 10</strong>
 						<br>Ventas Concretadas :  
 						<strong><? echo round($dc1v); ?> de 10</strong>
 					</div>
@@ -523,7 +544,8 @@
 			</div>
 			<div class="col-lg-4">
 				<div class="card">
-					<div class="card-header bg-secondary text-light">Datos Fideicomiso</div>
+					<div class="card-header bg-secondary text-light">Datos Fideicomiso</div> <!-- Funcionando completamente -->
+					<div class="card-body">
 					<div class="card-body">
 						Valor del fideicomiso : 
 						<strong><? echo number_format($F0003,2); ?></strong>

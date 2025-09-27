@@ -226,19 +226,46 @@ class Basicas {
         return null;
     }
 
-    /*********************************************************************************
+    /**
      * Retorna el valor del campo $d1 de la tabla $n1 donde $d2 = $d3 y $d4 = $d5.
-     *********************************************************************************/
+     *
+     * @param mysqli $c0   Conexión MySQLi activa.
+     * @param string $d1   Columna a devolver (p.ej. "Email").
+     * @param string $n1   Tabla a consultar (p.ej. "Usuarios").
+     * @param string $d2   Columna del primer filtro WHERE (p.ej. "Id").
+     * @param mixed  $d3   Valor para $d2 (se envía como parámetro preparado).
+     * @param string $d4   Columna del segundo filtro AND (p.ej. "Activo").
+     * @param mixed  $d5   Valor para $d4 (se envía como parámetro preparado).
+     * @return mixed|null  Valor de $d1 o null si no hay coincidencia/error.
+     */
     public function Buscar2Campos($c0, $d1, $n1, $d2, $d3, $d4, $d5) {
-        $this->trackUsage();  // Registra el uso de este método.
-        $d3 = $c0->real_escape_string($d3);
-        $d5 = $c0->real_escape_string($d5);
-        $sql = "SELECT `$d1` FROM `$n1` WHERE `$d2` = '$d3' AND `$d4` = '$d5'";
-        $res = $c0->query($sql);
-        if ($res && $Reg = $res->fetch_assoc()) {
-            return $Reg[$d1];
+        $this->trackUsage(); // Telemetría interna de uso del método.
+
+        // Validación básica de identificadores (tabla/columnas). Evita inyección en nombres.
+        $isId = static function($s){ return is_string($s) && preg_match('/^[A-Za-z0-9_]+$/', $s); };
+        if (!$isId($d1) || !$isId($n1) || !$isId($d2) || !$isId($d4)) {
+            return null;
         }
-        return null;
+
+        // SQL con identificadores escapados mediante backticks. Valores por parámetros.
+        $sql = "SELECT `{$d1}` FROM `{$n1}` WHERE `{$d2}` = ? AND `{$d4}` = ? LIMIT 1";
+        $stmt = $c0->prepare($sql);
+        if (!$stmt) return null;
+
+        // Inferencia simple de tipos para bind_param: i=int, d=float, s=string.
+        $t1 = is_int($d3) ? 'i' : (is_float($d3) ? 'd' : 's');
+        $t2 = is_int($d5) ? 'i' : (is_float($d5) ? 'd' : 's');
+        $stmt->bind_param($t1.$t2, $d3, $d5);
+
+        // Ejecuta y obtiene primera fila.
+        $stmt->execute();
+        $res = $stmt->get_result();
+        if (!$res) { $stmt->close(); return null; }
+        $row = $res->fetch_assoc();
+        $stmt->close();
+
+        // Retorna el valor de la columna solicitada o null.
+        return $row[$d1] ?? null;
     }
 
     /*********************************************************************************

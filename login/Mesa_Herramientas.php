@@ -46,18 +46,36 @@ if(!empty($_POST['RepDat'])){
 require_once 'php/Selector_Emergentes_Ml.php';
 ?>
 <!DOCTYPE html>
-<html lang="ES">
+<html lang="es-MX">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=no">
-    <title>herramientas</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
-    <link href='https://fonts.googleapis.com/icon?family=Material+Icons' rel='stylesheet'>
-    <link rel="stylesheet" href="assets/css/styles.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#F2F2F2">
     <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
-    <script src='https://code.jquery.com/jquery-3.3.1.slim.min.js'></script>
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js'></script>
-    <script src='https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js'></script>
+    <title>Mesa Prospectos</title>
+
+    <!-- Manifest / iOS -->
+    <link rel="manifest" href="/login/manifest.webmanifest">
+    <link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/login/assets/css/styles.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href='https://fonts.googleapis.com/icon?family=Material+Icons' rel='stylesheet'>
+    <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?echo $VerCache;?>">
+
+    <!-- Inicio Librerias prara las ventanas emergentes automaticas-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js' integrity='sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49' crossorigin='anonymous'></script>
+
+    <!-- JS externos -->
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+
 </head>
 <body>
     <section id="Menu">
@@ -82,7 +100,7 @@ require_once 'php/Selector_Emergentes_Ml.php';
                         <div class="modal-body">
                             <input type="number" name="IdContact" value="<?php echo isset($RegCt['id']) ? $RegCt['id'] : ''; ?>" style="display:none;">
                             <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;">
-                            <input type="text" name="name" value="<?php echo isset($name) ? $name : ''; ?>" style="display: none;">
+                            <input type="text" name="nombre" value="<?php echo isset($nombre) ? $nombre : ''; ?>" style="display: none;">
                             <label>Nombre</label>
                             <input class="form-control" disabled type="text" name="Nombre" value="<?php echo isset($Reg['Nombre']) ? $Reg['Nombre'] : ''; ?>">
                             <label>Puesto</label>

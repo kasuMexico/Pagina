@@ -95,36 +95,51 @@ $_SESSION['mail_token'] = bin2hex(random_bytes(16));
 $Metodo = "Mesa";
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-MX">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=no">
-    <title>clientes</title>
-    <meta name="theme-color" content="#2F3BA2" />
-    <link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#F2F2F2">
     <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
+    <title>Mesa Prospectos</title>
+
+    <!-- Manifest / iOS -->
+    <link rel="manifest" href="/login/manifest.webmanifest">
+    <link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/login/assets/css/styles.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/css/styles2.min.css">
-    <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href='https://fonts.googleapis.com/icon?family=Material+Icons' rel='stylesheet'>
+    <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?echo $VerCache;?>">
+    <link rel="stylesheet" href="assets/css/Grafica.css">
+
     <!-- Inicio Librerias prara las ventanas emergentes automaticas-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js' integrity='sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49' crossorigin='anonymous'></script>
+
+    <!-- JS externos -->
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+
 </head>
 <body onload="localize()">
+    <script type='text/javascript'>
+        $(document).ready(function() {
+            $('#<?php echo $Ventana; ?>').modal('toggle')
+        });
+    </script>
 <section id="Menu">
     <div class="MenuPrincipal">
         <a class="BtnMenu" href="Pwa_Principal.php"><img src="assets/img/FlorKasu.png"></a>
         <a class="BtnMenu" href="Mesa_Herramientas.php"><img src="assets/img/ajustes.png" style="background: #A9D0F5;"></a>
     </div>
 </section>
-<br><br><br>
 <section name="VentanasEMergentes">
-    <script type='text/javascript'>
-        $(document).ready(function() {
-            $('#<?php echo $Ventana; ?>').modal('toggle')
-        });
-    </script>
     <!-- Agregar pago a un cliente Funcionando 22/09/25 -->
     <div class="modal fade" id="Ventana1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">

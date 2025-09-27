@@ -16,14 +16,30 @@ require_once '../eia/librerias.php';
             }
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-MX">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>cuenta</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#F2F2F2">
+    <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
+    <title>Estado de Cuenta</title>
+
+    <!-- Manifest / iOS -->
+    <link rel="manifest" href="/login/manifest.webmanifest">
+    <link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- CSS -->
     <link rel="stylesheet" href="/login/assets/css/styles.min.css">
-		<link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?echo $VerCache;?>">
+    <link rel="stylesheet" href="assets/css/Grafica.css">
+
+    <!-- JS externos -->
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 </head>
 <body>
 		<!--Inicio de menu principal fijo-->

@@ -4,188 +4,199 @@ session_start();
 //inlcuir el archivo de funciones
 require_once '../../eia/librerias.php';
 date_default_timezone_set('America/Mexico_City');
+
 $hoy = date('Y-m-d');
 $HoraActual = date('H:i:s');
 //Varible principal
-$empresa = 'https://www.kasu.com.mx/';
-/********************************************************** Registros Generales de GPS y Fingerprint ***********************************************************/
-//Converson general de variables
-foreach ($_POST as $key => $value){
-    $asignacion="\$".$key."='".$value."';";
-    eval($asignacion);
-}
-//Se validan los datos de GPS
-if(isset($Latitud)){
-    //Se crea el array que contiene los datos de GPS
-    $DatGps = array (
-        "Latitud"   => $Latitud,
-        "Longitud"  => $Longitud,
-        "Presicion" => $Presicion
-    );
-    //Se realiza el insert en la base de datos
-    $basicas->InsertCampo($pros,"gps",$DatGps);
-}
-//Sevalida que el fingerprint exista
-if(isset($fingerprint)){
-      //Sevalida que el fingerprint exista
-      $Reg2 = $basicas->BuscarCampos($pros,'Id','FingerPrint','fingerprint',$fingerprint);
-      //COndicional si esta vacia la consulta
-      if(empty($Reg2)){
-      //Se crea el array que contiene los datos de FINGERPRINT
-      $DatFinger = array (
-              "fingerprint"   => $fingerprint,
-              "browser"       => $browser,
-              "flash"         => $flash,
-              "canvas"        => $canvas,
-              "connection"    => $connection,
-              "cookie"        => $cookie,
-              "display"       => $display,
-              "fontsmoothing" => $fontsmoothing,
-              "fonts"         => $fonts,
-              "formfields"    => $formfields,
-              "java"          => $java,
-              "language"      => $language,
-              "silverlight"   => $silverlight,
-              "os"            => $os,
-              "timezone"      => $timezone,
-              "touch"         => $touch,
-              "truebrowser"   => $truebrowser,
-              "plugins"       => $plugins,
-              "useragent"     => $useragent
-          );
-    //Se realiza el insert en la base de datos
-    $basicas->InsertCampo($pros,"FingerPrint",$DatFinger);
-    }
-}
-/*******************************************************************************************************************************
-                                              Registro de Prospectos pagina principal
-********************************************************************************************************************************/
-  if(isset($_POST['Registro'])){
-      //Verificamos que no exista el prospectos
-      $IdProspecto = $basicas->BuscarCampos($pros,'Id','prospectos','Email',$Mail);
-      //Seleccionamos el origen de el prospecto
-      if(empty($Origen)){
-        $Origen = "Web";
-      }
-      //Creamos el array para guardar los datos
-      $DatProsp = array(
-          "IdFingerprint"     => $fingerprint,
-          "FullName"          => $name,
-          "NoTel"             => $Telefono,
-          "Email"             => $Mail,
-          "Servicio_Interes"  => $Servicio,
-          "Origen"            => $Origen,
-          "Cancelacion"       => 0,
-          "Automatico"        => 0,
-          "Alta"              => $hoy." ".$HoraActual
-      );
-//Se realiza el insert en la base de datos
-      $Us = $basicas->InsertCampo($pros,"prospectos",$DatProsp);
-//Creamos el array para guardar los datos
-      $DatEventos = array(
-          "Us"            => $Us,
-          "IdFInger"      => $fingerprint,
-          "Evento"        => $Evento,
-          "Host"          => $Host,
-          "connection"    => $connection,
-          "timezone"      => $timezone,
-          "touch"         => $touch,
-          "Cupon"         => $Cupon,
-          "FechaRegistro" => $hoy." ".$HoraActual
-      );
-//Se realiza el insert en la base de datos
-    $basicas->InsertCampo($mysqli,"Eventos",$DatEventos);
-//Enviamos los correos de confirmacion de registro
-    header('Location: https://kasu.com.mx/eia/EnviarCorreo.php?ProReIn='.$Us.'&Host='.$Host.'&Mail='.$Mail.'&Servicio='.$Servicio);
 
-}
-/*****************************Registro de Prospectos pagina principal******************************/
-  if(isset($_POST['PerDIstri'])){
-//Creamos el array para guardar los datos
-    $DatProsp = array(
-          "IdProspecto"   => $Usr,
-          "name"          => $name,
-          "Mail"          => $Mail,
-          "Telefono"      => $Telefono,
-          "Clabe"         => $Clabe,
-          "Direccion"     => $Direccion,
-          "Alta"          => $hoy." ".$HoraActual
-    );
-//Se realiza el insert en la base de datos
-    $basicas->InsertCampo($pros,"Distribuidores",$DatProsp);
-/******************  Se registra el evento  *********************/
-//Creamos el array para guardar los datos
-      $DatEventos = array(
-          "Us"            => $Usr,
-          "IdFInger"      => $fingerprint,
-          "Evento"        => "Comp_Dist",
-          "Host"          => $Host,
-          "connection"    => $connection,
-          "timezone"      => $timezone,
-          "touch"         => $touch,
-          "Cupon"         => $Cupon,
-          "FechaRegistro" => $hoy." ".$HoraActual
-      );
-//Se realiza el insert en la base de datos
-    $basicas->InsertCampo($mysqli,"Eventos",$DatEventos);
-//Creamos la respuesta
-    $Msg = "se ha registrado correctamente tus datos, te enviaremos en breve el contrato de distribuidor";
-//echo "Se ha enviado un email al correo registrado.";
-    header('Location: https://kasu.com.mx/index.php?Msg='.$Msg);
-}
-/*********************************** Registra un nuevo prospecto ***************************************/
+/******************************************** BLOQUE: Registra un nuevo prospecto **********************************************/
+/************************************** REVISADO 25/09/2025 JOSE CARLOS CABRERA MONROY ****************************************/
+
     if(isset($_POST['prospectoNvo'])){
-//Verificamos que no exista el prospectos
-    $IdProspecto = $basicas->BuscarCampos($pros,'Id','prospectos','Email',$Mail);
-//Si el prospectoexiste no se registra
-    if(empty($IdProspecto)){
-//Creamos el array para guardar los datos
-          $DatProsp = array(
-              "FullName"          => $name,
-              "Email"             => $Mail,
-              "NoTel"             => $Telefono,
-              "FechaNac"          => $FechaNac,
-              "Servicio_Interes"  => $Servicio,
-              "Origen"            => $Origen,
-              "Estado"            => 1,
-              "Cancelacion"       => 0,
-              "Automatico"        => 0,
-              "Asignado"          => $IdAsignacion,
-              "Alta"              => $hoy." ".$HoraActual
-          );
-//Se realiza el insert en la base de datos
-      $Us = $basicas->InsertCampo($pros,"prospectos",$DatProsp);
-//El prospecto ya se registro previamente
-          $asunto = "CONOCE KASU";
-          $Evento = "1MAILPROS";
-      }else{
-//EL prospecto no se ha registrado
-          $asunto = "¿AUN TIENES DUDAS?";
-          $Evento = "2MAILPROS";
-          $Us = $IdProspecto;
-//Se actualiza el Estado en la base
-      $basicas->ActCampo($pros,"prospectos","Estado",2,$IdProspecto);
-      }
-//Creamos el array para guardar los datos
-      $DatEventos = array(
-          "Us"            => $Us,
-          "IdFInger"      => $fingerprint,
-          "Evento"        => $Evento,
-          "Host"          => $Host,
-          "connection"    => $connection,
-          "timezone"      => $timezone,
-          "touch"         => $touch,
-          "Cupon"         => $Cupon,
-          "FechaRegistro" => $hoy." ".$HoraActual
-      );
-//Se realiza el insert en la base de datos
-      $basicas->InsertCampo($mysqli,"Eventos",$DatEventos);
-      //Redireccionamos a la pagina del pago
-      header('Location: https://kasu.com.mx'.$Host.'?Ml=5&name='.$name);
+
+    // Extraer y sanitizar las variables necesarias
+    function post_has($k){ return array_key_exists($k, $_POST); }
+    function post_get($k){ return post_has($k) ? trim((string)$_POST[$k]) : null; }
+
+    function s_str($v){ return $v===null ? null : filter_var($v, FILTER_UNSAFE_RAW, FILTER_FLAG_STRIP_LOW|FILTER_FLAG_STRIP_HIGH); }
+    function s_int($v){ if($v===null) return null; $x = filter_var($v, FILTER_VALIDATE_INT); return $x===false ? null : $x; }
+    function s_bool01($v){ if($v===null) return null; $t=strtolower((string)$v); return in_array($t,['1','true','on','yes','si','sí'],true)?1:0; }
+    function s_email($v){ if($v===null) return null; $x = filter_var($v, FILTER_VALIDATE_EMAIL); return $x?:null; }
+    function s_phone10($v){ if($v===null) return null; $d=preg_replace('/\D+/','',$v); return strlen($d)>=10 ? substr($d,-10) : null; }
+    function s_curp($v){
+    if($v===null) return null;
+    $u = strtoupper(preg_replace('/[^A-Za-z0-9]/','',$v));
+    $re = '/^[A-Z]{4}\d{6}[HM](AS|BC|BS|CC|CS|CH|CL|CM|CO|DF|DG|GT|GR|HG|JC|MC|MN|MS|NT|NL|OC|PL|QT|QR|SP|SL|SR|TC|TS|TL|VZ|YN|ZS|NE)[B-DF-HJ-NP-TV-Z]{3}[A-Z0-9]\d$/';
+    return preg_match($re,$u) ? $u : null;
+    }
+    function s_date($v){ // -> Y-m-d
+    if($v===null) return null;
+    $v=trim($v);
+    foreach (['Y-m-d','d/m/Y','d-m-Y'] as $fmt){
+        $dt = DateTime::createFromFormat($fmt,$v);
+        if($dt && $dt->format($fmt)===$v) return $dt->format('Y-m-d');
+    }
+    return null;
+    }
+    function s_datetime($v){ // -> Y-m-d H:i:s
+    if($v===null) return null;
+    foreach (['Y-m-d H:i:s','d/m/Y H:i:s','Y-m-d'] as $fmt){
+        $dt = DateTime::createFromFormat($fmt,$v);
+        if($dt && $dt->format($fmt)===$v) return $dt->format('Y-m-d H:i:s');
+    }
+    return null;
+    }
+    function s_choice($v, array $allowed){
+    if($v===null) return null;
+    $x = strtoupper(trim($v));
+    return in_array($x,$allowed,true) ? $x : null;
+    }
+
+    // ==== Catálogos ====
+    $SERV_ALLOWED = ['FUNERARIO','SEGURIDAD','TRANSPORTE','RETIRO','DISTRIBUIDOR'];
+
+    // ==== Captura + sanitizado ====
+    // alias útiles desde tu modal/HTML
+    $Curp            = s_curp( post_get('Curp')      ?? post_get('CURP') );
+    $NoTel           = s_phone10( post_get('NoTel')  ?? post_get('Telefono') );
+    $Email           = s_email( post_get('Email')    ?? post_get('Email') );
+    $Servicio_Interes= s_choice( post_get('Servicio_Interes') ?? post_get('Servicio'), $SERV_ALLOWED );
+    $FechaNac        = s_date( post_get('FechaNac')  ?? post_get("FechaNac\t") ?? post_get('fecha_nac') );
+    $Alta            = s_datetime( post_get('Alta') ) ?? date('Y-m-d H:i:s');
+
+    // otros campos tal cual con su tipo
+    $IdFingerprint   = s_str( post_get('IdFingerprint') ?? post_get('fingerprint') );
+    $IdFacebook      = s_str( post_get('IdFacebook') );
+    $UsrApi          = s_str( post_get('UsrApi') );
+    $Direccion       = s_str( post_get('Direccion') );
+    $Origen          = s_str( post_get('Origen') );
+    $Sugeridos       = s_int( post_get('Sugeridos') );
+    $Cancelacion     = post_has('Cancelacion') ? s_bool01(post_get('Cancelacion')) : null;
+    $Automatico      = post_has('Automatico')  ? s_bool01(post_get('Automatico'))  : null;
+
+    //Validamos que el prospecto no se encuentre registrado
+    $CurpValid = $basicas->BuscarCampos($pros,'Id','prospectos','Curp',$Curp);
+    //Validamos que el correo electronico y el telefono no se registre doble
+    $ValidTele = $basicas->BuscarCampos($pros,'Id','prospectos','NoTel',$NoTel);
+    $ValidMail = $basicas->BuscarCampos($pros,'Id','prospectos','Email',$Email);
+    //Validamos que el CURP que se encuentra registrado tenga un pape line valido
+    $PapeCurp = $basicas->BuscarCampos($pros,'Papeline','prospectos','Curp',$Curp);
+    
+    //Buscamos si el cliente existe ya
+    $IdContac = $basicas->BuscarCampos($mysqli,'IdContact','Usuario','ClaveCurp',$Curp);
+    if (!empty($IdContac)){
+        //Validamos el status de el servicio
+        $StatVta = $basicas->BuscarCampos($mysqli,'Producto','Venta','IdContact',$IdContac);
+        //Creamos un validador para la ejecucion
+        if($StatVta != "Universidad" || $StatVta != "Retiro"){
+            $ValidacionProducto = "InValido";
+        }
+    }
+
+    //Validamos que el prospecto no se encuentre registrado
+    if($ValidacionProducto == "InValido"){
+        //Se registran los datos de el finger print, gps y Evento
+        $ids = $seguridad->auditoria_registrar(
+            $mysqli,                                // conexión principal
+            $basicas,                               // tu helper Basicas
+            $_POST,                                 // datos del form (fingerprint, gps, etc.)
+            'Pros_ya_Cte_Pwa',                    // nombre del evento
+            $_POST['Host'] ?? $_SERVER['PHP_SELF']  // host/origen
+        );
+        //mensaje de alert para usuario
+        $Msg = "Este prospecto ya es cliente de KASU";
+    } elseif(!empty($CurpValid) && $PapeCurp == "Prospeccion"){
+        //Se registran los datos de el finger print, gps y Evento
+        $ids = $seguridad->auditoria_registrar(
+            $mysqli,                                // conexión principal
+            $basicas,                               // tu helper Basicas
+            $_POST,                                 // datos del form (fingerprint, gps, etc.)
+            'Fallido_Prospecto_Pwa',                    // nombre del evento
+            $_POST['Host'] ?? $_SERVER['PHP_SELF']  // host/origen
+        );
+        //mensaje de alert para usuario
+        $Msg = "Este prospecto ya se encuentra registrado y no ha concluido el proceso";
+    } elseif(!empty($ValidTele) || !empty($ValidMail)){
+        //Se registran los datos de el finger print, gps y Evento
+        $ids = $seguridad->auditoria_registrar(
+            $mysqli,                                // conexión principal
+            $basicas,                               // tu helper Basicas
+            $_POST,                                 // datos del form (fingerprint, gps, etc.)
+            'Pros_Contacto_Duplicado',              // nombre del evento
+            $_POST['Host'] ?? $_SERVER['PHP_SELF']  // host/origen
+        );
+        //mensaje de alert para usuario
+        $Msg = "los datos de contacto de este prospecto ya se encuentran registrados";
+    } else {
+        //Validamos los datos de el prospecto
+        $DatProsp = $seguridad->peticion_get($Curp);
+        // Validamos que la curp sea real
+        if($DatProsp['Response'] == "Error"){
+            //Se registran los datos de el finger print, gps y Evento
+            $ids = $seguridad->auditoria_registrar(
+                $mysqli,                                // conexión principal
+                $basicas,                               // tu helper Basicas
+                $_POST,                                 // datos del form (fingerprint, gps, etc.)
+                'Pros_Curp_Falsa_Pwa',                    // nombre del evento
+                $_POST['Host'] ?? $_SERVER['PHP_SELF']  // host/origen
+            );
+            //mensaje de alert para usuario
+            $Msg = $DatProsp['Msg'];
+        } else {
+            //Buscamos el Id de el vendedor que crea el proespeco
+            $Asignado = $basicas->BuscarCampos($mysqli,'Id','Empleados','IdUsuario',$_SESSION["Vendedor"]);
+
+            //Se registran los datos de el finger print, gps y Evento
+            $ids = $seguridad->auditoria_registrar(
+                $mysqli,                                // conexión principal
+                $basicas,                               // tu helper Basicas
+                $_POST,                                 // datos del form (fingerprint, gps, etc.)
+                'Pros_Curp_Falsa_Pwa',                    // nombre del evento
+                $_POST['Host'] ?? $_SERVER['PHP_SELF']  // host/origen
+            );
+
+            //Realizamos el registro de el Usuario
+            // ==== Empaque para DB ====
+            $data = [
+            "IdFingerprint"     => $ids['fingerprint_id'],
+            "IdFacebook"        => $IdFacebook,
+            "UsrApi"            => $UsrApi,
+            "FullName"          => $DatProsp['Nombre']." ".$DatProsp['Paterno']." ".$DatProsp['Materno'],
+            "Curp"              => $Curp,
+            "NoTel"             => $NoTel,
+            "Email"             => $Email,
+            "Direccion"         => $Direccion,
+            "Servicio_Interes"  => $Servicio_Interes,
+            "Alta"              => $Alta,
+            "Origen"            => $Origen,
+            "Papeline"          => "Prospeccion",
+            "PosPapeline"       => 1,
+            "Sugeridos"         => $Sugeridos,
+            "Cancelacion"       => $Cancelacion,
+            "FechaNac"          => $DatProsp['FechaNacimiento'],
+            "Automatico"        => $Automatico,
+            "Asignado"          => $Asignado
+            ];
+            //Registramos en la base de datos la leyenda
+            $NvoRegistro = $basicas->InsertCampo($pros, "prospectos", $data);
+
+            //mensaje de alert para usuario
+            $Msg = "Se ha registrado correctamente el prospecto";
+        }
+    }
+    //Redireccionar a pagina de donde venimos
+    header('Location: https://kasu.com.mx' . $_POST['Host'] . '?Vt=1&Msg='.$Msg.'&nombre=' . $_POST['nombre']);
+    exit();
 }
-/*********************************** Descarga Cotizacion a prospecto ***************************************/
+/***************************************** BLOQUE: Descarga Cotizacion a prospecto ********************************************/
+/************************************** REVISADO 25/09/2025 JOSE CARLOS CABRERA MONROY ****************************************/
+
     if(isset($_POST['DescargaPres'])){
-      //codigo por si registra un pago un ejecutivo superior
+
+
+
+
+      /*/codigo por si registra un pago un ejecutivo superior
       if(empty($IdVendedor)){
           $Usuario = $_SESSION["Vendedor"];
       }else{
@@ -218,7 +229,7 @@ if(isset($fingerprint)){
           $dirUrl1 = "https://kasu.com.mx/login/Generar_PDF/Cotizacion_pdf.php";
       }
 //Se redirecciona a la pagina de los presupuestos
-    header('Location: '.$dirUrl1.'?Host='.$Host.'&name='.$name.'&busqueda='.$IdPros);
+    //header('Location: '.$dirUrl1.'?Host='.$Host.'&name='.$name.'&busqueda='.$IdPros);*/
 }
 /*********************************** Envia Cotizacion a prospecto ***************************************/
     if(isset($_POST['EnviaPres'])){

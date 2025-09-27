@@ -24,7 +24,8 @@ date_default_timezone_set('America/Mexico_City');
 $hoy = date('Y-m-d');
 $HoraActual = date('H:i:s');
 
-/********************************* BLOQUE: ACTUALIZAR DATOS DE UN CLIENTE *********************************/
+/**************************************** BLOQUE: ACTUALIZAR DATOS DE UN CLIENTE **********************************************/
+/************************************** REVISADO 25/09/2025 JOSE CARLOS CABRERA MONROY ****************************************/
 if (!empty($_POST['ActDatosCTE'])){
     // Extraer y sanitizar las variables necesarias
     $calle    = isset($_POST['calle'])   ? $mysqli->real_escape_string($_POST['calle'])   : '';
@@ -62,6 +63,8 @@ if (!empty($_POST['ActDatosCTE'])){
     exit();
 }
 /********************************* BLOQUE: REGISTRAR UN TICKET DE ATENCION AL CLIENTE *********************************/
+/************************************** REVISADO 25/09/2025 JOSE CARLOS CABRERA MONROY ****************************************/
+
 if (!empty($_POST['AltaTicket'])){
     
     // Extraer y sanitizar las variables necesarias
@@ -101,7 +104,9 @@ if (!empty($_POST['AltaTicket'])){
     exit();
 }
 
-/********************************* BLOQUE: REGISTRAR SERVICIO FUNERARIO *********************************/
+/***************************************** BLOQUE: REGISTRAR SERVICIO FUNERARIO ************************************************/
+/************************************** REVISADO 25/09/2025 JOSE CARLOS CABRERA MONROY ****************************************/
+
 if (!empty($_POST['RegisFun'])){
 
     // Extraer y sanitizar las variables necesarias
@@ -145,7 +150,9 @@ if (!empty($_POST['RegisFun'])){
     exit();
 }
 
-/********************************* BLOQUE: PAGO DE CLIENTE *********************************/
+/*********************************************** BLOQUE: PAGO DE CLIENTE ******************************************************/
+/************************************** REVISADO 25/09/2025 JOSE CARLOS CABRERA MONROY ****************************************/
+
 if (isset($_POST['Pago'])) {
     // ====== Inputs (sanitiza / castea) ======
     $IdVenta   = isset($_POST['IdVenta'])   ? $mysqli->real_escape_string($_POST['IdVenta'])   : '';
@@ -234,7 +241,9 @@ if (isset($_POST['Pago'])) {
     exit();
 }
 
-/********************************* BLOQUE: Registrar Promesa de Pago *********************************/
+/******************************************** BLOQUE: Registrar Promesa de Pago ***********************************************/
+/************************************** REVISADO 25/09/2025 JOSE CARLOS CABRERA MONROY ****************************************/
+
 if (isset($_POST['PromPago'])) {
 
     // ====== Inputs (sanitiza / castea) ======

@@ -10,73 +10,133 @@
   if(!isset($_SESSION["Vendedor"])){
       header('Location: https://kasu.com.mx/login');
   }else{
-    //SE separa el $_POST para seleccionar la Ventana
+    // Separar indicador de ventana y el Id numérico completo
     $IdProspecto = $_POST['IdProspecto'] ?? $_GET['IdProspecto'] ?? null;
+    $Vtn = '';
+    $CteInt = null;
+
     if ($IdProspecto !== null) {
         $Vtn = substr($IdProspecto, 0, 1);
-        $Cte = substr($IdProspecto, 1, 5);
-    } else {
-        $Vtn = '';
-        $Cte = '';
-    }
-    //realizamos la consulta
-    $venta = "SELECT * FROM prospectos WHERE Id = '".$Cte."'";
-    //Realiza consulta
-        $res = mysqli_query($pros, $venta);
-    //Si existe el registro se asocia en un fetch_assoc
-        if($Reg=mysqli_fetch_assoc($res)){
-          //Busqueda de prospectos
-            $ProsDos = "SELECT * FROM Distribuidores WHERE IdProspecto = ".$Reg['Id'];
-          //Realiza consulta
-                $ResDos = mysqli_query($pros, $ProsDos);
-          //Si existe el registro se asocia en un fetch_assoc
-                if($RegDos=mysqli_fetch_assoc($ResDos)){}
+        $idStr = substr($IdProspecto, 1);             // QUITA el 5 fijo
+        if (ctype_digit($idStr)) {
+            $CteInt = (int)$idStr;
         }
+    }
+
+    if ($CteInt !== null) {
+        // prospectos
+        $stmt = $pros->prepare("SELECT * FROM prospectos WHERE Id = ?");
+        if (!$stmt) { error_log($pros->error); die('Error SQL'); }
+        $stmt->bind_param('i', $CteInt);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $Reg = $res ? $res->fetch_assoc() : null;
+        $stmt->close();
+
+        if ($Reg) {
+            // Distribuidores
+            $stmt2 = $pros->prepare("SELECT * FROM Distribuidores WHERE IdProspecto = ?");
+            if ($stmt2) {
+                $stmt2->bind_param('i', $Reg['Id']);
+                $stmt2->execute();
+                $ResDos = $stmt2->get_result();
+                $RegDos = $ResDos ? $ResDos->fetch_assoc() : null;
+                $stmt2->close();
+            } else {
+                error_log($pros->error);
+            }
+        }
+    } else {
+        $Reg = null;
+        $RegDos = null;
+    }
+
     $Ventana = "Ventana".$Vtn;
   }
-  //Se pasan las variables POST a Variable
-  if(!isset($_POST['nombre'])){
-    $name = $_GET['name'];
-  }else{
-    $name = $_POST['nombre'];
+  // Captura nombre desde POST o GET
+  $nombre = $_POST['nombre'] ?? $_GET['nombre'] ?? "";
+  //Lanzamos las alertas por las actualizaciones
+  if (isset($_GET['Vt']) && (int)$_GET['Vt'] === 1) {
+        echo "<script>window.addEventListener('load',()=>alert('".$_GET['Msg']."'));</script>";
   }
   //alertas de correo electronico
   require_once 'php/Selector_Emergentes_Ml.php';
+  //Registro de metodo para pagos / mesa de control/
+  $Metodo = "Mesa";
 ?>
 <!DOCTYPE html>
-<html lang="es">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=no">
-        <title>Prospectos</title>
-        <meta name="theme-color" content="#2F3BA2" />
-        <link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png">
-        <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
-        <link rel="stylesheet" href="assets/css/styles2.min.css">
-        <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons'>
-        <!-- Inicio Librerias prara las ventanas emergentes automaticas-->
-        <script src='https://code.jquery.com/jquery-3.3.1.slim.min.js' integrity='sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo' crossorigin='anonymous'></script>
-        <script src='https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js' integrity='sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49' crossorigin='anonymous'></script>
-        <script src='https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js' integrity='sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy' crossorigin='anonymous'></script>
-        <!-- Fin Librerias prara las ventanas emergentes automaticas-->
-    </head>
-    <body>
-      <!--onload="localize();"-->
+<html lang="es-MX">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#F2F2F2">
+    <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
+    <title>Mesa Prospectos</title>
+
+    <!-- Manifest / iOS -->
+    <link rel="manifest" href="/login/manifest.webmanifest">
+    <link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/login/assets/css/styles.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href='https://fonts.googleapis.com/icon?family=Material+Icons' rel='stylesheet'>
+    <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?echo $VerCache;?>">
+    <link rel="stylesheet" href="assets/css/Grafica.css">
+
+    <!-- Inicio Librerias prara las ventanas emergentes automaticas-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js' integrity='sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49' crossorigin='anonymous'></script>
+
+    <!-- JS externos -->
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+
+</head>
+<body onload="localize()">
+  <script type='text/javascript'>
+    $(document).ready(function() {
+        $('#<?php echo $Ventana; ?>').modal('toggle')
+    });
+  </script>
+    <div class="principal">
+      <div class="d-flex align-items-center py-2 pe-3">
+          <h4 class="flex-grow-1 text-center mb-0">Cartera de Clientes</h4>
+          <!-- Botón registrar prospecto -->
+          <?
+          if(empty($nombre)){
+            $nombre = ' ';
+          }
+          echo "
+            <form method='POST' action='".$_SERVER['PHP_SELF']."'  style='padding-right: 5px;'>
+              <!-- Crear nuevo prospecto -->
+              <input type='text' name='Host' value='".$_SERVER['PHP_SELF']."' style='display: none;'>
+              <input type='text' name='nombre' value='".$nombre."' style='display: none;'>
+              <label for='400' title='Crear nuevo prospecto' class='btn' style='background: #F7DC6F; color: #F8F9F9;' ><i class='material-icons'>person_add</i></label>
+              <input id='400' type='submit' value='400' name='IdProspecto' class='hidden' style='display: none ;' />
+              <!-- Descarga masiva -->
+              <input type='text' name='Host' value='".$_SERVER['PHP_SELF']."' style='display: none;'>
+              <input type='text' name='nombre' value='".$nombre."' style='display: none;'>
+              <label for='400' title='Descarga masiva' class='btn' style='background: #196F3D; color: #F8F9F9;' ><i class='material-icons'>arrow_downward</i></label>
+              <input id='400' type='submit' value='400' name='IdProspecto' class='hidden' style='display: none ;' />
+            </form>
+          ";
+          ?>
+          <p>&nbsp;&nbsp;&nbsp;</p>
+      </div>
+      <hr>
+  </div>
       <!--Inicio de menu principal fijo-->
         <section id="Menu">
             <div class="MenuPrincipal">
             <a class="BtnMenu" href="Pwa_Principal.php"><img src="assets/img/FlorKasu.png"></a>
             <a class="BtnMenu" href="Mesa_Herramientas.php"><img src="assets/img/ajustes.png" style="background: #A9D0F5;"></a>
            </div>
-           <!--Inicio Creacion de las ventanas emergentes-->
-           <script type='text/javascript'>
-               $( document ).ready(function() {
-                   $('#<?PHP echo $Ventana;?>').modal('toggle')
-               });
-           </script>
         </section>
-            <br><br><br>
         <section name="VentanasEMergentes">
             <!-- Registrar Venta -->
             <div class="modal fade" id="Ventana1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -147,12 +207,12 @@
                                 </div>
                                 <div class="modal-body">
                                   <input type="text" name="Host" value="<?PHP echo $_SERVER['PHP_SELF'];?>" style="display: none;">
-                                  <input type="text" name="name" value="<?PHP echo $name;?>" style="display: none;">
+                                  <input type="text" name="nombre" value="<?PHP echo $nombre;?>" style="display: none;">
                                   <input type="number" name="Nivel" value="7" style="display: none;">
                                   <input type="number" name="IdProspecto" value="<? echo $RegDos['IdProspecto'];?>" style="display: none;">
                                   <label> Nombre</label>
                                   <input style="display: none;" type="text" name="Nombre" value="<? echo $RegDos['name'];?>">
-                                  <input class="form-control" type="text" name="Nore" value="<? echo $RegDos['name'];?>" disabled>
+                                  <input class="form-control" type="text" name="Nore" value="<? echo $RegDos['name'];?>" disabled> <!--  Revisar name -->
                                   <label> Telefono</label>
                                   <input style="display: none;" type="text" name="Telefono" value="<? echo $RegDos['Telefono'];?>">
                                   <input class="form-control" type="text" name="Tefono" value="<? echo $RegDos['Telefono'];?>" disabled>
@@ -207,7 +267,7 @@
                               </div>
                               <div class="modal-body">
                                 <input type="text" name="Host" value="<?PHP echo $_SERVER['PHP_SELF'];?>" style="display: none;">
-                                <input type="text" name="name" value="<?PHP echo $name;?>" style="display: none;">
+                                <input type="text" name="nombre" value="<?PHP echo $nombre;?>" style="display: none;">
                                 <input type="text" name="IdProspecto" value="<?PHP echo $Reg['Id'];?>" style="display: none;">
                                 <p>Asignar prospecto a</p>
                                 <label for="exampleFormControlSelect1">Selecciona a quien se asignara</label>
@@ -259,7 +319,7 @@
                               </div>
                               <div class="modal-body">
                                 <input type="text" name="Host" value="<?PHP echo $_SERVER['PHP_SELF'];?>" style="display: none;">
-                                <input type="text" name="name" value="<?PHP echo $name;?>" style="display: none;">
+                                <input type="text" name="nombre" value="<?PHP echo $nombre;?>" style="display: none;">
                                 <input type="text" name="IdProspecto" value="<?PHP echo $Reg['Id'];?>" style="display: none;">
                                 <label for="FullName">Nombre</label>
                                 <input class="form-control" type="text" name="FullName" value="<?php echo $Reg['FullName']; ?>">
@@ -295,7 +355,7 @@
                             </div>
                             <div class="modal-body">
                               <input type="text" name="Host" value="<?PHP echo $_SERVER['PHP_SELF'];?>" style="display: none;">
-                              <input type="text" name="name" value="<?PHP echo $name;?>" style="display: none;">
+                              <input type="text" name="nombre" value="<?PHP echo $nombre;?>" style="display: none;">
                               <input type="text" name="IdProspecto" value="<?PHP echo $Reg['Id'];?>" style="display: none;">
                                 <label for="exampleFormControlSelect1">Selecciona el motivo de la baja</label>
                                 <select class="form-control" name="MotivoBaja" required>
@@ -323,7 +383,7 @@
                           </div>
                           <div class="modal-body">
                             <input type="text" name="Host" value="<?PHP echo $_SERVER['PHP_SELF'];?>" style="display: none;">
-                            <input type="text" name="name" value="<?PHP echo $Reg['FullName'];?>" style="display: none;">
+                            <input type="text" name="nombre" value="<?PHP echo $Reg['FullName'];?>" style="display: none;">
                             <input type="text" name="IdProspecto" value="<?PHP echo $Reg['Id'];?>" style="display: none;">
                               <select class="form-control" name="Asunto">
                                 <option value="0">Correo a enviar:</option>
@@ -345,7 +405,50 @@
                         </form>
                       </div>
                   </div>
-              </div>
+            <!-- Alta de ticket atn cte-->
+            <div class="modal fade" id="Ventana8" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                  <div class="modal-content">
+                    <form method="POST" action="php/Funcionalidad_Pwa.php">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLabel"><?PHP echo $Reg['FullName'];?></h5>
+                            </div>
+                            <div class="modal-body">
+                            <?
+                            if(isset($_SESSION['Alta'])){
+                              echo '
+                                  <input type="number" name="IdProspecto" value="'.$Reg['Id'].'" style="display:none ;">
+                                  <input type="text" name="Host" value="'.$_SERVER['PHP_SELF'].'" style="display: none;">
+                                  <input type="text" name="nombre" value="'.$nombre.'" style="display: none;">
+                                  <p>Cerrar servicio de atencion al cliente</p>
+                                  ';
+                                  $BtnAtnSer = "Registrar Cita";
+                            }else{
+                              echo '
+                                    <input type="number" name="IdProspecto" value="'.$Reg['Id'].'" style="display:none ;">
+                                    <input type="text" name="Host" value="'.$_SERVER['PHP_SELF'].'" style="display: none;">
+                                    <input type="text" name="nombre" value="'.$nombre.'" style="display: none;">
+                                    <label for="exampleFormControlSelect1">Origen</label>
+                                    <input class="form-control" disabled type="text" name="Unico" value="'.$Reg['Origen'].'">
+                                    <label for="exampleFormControlSelect1">Alta</label>
+                                    <input class="form-control" disabled type="text" name="Status" value="'.$Reg['Alta'].'">
+                                    <label for="exampleFormControlSelect1">Numero de Telefono</label>
+                                    <input class="form-control" disabled type="text" name="Producto" value="'.$Reg['NoTel'].'">
+                                    <label for="exampleFormControlSelect1">Email</label>
+                                    <input class="form-control" disabled type="text" name="Producto" value="'.$Reg['Email'].'">
+                                    <label for="exampleFormControlSelect1">Producto de Interes</label>
+                                    <input class="form-control" disabled type="text" name="Direccion" value="'.$Reg['Servicio_Interes'].'">
+                                  ';
+                                  $BtnAtnSer = "Iniciar Cita telefonica";
+                            }
+                            ?>
+                            </div>
+                            <div class="modal-footer">
+                                <input type="submit" name="RegistroCita" class="btn btn-primary" value="<?echo $BtnAtnSer;?>">
+                            </div>
+                      </form>
+                  </div>
+                </div>
             <!-- Alta de ticket atn cte-->
             <div class="modal fade" id="Ventana9" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
                 <div class="modal-dialog" role="document">
@@ -360,7 +463,7 @@
                               echo '
                                   <input type="number" name="IdProspecto" value="'.$Reg['Id'].'" style="display:none ;">
                                   <input type="text" name="Host" value="'.$_SERVER['PHP_SELF'].'" style="display: none;">
-                                  <input type="text" name="name" value="'.$name.'" style="display: none;">
+                                  <input type="text" name="nombre" value="'.$nombre.'" style="display: none;">
                                   <p>Cerrar servicio de atencion al cliente</p>
                                   ';
                                   $BtnAtnSer = "Registrar Cita";
@@ -368,7 +471,7 @@
                               echo '
                                     <input type="number" name="IdProspecto" value="'.$Reg['Id'].'" style="display:none ;">
                                     <input type="text" name="Host" value="'.$_SERVER['PHP_SELF'].'" style="display: none;">
-                                    <input type="text" name="name" value="'.$name.'" style="display: none;">
+                                    <input type="text" name="nombre" value="'.$nombre.'" style="display: none;">
                                     <label for="exampleFormControlSelect1">Origen</label>
                                     <input class="form-control" disabled type="text" name="Unico" value="'.$Reg['Origen'].'">
                                     <label for="exampleFormControlSelect1">Alta</label>
@@ -388,36 +491,11 @@
                                 <input type="submit" name="RegistroCita" class="btn btn-primary" value="<?echo $BtnAtnSer;?>">
                             </div>
                         </form>
-                    </div>
                 </div>
+              </div>
             </div>
         </section>
         <section name="impresion de datos finales">
-            <?
-            if(empty($name)){
-              $name = ' ';
-            }
-            ?>
-            <div class="d-flex flex-row-reverse" >
-                  <div class="p-2" style='display: flex;'>
-                  <?
-                  echo "
-                      <form method='POST' action='".$_SERVER['PHP_SELF']."'  style='padding-right: 5px;'>
-                          <!-- Crear nuevo prospecto -->
-                          <input type='text' name='Host' value='".$_SERVER['PHP_SELF']."' style='display: none;'>
-                          <input type='text' name='nombre' value='".$name."' style='display: none;'>
-                          <label for='400' title='Crear nuevo prospecto' class='btn' style='background: #F7DC6F; color: #F8F9F9;' ><i class='material-icons'>person_add</i></label>
-                          <input id='400' type='submit' value='400' name='IdProspecto' class='hidden' style='display: none ;' />
-                          <!-- Descarga masiva -->
-                          <input type='text' name='Host' value='".$_SERVER['PHP_SELF']."' style='display: none;'>
-                          <input type='text' name='nombre' value='".$name."' style='display: none;'>
-                          <label for='400' title='Descarga masiva' class='btn' style='background: #196F3D; color: #F8F9F9;' ><i class='material-icons'>arrow_downward</i></label>
-                          <input id='400' type='submit' value='400' name='IdProspecto' class='hidden' style='display: none ;' />
-                      </form>
-                  ";
-                  ?>
-                </div>
-            </div>
             <table class="table">
                   <tr>
                       <th>Nombre Prospecto</th>
@@ -428,10 +506,10 @@
                       <th>Acciones</th>
                   </tr>
               <?
-              if($name == ' '){
-                  $buscar = $basicas->BLikesD2($pros,'prospectos','FullName',$name,'Cancelacion',0,'Automatico',0);
+              if($nombre == ' '){
+                  $buscar = $basicas->BLikesD2($pros,'prospectos','FullName',$nombre,'Cancelacion',0,'Automatico',0);
                 }else{
-                  $buscar = $basicas->BLikesCan($pros,"prospectos","FullName",$name,"Cancelacion",0);
+                  $buscar = $basicas->BLikesCan($pros,"prospectos","FullName",$nombre,"Cancelacion",0);
                 }
                   foreach ($buscar as $row){
                   //Contamos las semanas activas
@@ -453,14 +531,15 @@
                             <div style='display: flex;'>
                                 <form method='POST' action='".$_SERVER['PHP_SELF']."'>
                                     <input type='text' name='Host' value='".$_SERVER['PHP_SELF']."' style='display: none;'>
-                                    <input type='text' name='nombre' value='".$name."' style='display: none;'>
+                                    <input type='text' name='nombre' value='".$nombre."' style='display: none;'>
                                     <!-- Registrar Venta -->
                                     <label for='1".$row['Id']."' title='Registrar Venta' class='btn' style='background: #58D68D; color: #F8F9F9;' ><i class='material-icons'>attach_money</i></label>
                                     <input id='1".$row['Id']."' type='submit' value='1".$row['Id']."' name='IdProspecto' class='hidden' style='display: none;' />
-<!--                                    Enviar prospecto a lead sales
-                                    <label for='6".$row['Id']."' title='Enviar lead Sales' class='btn' style='background: #21618C; color: #F8F9F9;' ><i class='material-icons'>card_travel</i></label>
-                                    <input id='6".$row['Id']."' type='submit' value='6".$row['Id']."' name='IdProspecto' class='hidden' style='display: none;' />
--->
+                                    <!--Enviar prospecto a lead sales -->
+                                    <label for='4".$row['Id']."' title='Enviar lead Sales' class='btn' style='background: #21618C; color: #F8F9F9;' ><i class='material-icons'>card_travel</i></label>
+                                    <input id='4".$row['Id']."' type='submit' value='6".$row['Id']."' name='IdProspecto' class='hidden' style='display: none;' />
+                                    <label for='8" . $row['Id'] . "' title='Generar Presupuesto' class='btn' style='background: #5DADE2; color: #F8F9F9;' ><i class='material-icons'>feed</i></label>
+                                    <input id='8" . $row['Id'] . "' type='submit' value='8" . $row['Id'] . "' name='IdCliente' style='display: none ;' >
                                     <!-- Dar de Baja al Prospecto -->
                                     <label for='6".$row['Id']."' title='Dar de Baja al Prospecto' class='btn' style='background: #E74C3C; color: #F8F9F9;' ><i class='material-icons'>cancel</i></label>
                                     <input id='6".$row['Id']."' type='submit' value='6".$row['Id']."' name='IdProspecto' class='hidden' style='display: none;' />
@@ -500,11 +579,8 @@
               ?>
             </table>
         </section>
-        <!-- End: Login Form Clean -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
-        <script type="text/javascript" src="../eia/javascript/validarcurp.js"></script>
-        <script type="text/javascript" src="Javascript/finger.js"></script>
-        <!--script type="text/javascript" src="Javascript/localize.js"></script-->
+      <script type="text/javascript" src="Javascript/localize.js"></script>
+      <script src="Javascript/fingerprint-core-y-utils.js"></script>
+      <script src="Javascript/finger.js" defer></script>
     </body>
 </html>

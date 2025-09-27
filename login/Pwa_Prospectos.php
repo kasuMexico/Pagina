@@ -14,7 +14,7 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
         //Asigamos el nivel a el Usuario -> no se busca el nivel ya que se busca en el Menu
       }
       //Este IF lanza las ventanas Emergentes para acciones concretas
-      if(!empty($_POST['CreaProsp'])){
+      if(!empty($_POST['CreaProsp'])){  //Crear un nuevo prospecto
         //Lanzamos Ventana emergente
           $Lanzar = "#Ventana2";
       }elseif (!empty($_POST['ArmaPres'])){
@@ -47,40 +47,44 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
       						alert('".$_GET['Msg']."');
       				</script>";
       }
+//Registro de metodo para pagos / mesa de control/
+$Metodo = "Vtas";
 ?>
 <!DOCTYPE html>
-<html lang="ES">
+<html lang="es-MX">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Cartera Clientes</title>
-    <!-- CODELAB: Add meta theme-color -->
-    <meta name="theme-color" content="#2F3BA2"/>
-    <link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png">
+    <!-- Evitar el escalado para mantener el diseño -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#F2F2F2" />
     <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+    <title>Cartera Prospectos</title>
+    <!-- Manifest de /login -->
+    <link rel="manifest" href="/login/manifest.webmanifest">
+    <!-- Icono iOS -->
+    <link rel="apple-touch-icon" href="/login/assets/img/icon-180x180.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="stylesheet" href="/login/assets/css/styles.min.css">
+    <!-- CSS desde CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons'>
-    <!-- Inicio Librerias prara las ventanas emergentes automaticas-->
-    <script src='https://code.jquery.com/jquery-3.3.1.slim.min.js' integrity='sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo' crossorigin='anonymous'></script>
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js' integrity='sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49' crossorigin='anonymous'></script>
-    <script src='https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js' integrity='sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy' crossorigin='anonymous'></script>
-    <!-- Fin Librerias prara las ventanas emergentes automaticas-->
+    <!-- Librerías para gráficos y jQuery -->
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <!-- CSS locales -->
+    <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?echo $VerCache;?>">
 </head>
-<body onload="localize();"> <!-- Se lanza la funcion de localizacion -->
+<body onload="localize()"> <!-- Se lanza la funcion de localizacion -->
+
   <!--Inicio de menu principal fijo-->
     <section id="Menu">
       <?require_once 'html/Menuprinc.php';?>
     </section>
     <!--Final de menu principal fijo-->
     <section class="VentanasEMergentes">
-        <!--Inicio Creacion de las ventanas emergentes-->
-        <script type='text/javascript'>
-            $( document ).ready(function() {
-                $('<? echo $Lanzar; ?>').modal('toggle')
-            });
-        </script>
-        <!-- Modal que Muestra la informacion de el Prospecto -->
+        <!-- Modal que Muestra la informacion de el Prospecto Funcionando 25/09/2025-->
         <div class="modal fade" id="Ventana1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
@@ -90,30 +94,20 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
                             <span aria-hidden="true">&times;</span>
                         </div>
                         <div class="modal-body">
-                            <div id="Gps" style="display: none;"></div>
-                            <input type="number" name="IdVenta" value="<?PHP echo $Reg['Id'];?>" style="display: none;">
-                            <input type="text" name="Host" value="<?PHP echo $_SERVER['PHP_SELF'];?>" style="display: none;">
-                            <input type="text" name="name" value="<?PHP echo $name;?>" style="display: none;">
                             <p>Captado en </p>
                             <h2><strong><? echo $Reg['Origen']?></strong></h2>
                             <p>Fecha Alta </p>
                             <h2><strong><? echo date("d-M-Y",strtotime($Reg['Alta']))?></strong></h2>
                             <p>Producto </p>
                             <h2><strong><? echo $Reg['Servicio_Interes']?></strong></h2>
-                            <p> Avance de Venta </p>
                             <?
-                            //Buscamos si se ha enviado un presupuesto
-                            $sum = $basicas->BuscarCampos($pros,"Id","PrespEnviado","IdProspecto",$Reg['Id']);
-                            //SI se ha enviado el presupuesto se avanza el 50% de la venta
-                            if(!empty($sum)){
-                            $Va5r = $Reg['Estado']*10;
-                            $Var = $Va5r+50;
-                            }else{
-                            //Si no se ha enviado presupuesto se lleva el seguimineto por los correos
-                            $Var = $Reg['Estado']*10;
-                            }
+                            $Papeline = $basicas->Buscar2Campos($pros, "Nombre", "Papeline", "Pipeline", $Reg['Papeline'], "Nivel", $Reg['PosPapeline']);
+                            $MaxPape = $basicas->BuscarCampos($pros, "Maximo", "Papeline", "Pipeline", $Reg['Papeline']);
                             ?>
-                            <h2><strong><? echo $Var?> %</strong></h2>
+                            <p> Estatus en el proceso de venta </p>
+                            <h2><strong><? echo $Reg['Papeline']." - ".$Papeline?></strong></h2>
+                            <p> Avance de la venta </p>
+                            <h2><strong><? echo $Reg['PosPapeline']." de ".$MaxPape?></strong></h2>
                         </div>
                         <div class="modal-footer">
                             <a target="_blank" rel="noopener noreferrer" class="btn btn-primary mr-2"
@@ -142,7 +136,7 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
                 </div>
             </div>
         </div>
-        <!-- Modal que Muestra la informacion de el Prospecto -->
+        <!-- Modal que Registra un Nuevo Prospecto Funcionando 25/09/2025 -->
         <div class="modal fade" id="Ventana2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
@@ -174,36 +168,36 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
             <div class="form-group">
                 <div class="table-responsive" >
                    <?PHP
-                   if($Niv >= 5){
+                    if($Niv >= 5){
                         //Buscamos el Id de el empleado
                         $Vende = $basicas->BuscarCampos($mysqli,"Id","Empleados","IdUsuario",$_SESSION["Vendedor"]);
                         //Crear consulta
                         $Ventas = "SELECT * FROM prospectos WHERE Asignado = '".$Vende."' AND Cancelacion = 0";
                         //Realiza consulta
-                            if ($resultado = $pros -> query($Ventas)){
+                        if ($resultado = $pros -> query($Ventas)){
                         // obtener el array de objetos
-                                while ($fila = $resultado -> fetch_row()) {
-                                    printf("
+                            while ($fila = $resultado -> fetch_row()) {
+                                printf("
                                     <form method='POST' action='".$_SERVER['PHP_SELF']."'>
                                         <input type='number' name='IdProspecto' style='display:  none;' value='%s' />
                                         <input type='text' name='StatusVta' style='display:  none;' value='%s' />
                                         <span class='new badge blue %s' style='position: relative;padding: 0px;width: 100px;top: 20px;'>%s</span>
                                         <input type='submit' id='%s' name='SelPros' class='%s' value='%s' />
                                     </form>
-                                    ",$fila[0],$fila[9],$fila[9],$fila[9],$fila[9],$fila[9],$fila[4]);
-                                }
+                                ",$fila[0],$fila[9],$fila[9],$fila[9],$fila[9],$fila[9],$fila[4]);
                             }
-                        }elseif($Niv <= 4 AND $Niv >= 2){
-                          //Buscamos el id de la sucursal
-                          $IdSuc = $basicas->BuscarCampos($mysqli,"Sucursal","Empleados","IdUsuario",$_SESSION["Vendedor"]);
-                          //Buscamos el nombre de la sucursal
-                          $NomSuc = $basicas->BuscarCampos($mysqli,"NombreSucursal","Sucursal","Id",$IdSuc);
-                          //Crear consulta
-                          $sqal = "SELECT * FROM Empleados WHERE Nombre != 'Vacante' AND Nivel >= '$Niv' AND Sucursal = $IdSuc";
-                          //Realiza consulta
-                          $r4e9s = $mysqli->query($sqal);
-                          //Si existe el registro se asocia en un fetch_assoc
-                          foreach ($r4e9s as $Resd5){
+                        }
+                    }elseif($Niv <= 4 AND $Niv >= 2){
+                        //Buscamos el id de la sucursal
+                        $IdSuc = $basicas->BuscarCampos($mysqli,"Sucursal","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+                        //Buscamos el nombre de la sucursal
+                        $NomSuc = $basicas->BuscarCampos($mysqli,"NombreSucursal","Sucursal","Id",$IdSuc);
+                        //Crear consulta
+                        $sqal = "SELECT * FROM Empleados WHERE Nombre != 'Vacante' AND Nivel >= '$Niv' AND Sucursal = $IdSuc";
+                        //Realiza consulta
+                        $r4e9s = $mysqli->query($sqal);
+                        //Si existe el registro se asocia en un fetch_assoc
+                        foreach ($r4e9s as $Resd5){
                             //Crear consulta
                             $Ventas = "SELECT * FROM prospectos WHERE Asignado = '".$Resd5["Id"]."' AND Cancelacion = 0";
                                 //Realiza consulta
@@ -211,35 +205,35 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
                                 // obtener el array de objetos
                                     while ($fila = $resultado -> fetch_row()) {
                                       printf("
-                                      <form method='POST' action='".$_SERVER['PHP_SELF']."'>
-                                          <input type='number' name='IdProspecto' style='display:  none;' value='%s' />
-                                          <input type='text' name='StatusVta' style='display:  none;' value='%s' />
-                                          <input type='text' name='IdVendedor' style='display:  none;' value='".$Resd5["IdUsuario"]."' />
-                                          <span class='new badge blue %s' style='position: relative;padding: 0px;width: 100px;top: 20px;'>%s</span>
-                                          <input type='submit' id='%s' name='SelPros' class='%s' value='%s - ".$Resd5["IdUsuario"]." - $NomSuc' />
-                                      </form>
+                                        <form method='POST' action='".$_SERVER['PHP_SELF']."'>
+                                            <input type='number' name='IdProspecto' style='display:  none;' value='%s' />
+                                            <input type='text' name='StatusVta' style='display:  none;' value='%s' />
+                                            <input type='text' name='IdVendedor' style='display:  none;' value='".$Resd5["IdUsuario"]."' />
+                                            <span class='new badge blue %s' style='position: relative;padding: 0px;width: 100px;top: 20px;'>%s</span>
+                                            <input type='submit' id='%s' name='SelPros' class='%s' value='%s - ".$Resd5["IdUsuario"]." - $NomSuc' />
+                                        </form>
                                       ",$fila[0],$fila[9],$fila[9],$fila[9],$fila[9],$fila[9],$fila[4]);
                                     }
                                 }
                             }
-                        }elseif($Niv == 1){
-                          //Buscamos el id de la sucursal
-                          $IdSuc = $basicas->BuscarCampos($mysqli,"Sucursal","Empleados","IdUsuario",$_SESSION["Vendedor"]);
-                          //Buscamos el nombre de la sucursal
-                          $NomSuc = $basicas->BuscarCampos($mysqli,"NombreSucursal","Sucursal","Id",$IdSuc);
-                          //Crear consulta
-                          $sqal = "SELECT Id, IdUsuario FROM Empleados WHERE Nombre != 'Vacante' AND Nivel >= '$Niv'";
-                          //Realiza consulta
-                          $r4e9s = $mysqli->query($sqal);
-                          //Si existe el registro se asocia en un fetch_assoc
-                          foreach ($r4e9s as $Resd5){
+                    }elseif($Niv == 1){
+                        //Buscamos el id de la sucursal
+                        $IdSuc = $basicas->BuscarCampos($mysqli,"Sucursal","Empleados","IdUsuario",$_SESSION["Vendedor"]);
+                        //Buscamos el nombre de la sucursal
+                        $NomSuc = $basicas->BuscarCampos($mysqli,"NombreSucursal","Sucursal","Id",$IdSuc);
+                        //Crear consulta
+                        $sqal = "SELECT Id, IdUsuario FROM Empleados WHERE Nombre != 'Vacante' AND Nivel >= '$Niv'";
+                        //Realiza consulta
+                        $r4e9s = $mysqli->query($sqal);
+                        //Si existe el registro se asocia en un fetch_assoc
+                        foreach ($r4e9s as $Resd5){
                             //Crear consulta
                             $Ventas = "SELECT * FROM prospectos WHERE Asignado = '".$Resd5["Id"]."' AND Cancelacion = 0";
-                                //Realiza consulta
-                                if ($resultado = $pros -> query($Ventas)){
-                                // obtener el array de objetos
-                                    while ($fila = $resultado -> fetch_row()) {
-                                      printf("
+                            //Realiza consulta
+                            if ($resultado = $pros -> query($Ventas)){
+                            // obtener el array de objetos
+                                while ($fila = $resultado -> fetch_row()) {
+                                  printf("
                                       <form method='POST' action='".$_SERVER['PHP_SELF']."'>
                                           <input type='number' name='IdProspecto' style='display:  none;' value='%s' />
                                           <input type='text' name='StatusVta' style='display:  none;' value='%s' />
@@ -247,20 +241,29 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
                                           <span class='new badge blue %s' style='position: relative;padding: 0px;width: 100px;top: 20px;'>%s</span>
                                           <input type='submit' id='%s' name='SelPros' class='%s' value='%s - ".$Resd5["IdUsuario"]." - $NomSuc' />
                                       </form>
-                                      ",$fila[0],$fila[9],$fila[9],$fila[9],$fila[9],$fila[9],$fila[4]);
-                                    }
+                                  ",$fila[0],$fila[9],$fila[9],$fila[9],$fila[9],$fila[9],$fila[4]);
                                 }
                             }
                         }
+                    }
                     ?>
                 </div>
             </div>
     <br><br><br><br>
     </section>
-    <!-- End: Login Form Clean -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <!-- JS (una sola versión) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
-    <script type="text/javascript" src="Javascript/finger.js"></script>
-    <script type="text/javascript" src="Javascript/localize.js"></script>
+    <script src="Javascript/fingerprint-core-y-utils.js"></script>
+    <script src="Javascript/finger.js"></script>
+    <script src="Javascript/localize.js"></script>
+    <!-- Abrir modal solo si corresponde -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        <?php if (!empty($Lanzar)) : ?>
+        $('<?php echo $Lanzar; ?>').modal('show');
+        <?php endif; ?>
+    });
+    </script>
 </body>
 </html>

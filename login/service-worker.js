@@ -1,77 +1,73 @@
-// CODELAB: Update cache names any time any of the cached files change.
-const CACHE_NAME = 'static-cache-v2';
-const DATA_CACHE_NAME = 'data-cache-v1';
+// /login/service-worker.js
+const CACHE_STATIC = 'kasu-static-v2'; // antes v1
+const CACHE_RUNTIME = 'kasu-runtime-v1';
+const OFFLINE_URL = '/login/offline.html';
 
-// CODELAB: Add list of files to cache here.
 const FILES_TO_CACHE = [
-  '/login',
-  'index.php',
-  'Javascript/install.js',
-  'Javascript/finger.js',
-  'Javascript/localize.js',
-  'https://kit.fontawesome.com/21478023ef.js',
-  'assets/css/styles.min.css',
-  'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css',
-  'assets/img/kasu_logo.jpeg',
+  '/login/',
+  '/login/index.php',
+  '/login/offline.html',
+  '/login/assets/css/styles.min.css',
+  '/login/assets/img/kasu_logo.jpeg'
 ];
 
 self.addEventListener('install', (evt) => {
-  console.log('[ServiceWorker] Install');
-  // CODELAB: Precache static resources here.
   evt.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('[ServiceWorker] Pre-caching offline page');
-      return cache.addAll(FILES_TO_CACHE);
-    })
-);
-
+    caches.open(CACHE_STATIC).then(c => c.addAll(FILES_TO_CACHE))
+  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (evt) => {
-  console.log('[ServiceWorker] Activate');
-  // CODELAB: Remove previous cached data from disk.
   evt.waitUntil(
-    caches.keys().then((keyList) => {
-      return Promise.all(keyList.map((key) => {
-        if (key !== CACHE_NAME && key !== DATA_CACHE_NAME) {
-          console.log('[ServiceWorker] Removing old cache', key);
-          return caches.delete(key);
-        }
-      }));
-    })
-);
-
+    caches.keys().then(keys =>
+      Promise.all(keys.map(k => {
+        if (![CACHE_STATIC, CACHE_RUNTIME].includes(k)) return caches.delete(k);
+      }))
+    )
+  );
   self.clients.claim();
 });
-self.addEventListener('fetch', (evt) => {
-  console.log('[ServiceWorker] Fetch', evt.request.url);
-  // CODELAB: Add fetch event handler here.
-if (evt.request.url.includes('/forecast/')) {
-  console.log('[Service Worker] Fetch (data)', evt.request.url);
-  evt.respondWith(
-      caches.open(DATA_CACHE_NAME).then((cache) => {
-        return fetch(evt.request)
-            .then((response) => {
-              // If the response was good, clone it and store it in the cache.
-              if (response.status === 200) {
-                cache.put(evt.request.url, response.clone());
-              }
-              return response;
-            }).catch((err) => {
-              // Network request failed, try to get it from the cache.
-              return cache.match(evt.request);
-            });
-      }));
-  return;
-}
-evt.respondWith(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.match(evt.request)
-          .then((response) => {
-            return response || fetch(evt.request);
-          });
-    })
-);
 
+self.addEventListener('fetch', (evt) => {
+  const req = evt.request;
+  if (req.method !== 'GET') return;
+
+  // Navegaciones: red -> cache -> offline
+  if (req.mode === 'navigate') {
+    evt.respondWith((async () => {
+      try {
+        const fresh = await fetch(req);
+        const cache = await caches.open(CACHE_RUNTIME);
+        cache.put(req, fresh.clone());
+        return fresh;
+      } catch (e) {
+        const cached = await caches.match(req);
+        return cached || caches.match(OFFLINE_URL);
+      }
+    })());
+    return;
+  }
+
+  const url = new URL(req.url);
+  const same = url.origin === self.location.origin;
+
+  // Estáticos precache: cache-first
+  if (same && FILES_TO_CACHE.includes(url.pathname)) {
+    evt.respondWith(caches.match(req).then(c => c || fetch(req)));
+    return;
+  }
+
+  // Otros: stale-while-revalidate
+  evt.respondWith((async () => {
+    const cache = await caches.open(CACHE_RUNTIME);
+    const cached = await cache.match(req);
+    const fetching = fetch(req).then(res => {
+      if (res && (res.status === 200 || res.type === 'opaque')) {
+        cache.put(req, res.clone());
+      }
+      return res;
+    }).catch(() => cached);
+    return cached || fetching;
+  })());
 });

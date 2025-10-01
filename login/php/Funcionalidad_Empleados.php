@@ -16,6 +16,87 @@ date_default_timezone_set('America/Mexico_City');
 $hoy = date('Y-m-d');
 $HoraActual = date('H:i:s');
 
+/************************************************ BLOQUE: LOGIN ***********************************************/
+
+if (!empty($_POST['Login'])) {
+    // CSRF
+    if (empty($_POST['csrf']) || !hash_equals($_SESSION['csrf_auth'] ?? '', $_POST['csrf'])) {       
+        http_response_code(403); exit;
+    }
+    $Host = $mysqli->real_escape_string($_POST['Host'] ?? '/login/index.php');
+    $Usuario = trim($_POST['Usuario'] ?? '');
+    $Pass    = $_POST['PassWord'] ?? '';
+
+    if ($Usuario === '' || $Pass === '') {
+        header('Location: https://kasu.com.mx/login/index.php?data=4'); exit;
+    }
+    
+    $hashDB  = $basicas->BuscarCampos($mysqli, "Pass", "Empleados", "IdUsuario", $Usuario);
+    if (!empty($hashDB) && hash('sha256', $Pass) === $hashDB) {
+        $idEmp = $basicas->BuscarCampos($mysqli, "Id", "Empleados", "IdUsuario", $Usuario);
+        $_SESSION['Vendedor']   = $Usuario;
+        $_SESSION['IdVendedor'] = $idEmp;
+
+        // evento opcional
+        $basicas->InsertCampo($mysqli, "Eventos", [
+          "IdFInger"      => $_POST['fingerprint'] ?? '',
+          "Idgps"         => null,
+          "Host"          => $Host,
+          "Evento"        => "LoginOK",
+          "Usuario"       => $Usuario,
+          "FechaRegistro" => date('Y-m-d H:i:s')
+        ]);
+
+        header('Location: https://kasu.com.mx/login/Pwa_Principal.php'); exit;
+    }
+
+    // login inválido
+    $basicas->InsertCampo($mysqli, "Eventos", [
+      "IdFInger"      => $_POST['fingerprint'] ?? '',
+      "Idgps"         => null,
+      "Host"          => $Host,
+      "Evento"        => "LoginFAIL",
+      "Usuario"       => $Usuario,
+      "FechaRegistro" => date('Y-m-d H:i:s')
+    ]);
+    header('Location: https://kasu.com.mx/login/index.php?data=4'); exit;
+}
+
+/********************* BLOQUE: CAMBIAR CONTRASEÑA (usuario conoce su contraseña actual) *******************************/
+if (!empty($_POST['CambiarPass'])) {
+    if (empty($_POST['csrf']) || !hash_equals($_SESSION['csrf_auth'] ?? '', $_POST['csrf'])) {
+        http_response_code(403); exit;
+    }
+    $Host    = $mysqli->real_escape_string($_POST['Host'] ?? '/login/index.php');
+    $Usuario = trim($_POST['Usuario'] ?? '');
+    $PassAct = $_POST['PassAct']   ?? '';
+    $P1      = $_POST['PassWord1'] ?? '';
+    $P2      = $_POST['PassWord2'] ?? '';
+
+    if ($P1 !== $P2) {
+        header('Location: https://kasu.com.mx/login/index.php?action=cp&data=2'); exit;
+    }
+
+    $hashDB = $basicas->BuscarCampos($mysqli, "Pass", "Empleados", "IdUsuario", $Usuario);
+    if (empty($hashDB) || hash('sha256', $PassAct) !== $hashDB) {
+        header('Location: https://kasu.com.mx/login/index.php?action=cp&data=5'); exit;
+    }
+
+    $idEmp = $basicas->BuscarCampos($mysqli, "Id", "Empleados", "IdUsuario", $Usuario);
+    $basicas->ActCampo($mysqli, "Empleados", "Pass", hash('sha256', $P1), $idEmp);
+
+    $basicas->InsertCampo($mysqli, "Eventos", [
+      "IdFInger"      => $_POST['fingerprint'] ?? '',
+      "Idgps"         => null,
+      "Host"          => $Host,
+      "Evento"        => "PassChangeOK",
+      "Usuario"       => $Usuario,
+      "FechaRegistro" => date('Y-m-d H:i:s')
+    ]);
+
+    header('Location: https://kasu.com.mx/login/index.php?data=6'); exit;
+}
+
 /********************************* BLOQUE: PAGO DE COMISIONES *********************************/
 if (isset($_POST['PagoCom'])) {
     // Extraer y sanitizar las variables necesarias desde POST
@@ -86,59 +167,143 @@ if (isset($_POST['BajaEmp'])) {
 
 /********************************* BLOQUE: CREAR EMPLEADO Y ENVIAR CORREO *********************************/
 if (isset($_POST['CreaEmpl'])) {
+
     // Extraer y sanitizar las variables necesarias
-    $Nombre   = isset($_POST['Nombre'])   ? $mysqli->real_escape_string($_POST['Nombre'])   : '';
-    $Email    = isset($_POST['Email'])    ? $mysqli->real_escape_string($_POST['Email'])    : '';
-    $Telefono = isset($_POST['Telefono']) ? $mysqli->real_escape_string($_POST['Telefono']) : '';
-    $Direccion= isset($_POST['Direccion'])? $mysqli->real_escape_string($_POST['Direccion']): '';
-    $Host     = isset($_POST['Host'])     ? $mysqli->real_escape_string($_POST['Host'])     : '';
-    $name     = isset($_POST['name'])     ? $mysqli->real_escape_string($_POST['name'])     : '';
-    $Nivel    = isset($_POST['Nivel'])    ? $mysqli->real_escape_string($_POST['Nivel'])    : '';
-    $Sucursal = isset($_POST['Sucursal']) ? $mysqli->real_escape_string($_POST['Sucursal']) : '';
-    $Lider    = isset($_POST['Lider'])    ? $mysqli->real_escape_string($_POST['Lider'])    : '';
-    $Cuenta   = isset($_POST['Cuenta'])   ? $mysqli->real_escape_string($_POST['Cuenta'])   : '';
-    $IdProspecto = isset($_POST['IdProspecto']) ? $mysqli->real_escape_string($_POST['IdProspecto']) : '';
+    $Nombre         = isset($_POST['Nombre'])   ? $mysqli->real_escape_string($_POST['Nombre'])   : '';
+    $Email          = isset($_POST['Email'])    ? $mysqli->real_escape_string($_POST['Email'])    : '';
+    $Telefono       = isset($_POST['Telefono']) ? $mysqli->real_escape_string($_POST['Telefono']) : '';
+    $Direccion      = isset($_POST['Direccion'])? $mysqli->real_escape_string($_POST['Direccion']): '';
+    $calle          = isset($_POST['calle'])    ? $mysqli->real_escape_string($_POST['calle'])    : ''; //Prospectos
+    $Host           = isset($_POST['Host'])     ? $mysqli->real_escape_string($_POST['Host'])     : '';
+    $name           = isset($_POST['name'])     ? $mysqli->real_escape_string($_POST['name'])     : '';
+    $Nivel          = isset($_POST['Nivel'])    ? $mysqli->real_escape_string($_POST['Nivel'])    : '';
+    $Sucursal       = isset($_POST['Sucursal']) ? $mysqli->real_escape_string($_POST['Sucursal']) : '';
+    $Lider          = isset($_POST['Lider'])    ? $mysqli->real_escape_string($_POST['Lider'])    : '';
+    $Cuenta         = isset($_POST['Cuenta'])   ? $mysqli->real_escape_string($_POST['Cuenta'])   : '';
+    $IdProspecto    = isset($_POST['IdProspecto']) ? $mysqli->real_escape_string($_POST['IdProspecto']) : ''; //Pwa_Prosp y Mesa_Empl
 
-    // Generar código único para el usuario (por ejemplo, usando partes del nombre)
-    $Sg1t = substr($Nombre, 0, 3);
-    $Sg2t = substr($Nombre, -3);
-    $Dil = $Sg1t . $Sg2t;
-    $DirUrl = strtoupper($Dil);
-    $envTs = "Tu usuario es " . $DirUrl;
-    $dRc = mt_rand();
-    $dirUrl1 = base64_encode($dRc);
+    //Validamos que sea prospecto o empleado directo
+    if ($Host == "/login/Pwa_Prospectos.php") {
+        //Obtenemos los datos de el prospecto
+        $venta = "SELECT * FROM prospectos WHERE Id='".$IdProspecto."' LIMIT 1";
+        $res   = $pros->query($venta);
+        if ($Reg = $res->fetch_assoc()) {}
 
-    // Insertar datos de Contacto para el empleado
-    $DatContac = [
-        "Usuario"   => $_SESSION["Vendedor"],
-        "Host"      => $Host,
-        "Mail"      => $Email,
-        "Telefono"  => $Telefono,
-        "Direccion" => $Direccion,
-        "Producto"  => "Empleado"
-    ];
-    $uSR = $basicas->InsertCampo($mysqli, "Contacto", $DatContac);
+        // Generar código único para el usuario (por ejemplo, usando partes del nombre)
+        $Sg1t = substr($Reg['FullName'], 0, 3);
+        $Sg2t = substr($Reg['FullName'], -3);
+        $Dil = $Sg1t . $Sg2t;
+        $DirUrl = strtoupper($Dil);
+        $envTs = "Tu usuario es " . $DirUrl;
+        $dRc = mt_rand();
+        $dirUrl1 = base64_encode($dRc);
 
-    // Se busca un registro en Empleados (por ejemplo, el primer disponible de un nivel y sucursal)
-    $Reg = $basicas->Buscar2Campos($mysqli, "Id", "Empleados", "Sucursal", 0, "Nivel", $Nivel);
-    if (!empty($Reg)) {
-        $basicas->ActCampo($mysqli, "Empleados", "Nombre", $Nombre, $Reg);
-        $basicas->ActCampo($mysqli, "Empleados", "IdContacto", $uSR, $Reg);
-        $basicas->ActCampo($mysqli, "Empleados", "IdUsuario", NULL, $Reg);
-        $basicas->ActCampo($mysqli, "Empleados", "Pass", $dRc, $Reg);
-        $basicas->ActCampo($mysqli, "Empleados", "Equipo", $Lider, $Reg);
-        $basicas->ActCampo($mysqli, "Empleados", "Sucursal", $Sucursal, $Reg);
-        $basicas->ActCampo($mysqli, "Empleados", "FechaAlta", $hoy, $Reg);
-        $basicas->ActCampo($mysqli, "Empleados", "Cuenta", $Cuenta, $Reg);
+        //Actualizamos los datos de el prospecto para su registro correcto
+        $basicas->ActCampo($pros,"prospectos","NoTel",$Telefono,$IdProspecto); //Telefono
+        $basicas->ActCampo($pros,"prospectos","Email",$Email,$IdProspecto); //Email
+        $basicas->ActCampo($pros,"prospectos","Direccion",$calle,$IdProspecto); //Direccion
+        $basicas->ActCampo($pros,"prospectos","Cancelacion",1,$IdProspecto); //Status
+        
+        //Registramos el contacto
+        $ArrayContacto = [
+            "Usuario"   => $_SESSION["Vendedor"],
+            "Host"      => $Host,
+            "Mail"      => $Email,
+            "Telefono"  => $Telefono,
+            "calle" => $calle,
+            "Producto"  => "Distribuidor"
+        ];
+
+        //Registrar array en la base de datos
+        $IdContacto = $basicas->InsertCampo($mysqli, "Contacto", $ArrayContacto);
+        //Buscamos los datos del usuario
+        $IdUsuario = $basicas->BuscarCampos($mysqli, "id", "Usuario", "ClaveCurp", $Reg['Curp']);
+        if (empty($IdUsuario)){
+            //Registramos a los datos del usuario
+            $ArrayUsuario = [
+                "Usuario"       => $_SESSION["Vendedor"],
+                "IdContact"     => $IdContacto,
+                "Tipo"	        => 'Distribuidor',
+                "Nombre"        => $Reg['FullName'],
+                "ClaveCurp"     => $Reg['Curp'],
+                "Email"         => $Email,
+                "FechaRegistro" => $hoy." ".$HoraActual
+            ];
+            //Regstrar array en base de datos
+            $IdUsuario = $basicas->InsertCampo($mysqli, "Usuario", $ArrayUsuario);
+        } else {
+            //Actualizamos el contacto de el Usuario existente, para actualizar medios de contacto
+            $basicas->ActCampo($mysqli, "Usuario", "IdContact", $IdContacto, $IdUsuario);
+        }
+        // Se busca un registro en Empleados (por ejemplo, el primer disponible de un nivel y sucursal)
+        $EspEMp = $basicas->Buscar2Campos($mysqli, "Id", "Empleados", "Sucursal", 0, "Nivel", 7);
+        //Registranmos el empleado en la base de datos empleados
+        if (!empty($EspEMp)) {
+            
+            // ====== Auditoría (GPS / fingerprint) ======
+            $ids = $seguridad->auditoria_registrar(
+                $mysqli,
+                $basicas,
+                $_POST,
+                'Autorizacion_Distibuidor',
+                $_POST['Host'] ?? $_SERVER['PHP_SELF']
+            );
+            //Registranmos el empleado en la base de datos empleados
+            $basicas->ActCampo($mysqli, "Empleados", "Nombre", $Reg['FullName'], $EspEMp);
+            $basicas->ActCampo($mysqli, "Empleados", "IdUsuario", $DirUrl, $EspEMp);
+            $basicas->ActCampo($mysqli, "Empleados", "IdContacto", $IdContacto, $EspEMp);
+            $basicas->ActCampo($mysqli, "Empleados", "FechaAlta", $hoy, $EspEMp);
+            $basicas->ActCampo($mysqli, "Empleados", "Sucursal", 1, $EspEMp); //Este dato lo cambia mesa de control 
+            $basicas->ActCampo($mysqli, "Empleados", "Telefono", $Telefono, $EspEMp);
+        }
+        //Creamos un alert de registro de DISTRIBUIDOR 
+        $alert = "EL distribudor se registro correctamente, asignalo a tu sucursal y al coordinador que correspoanda llamando a mesa de control, despues el usuario podra ingresar al sistema";
+        //Redireccionamos al origen
+        header('Location: https://kasu.com.mx' . $Host . '?&name=' . $name.'&Msg='.$alert);
+        exit();
+    } else {
+
+        // Generar código único para el usuario (por ejemplo, usando partes del nombre)
+        $Sg1t = substr($Nombre, 0, 3);
+        $Sg2t = substr($Nombre, -3);
+        $Dil = $Sg1t . $Sg2t;
+        $DirUrl = strtoupper($Dil);
+        $envTs = "Tu usuario es " . $DirUrl;
+        $dRc = mt_rand();
+        $dirUrl1 = base64_encode($dRc);
+
+        // Insertar datos de Contacto para el empleado
+        $DatContac = [
+            "Usuario"   => $_SESSION["Vendedor"],
+            "Host"      => $Host,
+            "Mail"      => $Email,
+            "Telefono"  => $Telefono,
+            "Direccion" => $Direccion,
+            "Producto"  => "Empleado"
+        ];
+        //$uSR = $basicas->InsertCampo($mysqli, "Contacto", $DatContac);
+
+        // Se busca un registro en Empleados (por ejemplo, el primer disponible de un nivel y sucursal)
+        $Reg = $basicas->Buscar2Campos($mysqli, "Id", "Empleados", "Sucursal", 0, "Nivel", $Nivel);
+        if (!empty($Reg)) {
+            $basicas->ActCampo($mysqli, "Empleados", "Nombre", $Nombre, $Reg);
+            $basicas->ActCampo($mysqli, "Empleados", "IdContacto", $uSR, $Reg);
+            $basicas->ActCampo($mysqli, "Empleados", "IdUsuario", NULL, $Reg);
+            $basicas->ActCampo($mysqli, "Empleados", "Pass", $dRc, $Reg);
+            $basicas->ActCampo($mysqli, "Empleados", "Equipo", $Lider, $Reg);
+            $basicas->ActCampo($mysqli, "Empleados", "Sucursal", $Sucursal, $Reg);
+            $basicas->ActCampo($mysqli, "Empleados", "FechaAlta", $hoy, $Reg);
+            $basicas->ActCampo($mysqli, "Empleados", "Cuenta", $Cuenta, $Reg);
+        }
+        // Si el nivel es 7, se asume que se debe realizar algún ajuste adicional
+        if ($Nivel == 7) {
+            $contra = '&Add=' . $uSR;
+            // Actualiza el estado del prospecto
+            $basicas->ActCampo($pros, "prospectos", "Cancelacion", 1, $IdProspecto);
+        }
+        //header('Location: https://kasu.com.mx' . $Host . '?Ml=1&name=' . $name . $contra);
+        //exit();
     }
-    // Si el nivel es 7, se asume que se debe realizar algún ajuste adicional
-    if ($Nivel == 7) {
-        $contra = '&Add=' . $uSR;
-        // Actualiza el estado del prospecto
-        $basicas->ActCampo($pros, "prospectos", "Cancelacion", 1, $IdProspecto);
-    }
-    header('Location: https://kasu.com.mx' . $Host . '?Ml=1&name=' . $name . $contra);
-    exit();
 }
 
 /********************************* BLOQUE: REENVÍO DE CONTRASEÑA *********************************/
@@ -284,4 +449,5 @@ if (isset($_POST['Reporte'])) {
     header('Location: https://kasu.com.mx' . $Host . '?Msg=' . $msg);
     exit();
 }
+
 ?>

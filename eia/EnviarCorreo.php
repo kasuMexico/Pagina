@@ -61,7 +61,7 @@ if (!empty($EnCoti)) {
     $Id  = $EnCoti;
     $Msg = "Se ha enviado la cotización al correo registrado de tu cliente";
 
-} elseif (!empty($EnviarPoliza)) {  //Enviar poliza para descargar por el usuario
+} elseif (!empty($EnviarPoliza)) {  //Enviar poliza para descargar por el usuario Revisado 26/09/2025 JCCM
     // Auditoría/GPS/Fingerprint
     $ids = $seguridad->auditoria_registrar(
         $mysqli,
@@ -81,7 +81,7 @@ if (!empty($EnCoti)) {
     $Id  = $IdVenta;
     $Msg = "Se ha enviado la poliza de tu cliente";
 
-} elseif (!empty($EnviarFichas)) { //Enivar fichas de pago para descargar al usuario
+} elseif (!empty($EnviarFichas)) { //Enivar fichas de pago para descargar al usuario Revisado 26/09/2025 JCCM
     // Auditoría/GPS/Fingerprint
     $ids = $seguridad->auditoria_registrar(
         $mysqli,
@@ -104,7 +104,7 @@ if (!empty($EnCoti)) {
     
     $Msg = "Se han enviado las fichas de pago de tu cliente";
 
-} elseif (!empty($EnviarEdoCta)) { //Enviar estado de cuenta de Cliente
+} elseif (!empty($EnviarEdoCta)) { //Enviar estado de cuenta de Cliente Revisado 26/09/2025 JCCM
     // Auditoría/GPS/Fingerprint
     $ids = $seguridad->auditoria_registrar(
         $mysqli,
@@ -124,6 +124,19 @@ if (!empty($EnCoti)) {
     $Id = $IdVenta;
     
     $Msg = "Se ha enviado el estado de cuenta al correo registrado de tu cliente";
+
+} elseif (!empty($EnFi)) { //Enviar correo para asignacion de contraseña en el sistema 29/09/2025 JCCM
+    $Asunto   = "PAGO PENDIENTE";
+    $Email    = $basicas->BuscarCampos($mysqli, "Mail",   "Contacto", "id", $_SESSION["Cnc"]);
+    $FullName = $basicas->BuscarCampos($mysqli, "Nombre", "Usuario",  "IdContact", $_SESSION["Cnc"]);
+    $Id       = $_SESSION["Cnc"];
+    if ($EnFi == 1) {
+        $DirUrl = "https://www.mercadopago.com.mx/checkout/v1/redirect?preference-id=" . $hash;
+    } else {
+        $DirUrl = "https://www.mercadopago.com.mx/subscriptions/checkout?preapproval_plan_id=" . $hash;
+    }
+    $data = ['Cte' => $FullName, 'DirUrl' => $DirUrl];
+    $stat = "3";
 
 } elseif (!empty($EnFi)) {
     $Asunto   = "PAGO PENDIENTE";

@@ -1,76 +1,106 @@
 <?php
 $hasEmail = !empty($Reg['Email']) || !empty($_POST['Mail'] ?? '');
-$serv = $Reg['Servicio_Interes'] ?? '';
-//Calculamos la edad de el cliente para determinar el costo
-$Edad = $basicas->ObtenerEdad($Reg['Curp']);
-$ProdSel = $basicas->ProdFune($Edad); //Calculamos el producto
-$Costo  = $basicas->BuscarCampos($mysqli, "Costo", "Productos", "Producto", $ProdSel); //Obtenemos el precio del producto
+$servRaw  = $Reg['Servicio_Interes'] ?? '';
+$serv     = strtoupper(trim($servRaw));
 
+$Edad     = $basicas->ObtenerEdad($Reg['Curp'] ?? '');
+$ProdSel  = $basicas->ProdFune($Edad);
+$Costo    = $basicas->BuscarCampos($mysqli, "Costo", "Productos", "Producto", $ProdSel);
+
+function h($v){ return htmlspecialchars((string)$v, ENT_QUOTES,'UTF-8'); }
+
+$hidden = [
+  'nombre'    => $nombre ?? '',
+  'Host'      => $_SERVER['PHP_SELF'] ?? '',
+  'IdVenta'   => $Reg['Id'] ?? '',
+  'IdContact' => $Recg['id'] ?? '',
+  'IdUsuario' => $Recg1['id'] ?? '',
+  'Producto'  => $Reg['Producto'] ?? '',
+  'Id'        => (int)($Reg['Id'] ?? 0),
+  'IdVendedor'=> $_POST['IdVendedor'] ?? '',
+  'name'      => $name ?? '',
+];
+if (!empty($_SESSION['csrf'])) $hidden['csrf'] = $_SESSION['csrf'];
+
+$groupLabel = [
+  'FUNERARIO'  => 'Familiar',
+  'SEGURIDAD'  => 'Grupo de Oficiales',
+  'TRANSPORTE' => 'Grupo de Transportistas',
+][$serv] ?? null;
+
+$groupValue = [
+  'FUNERARIO'  => 'FAMILIAR',
+  'SEGURIDAD'  => 'SEGURIDAD',
+  'TRANSPORTE' => 'SEGURIDAD',
+][$serv] ?? null;
+
+/* Pago/plazos por servicio */
+$pagoOptions  = ['CREDITO'=>'CRÉDITO', 'CONTADO'=>'CONTADO'];
+$plazoOptions = ['3'=>'3 Meses','6'=>'6 Meses','9'=>'9 Meses'];
+
+if ($serv === 'SEGURIDAD' || $serv === 'RETIRO') {
+  $pagoOptions  = ['CONTADO'=>'CONTADO'];
+  $plazoOptions = [];
+} elseif ($serv === 'TRANSPORTE') {
+  $pagoOptions  = ['CREDITO'=>'CRÉDITO', 'CONTADO'=>'CONTADO'];
+  $plazoOptions = ['3'=>'3 Meses','6'=>'6 Meses','9'=>'9 Meses','12'=>'12 Meses'];
+}
 ?>
 <form method="POST" action="php/Registro_Prospectos.php" autocomplete="off">
-  <!-- *********************************************** Bloque de registro de Eventos ************************************************************************* -->
-  <div style="display: none;" id="Gps"></div> <!-- Div que lanza el GPS -->
-  <div data-fingerprint-slot></div> <!-- DIV que lanza el Finger Print -->
-  <input type="text" name="nombre" value="<?php echo $nombre; ?>" style="display: none;"> <!-- nombre que busque para esta pantalla -->
-  <input type="text" name="Host" value="<?php echo $_SERVER['PHP_SELF']; ?>" style="display: none;"> <!-- Host de donde estoy enviando la peticion -->
-  <input type="number" name="IdVenta" value="<?php echo $Reg['Id'] ?? ''; ?>" style="display: none;"> <!-- Id de Venta Seleccionado -->
-  <input type="number" name="IdContact" value="<?php echo $Recg['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Contacto Seleccionado -->
-  <input type="number" name="IdUsuario" value="<?php echo $Recg1['id'] ?? ''; ?>" style="display: none;"> <!-- Id de Usuario Seleccionado -->
-  <input type="text" name="Producto" value="<?php echo $Reg['Producto'] ?? ''; ?>" style="display: none;"> <!-- Producto de el cliente Seleccionado -->
-  <!-- ********************************************** Bloque de registro de Eventos ************************************************************************* -->
-  <div class="modal-body">
-    <input type="hidden" name="Id"         value="<?php echo (int)($Reg['Id'] ?? 0); ?>">
-    <input type="hidden" name="IdVendedor" value="<?php echo htmlspecialchars($_POST['IdVendedor'] ?? '', ENT_QUOTES,'UTF-8'); ?>">
-    <input type="hidden" name="Host"       value="<?php echo htmlspecialchars($_SERVER['PHP_SELF'] ?? '', ENT_QUOTES,'UTF-8'); ?>">
-    <input type="hidden" name="name"       value="<?php echo htmlspecialchars($name ?? '', ENT_QUOTES,'UTF-8'); ?>">
-    <?php if (!empty($_SESSION['csrf'])): ?>
-      <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($_SESSION['csrf'], ENT_QUOTES,'UTF-8'); ?>">
-    <?php endif; ?>
+  <div id="Gps" style="display:none"></div>
+  <div data-fingerprint-slot></div>
 
-    <p class="mb-2">Que producto desea cotizar tu cliente</p>
+  <?php foreach ($hidden as $k=>$v): ?>
+    <input type="hidden" name="<?=h($k)?>" value="<?=h($v)?>">
+  <?php endforeach; ?>
 
-    <?php if ($serv === 'FUNERARIO'): ?>
+  <div class="modal-body" data-serv="<?=h($serv)?>">
+    <p class="mb-2">¿Qué producto desea cotizar tu cliente?</p>
+
+    <?php if (in_array($serv, ['FUNERARIO','SEGURIDAD','TRANSPORTE'])): ?>
       <div class="form-group">
         <label class="mr-3"><input type="radio" name="tipo_plan" value="INDIVIDUAL" checked> Individual</label>
-        <label><input type="radio" name="tipo_plan" value="FAMILIAR"> Familiar</label>
+        <label><input type="radio" name="tipo_plan" value="<?=h($groupValue)?>"> <?=h($groupLabel)?></label>
       </div>
+    <?php endif; ?>
 
+    <?php if (in_array($serv, ['FUNERARIO','SEGURIDAD','TRANSPORTE'])): ?>
       <div id="plan-individual">
         <label class="mb-1">Edad</label>
-        <h4 class="text-center"><strong><?echo $Edad;?> Años</strong></h4>
-        <input type="hidden" name="Edad" value="<?echo $Edad;?>">
+        <h4 class="text-center"><strong><?= (int)$Edad ?> Años</strong></h4>
+        <input type="hidden" name="Edad" value="<?= (int)$Edad ?>">
         <label class="mb-1">Precio de Contado</label>
-        <h4 class="text-center"><strong>$ <?echo number_format($Costo, 2)?></strong></h4>
+        <h4 class="text-center"><strong>$ <?= number_format((float)$Costo, 2) ?></strong></h4>
       </div>
 
       <div id="plan-familiar" style="display:none">
         <label class="mt-3 d-block">Cantidad de pólizas por bloque</label>
-        <label>0–29</label>   <input class="form-control" type="number" name="a0a29"  min="0" placeholder="Cantidad">
-        <label>30–49</label>  <input class="form-control" type="number" name="a30a49" min="0" placeholder="Cantidad">
-        <label>50–54</label>  <input class="form-control" type="number" name="a50a54" min="0" placeholder="Cantidad">
-        <label>55–59</label>  <input class="form-control" type="number" name="a55a59" min="0" placeholder="Cantidad">
-        <label>60–64</label>  <input class="form-control" type="number" name="a60a64" min="0" placeholder="Cantidad">
-        <label>65–69</label>  <input class="form-control" type="number" name="a65a69" min="0" placeholder="Cantidad">
+        <?php foreach (['a0a29'=>'0–29','a30a49'=>'30–49','a50a54'=>'50–54','a55a59'=>'55–59','a60a64'=>'60–64','a65a69'=>'65–69'] as $name=>$txt): ?>
+          <label><?=h($txt)?></label>
+          <input class="form-control" type="number" name="<?=h($name)?>" min="0" placeholder="Cantidad">
+        <?php endforeach; ?>
       </div>
-
-    <?php elseif ($serv === 'UNIVERSITARIO'): ?>
-      <label>Niños a registrar</label>
-      <input class="form-control" type="number" name="Univ" min="1" placeholder="Cantidad" required>
     <?php endif; ?>
 
     <label class="mt-3">Selecciona el Tipo de Pago</label>
-    <select class="form-control" name="Pago" id="pago" required>
-      <option value="CREDITO">CRÉDITO</option>
-      <option value="CONTADO">CONTADO</option>
+    <select class="form-control" name="Pago" id="pago"
+            data-has-plazos="<?= empty($plazoOptions) ? '0' : '1' ?>"
+            required <?= count($pagoOptions)===1 ? 'disabled' : ''?>>
+      <?php foreach ($pagoOptions as $val=>$txt): ?>
+        <option value="<?=h($val)?>"><?=h($txt)?></option>
+      <?php endforeach; ?>
     </select>
 
-    <div id="plazo-row" class="mt-2">
+    <div id="plazo-row" class="mt-2" style="<?= empty($plazoOptions) ? 'display:none' : '' ?>">
       <label>Selecciona el Plazo</label>
-      <select class="form-control" name="plazo" id="plazo" required>
-        <option value="1">Contado</option>
-        <option value="3">3 Meses</option>
-        <option value="6">6 Meses</option>
-        <option value="9">9 Meses</option>
+      <select class="form-control" name="plazo" id="plazo" <?= empty($plazoOptions) ? '' : 'required' ?>>
+        <?php if (empty($plazoOptions)): ?>
+          <option value="1" selected>Contado</option>
+        <?php else: ?>
+          <?php foreach ($plazoOptions as $val=>$txt): ?>
+            <option value="<?=h($val)?>"><?=h($txt)?></option>
+          <?php endforeach; ?>
+        <?php endif; ?>
       </select>
     </div>
   </div>
@@ -84,30 +114,52 @@ $Costo  = $basicas->BuscarCampos($mysqli, "Costo", "Productos", "Producto", $Pro
 </form>
 
 <script>
-// Plan FUNERARIO toggle
-document.addEventListener('change', function(e){
-  if (e.target && e.target.name === 'tipo_plan') {
+(function () {
+  function togglePlanes() {
     var fam = document.getElementById('plan-familiar');
     var ind = document.getElementById('plan-individual');
-    if (e.target.value === 'FAMILIAR') { fam.style.display='block'; ind.style.display='none'; }
-    else { fam.style.display='none'; ind.style.display='block'; }
+    var sel = document.querySelector('input[name="tipo_plan"]:checked');
+    var val = sel ? sel.value : 'INDIVIDUAL';
+    if (fam) fam.style.display = (val === 'INDIVIDUAL') ? 'none' : 'block';
+    if (ind) ind.style.display = (val === 'INDIVIDUAL') ? 'block' : 'none';
   }
-});
 
-// Ocultar plazo cuando pago = CONTADO
-(function(){
-  var pago  = document.getElementById('pago');
-  var plazo = document.getElementById('plazo');
-  var row   = document.getElementById('plazo-row');
+  function syncPagoYPlazo(){
+    var body  = document.querySelector('.modal-body');
+    var serv  = body ? (body.getAttribute('data-serv') || '') : '';
+    var pago  = document.getElementById('pago');
+    var plazo = document.getElementById('plazo');
+    var row   = document.getElementById('plazo-row');
+    var hasPlazos = (pago && pago.getAttribute('data-has-plazos') === '1');
 
-  function syncPlazo(){
+    if (serv === 'SEGURIDAD' || serv === 'RETIRO') {
+      if (pago) { pago.value = 'CONTADO'; pago.setAttribute('disabled','disabled'); }
+      if (row) row.style.display = 'none';
+      if (plazo) plazo.value = '1';
+      return;
+    }
+
+    if (!pago || !plazo || !row) return;
     var contado = pago.value === 'CONTADO';
+    if (!hasPlazos) {
+      row.style.display = 'none';
+      plazo.value = '1';
+      return;
+    }
     row.style.display = contado ? 'none' : '';
     plazo.required = !contado;
     if (contado) plazo.value = '1';
-    else if (plazo.value === '1') plazo.value = '3';
   }
-  pago.addEventListener('change', syncPlazo);
-  syncPlazo();
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){ togglePlanes(); syncPagoYPlazo(); });
+  } else {
+    togglePlanes(); syncPagoYPlazo();
+  }
+
+  document.addEventListener('change', function (e) {
+    if (e.target && e.target.name === 'tipo_plan') togglePlanes();
+    if (e.target && e.target.id === 'pago') syncPagoYPlazo();
+  });
 })();
 </script>

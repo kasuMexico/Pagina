@@ -1,137 +1,106 @@
 <?php
-// Iniciar sesión
-session_start();
+    // cookies seguras antes de session_start
+    session_set_cookie_params([
+    'lifetime'=>0,
+    'path'=>'/',
+    'domain'=>'kasu.com.mx',
+    'secure'=>true,
+    'httponly'=>true,
+    'samesite'=>'Lax'
+    ]);
 
-// Incluir el archivo de funciones
-require_once '../eia/librerias.php';
-$_SESSION["Vendedor"] = 'JCarlos';
-// Redirigir si el usuario ya tiene sesión activa
-if (isset($_SESSION["Vendedor"])) {
-    header('Location: https://kasu.com.mx/login/Pwa_Principal.php');
-    exit();
-}
+    session_start();
+    require_once __DIR__.'/../eia/librerias.php';
 
-// Validar mensajes de error o confirmación
-$messages = [
-    1 => "Este correo ya ha registrado la contraseña, si requieres otra contraseña por favor ponte en contacto con tu supervisor.",
-    2 => "Las contraseñas que registraste no coinciden.",
-    3 => "Haz registrado exitosamente tu contraseña, si la olvidas solicita un nuevo correo a tu supervisor."
-];
+    // si ya hay sesión, entra directo
+    if (!empty($_SESSION['Vendedor'])) {
+    header('Location: https://kasu.com.mx/login/Pwa_Principal.php'); exit;
+    }
 
-$alertMessage = "";
-if (isset($_GET['Data']) && array_key_exists($_GET['Data'], $messages)) {
-    $alertMessage = "<script>alert('" . htmlspecialchars($messages[$_GET['Data']], ENT_QUOTES, 'UTF-8') . "');</script>";
-}
+    // token CSRF para formularios
+    $_SESSION['csrf_auth'] = $_SESSION['csrf_auth'] ?? bin2hex(random_bytes(32));
 
+    // selector de vista
+    $action = $_GET['action'] ?? '';          // '', 'cp' (cambiar pass)
+    $data   = filter_input(INPUT_GET,'data',FILTER_VALIDATE_INT);
+    $usr    = filter_input(INPUT_GET,'Usr',FILTER_SANITIZE_SPECIAL_CHARS);
+
+    // mensajes
+    $messages = [
+    1=>"Este correo ya registró contraseña. Solicita otro enlace a tu supervisor.",
+    2=>"Las contraseñas no coinciden.",
+    3=>"Contraseña registrada correctamente.",
+    4=>"Usuario o contraseña incorrectos.",
+    5=>"Tu contraseña actual es incorrecta.",
+    6=>"Contraseña actualizada correctamente."
+    ];
 ?>
-<!DOCTYPE html>
-<html lang="es">
+<!doctype html><html lang="es-MX"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KASU | Ventas</title>
+<link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?echo $VerCache;?>">
+<style>
+html,body{ height:100%; background:#fff; }
+body, .main{ min-height:100dvh; background:#fff !important; }
+.login-clean{ background:#fff !important; }
+.login-clean form{
+  background:#fff !important;
+  box-shadow:none !important; /* quita “tarjeta gris” */
+  border:0 !important;
+}
+</style>
+<meta name="theme-color" content="#ffffff">
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>KASU</title>
-    
-    <!-- Meta tags -->
-    <meta name="theme-color" content="#2F3BA2">
-    <meta name="description" content="Una aplicación para Vendedores">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="KASU Vendedores">
-    
-    <!-- Favicon -->
-    <link rel="apple-touch-icon" href="/login/assets/img/kasu_logo.jpeg">
-    <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
-    
-    <!-- Manifest -->
-    <link rel="manifest" href="/manifest.webmanifest">
-
-    <!-- CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/login/assets/css/styles.min.css">
-
-    <!-- FontAwesome -->
-    <script src="https://kit.fontawesome.com/21478023ef.js" crossorigin="anonymous"></script>
-
-    <?php echo $alertMessage; ?>
 </head>
-
-<body class="main">
-    <header class="header">
-        <div style="text-align:right; width:100%;">
-            <button id="buttonAdd" aria-label="Install"><i class="fas fa-download" style="color:#01579b;"></i></button>
-            <button onclick="window.location.reload()" id="butRefresh" aria-label="Refresh"><i class="fas fa-redo-alt" style="color:#01579b;"></i></button>
-        </div>
-    </header>
-
+<body>
     <div class="login-clean">
-        <?php if (!empty($_GET['data'])) : ?>
-            <form method="POST" action="php/Funcionalidad_Empleados.php">
-                <h1 class="sr-only">Login Form</h1>
-                <div class="illustration">
-                    <img alt="KASU Logo" src="/login/assets/img/logoKasu.png">
-                </div>
-                <!-- Registros de Gps y fingerprint -->
-                <div id="Gps" style="display:none;"></div>
-                <div id="FingerPrint" style="display:none;"></div>
-                
-                <!-- Inputs ocultos con sanitización -->
-                <input type="hidden" name="Host" value="<?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8') ?>">
-                <input type="hidden" name="data" value="<?= htmlspecialchars($_GET['data'], ENT_QUOTES, 'UTF-8') ?>">
-                <input type="hidden" name="User" value="<?= htmlspecialchars($_GET['Usr'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+    <div class="illustration"><img alt="KASU" src="/login/assets/img/logoKasu.png"></div>
 
-                <div class="form-group">
-                    <input class="form-control" type="password" name="PassWord1" placeholder="Contraseña" required>
-                </div>
-                <div class="form-group">
-                    <input class="form-control" type="password" name="PassWord2" placeholder="Confirmar Contraseña" required>
-                </div>
-                <div class="form-group">
-                    <input type="submit" name="GenCont" value="Generar Contraseña" class="btn btn-primary btn-block">
-                </div>
-            </form>
-        <?php else : ?>
-            <form method="POST" action="php/Funcionalidad_Pwa.php">
-                <h1 class="sr-only">Login Form</h1>
-                <div class="illustration">
-                    <img alt="KASU Logo" src="/login/assets/img/logoKasu.png">
-                </div>
-                
-                <!-- Registros de Gps y fingerprint -->
-                <div id="Gps" style="display:none;"></div>
-                <div id="FingerPrint" style="display:none;"></div>
+    <?php if (!empty($data) && $messages === 8): ?>
+    <!-- ACTIVAR/REGISTRAR CONTRASEÑA vía enlace -->
+    <form method="POST" action="php/Funcionalidad_Empleados.php" autocomplete="off">
+        <input type="hidden" name="csrf"  value="<?= $_SESSION['csrf_auth'] ?>">
+        <input type="hidden" name="Host"  value="<?= htmlspecialchars($_SERVER['PHP_SELF'],ENT_QUOTES) ?>">
+        <input type="hidden" name="data"  value="<?= (int)$data ?>">
+        <input type="hidden" name="User"  value="<?= htmlspecialchars($usr ?? '',ENT_QUOTES) ?>">
+        <div class="form-group"><input class="form-control" type="password" name="PassWord1" placeholder="Nueva contraseña" required autocomplete="new-password"></div>
+        <div class="form-group"><input class="form-control" type="password" name="PassWord2" placeholder="Confirmar contraseña" required autocomplete="new-password"></div>
+        <div class="form-group"><button class="btn btn-primary btn-block" name="GenCont" value="1">Guardar contraseña</button></div>
+        <div class="text-center"><a href="/login/index.php">Volver a iniciar sesión</a></div>
+    </form>
 
-                <input type="hidden" name="Host" value="<?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8') ?>">
+    <?php elseif ($action === 'cp'): ?>
+    <!-- CAMBIAR CONTRASEÑA con usuario + pass actual -->
+    <form method="POST" action="php/Funcionalidad_Empleados.php" autocomplete="off">
+        <input type="hidden" name="csrf" value="<?= $_SESSION['csrf_auth'] ?>">
+        <input type="hidden" name="Host" value="<?= htmlspecialchars($_SERVER['PHP_SELF'],ENT_QUOTES) ?>">
+        <div class="form-group"><input class="form-control" type="text" name="Usuario" placeholder="Usuario" required autocomplete="username"></div>
+        <div class="form-group"><input class="form-control" type="password" name="PassAct" placeholder="Contraseña actual" required autocomplete="current-password"></div>
+        <div class="form-group"><input class="form-control" type="password" name="PassWord1" placeholder="Nueva contraseña" required autocomplete="new-password"></div>
+        <div class="form-group"><input class="form-control" type="password" name="PassWord2" placeholder="Confirmar nueva contraseña" required autocomplete="new-password"></div>
+        <div class="form-group"><button class="btn btn-primary btn-block" name="CambiarPass" value="1">Cambiar contraseña</button></div>
+        <div class="text-center"><a href="/login">Volver a iniciar sesión</a></div>
+    </form>
 
-                <div class="form-group">
-                    <input class="form-control" type="text" name="Usuario" placeholder="Usuario" required>
-                </div>
-                <div class="form-group">
-                    <input class="form-control" type="password" name="PassWord" placeholder="Contraseña" required>
-                </div>
-                <div class="form-group">
-                    <input type="submit" name="Login" value="Ingresar" class="btn btn-primary btn-block">
-                </div>
-            </form>
-        <?php endif; ?>
-    </div>
+    <?php else: ?>
+    <!-- INGRESAR AL SISTEMA -->
+    <form method="POST" action="php/Funcionalidad_Empleados.php" autocomplete="on">
+        <input type="hidden" name="csrf" value="<?= $_SESSION['csrf_auth'] ?>">
+        <input type="hidden" name="Host" value="<?= htmlspecialchars($_SERVER['PHP_SELF'],ENT_QUOTES) ?>">
+        <div class="form-group"><input class="form-control" type="text" name="Usuario" placeholder="Usuario" required autocomplete="username"></div>
+        <div class="form-group"><input class="form-control" type="password" name="PassWord" placeholder="Contraseña" required autocomplete="current-password"></div>
+        <div class="form-group"><button class="btn btn-primary btn-block" name="Login" value="1">Ingresar</button></div>
+        <div class="text-center">
+            <a href="<?= htmlspecialchars($_SERVER['PHP_SELF'],ENT_QUOTES) ?>?action=cp">Cambiar mi contraseña</a>
+        </div>
+    </form>
+    <?php endif; ?>
 
-    <!-- Service Worker -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('service-worker.js')
-                    .then(reg => console.log('Service worker registrado.', reg))
-                    .catch(err => console.error('Error al registrar el Service Worker:', err));
-            });
-        }
-    </script>
-
-    <!-- Scripts -->
-    <script defer src="Javascript/install.js"></script>
-    <script defer src="Javascript/refresh.js"></script>
-    <script defer src="Javascript/finger.js"></script>
-    <script defer src="Javascript/localize.js"></script>
+    <?php if (!empty($data) && isset($messages[$data])): ?>
+        <div class="alert alert-info mt-3" role="alert"><?= htmlspecialchars($messages[$data],ENT_QUOTES) ?></div>
+    <?php endif; ?>
+</div>
 </body>
-
 </html>

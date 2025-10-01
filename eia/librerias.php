@@ -28,4 +28,4 @@
     ini_set('display_startup_errors', 1);
     error_reporting(E_ALL);
 //Temporal para actualizar cache de PWA
-    $VerCache = 6;
+    $VerCache = 54;

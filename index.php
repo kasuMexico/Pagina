@@ -2,7 +2,6 @@
 
 // Iniciar la sesión
 session_start();
-
 // Requerir el archivo de librerías
 require_once 'eia/librerias.php';
 //Se establecen el numero de contacto

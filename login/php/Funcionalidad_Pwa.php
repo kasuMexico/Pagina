@@ -237,7 +237,7 @@ if (isset($_POST['Pago'])) {
     //mensaje de alert para usuario
     $Msg = "Pago Registrado correctamente";
     //Redireccionar a pagina de donde venimos
-    header('Location: https://kasu.com.mx' . $host. '?Vt=1&Msg='.$Msg.'&nombre=' . rawurlencode($nombre));
+    header('Location: https://kasu.com.mx' . $host. '?Msg='.$Msg.'&nombre=' . rawurlencode($nombre));
     exit();
 }
 

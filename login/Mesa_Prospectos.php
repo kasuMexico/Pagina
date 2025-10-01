@@ -1,30 +1,35 @@
 <?php
-//indicar que se inicia una sesion
-  session_start();
-//inlcuir el archivo de funciones
-  require_once '../eia/librerias.php';
-  //Variables de los periodos
-  $FechIni = date("d-m-Y", strtotime('first day of this month'));
-  $FechFin = date("d-m-Y");
-//Validar si existe la session y redireccionar
-  if(!isset($_SESSION["Vendedor"])){
-      header('Location: https://kasu.com.mx/login');
-  }else{
-    // Separar indicador de ventana y el Id numérico completo
-    $IdProspecto = $_POST['IdProspecto'] ?? $_GET['IdProspecto'] ?? null;
-    $Vtn = '';
-    $CteInt = null;
+// Iniciar sesión
+session_start();
 
-    if ($IdProspecto !== null) {
-        $Vtn = substr($IdProspecto, 0, 1);
-        $idStr = substr($IdProspecto, 1);             // QUITA el 5 fijo
-        if (ctype_digit($idStr)) {
-            $CteInt = (int)$idStr;
-        }
-    }
+// Incluir librerías y clases
+require_once '../eia/librerias.php';
 
-    if ($CteInt !== null) {
-        // prospectos
+// Fechas del período actual (si las usas en otro lado)
+$FechIni = date("d-m-Y", strtotime('first day of this month'));
+$FechFin = date("d-m-Y");
+
+// Verificar sesión
+if (!isset($_SESSION["Vendedor"])) {
+    header('Location: https://kasu.com.mx/login');
+    exit;
+}
+
+/* ================== Variables base ================== */
+$Reg    = null;
+$RegDos = null;
+$Ventana = null;   // "Ventana1" .. "Ventana9"
+$Lanzar  = null;   // '#Ventana' para abrir el modal
+
+/* ================== Parseo del selector ================== */
+$IdProspecto = $_POST['IdProspecto'] ?? $_GET['IdProspecto'] ?? null;
+if ($IdProspecto !== null && $IdProspecto !== '') {
+    $Vtn   = substr($IdProspecto, 0, 1);
+    $idStr = substr($IdProspecto, 1);
+    if (ctype_digit($idStr)) {
+        $CteInt = (int)$idStr;
+
+        // Prospecto
         $stmt = $pros->prepare("SELECT * FROM prospectos WHERE Id = ?");
         if (!$stmt) { error_log($pros->error); die('Error SQL'); }
         $stmt->bind_param('i', $CteInt);
@@ -33,8 +38,8 @@
         $Reg = $res ? $res->fetch_assoc() : null;
         $stmt->close();
 
+        // Distribuidor (si aplica)
         if ($Reg) {
-            // Distribuidores
             $stmt2 = $pros->prepare("SELECT * FROM Distribuidores WHERE IdProspecto = ?");
             if ($stmt2) {
                 $stmt2->bind_param('i', $Reg['Id']);
@@ -47,22 +52,27 @@
             }
         }
     } else {
-        $Reg = null;
-        $RegDos = null;
+        $Vtn = '';
     }
 
-    $Ventana = "Ventana".$Vtn;
-  }
-  // Captura nombre desde POST o GET
-  $nombre = $_POST['nombre'] ?? $_GET['nombre'] ?? "";
-  //Lanzamos las alertas por las actualizaciones
-  if (isset($_GET['Vt']) && (int)$_GET['Vt'] === 1) {
-        echo "<script>window.addEventListener('load',()=>alert('".$_GET['Msg']."'));</script>";
-  }
-  //alertas de correo electronico
-  require_once 'php/Selector_Emergentes_Ml.php';
-  //Registro de metodo para pagos / mesa de control/
-  $Metodo = "Mesa";
+    // Configurar modal a abrir
+    if (!empty($Vtn) && ctype_digit($Vtn)) {
+        $Ventana = 'Ventana' . $Vtn;
+        $Lanzar  = '#Ventana';
+    }
+}
+
+// Alerts de mensajes recibidos
+if(isset($_GET['Msg'])){
+    echo "<script>alert('".htmlspecialchars($_GET['Msg'], ENT_QUOTES)."');</script>";
+}
+
+// Método (tracking interno)
+$Metodo = "Mesa";
+
+// Captura nombre desde POST o GET
+$nombre = $_POST['nombre'] ?? $_GET['nombre'] ?? "";
+if ($nombre === '') { $nombre = ' '; }
 ?>
 <!DOCTYPE html>
 <html lang="es-MX">
@@ -73,514 +83,464 @@
     <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
     <title>Mesa Prospectos</title>
 
-    <!-- Manifest / iOS -->
+    <!-- PWA -->
     <link rel="manifest" href="/login/manifest.webmanifest">
     <link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="/login/assets/css/styles.min.css">
+    <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?php echo htmlspecialchars($VerCache ?? '', ENT_QUOTES); ?>">
+    <link rel="stylesheet" href="assets/css/Grafica.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link href='https://fonts.googleapis.com/icon?family=Material+Icons' rel='stylesheet'>
-    <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?echo $VerCache;?>">
-    <link rel="stylesheet" href="assets/css/Grafica.css">
-
-    <!-- Inicio Librerias prara las ventanas emergentes automaticas-->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js' integrity='sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49' crossorigin='anonymous'></script>
-
-    <!-- JS externos -->
-    <script src="https://www.gstatic.com/charts/loader.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
 </head>
 <body onload="localize()">
-  <script type='text/javascript'>
-    $(document).ready(function() {
-        $('#<?php echo $Ventana; ?>').modal('toggle')
-    });
-  </script>
-    <div class="principal">
-      <div class="d-flex align-items-center py-2 pe-3">
-          <h4 class="flex-grow-1 text-center mb-0">Cartera de Clientes</h4>
-          <!-- Botón registrar prospecto -->
-          <?
-          if(empty($nombre)){
-            $nombre = ' ';
-          }
-          echo "
-            <form method='POST' action='".$_SERVER['PHP_SELF']."'  style='padding-right: 5px;'>
-              <!-- Crear nuevo prospecto -->
-              <input type='text' name='Host' value='".$_SERVER['PHP_SELF']."' style='display: none;'>
-              <input type='text' name='nombre' value='".$nombre."' style='display: none;'>
-              <label for='400' title='Crear nuevo prospecto' class='btn' style='background: #F7DC6F; color: #F8F9F9;' ><i class='material-icons'>person_add</i></label>
-              <input id='400' type='submit' value='400' name='IdProspecto' class='hidden' style='display: none ;' />
-              <!-- Descarga masiva -->
-              <input type='text' name='Host' value='".$_SERVER['PHP_SELF']."' style='display: none;'>
-              <input type='text' name='nombre' value='".$nombre."' style='display: none;'>
-              <label for='400' title='Descarga masiva' class='btn' style='background: #196F3D; color: #F8F9F9;' ><i class='material-icons'>arrow_downward</i></label>
-              <input id='400' type='submit' value='400' name='IdProspecto' class='hidden' style='display: none ;' />
-            </form>
-          ";
-          ?>
-          <p>&nbsp;&nbsp;&nbsp;</p>
-      </div>
-      <hr>
+
+  <!-- Top bar fija -->
+  <div class="topbar">
+    <div class="d-flex align-items-center w-100">
+      <h4 class="title">Cartera de Prospectos</h4>
+
+      <!-- botón crear prospecto -->
+      <form class="BtnSocial m-0 ml-auto" method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
+        <input type="hidden" name="Host" value="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
+        <label for="btnCrear" class="btn mb-0" title="Crear nuevo prospecto" style="background:#F7DC6F;color:#000;">
+          <i class="material-icons">person_add</i>
+        </label>
+        <input id="btnCrear" type="submit" name="CreaProsp" hidden>
+      </form>
+    </div>
   </div>
-      <!--Inicio de menu principal fijo-->
-        <section id="Menu">
-            <div class="MenuPrincipal">
-            <a class="BtnMenu" href="Pwa_Principal.php"><img src="assets/img/FlorKasu.png"></a>
-            <a class="BtnMenu" href="Mesa_Herramientas.php"><img src="assets/img/ajustes.png" style="background: #A9D0F5;"></a>
-           </div>
-        </section>
-        <section name="VentanasEMergentes">
-            <!-- Registrar Venta -->
-            <div class="modal fade" id="Ventana1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                  <div class="modal-dialog" role="document">
-                      <div class="modal-content">
-                        <form method="POST" action="../eia/php/Registrar_Venta.php">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="exampleModalLabel"><?PHP echo $Reg['FullName'];?></h5>
-                            </div>
-                            <div class="modal-body">
-                                <input type="text" name="Host" value="<?PHP echo $_SERVER['PHP_SELF'];?>" style="display:none ;">
-                                <input type="text" name="FullName" value="<?PHP echo $Reg['FullName'];?>" style="display:none ;">
-                                <input type="text" name="IdProspecto" value="<?PHP echo $Reg['Id'];?>" style="display:none ;">
-                                <input type="text" name="Producto" value="<?PHP echo $Reg['Servicio_Interes'];?>" style="display:none ;">
-                                <pre id="resultado"></pre>
-                                <label for="CURP">Clave CURP</label>
-                                <input class="form-control" type="text" name="CurClie" placeholder="Clave CURP" id="CurCli" maxlength="18" oninput="validarInput(this)" required>
-                                <label for="Electronico">Correo Electronico</label>
-                                <input class="form-control" type="email" name="Mail" placeholder="Mail" value="<?PHP echo $Reg['Email'];?>" required>
-                                <label for="Telefono">Telefono</label>
-                                <input class="form-control" type="number" name="Telefono" placeholder="Telefono" value="<?PHP echo $Reg['NoTel'];?>" required>
-                                <label for="calle">calle</label>
-                                <input class="form-control" type="text" name="calle" placeholder="calle" required>
-                                <label for="numero">numero</label>
-                                <input class="form-control" type="text" name="numero" placeholder="numero" required>
-                                <label for="colonia">colonia</label>
-                                <input class="form-control" type="text" name="colonia" placeholder="colonia" required>
-                                <label for="municipio">municipio</label>
-                                <input class="form-control" type="text" name="municipio" placeholder="municipio" required>
-                                <label for="estado">estado</label>
-                                <input class="form-control" type="text" name="estado" placeholder="estado" required>
-                                <label for="Postal">codigo Postal</label>
-                                <input class="form-control" type="text" name="codigo_postal" placeholder="codigo Postal" required>
-                                <label for="TipServicio">Selecciona el tipo de servicio</label>
-                                <select class="form-control" name='TipoServicio'>
-                                  <option value='Tradicional'>Tradicional</option>
-                                  <option value='Ecologico' selected>Ecologico</option>
-                                  <option value='Cremacion'>Cremacion</option>
-                                </select>
-                                <label for="TiempPago">Selecciona el tiempo de pago</label>
-                                <select class="form-control" name="Meses">
-                                  <option value="0">Pago Único</option>
-                                  <option value="3">3 Meses</option>
-                                  <option value="6">6 Meses</option>
-                                  <option value="9">9 Meses</option>
-                                </select>
-                                <br>
-                                <div class="Legales">
-                                  <p><input type="checkbox" name="Terminos" value="acepto" required> Conozca nuestros Terminos y condiciones accediendo a <a href="https://kasu.com.mx/terminos-y-condiciones.php/">kasu.com.mx/terminos-y-condiciones.php</a></p>
-                                  <p><input type="checkbox" name="Aviso" value="acepto" required> Conozca nuestro Aviso de privacidad accediendo a <a href="https://kasu.com.mx/terminos-y-condiciones.php/">kasu.com.mx/Aviso-de-privacidad</a></p>
-                                  <p><input type="checkbox" name="Fideicomiso" value="acepto" required> Conozca El fideicomiso KASU accediendo a <a href="#">kasu.com.mx/Fideicomiso_F0003.pdf</a></p>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <input type="submit" name="RegistroMesa" class="btn btn-primary" value="Registrar Venta">'
-                            </div>
-                        </form>
-                      </div>
-                  </div>
-              </div>
-            <!-- Crear empleado-->
-            <div class="modal fade" id="Ventana2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                            <form method="POST" action="php/Funcionalidad_Empleados.php">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="exampleModalLabel">Registrar distribuidor</h5>
-                                </div>
-                                <div class="modal-body">
-                                  <input type="text" name="Host" value="<?PHP echo $_SERVER['PHP_SELF'];?>" style="display: none;">
-                                  <input type="text" name="nombre" value="<?PHP echo $nombre;?>" style="display: none;">
-                                  <input type="number" name="Nivel" value="7" style="display: none;">
-                                  <input type="number" name="IdProspecto" value="<? echo $RegDos['IdProspecto'];?>" style="display: none;">
-                                  <label> Nombre</label>
-                                  <input style="display: none;" type="text" name="Nombre" value="<? echo $RegDos['name'];?>">
-                                  <input class="form-control" type="text" name="Nore" value="<? echo $RegDos['name'];?>" disabled> <!--  Revisar name -->
-                                  <label> Telefono</label>
-                                  <input style="display: none;" type="text" name="Telefono" value="<? echo $RegDos['Telefono'];?>">
-                                  <input class="form-control" type="text" name="Tefono" value="<? echo $RegDos['Telefono'];?>" disabled>
-                                  <label> Email</label>
-                                  <input style="display: none;" type="text" name="Email" value="<? echo $RegDos['Mail'];?>">
-                                  <input class="form-control" type="text" name="Eml" value="<? echo $RegDos['Mail'];?>" disabled>
-                                  <label> Direccion</label>
-                                  <input style="display: none;" type="text" name="Direccion" value="<? echo $RegDos['Direccion'];?>">
-                                  <input class="form-control" type="text" name="Diccion" value="<? echo $RegDos['Direccion'];?>" disabled>
-                                  <label> Cuenta Bancaria</label>
-                                  <input style="display: none;" type="number" name="Cuenta" value="<? echo $RegDos['Clabe'];?>">
-                                  <input class="form-control" type="number" name="enta" value="<? echo $RegDos['Clabe'];?>" disabled>
-                                  <label> Sucursal </label>
-                                  <select class="form-control" name="Sucursal" required>
-                                  <?
-                                    //Se crea la consulta para los vendedores
-                                    $sql1 = "SELECT * FROM Sucursal WHERE Status = 1";
-                                    $S621 = $mysqli->query($sql1);
-                                    while($S631= mysqli_fetch_array($S621)){
-                                      echo "<option value='".$S631['id']."'>".$S631['nombreSucursal']."</option>";
-                                    }
-                                  ?>
-                                  </select>
-                                  <label> Jefe Directo</label>
-                                  <select class="form-control" name="Lider" required>
-                                  <?
-                                    //Se crea la consulta para los vendedores
-                                    $sql3 = "SELECT * FROM Empleados WHERE Nivel >= '".$Nivel."' AND Nombre != 'Vacante'";
-                                    $S623 = $mysqli->query($sql3);
-                                    while($S633= mysqli_fetch_array($S623)){
-                                      $Su2cur3 = $basicas->BuscarCampos($mysqli,"nombreSucursal","Sucursal","Id",$S633['Sucursal']);
-                                      $St2ats3 = $basicas->BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$S633['Nivel']);
-                                      echo "<option value='".$S633['Id']."'>".$S633['Nombre']." - ".$St2ats3." - ".$Su2cur3."</option>";
-                                    }
-                                  ?>
-                                  </select>
-                                </div>
-                                <div class="modal-footer">
-                                    <input type="submit" name="CreaEmpl" class="btn btn-primary" value="Registrar distribuidor">
-                                </div>
-                            </form>
+
+    <!-- Menú principal -->
+    <section id="Menu">
+        <div class="MenuPrincipal">
+            <a class="BtnMenu" href="Pwa_Principal.php"><img src="assets/img/FlorKasu.png" alt=""></a>
+            <a class="BtnMenu" href="Mesa_Herramientas.php"><img src="assets/img/herramientas.png" style="background:#A9D0F5;" alt=""></a>
+        </div>
+    </section>
+
+    <!-- CONTENEDOR ÚNICO DE MODAL (seguimos el modelo que sí funciona) -->
+    <div class="modal fade" id="Ventana" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <?php
+                // Render dinámico del contenido según $Ventana
+                if ($Ventana === "Ventana1") : ?>
+                    <form method="POST" action="../eia/php/Registrar_Venta.php">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalLabel"><?php echo htmlspecialchars($Reg['FullName'] ?? ''); ?></h5>
                         </div>
-                    </div>
-            </div>
-            <!-- Asignar prospecto a un ejecutivo-->
-            <div class="modal fade" id="Ventana3" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                  <div class="modal-dialog" role="document">
-                      <div class="modal-content">
-                          <form method="POST" action="php/Registro_Prospectos.php">
-                              <div class="modal-header">
-                                  <h5 class="modal-title" id="exampleModalLabel"><?PHP echo $Reg['FullName'];?></h5>
-                              </div>
-                              <div class="modal-body">
-                                <input type="text" name="Host" value="<?PHP echo $_SERVER['PHP_SELF'];?>" style="display: none;">
-                                <input type="text" name="nombre" value="<?PHP echo $nombre;?>" style="display: none;">
-                                <input type="text" name="IdProspecto" value="<?PHP echo $Reg['Id'];?>" style="display: none;">
-                                <p>Asignar prospecto a</p>
-                                <label for="exampleFormControlSelect1">Selecciona a quien se asignara</label>
-                                <select class="form-control" name="NvoVend">
-                                <?
-                                //Buscamos el nivel de el usuario
-                                $Nvl = $basicas->BuscarCampos($mysqli,'Nivel','Empleados','IdUsuario',$_SESSION["Vendedor"]);
-                                //Select para la lista de prospectos a asiganar
-                                if($Nvl == 1){
-                                  //Se crea la consulta para los vendedores
-                                  $sql9 = "SELECT * FROM Empleados WHERE Nombre != 'Vacante'";
-                                }else{
-                                  //Se crea la consulta para los vendedores
-                                  $sql9 = "SELECT * FROM Empleados WHERE Nivel >= 5 AND Nombre != 'Vacante'";
+                        <div class="modal-body">
+                            <input type="text" name="Host" value="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" hidden>
+                            <input type="text" name="FullName" value="<?php echo htmlspecialchars($Reg['FullName'] ?? ''); ?>" hidden>
+                            <input type="text" name="IdProspecto" value="<?php echo htmlspecialchars($Reg['Id'] ?? '', ENT_QUOTES); ?>" hidden>
+                            <input type="text" name="Producto" value="<?php echo htmlspecialchars($Reg['Servicio_Interes'] ?? ''); ?>" hidden>
+
+                            <pre id="resultado"></pre>
+                            <label>Clave CURP</label>
+                            <input class="form-control" type="text" name="CurClie" id="CurCli" maxlength="18" oninput="validarInput(this)" required>
+                            <label>Correo Electrónico</label>
+                            <input class="form-control" type="email" name="Mail" value="<?php echo htmlspecialchars($Reg['Email'] ?? ''); ?>" required>
+                            <label>Teléfono</label>
+                            <input class="form-control" type="number" name="Telefono" value="<?php echo htmlspecialchars($Reg['NoTel'] ?? ''); ?>" required>
+                            <label>Calle</label>
+                            <input class="form-control" type="text" name="calle" required>
+                            <label>Número</label>
+                            <input class="form-control" type="text" name="numero" required>
+                            <label>Colonia</label>
+                            <input class="form-control" type="text" name="colonia" required>
+                            <label>Municipio</label>
+                            <input class="form-control" type="text" name="municipio" required>
+                            <label>Estado</label>
+                            <input class="form-control" type="text" name="estado" required>
+                            <label>Código Postal</label>
+                            <input class="form-control" type="text" name="codigo_postal" required>
+
+                            <label>Tipo de servicio</label>
+                            <select class="form-control" name="TipoServicio">
+                                <option value="Tradicional">Tradicional</option>
+                                <option value="Ecologico" selected>Ecologico</option>
+                                <option value="Cremacion">Cremación</option>
+                            </select>
+
+                            <label>Tiempo de pago</label>
+                            <select class="form-control" name="Meses">
+                                <option value="0">Pago Único</option>
+                                <option value="3">3 Meses</option>
+                                <option value="6">6 Meses</option>
+                                <option value="9">9 Meses</option>
+                            </select>
+                            <br>
+                            <div class="Legales">
+                                <p><input type="checkbox" name="Terminos" value="acepto" required> Acepto Términos y Condiciones (kasu.com.mx/terminos-y-condiciones.php)</p>
+                                <p><input type="checkbox" name="Aviso" value="acepto" required> Acepto Aviso de privacidad (kasu.com.mx/Aviso-de-privacidad)</p>
+                                <p><input type="checkbox" name="Fideicomiso" value="acepto" required> Conozco el Fideicomiso KASU (kasu.com.mx/Fideicomiso_F0003.pdf)</p>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <input type="submit" name="RegistroMesa" class="btn btn-primary" value="Registrar Venta">
+                        </div>
+                    </form>
+                <?php
+                elseif ($Ventana === "Ventana2") : ?>
+                    <form method="POST" action="php/Funcionalidad_Empleados.php">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalLabel">Registrar distribuidor</h5>
+                        </div>
+                        <div class="modal-body">
+                            <input type="text" name="Host" value="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" hidden>
+                            <input type="text" name="nombre" value="<?php echo htmlspecialchars($nombre); ?>" hidden>
+                            <input type="number" name="Nivel" value="7" hidden>
+                            <input type="number" name="IdProspecto" value="<?php echo htmlspecialchars($RegDos['IdProspecto'] ?? ''); ?>" hidden>
+
+                            <label>Nombre</label>
+                            <input type="text" name="Nombre" value="<?php echo htmlspecialchars($RegDos['name'] ?? ''); ?>" hidden>
+                            <input class="form-control" type="text" value="<?php echo htmlspecialchars($RegDos['name'] ?? ''); ?>" disabled>
+
+                            <label>Teléfono</label>
+                            <input type="text" name="Telefono" value="<?php echo htmlspecialchars($RegDos['Telefono'] ?? ''); ?>" hidden>
+                            <input class="form-control" type="text" value="<?php echo htmlspecialchars($RegDos['Telefono'] ?? ''); ?>" disabled>
+
+                            <label>Email</label>
+                            <input type="text" name="Email" value="<?php echo htmlspecialchars($RegDos['Mail'] ?? ''); ?>" hidden>
+                            <input class="form-control" type="text" value="<?php echo htmlspecialchars($RegDos['Mail'] ?? ''); ?>" disabled>
+
+                            <label>Dirección</label>
+                            <input type="text" name="Direccion" value="<?php echo htmlspecialchars($RegDos['Direccion'] ?? ''); ?>" hidden>
+                            <input class="form-control" type="text" value="<?php echo htmlspecialchars($RegDos['Direccion'] ?? ''); ?>" disabled>
+
+                            <label>Cuenta Bancaria (CLABE)</label>
+                            <input type="number" name="Cuenta" value="<?php echo htmlspecialchars($RegDos['Clabe'] ?? ''); ?>" hidden>
+                            <input class="form-control" type="number" value="<?php echo htmlspecialchars($RegDos['Clabe'] ?? ''); ?>" disabled>
+
+                            <label>Sucursal</label>
+                            <select class="form-control" name="Sucursal" required>
+                                <?php
+                                $sql1 = "SELECT * FROM Sucursal WHERE Status = 1";
+                                if ($S621 = $mysqli->query($sql1)) {
+                                    while ($S631 = $S621->fetch_assoc()) {
+                                        echo "<option value='".htmlspecialchars($S631['id'])."'>".htmlspecialchars($S631['nombreSucursal'])."</option>";
+                                    }
                                 }
-                                  $S629 = $mysqli->query($sql9);
-                                  while($S635= mysqli_fetch_array($S629)){
-                                    $Su2cur = $basicas->BuscarCampos($mysqli,"nombreSucursal","Sucursal","Id",$S635['Sucursal']);
-                                    $St2ats = $basicas->BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$S635['Nivel']);
-                                    echo "<option value='".$S635['Id']."'>".$S635['Nombre']." - ".$St2ats." - ".$Su2cur."</option>";
-                                  }
                                 ?>
-                                </select>
-                                <br>
-                              </div>
-                              <div class="modal-footer">
-                                  <input type="submit" name="AsigVende" class="btn btn-primary" value="Asignar Prospecto">
-                              </div>
-                          </form>
-                      </div>
-                  </div>
-              </div>
-            <!-- Crear prospecto-->
-            <div class="modal fade" id="Ventana4" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                  <div class="modal-dialog" role="document">
-                      <div class="modal-content">
-                        <? require_once 'html/NvoProspecto.php'; ?>
-                      </div>
-                  </div>
-              </div>
-            </div>
-            <!-- Modificar datos de un prospecto-->
-            <div class="modal fade" id="Ventana5" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                  <div class="modal-dialog" role="document">
-                      <div class="modal-content">
-                          <form method="POST" action="php/Registro_Prospectos.php">
-                              <div class="modal-header">
-                                  <h5 class="modal-title" id="exampleModalLabel"> Fecha de Alta <?PHP echo $Reg['Alta'];?></h5>
-                              </div>
-                              <div class="modal-body">
-                                <input type="text" name="Host" value="<?PHP echo $_SERVER['PHP_SELF'];?>" style="display: none;">
-                                <input type="text" name="nombre" value="<?PHP echo $nombre;?>" style="display: none;">
-                                <input type="text" name="IdProspecto" value="<?PHP echo $Reg['Id'];?>" style="display: none;">
-                                <label for="FullName">Nombre</label>
-                                <input class="form-control" type="text" name="FullName" value="<?php echo $Reg['FullName']; ?>">
-                                <label for="NoTel">Telefono</label>
-                                <input class="form-control" type="text" name="NoTel" value="<?php echo $Reg['NoTel']; ?>">
-                                <label for="Dircc">Direccion</label>
-                                <input class="form-control" type="text" name="Direccion" value="<?php echo $Reg['Direccion']; ?>">
-                                <label for="Email">Email</label>
-                                <input class="form-control" type="text" name="Email" value="<?php echo $Reg['Email']; ?>">
-                                <label for="Servicio_Interes">Servicio de Interes => <?echo $Reg['Servicio_Interes'];?></label>
-                                <select class="form-control" name="Servicio_Interes">
-                                  <option value="0">SELECCIONA UN SERVICIO</option>
-                                  <option value="FUNERARIO">FUNERARIO</option>
-                                  <option value="DISTRIBUIDOR">DISTRIBUIDOR</option>
-                                  <option value="UNIVERSITARIO">INVERSION UNIVERSITARIA</option>
-                                  <option value="RETIRO">RETIRO SEGURO</option>
-                                </select>
-                              </div>
-                              <div class="modal-footer">
-                                  <input type="submit" name="CamDat" class="btn btn-primary" value="Modificar Datos">
-                              </div>
-                          </form>
-                      </div>
-                  </div>
-              </div>
-            <!-- Dar de baja al prospecto -->
-            <div class="modal fade" id="Ventana6" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                  <div class="modal-dialog" role="document">
-                      <div class="modal-content">
-                        <form method="POST" action="php/Registro_Prospectos.php">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="exampleModalLabel"><?PHP echo $Reg['FullName'];?></h5>
-                            </div>
-                            <div class="modal-body">
-                              <input type="text" name="Host" value="<?PHP echo $_SERVER['PHP_SELF'];?>" style="display: none;">
-                              <input type="text" name="nombre" value="<?PHP echo $nombre;?>" style="display: none;">
-                              <input type="text" name="IdProspecto" value="<?PHP echo $Reg['Id'];?>" style="display: none;">
-                                <label for="exampleFormControlSelect1">Selecciona el motivo de la baja</label>
-                                <select class="form-control" name="MotivoBaja" required>
-                                    <option value="Declinada">Propuesta Declinada</option>
-                                    <option value="expirado">Tiempo de venta expirado</option>
-                                    <option value="Inexistente">Contacto Inexistente</option>
-                                    <option value="prospecto">Solicitud de prospecto</option>
-                                </select>
-                            </div>
-                            <div class="modal-footer">
-                                <input type="submit" name="BajaEmp" class="btn btn-primary" value="Dar de Baja">
-                            </div>
-                        </form>
-                      </div>
-                  </div>
-              </div>
-            <!-- Enviar correo a prospecto -->
-            <div class="modal fade" id="Ventana7" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                  <div class="modal-dialog" role="document">
-                      <div class="modal-content">
-                        <!--Formulario para envio de correo de Bienvenida-->
-                        <form action="php/Registro_Prospectos.php" method="post">
-                          <div class="modal-header">
-                              <h5 class="modal-title" id="exampleModalLabel"><?PHP echo $Reg['FullName'];?></h5>
-                          </div>
-                          <div class="modal-body">
-                            <input type="text" name="Host" value="<?PHP echo $_SERVER['PHP_SELF'];?>" style="display: none;">
-                            <input type="text" name="nombre" value="<?PHP echo $Reg['FullName'];?>" style="display: none;">
-                            <input type="text" name="IdProspecto" value="<?PHP echo $Reg['Id'];?>" style="display: none;">
-                              <select class="form-control" name="Asunto">
+                            </select>
+
+                            <label>Jefe Directo</label>
+                            <select class="form-control" name="Lider" required>
+                                <?php
+                                $Nivel = 0;
+                                $sql3 = "SELECT * FROM Empleados WHERE Nivel >= '".$Nivel."' AND Nombre != 'Vacante'";
+                                if ($S623 = $mysqli->query($sql3)) {
+                                    while ($S633 = $S623->fetch_assoc()) {
+                                        $Su2cur3 = $basicas->BuscarCampos($mysqli,"nombreSucursal","Sucursal","Id",$S633['Sucursal']);
+                                        $St2ats3 = $basicas->BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$S633['Nivel']);
+                                        echo "<option value='".htmlspecialchars($S633['Id'])."'>".htmlspecialchars($S633['Nombre'])." - ".htmlspecialchars($St2ats3)." - ".htmlspecialchars($Su2cur3)."</option>";
+                                    }
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <input type="submit" name="CreaEmpl" class="btn btn-primary" value="Registrar distribuidor">
+                        </div>
+                    </form>
+                <?php
+                elseif ($Ventana === "Ventana3") : ?>
+                    <form method="POST" action="php/Registro_Prospectos.php">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalLabel"><?php echo htmlspecialchars($Reg['FullName'] ?? ''); ?></h5>
+                        </div>
+                        <div class="modal-body">
+                            <input type="text" name="Host" value="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" hidden>
+                            <input type="text" name="nombre" value="<?php echo htmlspecialchars($nombre); ?>" hidden>
+                            <input type="text" name="IdProspecto" value="<?php echo htmlspecialchars($Reg['Id'] ?? ''); ?>" hidden>
+                            <p>Asignar prospecto a</p>
+                            <label>Selecciona a quien se asignará</label>
+                            <select class="form-control" name="NvoVend">
+                                <?php
+                                $Nvl = $basicas->BuscarCampos($mysqli,'Nivel','Empleados','IdUsuario',$_SESSION["Vendedor"]);
+                                $sql9 = ($Nvl == 1)
+                                    ? "SELECT * FROM Empleados WHERE Nombre != 'Vacante'"
+                                    : "SELECT * FROM Empleados WHERE Nivel >= 5 AND Nombre != 'Vacante'";
+                                if ($S629 = $mysqli->query($sql9)) {
+                                    while ($S635 = $S629->fetch_assoc()) {
+                                        $Su2cur = $basicas->BuscarCampos($mysqli,"nombreSucursal","Sucursal","Id",$S635['Sucursal']);
+                                        $St2ats = $basicas->BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$S635['Nivel']);
+                                        echo "<option value='".htmlspecialchars($S635['Id'])."'>".htmlspecialchars($S635['Nombre'])." - ".htmlspecialchars($St2ats)." - ".htmlspecialchars($Su2cur)."</option>";
+                                    }
+                                }
+                                ?>
+                            </select>
+                            <br>
+                        </div>
+                        <div class="modal-footer">
+                            <input type="submit" name="AsigVende" class="btn btn-primary" value="Asignar Prospecto">
+                        </div>
+                    </form>
+                <?php
+                elseif ($Ventana === "Ventana4") : ?>
+                    <?php require_once 'html/NvoProspecto.php'; ?>
+                <?php
+                elseif ($Ventana === "Ventana5") : ?>
+                    <form method="POST" action="php/Registro_Prospectos.php">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalLabel">Fecha de Alta <?php echo htmlspecialchars($Reg['Alta'] ?? ''); ?></h5>
+                        </div>
+                        <div class="modal-body">
+                            <input type="text" name="Host" value="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" hidden>
+                            <input type="text" name="nombre" value="<?php echo htmlspecialchars($nombre); ?>" hidden>
+                            <input type="text" name="IdProspecto" value="<?php echo htmlspecialchars($Reg['Id'] ?? ''); ?>" hidden>
+
+                            <label>Nombre</label>
+                            <input class="form-control" type="text" name="FullName" value="<?php echo htmlspecialchars($Reg['FullName'] ?? ''); ?>">
+
+                            <label>Teléfono</label>
+                            <input class="form-control" type="text" name="NoTel" value="<?php echo htmlspecialchars($Reg['NoTel'] ?? ''); ?>">
+
+                            <label>Dirección</label>
+                            <input class="form-control" type="text" name="Direccion" value="<?php echo htmlspecialchars($Reg['Direccion'] ?? ''); ?>">
+
+                            <label>Email</label>
+                            <input class="form-control" type="text" name="Email" value="<?php echo htmlspecialchars($Reg['Email'] ?? ''); ?>">
+
+                            <label>Servicio de Interés ⇒ <?php echo htmlspecialchars($Reg['Servicio_Interes'] ?? ''); ?></label>
+                            <select class="form-control" name="Servicio_Interes">
+                                <option value="0">SELECCIONA UN SERVICIO</option>
+                                <option value="FUNERARIO">FUNERARIO</option>
+                                <option value="DISTRIBUIDOR">DISTRIBUIDOR</option>
+                                <option value="UNIVERSITARIO">INVERSION UNIVERSITARIA</option>
+                                <option value="RETIRO">RETIRO SEGURO</option>
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <input type="submit" name="CamDat" class="btn btn-primary" value="Modificar Datos">
+                        </div>
+                    </form>
+                <?php
+                elseif ($Ventana === "Ventana6") : ?>
+                    <form method="POST" action="php/Registro_Prospectos.php">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalLabel"><?php echo htmlspecialchars($Reg['FullName'] ?? ''); ?></h5>
+                        </div>
+                        <div class="modal-body">
+                            <input type="text" name="Host" value="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" hidden>
+                            <input type="text" name="nombre" value="<?php echo htmlspecialchars($nombre); ?>" hidden>
+                            <input type="text" name="IdProspecto" value="<?php echo htmlspecialchars($Reg['Id'] ?? ''); ?>" hidden>
+
+                            <label>Selecciona el motivo de la baja</label>
+                            <select class="form-control" name="MotivoBaja" required>
+                                <option value="Declinada">Propuesta Declinada</option>
+                                <option value="expirado">Tiempo de venta expirado</option>
+                                <option value="Inexistente">Contacto Inexistente</option>
+                                <option value="prospecto">Solicitud de prospecto</option>
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <input type="submit" name="BajaEmp" class="btn btn-primary" value="Dar de Baja">
+                        </div>
+                    </form>
+                <?php
+                elseif ($Ventana === "Ventana7") : ?>
+                    <form action="php/Registro_Prospectos.php" method="post">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalLabel"><?php echo htmlspecialchars($Reg['FullName'] ?? ''); ?></h5>
+                        </div>
+                        <div class="modal-body">
+                            <input type="text" name="Host" value="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" hidden>
+                            <input type="text" name="nombre" value="<?php echo htmlspecialchars($Reg['FullName'] ?? ''); ?>" hidden>
+                            <input type="text" name="IdProspecto" value="<?php echo htmlspecialchars($Reg['Id'] ?? ''); ?>" hidden>
+
+                            <select class="form-control" name="Asunto">
                                 <option value="0">Correo a enviar:</option>
                                 <?php
-                                if($Reg['Servicio_Interes'] == "DISTRIBUIDOR"){
-                                  $EmTit = $pros -> query ("SELECT * FROM correos WHERE Tipo = 'DISTRIBUIDOR'");
-                                }else{
-                                  $EmTit = $pros -> query ("SELECT * FROM correos WHERE Tipo = 'VENTA'");
+                                $tipo = (($Reg['Servicio_Interes'] ?? '') === "DISTRIBUIDOR") ? 'DISTRIBUIDOR' : 'VENTA';
+                                if ($EmTit = $pros->query("SELECT * FROM correos WHERE Tipo = '".$pros->real_escape_string($tipo)."'")) {
+                                    while ($TitMa = $EmTit->fetch_assoc()) {
+                                        echo '<option value="'.htmlspecialchars($TitMa['Asunto']).'">'.htmlspecialchars($TitMa['Seguimiento'].' => '.$TitMa['Asunto']).'</option>';
+                                    }
                                 }
-                                  while ($TitMa = mysqli_fetch_array($EmTit)) {
-                                    echo '<option value="'.$TitMa[Asunto].'">'.$TitMa[Seguimiento]." => ".$TitMa[Asunto].'</option>';
-                                  }
                                 ?>
-                              </select>
-                            </div>
-                            <div class="modal-footer">
-                                <input type="submit" name="interno" class="btn btn-primary" value="Enviar Correo">
-                            </div>
-                        </form>
-                      </div>
-                  </div>
-            <!-- Alta de ticket atn cte-->
-            <div class="modal fade" id="Ventana8" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                  <div class="modal-content">
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <input type="submit" name="interno" class="btn btn-primary" value="Enviar Correo">
+                        </div>
+                    </form>
+                <?php
+                elseif ($Ventana === "Ventana8" || $Ventana === "Ventana9") : ?>
                     <form method="POST" action="php/Funcionalidad_Pwa.php">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="exampleModalLabel"><?PHP echo $Reg['FullName'];?></h5>
-                            </div>
-                            <div class="modal-body">
-                            <?
-                            if(isset($_SESSION['Alta'])){
-                              echo '
-                                  <input type="number" name="IdProspecto" value="'.$Reg['Id'].'" style="display:none ;">
-                                  <input type="text" name="Host" value="'.$_SERVER['PHP_SELF'].'" style="display: none;">
-                                  <input type="text" name="nombre" value="'.$nombre.'" style="display: none;">
-                                  <p>Cerrar servicio de atencion al cliente</p>
-                                  ';
-                                  $BtnAtnSer = "Registrar Cita";
-                            }else{
-                              echo '
-                                    <input type="number" name="IdProspecto" value="'.$Reg['Id'].'" style="display:none ;">
-                                    <input type="text" name="Host" value="'.$_SERVER['PHP_SELF'].'" style="display: none;">
-                                    <input type="text" name="nombre" value="'.$nombre.'" style="display: none;">
-                                    <label for="exampleFormControlSelect1">Origen</label>
-                                    <input class="form-control" disabled type="text" name="Unico" value="'.$Reg['Origen'].'">
-                                    <label for="exampleFormControlSelect1">Alta</label>
-                                    <input class="form-control" disabled type="text" name="Status" value="'.$Reg['Alta'].'">
-                                    <label for="exampleFormControlSelect1">Numero de Telefono</label>
-                                    <input class="form-control" disabled type="text" name="Producto" value="'.$Reg['NoTel'].'">
-                                    <label for="exampleFormControlSelect1">Email</label>
-                                    <input class="form-control" disabled type="text" name="Producto" value="'.$Reg['Email'].'">
-                                    <label for="exampleFormControlSelect1">Producto de Interes</label>
-                                    <input class="form-control" disabled type="text" name="Direccion" value="'.$Reg['Servicio_Interes'].'">
-                                  ';
-                                  $BtnAtnSer = "Iniciar Cita telefonica";
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalLabel"><?php echo htmlspecialchars($Reg['FullName'] ?? ''); ?></h5>
+                        </div>
+                        <div class="modal-body">
+                            <?php
+                            if (isset($_SESSION['Alta'])) {
+                                echo '
+                                    <input type="number" name="IdProspecto" value="'.htmlspecialchars($Reg['Id'] ?? '').'" hidden>
+                                    <input type="text" name="Host" value="'.htmlspecialchars($_SERVER['PHP_SELF']).'" hidden>
+                                    <input type="text" name="nombre" value="'.htmlspecialchars($nombre).'" hidden>
+                                    <p>Cerrar servicio de atención al cliente</p>
+                                ';
+                                $BtnAtnSer = "Registrar Cita";
+                            } else {
+                                echo '
+                                    <input type="number" name="IdProspecto" value="'.htmlspecialchars($Reg['Id'] ?? '').'" hidden>
+                                    <input type="text" name="Host" value="'.htmlspecialchars($_SERVER['PHP_SELF']).'" hidden>
+                                    <input type="text" name="nombre" value="'.htmlspecialchars($nombre).'" hidden>
+                                    <label>Origen</label>
+                                    <input class="form-control" disabled type="text" value="'.htmlspecialchars($Reg['Origen'] ?? '').'">
+                                    <label>Alta</label>
+                                    <input class="form-control" disabled type="text" value="'.htmlspecialchars($Reg['Alta'] ?? '').'">
+                                    <label>Número de Teléfono</label>
+                                    <input class="form-control" disabled type="text" value="'.htmlspecialchars($Reg['NoTel'] ?? '').'">
+                                    <label>Email</label>
+                                    <input class="form-control" disabled type="text" value="'.htmlspecialchars($Reg['Email'] ?? '').'">
+                                    <label>Producto de Interés</label>
+                                    <input class="form-control" disabled type="text" value="'.htmlspecialchars($Reg['Servicio_Interes'] ?? '').'">
+                                ';
+                                $BtnAtnSer = "Iniciar Cita telefónica";
                             }
                             ?>
-                            </div>
-                            <div class="modal-footer">
-                                <input type="submit" name="RegistroCita" class="btn btn-primary" value="<?echo $BtnAtnSer;?>">
-                            </div>
-                      </form>
-                  </div>
-                </div>
-            <!-- Alta de ticket atn cte-->
-            <div class="modal fade" id="Ventana9" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <form method="POST" action="php/Funcionalidad_Pwa.php">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="exampleModalLabel"><?PHP echo $Reg['FullName'];?></h5>
-                            </div>
-                            <div class="modal-body">
-                            <?
-                            if(isset($_SESSION['Alta'])){
-                              echo '
-                                  <input type="number" name="IdProspecto" value="'.$Reg['Id'].'" style="display:none ;">
-                                  <input type="text" name="Host" value="'.$_SERVER['PHP_SELF'].'" style="display: none;">
-                                  <input type="text" name="nombre" value="'.$nombre.'" style="display: none;">
-                                  <p>Cerrar servicio de atencion al cliente</p>
-                                  ';
-                                  $BtnAtnSer = "Registrar Cita";
-                            }else{
-                              echo '
-                                    <input type="number" name="IdProspecto" value="'.$Reg['Id'].'" style="display:none ;">
-                                    <input type="text" name="Host" value="'.$_SERVER['PHP_SELF'].'" style="display: none;">
-                                    <input type="text" name="nombre" value="'.$nombre.'" style="display: none;">
-                                    <label for="exampleFormControlSelect1">Origen</label>
-                                    <input class="form-control" disabled type="text" name="Unico" value="'.$Reg['Origen'].'">
-                                    <label for="exampleFormControlSelect1">Alta</label>
-                                    <input class="form-control" disabled type="text" name="Status" value="'.$Reg['Alta'].'">
-                                    <label for="exampleFormControlSelect1">Numero de Telefono</label>
-                                    <input class="form-control" disabled type="text" name="Producto" value="'.$Reg['NoTel'].'">
-                                    <label for="exampleFormControlSelect1">Email</label>
-                                    <input class="form-control" disabled type="text" name="Producto" value="'.$Reg['Email'].'">
-                                    <label for="exampleFormControlSelect1">Producto de Interes</label>
-                                    <input class="form-control" disabled type="text" name="Direccion" value="'.$Reg['Servicio_Interes'].'">
-                                  ';
-                                  $BtnAtnSer = "Iniciar Cita telefonica";
-                            }
-                            ?>
-                            </div>
-                            <div class="modal-footer">
-                                <input type="submit" name="RegistroCita" class="btn btn-primary" value="<?echo $BtnAtnSer;?>">
-                            </div>
-                        </form>
-                </div>
-              </div>
+                        </div>
+                        <div class="modal-footer">
+                            <input type="submit" name="RegistroCita" class="btn btn-primary" value="<?php echo htmlspecialchars($BtnAtnSer); ?>">
+                        </div>
+                    </form>
+                <?php
+                endif; ?>
             </div>
-        </section>
-        <section name="impresion de datos finales">
-            <table class="table">
-                  <tr>
-                      <th>Nombre Prospecto</th>
-                      <th>Sem. Activo</th>
-                      <th>Servicio</th>
-                      <th>Art. Env</th>
-                      <th>Asignado</th>
-                      <th>Acciones</th>
-                  </tr>
-              <?
-              if($nombre == ' '){
-                  $buscar = $basicas->BLikesD2($pros,'prospectos','FullName',$nombre,'Cancelacion',0,'Automatico',0);
-                }else{
-                  $buscar = $basicas->BLikesCan($pros,"prospectos","FullName",$nombre,"Cancelacion",0);
+        </div>
+    </div>
+    </br></br>
+    <!-- Tabla de resultados -->
+    <section name="impresion de datos finales">
+        <table class="table">
+            <tr>
+                <th>Nombre Prospecto</th>
+                <th>Sem. Activo</th>
+                <th>Servicio</th>
+                <th>Art. Env</th>
+                <th>Asignado</th>
+                <th>Acciones</th>
+            </tr>
+            <?php
+            if ($nombre === ' ') {
+                $buscar = $basicas->BLikesD2($pros,'prospectos','FullName',$nombre,'Cancelacion',0,'Automatico',0);
+            } else {
+                $buscar = $basicas->BLikesCan($pros,"prospectos","FullName",$nombre,"Cancelacion",0);
+            }
+            foreach ($buscar as $row) {
+                // Semanas activas
+                $Sem   = strtotime($row['Alta']);
+                $HoyA  = strtotime(date("Y-m-d"));
+                $CSem  = $HoyA - $Sem;
+                $ContSem = $CSem/604800;
+
+                // ¿Es distribuidor?
+                $Distri = $basicas->BuscarCampos($pros,'Id','Distribuidores','IdProspecto',$row['Id']);
+
+                echo '<tr>
+                        <th>'.htmlspecialchars($row["FullName"]).'</th>
+                        <th>'.round($ContSem,0).'</th>
+                        <th>'.htmlspecialchars($row["Servicio_Interes"]).'</th>
+                        <th>'.htmlspecialchars($row["Sugeridos"]).'</th>
+                        <th>'.htmlspecialchars($basicas->BuscarCampos($mysqli,"IdUsuario","Empleados","Id",$row["Asignado"])).'</th>
+                        <th>
+                        <div style="display:flex;">
+                            <form method="POST" action="'.htmlspecialchars($_SERVER['PHP_SELF']).'">
+                                <input type="text" name="Host" value="'.htmlspecialchars($_SERVER['PHP_SELF']).'" hidden>
+                                <input type="text" name="nombre" value="'.htmlspecialchars($nombre).'" hidden>
+
+                                <!-- Registrar Venta (Ventana1) -->
+                                <label for="btn1'.$row['Id'].'" title="Registrar Venta" class="btn" style="background:#58D68D;color:#F8F9F9;">
+                                    <i class="material-icons">attach_money</i>
+                                </label>
+                                <input id="btn1'.$row['Id'].'" type="submit" name="IdProspecto" value="1'.$row['Id'].'" hidden>
+
+                                <!-- Enviar prospecto a lead sales (usa Ventana6 según tu flujo original de envío 6) -->
+                                <label for="btn4'.$row['Id'].'" title="Enviar lead Sales" class="btn" style="background:#21618C;color:#F8F9F9;">
+                                    <i class="material-icons">card_travel</i>
+                                </label>
+                                <input id="btn4'.$row['Id'].'" type="submit" name="IdProspecto" value="6'.$row['Id'].'" hidden>
+
+                                <!-- Generar Presupuesto (si en otra pantalla) mantenemos id demostrativo Ventana8 para consistencia -->
+                                <label for="btn8'.$row['Id'].'" title="Generar Presupuesto" class="btn" style="background:#5DADE2;color:#F8F9F9;">
+                                    <i class="material-icons">feed</i>
+                                </label>
+                                <input id="btn8'.$row['Id'].'" type="submit" name="IdProspecto" value="8'.$row['Id'].'" hidden>
+
+                                <!-- Dar de Baja (Ventana6) -->
+                                <label for="btn6'.$row['Id'].'" title="Dar de Baja al Prospecto" class="btn" style="background:#E74C3C;color:#F8F9F9;">
+                                    <i class="material-icons">cancel</i>
+                                </label>
+                                <input id="btn6'.$row['Id'].'" type="submit" name="IdProspecto" value="6'.$row['Id'].'" hidden>
+
+                                <!-- Asignar a ejecutivo (Ventana3) -->
+                                <label for="btn3'.$row['Id'].'" title="Asignar prospecto a un ejecutivo" class="btn" style="background:#AF7AC5;color:#F8F9F9;">
+                                    <i class="material-icons">people_alt</i>
+                                </label>
+                                <input id="btn3'.$row['Id'].'" type="submit" name="IdProspecto" value="3'.$row['Id'].'" hidden>
+
+                                <!-- Enviar correo (Ventana7) -->
+                                <label for="btn7'.$row['Id'].'" title="Enviar correo electrónico" class="btn" style="background:#EB984E;color:#F8F9F9;">
+                                    <i class="material-icons">send_to_mobile</i>
+                                </label>
+                                <input id="btn7'.$row['Id'].'" type="submit" name="IdProspecto" value="7'.$row['Id'].'" hidden>
+
+                                <!-- Cambiar datos (Ventana5) -->
+                                <label for="btn5'.$row['Id'].'" title="Cambiar datos del Prospecto" class="btn" style="background:#AAB7B8;color:#F8F9F9;">
+                                    <i class="material-icons">badge</i>
+                                </label>
+                                <input id="btn5'.$row['Id'].'" type="submit" name="IdProspecto" value="5'.$row['Id'].'" hidden>';
+
+                if (!empty($Distri)) {
+                    echo '
+                                <!-- Convertir en distribuidor (Ventana2) -->
+                                <label for="btn2'.$row['Id'].'" title="Convertir en distribuidor" class="btn" style="background:#58D68D;color:#F8F9F9;">
+                                    <i class="material-icons">verified_user</i>
+                                </label>
+                                <input id="btn2'.$row['Id'].'" type="submit" name="IdProspecto" value="2'.$row['Id'].'" hidden>';
                 }
-                  foreach ($buscar as $row){
-                  //Contamos las semanas activas
-                  $Sem = strtotime($row['Alta']);
-                  $HoyA = strtotime(date("Y-m-d"));
-                  $CSem = $HoyA-$Sem;
-                  $ContSem = $CSem/604800;
-                  //COnvertir en distribuidor
-                  $Distri = $basicas->BuscarCampos($pros,'Id','Distribuidores','IdProspecto',$row['Id']);
-                  //Se busca si el cliente ya esta no debe nada
-                        echo "
-                        <tr>
-                            <th>".$row['FullName']."</th>
-                            <th>".round($ContSem,0)."</th>
-                            <th>".$row['Servicio_Interes']."</th>
-                            <th>".$row['Sugeridos']."</th>
-                            <th>".$basicas->BuscarCampos($mysqli,"IdUsuario","Empleados","Id",$row['Asignado'])."</th>
-                            <th>
-                            <div style='display: flex;'>
-                                <form method='POST' action='".$_SERVER['PHP_SELF']."'>
-                                    <input type='text' name='Host' value='".$_SERVER['PHP_SELF']."' style='display: none;'>
-                                    <input type='text' name='nombre' value='".$nombre."' style='display: none;'>
-                                    <!-- Registrar Venta -->
-                                    <label for='1".$row['Id']."' title='Registrar Venta' class='btn' style='background: #58D68D; color: #F8F9F9;' ><i class='material-icons'>attach_money</i></label>
-                                    <input id='1".$row['Id']."' type='submit' value='1".$row['Id']."' name='IdProspecto' class='hidden' style='display: none;' />
-                                    <!--Enviar prospecto a lead sales -->
-                                    <label for='4".$row['Id']."' title='Enviar lead Sales' class='btn' style='background: #21618C; color: #F8F9F9;' ><i class='material-icons'>card_travel</i></label>
-                                    <input id='4".$row['Id']."' type='submit' value='6".$row['Id']."' name='IdProspecto' class='hidden' style='display: none;' />
-                                    <label for='8" . $row['Id'] . "' title='Generar Presupuesto' class='btn' style='background: #5DADE2; color: #F8F9F9;' ><i class='material-icons'>feed</i></label>
-                                    <input id='8" . $row['Id'] . "' type='submit' value='8" . $row['Id'] . "' name='IdCliente' style='display: none ;' >
-                                    <!-- Dar de Baja al Prospecto -->
-                                    <label for='6".$row['Id']."' title='Dar de Baja al Prospecto' class='btn' style='background: #E74C3C; color: #F8F9F9;' ><i class='material-icons'>cancel</i></label>
-                                    <input id='6".$row['Id']."' type='submit' value='6".$row['Id']."' name='IdProspecto' class='hidden' style='display: none;' />
-                                    <!-- Asignar prospecto a un ejecutivo-->
-                                    <label for='3".$row['Id']."' title='Asignar prospecto a un ejecutivo' class='btn' style='background: #AF7AC5; color: #F8F9F9;' ><i class='material-icons'>people_alt</i></label>
-                                    <input id='3".$row['Id']."' type='submit' value='3".$row['Id']."' name='IdProspecto' class='hidden' style='display: none;' />
-                                    <!-- Enviar correo electronico-->
-                                    <label for='7".$row['Id']."' title='Enviar correo electronico' class='btn' style='background: #EB984E; color: #F8F9F9;' ><i class='material-icons'>send_to_mobile</i></label>
-                                    <input id='7".$row['Id']."' type='submit' value='7".$row['Id']."' name='IdProspecto' class='hidden' style='display: none;' />
-                                    <!-- Cambiar los datos del cliente -->
-                                    <label for='5".$row['Id']."' title='Cambiar los datos del Prospecto' class='btn' style='background: #AAB7B8; color: #F8F9F9;' ><i class='material-icons'>badge</i></label>
-                                    <input id='5".$row['Id']."' type='submit' value='5".$row['Id']."' name='IdProspecto' class='hidden' style='display: none;' />
-                                    ";
-                                    //Buscamos si el prospecto ya esta registrado con datos completos
-                                    if(!empty($Distri)){
-                                      echo "
-                                      <!-- Convertir en distribuidor-->
-                                      <label for='2".$row['Id']."' title='Convertir en distribuidor' class='btn' style='background: #58D68D; color: #F8F9F9;' ><i class='material-icons'>verified_user</i></label>
-                                      <input id='2".$row['Id']."' type='submit' value='2".$row['Id']."' name='IdProspecto' class='hidden' style='display: none;' />
-                                      ";
-                                    }
-                                    //Cuando el prospecto genero una cita
-                                    if(!empty($basicas->Buscar2Campos($pros,'Id','citas','IdProspecto',$row['Id'],'FechaCita',date("Y-m-d")))){
-                                    echo "
-                                        <!-- Ticket de Atencion al cliente -->
-                                        <label for='9".$row['Id']."' title='Ticket de Atencion al cliente' class='btn' style='background: #F39C12; color: #F8F9F9;' ><i class='material-icons'>phone_locked</i></label>
-                                        <input id='9".$row['Id']."' type='submit' value='9".$row['Id']."' name='IdProspecto' class='hidden' style='display: none;' />
-                                    ";
-                                    }
-                              echo "
-                                </form>
-                            <div>
-                        </th>
-                    </tr>
-                                    ";
-                  }
-              ?>
-            </table>
-        </section>
-      <script type="text/javascript" src="Javascript/localize.js"></script>
-      <script src="Javascript/fingerprint-core-y-utils.js"></script>
-      <script src="Javascript/finger.js" defer></script>
-    </body>
+
+                if (!empty($basicas->Buscar2Campos($pros,'Id','citas','IdProspecto',$row['Id'],'FechaCita',date("Y-m-d")))) {
+                    echo '
+                                <!-- Ticket Atención (Ventana9) -->
+                                <label for="btn9'.$row['Id'].'" title="Ticket de Atención al cliente" class="btn" style="background:#F39C12;color:#F8F9F9;">
+                                    <i class="material-icons">phone_locked</i>
+                                </label>
+                                <input id="btn9'.$row['Id'].'" type="submit" name="IdProspecto" value="9'.$row['Id'].'" hidden>';
+                }
+
+                echo '          </form>
+                        </div>
+                    </th>
+                </tr>';
+            }
+            ?>
+        </table>
+    </section>
+
+    <!-- JS (UNA sola versión consistente) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Libs varias -->
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="Javascript/fingerprint-core-y-utils.js"></script>
+    <script src="Javascript/finger.js"></script>
+    <script src="Javascript/localize.js"></script>
+
+    <!-- Lanzar modal si corresponde (modelo que sí funciona) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            <?php if (!empty($Lanzar)) : ?>
+            $('<?php echo $Lanzar; ?>').modal('show');
+            <?php endif; ?>
+        });
+    </script>
+</body>
 </html>

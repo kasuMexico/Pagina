@@ -23,7 +23,7 @@ if ($Niv != 7 && $statusVtaPost === 'COBRANZA') {
   $BtnPago = '<input type="submit" name="SelCte" class="btn btn-primary" value="Agregar Pago">';
 }
 $BtnCta = '';
-if ($Niv != 7) {
+if ($Niv != 2) {
   $BtnCta = '<a class="btn btn-primary" href="Pwa_Estado_Cuenta.php?busqueda=' . base64_encode($Reg['Id']) . '">Estado de Cuenta</a>';
 }
 ?>
@@ -41,7 +41,7 @@ if ($Niv != 7) {
     <input type="hidden" name="Host"       value="<?php echo $host; ?>">
     <input type="hidden" name="nombre"     value="<?php echo $nombreSafe; ?>">
 
-    <?php if ($Niv <= 4): ?>
+    <?php if ($Niv <= 5): ?>
       <p>Ejecutivo de Ventas</p>
       <h2><?php echo $regUsuario; ?></h2>
     <?php endif; ?>

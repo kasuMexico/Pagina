@@ -51,15 +51,19 @@
       <!-- Origen oculto con el valor de $Metodo -->
       <input type="hidden" name="Origen" value="<?php echo htmlspecialchars($Metodo, ENT_QUOTES, 'UTF-8'); ?>">
     <?php endif; ?>
-
+    
+    <!-- Lanzamos el select con base en los niveles -->
     <div class="form-group mb-0">
       <label class="mb-1">El usuario está interesado en</label>
       <select class="form-control" name="Servicio" required>
         <option value="FUNERARIO">GASTOS FUNERARIOS</option>
+        <option value="RETIRO">AHORRO PARA EL RETIRO</option>
+        <? if($Niv == 1 || $Niv == 3):?>
         <option value="SEGURIDAD">GASTOS FUNERARIOS OFICIALES</option>
         <option value="TRANSPORTE">GASTOS FUNERARIOS SERVICIO DE TRANSPORTE</option>
-        <option value="RETIRO">AHORRO PARA EL RETIRO</option>
+        <? elseif($Niv <= 4):?>
         <option value="DISTRIBUIDOR">SER DISTRIBUIDOR</option>
+        <? endif;?>
       </select>
     </div>
   </div>

@@ -1,60 +1,57 @@
 <?php
-// Se inicializan las variables de estilo para cada botón del menú
-$a1 = $a2 = $a3 = $a4 = $a5 = $a6 = $a7 = "";
+// Estado visual y de clic por botón
+$a1 = $a2 = $a3 = $a4 = $a5 = $a6 = $a7 = '';
+$d1 = $d2 = $d3 = $d4 = $d5 = $d6 = $d7 = false;
 
-// Se comprueba el nivel del usuario utilizando la función BuscarCampos de la clase Basicas
 $Niv = $basicas->BuscarCampos($mysqli, "Nivel", "Empleados", "IdUsuario", $_SESSION["Vendedor"]);
+$CoMn = basename($_SERVER['PHP_SELF']); // nombre del archivo actual
 
-// Se extrae una parte de la ruta actual para determinar en qué página se encuentra el usuario
-$CoMn = substr($_SERVER['PHP_SELF'], 7, 20);
+$coloHover = "#F6CFFC";
+$imgDisabled = "background: {$coloHover};";
+$anchorDisabled = 'style="pointer-events:none; cursor:default;" aria-current="page" tabindex="-1"';
 
-// Asigna estilos dependiendo de la página actual (el estilo deshabilita el botón actual)
-if ($CoMn == "Pwa_Principal.php") {
-    $a1 = "background: #D7BDE2; pointer-events: none; cursor: default;";
-} elseif ($CoMn == "Pwa_Prospectos.php") {
-    $a2 = "background: #D7BDE2; pointer-events: none; cursor: default;";
-} elseif ($CoMn == "Pwa_Registro_Pagos.php") {
-    $a3 = "background: #D7BDE2; pointer-events: none; cursor: default;";
-} elseif ($CoMn == "Pwa_Clientes.php") {
-    $a4 = "background: #D7BDE2; pointer-events: none; cursor: default;";
-} elseif ($CoMn == "Mesa_Herramientas.php") {
-    $a5 = "background: #D7BDE2; pointer-events: none; cursor: default;";
-} elseif ($CoMn == "Pwa_Analisis_Ventas.php") {
-    $a6 = "background: #D7BDE2; pointer-events: none; cursor: default;";
-} elseif ($CoMn == "Pwa_Sociales.php") {
-    $a7 = "background: #D7BDE2; pointer-events: none; cursor: default;";
+switch ($CoMn) {
+  case 'Pwa_Principal.php':        $a1 = $imgDisabled; $d1 = true; break;
+  case 'Pwa_Prospectos.php':       $a2 = $imgDisabled; $d2 = true; break;
+  case 'Pwa_Registro_Pagos.php':   $a3 = $imgDisabled; $d3 = true; break;
+  case 'Pwa_Clientes.php':         $a4 = $imgDisabled; $d4 = true; break;
+  case 'Mesa_Herramientas.php':    $a5 = $imgDisabled; $d5 = true; break;
+  case 'Pwa_Analisis_Ventas.php':  $a6 = $imgDisabled; $d6 = true; break;
+  case 'Pwa_Sociales.php':         $a7 = $imgDisabled; $d7 = true; break;
+}
+
+// Helper: imprime <a> activo o deshabilitado
+function btn($href, $img, $imgStyle, $disabled, $anchorDisabled) {
+  if ($disabled) {
+    echo '<a class="BtnMenu" '.$anchorDisabled.'><img src="'.$img.'" style="'.$imgStyle.'"></a>';
+  } else {
+    echo '<a class="BtnMenu" href="'.$href.'"><img src="'.$img.'" style="'.$imgStyle.'"></a>';
+  }
 }
 ?>
 <div class="MenuPrincipal">
-    <?php
-    // Botón para la página principal
-    echo '<a class="BtnMenu" href="Pwa_Principal.php"><img src="assets/img/FlorKasu.png" style="' . $a1 . '"></a>';
-
-    // Si el nivel del usuario es 1, se muestra el botón para análisis de ventas
+  <?php
+    btn('Pwa_Principal.php',      'assets/img/FlorKasu.png',     $a1, $d1, $anchorDisabled);
+    
     if ($Niv == 1) {
-        echo '<a class="BtnMenu" href="Pwa_Analisis_Ventas.php"><img src="assets/img/analisis.png" style="' . $a6 . '"></a>';
+      btn('Pwa_Analisis_Ventas.php','assets/img/estadistico.png', $a6, $d6, $anchorDisabled);
+    }
+    if ($Niv != 2) {
+      btn('Pwa_Clientes.php',     'assets/img/usuario_a.png',    $a4, $d4, $anchorDisabled);
     }
 
-    // Para niveles distintos de 5 y 3 se muestran botones de prospectos y sociales
-    if ($Niv != 5 && $Niv != 3) {
-        echo '
-            <a class="BtnMenu" href="Pwa_Prospectos.php"><img src="assets/img/usuario.png" style="' . $a2 . '"></a>
-            <!-- Opción de prospectos en Mesa (comentada) -->
-            <a class="BtnMenu" href="Pwa_Sociales.php"><img src="assets/img/Sociales.png" style="' . $a7 . '"></a>
-        ';
+    if ($Niv != 5 && $Niv != 3 && $Niv != 2) {
+      btn('Pwa_Prospectos.php',   'assets/img/prospectos.png',   $a2, $d2, $anchorDisabled);
     }
 
-    // Si el usuario no es de nivel 3 se muestra el botón para cartera de clientes
-    if ($Niv != 3) {
-        echo '<a class="BtnMenu" href="Pwa_Clientes.php"><img alt="cartera" src="assets/img/cartera.png" style="' . $a4 . '"></a>';
-    }
-
-    // Si el usuario no es de nivel 7 se muestra el botón para gestor de cobranza
     if ($Niv != 7) {
-        echo '<a class="BtnMenu" href="Pwa_Registro_Pagos.php"><img src="assets/img/cobranza.png" style="' . $a3 . '"></a>';
+      btn('Pwa_Registro_Pagos.php','assets/img/cobrando.png',    $a3, $d3, $anchorDisabled);
     }
 
-    // Botón para la página de ajustes (Mesa Herramientas)
-    echo '<a class="BtnMenu" href="Mesa_Herramientas.php"><img src="assets/img/ajustes.png" style="' . $a5 . '"></a>';
-    ?>
+    if ($Niv == 7 || $Niv == 6 || $Niv == 1) {
+      btn('Pwa_Sociales.php',     'assets/img/post_fb.png',      $a7, $d7, $anchorDisabled);
+    }
+
+    btn('Mesa_Herramientas.php',  'assets/img/herramientas.png', $a5, $d5, $anchorDisabled);
+  ?>
 </div>

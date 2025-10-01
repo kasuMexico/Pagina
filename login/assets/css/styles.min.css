@@ -27,7 +27,9 @@ body{background:#f1f7fc;}
 .FALLECIDO{padding:10px;border:1px solid #e6b0aa;width:100%;background:#f2d7d5;display:none;}
 .PREVENTA{padding:10px;border:1px solid #e6b0aa;width:100%;background:#f2d7d5;}
 .FUNERARIO{padding:10px;border:1px solid #fcf3cf;width:100%;background:#fcf3cf;}
-.UNIVERSITARIO{padding:10px;border:1px solid #5c93e7;width:100%;background:#a9cce3;}
+.SEGURIDAD{padding:10px;border:1px solid #4e71f0;width:100%;background:#4e71f0;}
+.TRANSPORTE{padding:10px;border:1px solid #fcf3cf;width:100%;background:#fcf3cf;}
+.DISTRIBUIDOR{padding:10px;border:1px solid #5c93e7;width:100%;background:#a9cce3;}
 .RETIRO{padding:10px;border:1px solid #fad7a0;width:100%;background:#d5f5e3;}
 
 @media(max-height:649px){.table-responsive{width:100%;height:600px;}}
@@ -57,8 +59,6 @@ body{background:#f1f7fc;}
 .BtnSocial img:hover{background:#A9D0F5;}
 
 .principal{background:#f2f2f2;}
-.header{align-items:stretch;background:#f1f7fc;display:flex;flex-direction:row;flex-wrap:nowrap;height:56px;justify-content:flex-start;padding:16px 16px 0 16px;position:fixed;transition:transform .233s cubic-bezier(0,0,.21,1) .1s;width:100%;will-change:transform;z-index:1000;}
-.header button{border:none;cursor:pointer;height:25px;width:25px;margin-right:16px;opacity:1;outline:none;overflow:hidden;background:#f1f7fc;}
 .dpersonales{display:flex;padding:20px 20px 5px;}
 .imgPerfil img{height:115px;}
 .subir,.enviarFoto{width:100px;height:35px;padding:5px 10px;color:#fff;border:0;border-radius:10px;}
@@ -66,7 +66,6 @@ body{background:#f1f7fc;}
 .enviarFoto{background:#00b0ff;}
 .enviarFoto:hover{color:#fff;background:#80d8ff;}
 .subir:hover{color:#fff;background:#81c784;}
-
 .Nombre{flex-wrap:wrap;padding:10px;text-align:center;transform:translateX(20px);}
 .Datos{text-align:center;border:1px solid #a4a4a4;padding:10px;}
 .Datos h1{font-size:35px;}
@@ -90,46 +89,83 @@ tbody{border-color:#808B96;}
 #resultado{background:red;color:#fff;font-weight:bold;}
 #resultado.ok{background:green;}
 
-/* ===== Menú inferior (safe area + color #808B96) ===== */
-:root{--nav-h:64px;--safe-b:env(safe-area-inset-bottom,0px);}
+/* ====== Safe areas y medidas (únicas) ====== */
+:root{
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
 
-#Menu{position:fixed;left:0;right:0;bottom:0;z-index:1000;}
+  --topbar-h: 56px;      /* alto base barra superior */
 
+  /* Menú inferior */
+  --icon: 40px;          /* tamaño real de tus íconos */
+  --pad-v: 6px;          /* relleno vertical dentro del menú */
+  --bottombar-h: 48px;   /* alto objetivo mínimo de la barra */
+}
+
+/* ====== Barra superior fija ====== */
+.topbar{
+  position: fixed; top:0; left:0; right:0; z-index:1200;
+  height: calc(var(--topbar-h) + var(--safe-t));
+  padding: calc(8px + var(--safe-t)) 12px 8px;
+  background:#F2F2F2;
+  border-bottom:1px solid rgba(0,0,0,.08);
+  display:flex; align-items:center; gap:8px;
+}
+.topbar .title{ margin:0; text-align:center; width:100%; }
+
+/* ====== Menú inferior fijo ====== */
+#Menu{ position:fixed; left:0; right:0; bottom:0; z-index:1000; }
 #Menu .MenuPrincipal{
-  display:flex;justify-content:space-around;align-items:center;
-  height:calc(var(--nav-h) + var(--safe-b));
-  padding:8px 12px calc(8px + var(--safe-b));
-  background:#808B96 !important;
-  border-top:1px solid rgba(136,147,157);
-  backdrop-filter:saturate(140%) blur(8px);
+  display:flex; justify-content:space-around; align-items:center;
+
+  /* Altura = max(alto objetivo, icono + padding) + safe-bottom mínimo */
+  height: calc(
+    max(var(--bottombar-h), calc(var(--icon) + 2*var(--pad-v)))
+    + max(var(--safe-b), 8px)
+  );
+
+  /* No sumes safe-b aquí (ya se añadió en height) */
+  padding: var(--pad-v) 12px var(--pad-v);
+  background:#808B96;
+  border-top:1px solid rgba(136,147,157,.6);
 }
 
-/* tamaño por defecto móvil */
-#Menu .BtnMenu img {
-  width: 42px;
-  height: 42px;
+/* Tamaños de iconos */
+#Menu .BtnMenu img{ width:var(--icon); height:var(--icon); border-radius:50%; display:block; }
+@media (min-width:992px){
+  #Menu .BtnMenu img{ width:50px; height:50px; }
 }
 
-/* escritorio / pantallas anchas */
-@media (min-width: 992px) {
-  #Menu .BtnMenu img {
-    width: 50px;
-    height: 50px;
+/* WebKit/iPhone: mantiene el mismo cálculo de altura */
+@supports (-webkit-touch-callout:none){
+  #Menu .MenuPrincipal{
+    height: calc(
+      max(var(--bottombar-h), calc(var(--icon) + 2*var(--pad-v)))
+      + max(var(--safe-b), 8px)
+    );
   }
 }
 
-/* forzar tamaño en Safari iOS (pantallas retina) */
-@supports (-webkit-touch-callout: none) {
-  #Menu .BtnMenu img {
-    width: 56px;   /* prueba entre 52–60px según lo quieras ver */
-    height: 56px;
-  }
-  #Menu .MenuPrincipal {
-    height: calc(72px + var(--safe-b));
-  }
+/* Fallback iOS antiguo (constant()) */
+.topbar{ padding-top: constant(safe-area-inset-top); }
+#Menu .MenuPrincipal{ padding-bottom: var(--pad-v); }
+
+/* ====== Contenido entre barras ====== */
+main.page-content{
+  padding-top: calc(var(--topbar-h) + var(--safe-t) + 8px);
+  padding-bottom: calc(
+    max(var(--bottombar-h), calc(var(--icon) + 2*var(--pad-v)))
+    + max(var(--safe-b), 8px) + 8px
+  );
 }
 
-#Menu .MenuPrincipal{padding-bottom:calc(8px + constant(safe-area-inset-bottom));}
+/* ====== Modales siempre encima ====== */
+.modal{ z-index:3000; }          /* > topbar(1200) y menú(1000) */
+.modal-backdrop{ z-index:2990; } /* justo debajo de la modal */
+.modal.show .modal-dialog{
+  margin: calc(env(safe-area-inset-top,0px) + 10px) auto 10px !important;
+}
 
-/* espacio para contenido */
-body,main,.page-content{padding-bottom:calc(var(--nav-h) + var(--safe-b) + 8px);}
+/* ====== Bloques varios que tenías (no tocados) ====== */
+.dpersonales{display:flex; gap:16px; padding:16px;}
+.imgPerfil img{height:115px; width:115px; object-fit:cover; border-radius:12px;}

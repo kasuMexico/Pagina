@@ -4,7 +4,16 @@ $servRaw  = $Reg['Servicio_Interes'] ?? '';
 $serv     = strtoupper(trim($servRaw));
 
 $Edad     = $basicas->ObtenerEdad($Reg['Curp'] ?? '');
-$ProdSel  = $basicas->ProdFune($Edad);
+if($serv == "TRANSPORTE"){
+  //Producto Funerario TRANSPORTE
+  $ProdSel  = $basicas->ProdTrans($Edad);
+}elseif($serv == "SEGURIDAD"){
+  //Producto Funerario SEGURIDAD
+  $ProdSel  = $basicas->ProdPli($Edad);
+}else{
+  //Producto Funerario
+  $ProdSel  = $basicas->ProdFune($Edad);
+}
 $Costo    = $basicas->BuscarCampos($mysqli, "Costo", "Productos", "Producto", $ProdSel);
 
 function h($v){ return htmlspecialchars((string)$v, ENT_QUOTES,'UTF-8'); }
@@ -31,7 +40,7 @@ $groupLabel = [
 $groupValue = [
   'FUNERARIO'  => 'FAMILIAR',
   'SEGURIDAD'  => 'SEGURIDAD',
-  'TRANSPORTE' => 'SEGURIDAD',
+  'TRANSPORTE' => 'TRANSPORTE',
 ][$serv] ?? null;
 
 /* Pago/plazos por servicio */
@@ -75,7 +84,7 @@ if ($serv === 'SEGURIDAD' || $serv === 'RETIRO') {
 
       <div id="plan-familiar" style="display:none">
         <label class="mt-3 d-block">Cantidad de pólizas por bloque</label>
-        <?php foreach (['a0a29'=>'0–29','a30a49'=>'30–49','a50a54'=>'50–54','a55a59'=>'55–59','a60a64'=>'60–64','a65a69'=>'65–69'] as $name=>$txt): ?>
+        <?php foreach (['a02a29'=>'02–29','a30a49'=>'30–49','a50a54'=>'50–54','a55a59'=>'55–59','a60a64'=>'60–64','a65a69'=>'65–69'] as $name=>$txt): ?>
           <label><?=h($txt)?></label>
           <input class="form-control" type="number" name="<?=h($name)?>" min="0" placeholder="Cantidad">
         <?php endforeach; ?>

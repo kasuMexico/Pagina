@@ -1,211 +1,191 @@
 <?php
-echo '
+/* Plantilla DOMPDF para Cotización
+   Requiere:
+   - $Propuest (o $Propuesta) con a02a29..a65a69, FechaRegistro, Plazo/plazo
+   - $Prospecto (o $Reg) con FullName, NoTel, Email, Servicio_Interes
+   - $basicas, $mysqli, $tel disponibles
+*/
+
+$P = $Propuest  ?? ($Propuesta ?? []);
+$C = $Prospecto ?? ($Reg ?? []);
+
+function h($v){ return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
+
+$telEmpresa = $tel ?? '55 8851 0571';
+$fechaReg   = $P['FechaRegistro'] ?? date('Y-m-d');
+
+// Detecta prefijo por servicio
+$serv = strtoupper(trim($C['Servicio_Interes'] ?? ''));
+$prefix = ($serv === 'TRANSPORTE') ? 'T' : (($serv === 'SEGURIDAD') ? 'P' : '');
+
+// Plazo solicitado
+$plazoSolic = (int)($P['Plazo'] ?? $P['plazo'] ?? 1);
+
+// Rangos base (sin prefijo)
+$rangos = [
+  'a02a29' => '02a29',
+  'a30a49' => '30a49',
+  'a50a54' => '50a54',
+  'a55a59' => '55a59',
+  'a60a64' => '60a64',
+  'a65a69' => '65a69',
+];
+
+// Cantidades por rango
+$qty = [];
+foreach ($rangos as $k => $_) {
+  $qty[$k] = (int)($P[$k] ?? 0);
+}
+
+// Carga precios, tasa y MaxCredito por los códigos realmente usados
+$labels = [
+  '02a29' => '02 a 29 años',
+  '30a49' => '30 a 49 años',
+  '50a54' => '50 a 54 años',
+  '55a59' => '55 a 59 años',
+  '60a64' => '60 a 64 años',
+  '65a69' => '65 a 69 años',
+];
+
+$precio = [];
+$imp    = [];
+$sal    = 0.0;
+$codigosUsados = [];
+$tasas = [];
+$maxCreds = [];
+
+foreach ($rangos as $k => $base) {
+  if ($qty[$k] <= 0) { $precio[$k] = 0; $imp[$k] = 0; continue; }
+
+  // Código a consultar: si hay prefijo (T o P) se usa SIEMPRE el prefijo.
+  $code = $prefix ? ($prefix.$base) : $base;
+
+  // Precio unitario (no hacer fallback al familiar cuando hay prefijo)
+  $pu = (float)$basicas->BuscarCampos($mysqli, 'Costo',      'Productos', 'Producto', $code);
+  $precio[$k] = $pu;
+  $imp[$k]    = $qty[$k] * $pu;
+  $sal       += $imp[$k];
+
+  // Para tasa y MaxCredito
+  $tAnual   = (float)$basicas->BuscarCampos($mysqli, 'TasaAnual',  'Productos', 'Producto', $code);
+  $maxCred  = (int)$basicas->BuscarCampos($mysqli, 'MaxCredito',   'Productos', 'Producto', $code);
+  if ($tAnual > 0)   { $tasas[] = $tAnual; }
+  if ($maxCred > 0)  { $maxCreds[] = $maxCred; }
+
+  $codigosUsados[] = $code;
+}
+
+// Tasa anual: si hay varias, toma la MÁXIMA (conservador)
+$tasaAnual = count($tasas) ? max($tasas) : 0.0;
+
+// Plazo efectivo: no puede exceder el MÍNIMO MaxCredito de los productos usados
+$plazoMaxPermitido = count($maxCreds) ? min($maxCreds) : $plazoSolic;
+$plazoEfectivo = min(max(1, $plazoSolic), $plazoMaxPermitido);
+
+// Descuento especial si 24 meses (opcional, conserva tu lógica)
+$DesCt = 0.0;
+if ($plazoEfectivo === 24) {
+  $DesCt = $sal * 0.15;
+  $sal  -= $DesCt;
+}
+
+// Cálculo pagos
+if ($plazoEfectivo <= 1) {
+  $saldo = $sal;
+  $pagm  = $sal;
+} else {
+  $iMes   = ($tasaAnual / 12.0) / 100.0;
+  $factor = pow(1 + $iMes, $plazoEfectivo);
+  $saldo  = $sal * $factor;
+  $pagm   = $saldo / $plazoEfectivo;
+}
+?>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-     <title>Propuesto de Venta</title>
-     <link rel="stylesheet" href="css/EstadoCta.css">
+  <meta charset="utf-8">
+  <title>Propuesta de Venta</title>
+  <link rel="stylesheet" href="https://kasu.com.mx/login/Generar_PDF/css/EstadoCta.css">
 </head>
 <body>
   <table class="t-h">
-      <tr>
-          <td>
-              <h1 class="ha-text"><strong>KASU, Servicios a Futuro S.A de C.V.  </strong></h1>
-              <h2 class="hb-text"> RFC: KSF201022441  WEB: www.kasu.com.mx</h2>
-              <p class="hb-text"> Bosque de Chapultepec, Pedregal 24, Molino del Rey, Ciudad de México, CDMX, Mexico C.P. 11000</p>
-              <p class="hb-text"> Telefono: '.$tel.' Email: antcliente@kasu.com.mxs</p>
-          </td>
-      </tr>
+    <tr>
+      <td>
+        <h1 class="ha-text"><strong>KASU, Servicios a Futuro S.A. de C.V.</strong></h1>
+        <h2 class="hb-text">RFC: KSF201022441 &nbsp; WEB: www.kasu.com.mx</h2>
+        <p class="hb-text">Bosque de Chapultepec, Pedregal 24, Molino del Rey, Ciudad de México, CDMX, C.P. 11000</p>
+        <p class="hb-text">Teléfono: <?= h($telEmpresa) ?> &nbsp; Email: antcliente@kasu.com.mx</p>
+      </td>
+    </tr>
   </table>
+
   <img src="https://kasu.com.mx/assets/poliza/img2/transp.jpg" class="header">
-    <div class="container">
-       <div class="cardheader">Datos del Cliente</div>
-          <div class="cardbody">
-              Nombre : '.htmlentities($Prospecto['FullName'], ENT_QUOTES, "UTF-8").' <br>
-              Telefono : '.$Prospecto['NoTel'].'<br>
-              Email : '.$Prospecto['Email'].'<br>
-              Producto : '.$Prospecto['Servicio_Interes'].'<br>
-          </div>
-        <div class="card">
-            <div class="cardheader">En atencion a su solicitud envio la siguiente propuesta de venta</div>
-            <div class="cardbody">
-                <table class="table">
-                    <thead>
-                        <tr>
-                          <th>Fecha</th>
-                          <th>Concepto</th>
-                          <th>Cantidad</th>
-                          <th>Precio U.</th>
-                          <th>Costo</th>
-                        </tr>
-                    </thead>
-                    <tbody>';
-                      if(!empty($Propuest['a0a29'])){
-                        $Pra0a29 = $basicas->BuscarCampos($mysqli,"Costo","Productos","Producto","02a29");
-                        $Pa0a29 = $Propuest['a0a29']*$Pra0a29;
-                        echo '
-                      <tr>
-                        <td>'.date("d-m-Y", strtotime($Propuest['FechaRegistro'])).'</td>
-                        <td>Servicio 02 a 29 años</td>
-                        <td> '.$Propuest['a0a29'].' </td>
-                        <td> $'.number_format($Pra0a29, 2).' </td>
-                        <td> $'.number_format($Pa0a29, 2).'</td>
-                      </tr>
-                      ';
-                      }
-                      if(!empty($Propuest['a30a49'])){
-                        $Pra30a49 = $basicas->BuscarCampos($mysqli,"Costo","Productos","Producto","30a49");
-                        $Pa30a49 = $Propuest['a30a49']*$Pra30a49;
-                        echo '
-                      <tr>
-                        <td>'.date("d-m-Y", strtotime($Propuest['FechaRegistro'])).'</td>
-                        <td>Servicio 30 a 49 años</td>
-                        <td> '.$Propuest['a30a49'].' </td>
-                        <td> $'.number_format($Pra30a49, 2).' </td>
-                        <td> $'.number_format($Pa30a49, 2).'</td>
-                      </tr>
-                      ';
-                      }
-                      if(!empty($Propuest['a50a54'])){
-                        $Pra50a54 = $basicas->BuscarCampos($mysqli,"Costo","Productos","Producto","50a54");
-                        $Pa50a54 = $Propuest['a50a54']*$Pra50a54;
-                        echo '
-                      <tr>
-                        <td>'.date("d-m-Y", strtotime($Propuest['FechaRegistro'])).'</td>
-                        <td>Servicio 50 a 54 años</td>
-                        <td> '.$Propuest['a50a54'].' </td>
-                        <td> $'.number_format($Pra50a54, 2).' </td>
-                        <td> $'.number_format($Pa50a54, 2).'</td>
-                      </tr>
-                      ';
-                      }
-                      if(!empty($Propuest['a55a59'])){
-                        $Pra55a59 = $basicas->BuscarCampos($mysqli,"Costo","Productos","Producto","55a59");
-                        $Pa55a59 = $Propuest['a55a59']*$Pra55a59;
-                        echo '
-                      <tr>
-                        <td>'.date("d-m-Y", strtotime($Propuest['FechaRegistro'])).'</td>
-                        <td>Servicio 55 a 59 años</td>
-                        <td> '.$Propuest['a55a59'].' </td>
-                        <td> $'.number_format($Pra55a59, 2).' </td>
-                        <td> $'.number_format($Pa55a59, 2).'</td>
-                      </tr>
-                      ';
-                      }
-                      if(!empty($Propuest['a60a64'])){
-                        $Pra60a64 = $basicas->BuscarCampos($mysqli,"Costo","Productos","Producto","60a64");
-                        $Pa60a64 = $Propuest['a60a64']*$Pra60a64;
-                        echo '
-                      <tr>
-                        <td>'.date("d-m-Y", strtotime($Propuest['FechaRegistro'])).'</td>
-                        <td>Servicio 60 a 64 años</td>
-                        <td> '.$Propuest['a60a64'].' </td>
-                        <td> $'.number_format($Pra60a64, 2).' </td>
-                        <td> $'.number_format($Pa60a64, 2).'</td>
-                      </tr>
-                      ';
-                      }
-                      if(!empty($Propuest['a65a69'])){
-                        $Pra65a69 = $basicas->BuscarCampos($mysqli,"Costo","Productos","Producto","65a69");
-                        $Pa65a69 = $Propuest['a65a69']*$Pra65a69;
-                        echo '
-                      <tr>
-                        <td>'.date("d-m-Y", strtotime($Propuest['FechaRegistro'])).'</td>
-                        <td>Servicio 65 a 69 años</td>
-                        <td> '.$Propuest['a65a69'].' </td>
-                        <td> $'.number_format($Pra65a69, 2).' </td>
-                        <td> $'.number_format($Pa65a69, 2).'</td>
-                      </tr>
-                      ';
-                      }
-                      //SE suman los valores
-                      if (!isset($Pa0a29)) $Pa0a29 = 0;
-                      if (!isset($Pa30a49)) $Pa30a49 = 0;
-                      if (!isset($Pa50a54)) $Pa50a54 = 0;
-                      if (!isset($Pa55a59)) $Pa55a59 = 0;
-                      if (!isset($Pa60a64)) $Pa60a64 = 0;
-                      if (!isset($Pa65a69)) $Pa65a69 = 0;
-                      $sal = $Pa0a29 + $Pa30a49 + $Pa50a54 + $Pa55a59 + $Pa60a64 + $Pa65a69;
-                      //Se suman las cantidades
-                      $Canti = $Propuest['a0a29']+$Propuest['a30a49']+$Propuest['a50a54']+$Propuest['a55a59']+$Propuest['a60a64']+$Propuest['a65a69'];
-                      //Si es poliza de ayuntamiento se calcula tasa en 0
-                      if($Propuest['plazo'] == 24){
-                        //Calculamos la tasa
-                        $tasa = 0;
-                        //Aplicamos el 15% de Descuento
-                        $Deso = $sal/100;
-                        $DesCt = $Deso*15;
-                        //Cantidad a descontar
-                        $sal = $sal-$DesCt;
-                      }else{
-                        //Calcula la tasa normal
-                        $tasa = $basicas->BuscarCampos($mysqli,"TasaAnual","Productos","Producto","02a29");
-                      }
-                      //Tasa anual se divide en meses
-                      $aR=$tasa/12;
-                      //tasa entre 100
-                      $a=$aR/100;
-                      //SE le suma 1
-                      $a = 1+$a;
-                      //Potencia
-                      $sr = pow($a,$Propuest['plazo']);
-                      //SAldo Real
-                      $saldo = $sal*$sr;
-                      //Pago de el periodo
-                      $pagm = $saldo/$Propuest['plazo'];
-                      echo '
-                    </tbody>
-                    <tbody>';
-                      if($Propuest['plazo'] == 1){
-                        echo '
-                        <tr>
-                          <td></td>
-                          <td></td>
-                          <td></td>
-                          <td><strong>TOTAL</strong></td>
-                          <td><strong> $'.number_format($sal, 2).'</strong></td>
-                        </tr>
-                        ';
-                      }else{
-                          echo '
-                          <tr>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td><strong>'.$Propuest['plazo'].' Pagos mensuales de</strong></td>
-                            <td><strong>'.number_format($pagm, 2).'</strong></td>
-                          </tr>';
-                          if (isset($Propuest['Origen']) && $Propuest['Origen'] == "mpio") {
-                              echo '
-                              <tr>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td><strong>Descuento ayuntamiento</strong></td>
-                                <td>' . number_format($DesCt, 2) . '</td>
-                              </tr>';
-                          }
-                          echo '
-                          <tr>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td><strong>TOTAL</strong></td>
-                            <td>'.number_format($saldo, 2).'</td>
-                          </tr>
-                          ';
-                      }
-                      echo '
-                    </tbody>
-                </table>
-            </div>
-        </div>
+
+  <div class="container">
+    <div class="cardheader">Datos del Cliente</div>
+    <div class="cardbody">
+      Nombre: <?= h($C['FullName'] ?? '') ?><br>
+      Teléfono: <?= h($C['NoTel'] ?? '') ?><br>
+      Email: <?= h($C['Email'] ?? '') ?><br>
+      Producto: <?= h($C['Servicio_Interes'] ?? '') ?><br>
     </div>
-    <img src="https://kasu.com.mx/assets/poliza/img2/LINE7.jpg" class="h-line">
-    <h2 class="hb-text">Condiciones Comerciales</h2>
-    <p class="hb-text"> La presente cotizacion tiene una validez de 60 dias contado a apartir de la fecha de '.date("d M Y").'</p>
-    <p class="hb-text"> La presente cotizacion no es transferible y unicamente puede ser ejercida por '.htmlentities($Prospecto['FullName'], ENT_QUOTES, "UTF-8").', en el entendido que la presente cotizacion forma parte de una solucitud realizada por '.htmlentities($Prospecto['FullName'], ENT_QUOTES, "UTF-8").' a KASU, Servicios a Futuro S.A. de C.V.</p>
-    <p class="hb-text"> Las condiciones de pago, tales como la forma de pago, plazos, intereses o descuentos, seran pactados entre las partes via contrato de venta.</p>
-    <img src="https://kasu.com.mx/assets/poliza/img2/img.jpg" class="fin2">
-  </body>
-</html>';
-?>
+
+    <div class="card">
+      <div class="cardheader">En atención a su solicitud, envío la siguiente propuesta de venta</div>
+      <div class="cardbody">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Concepto</th>
+              <th>Cantidad</th>
+              <th>Precio U.</th>
+              <th>Costo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach ($rangos as $k => $base): ?>
+              <?php if ($qty[$k] > 0): ?>
+                <tr>
+                  <td><?= h(date('d-m-Y', strtotime($fechaReg))) ?></td>
+                  <td>Servicio <?= h($labels[$base] ?? $base) ?></td>
+                  <td><?= h($qty[$k]) ?></td>
+                  <td>$ <?= number_format($precio[$k], 2) ?></td>
+                  <td>$ <?= number_format($imp[$k], 2) ?></td>
+                </tr>
+              <?php endif; ?>
+            <?php endforeach; ?>
+          </tbody>
+
+          <tbody>
+            <tr>
+              <td></td><td></td><td></td>
+              <td><strong>TOTAL</strong></td>
+              <td><strong>$ <?= number_format($sal, 2) ?></strong></td>
+            </tr>
+            <tr>
+              <td></td><td></td><td></td>
+              <td><strong>Pago Mensual (<?= h($plazoEfectivo) ?> meses)</strong></td>
+              <td><strong>$ <?= number_format($pagm, 2) ?></strong></td>
+            </tr>
+            <?php if ($plazoEfectivo !== $plazoSolic): ?>
+              <tr>
+                <td colspan="5" class="hb-text">
+                  * El plazo solicitado (<?= h($plazoSolic) ?>) fue ajustado a <?= h($plazoEfectivo) ?> meses por límite de crédito del producto seleccionado.
+                </td>
+              </tr>
+            <?php endif; ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <img src="https://kasu.com.mx/assets/poliza/img2/LINE7.jpg" class="h-line">
+  <h2 class="hb-text">Condiciones Comerciales</h2>
+  <p class="hb-text">La presente cotización tiene una validez de 60 días contados a partir de la fecha de <?= h(date('d M Y')) ?>.</p>
+  <p class="hb-text">La presente cotización no es transferible y únicamente puede ser ejercida por <?= h($C['FullName'] ?? '') ?>, en el entendido de que forma parte de una solicitud realizada por <?= h($C['FullName'] ?? '') ?> a KASU, Servicios a Futuro S.A. de C.V.</p>
+  <p class="hb-text">Las condiciones de pago, tales como forma de pago, plazos, intereses o descuentos, serán pactadas entre las partes vía contrato de venta.</p>
+  <img src="https://kasu.com.mx/assets/poliza/img2/img.jpg" class="fin2">
+</body>
+</html>

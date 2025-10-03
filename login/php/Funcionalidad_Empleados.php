@@ -16,7 +16,7 @@ date_default_timezone_set('America/Mexico_City');
 $hoy = date('Y-m-d');
 $HoraActual = date('H:i:s');
 
-/************************************************ BLOQUE: LOGIN ***********************************************/
+/**************************************** BLOQUE: LOGIN Revisado 1/10/2025 JCCM ****************************************/
 
 if (!empty($_POST['Login'])) {
     // CSRF
@@ -37,28 +37,26 @@ if (!empty($_POST['Login'])) {
         $_SESSION['Vendedor']   = $Usuario;
         $_SESSION['IdVendedor'] = $idEmp;
 
-        // evento opcional
-        $basicas->InsertCampo($mysqli, "Eventos", [
-          "IdFInger"      => $_POST['fingerprint'] ?? '',
-          "Idgps"         => null,
-          "Host"          => $Host,
-          "Evento"        => "LoginOK",
-          "Usuario"       => $Usuario,
-          "FechaRegistro" => date('Y-m-d H:i:s')
-        ]);
+        // ====== Auditoría (GPS / fingerprint) ======
+        $ids = $seguridad->auditoria_registrar(
+            $mysqli,
+            $basicas,
+            $_POST,
+            'LoginOK',
+            $_POST['Host'] ?? $_SERVER['PHP_SELF']
+        );
 
         header('Location: https://kasu.com.mx/login/Pwa_Principal.php'); exit;
     }
 
-    // login inválido
-    $basicas->InsertCampo($mysqli, "Eventos", [
-      "IdFInger"      => $_POST['fingerprint'] ?? '',
-      "Idgps"         => null,
-      "Host"          => $Host,
-      "Evento"        => "LoginFAIL",
-      "Usuario"       => $Usuario,
-      "FechaRegistro" => date('Y-m-d H:i:s')
-    ]);
+    // ====== Auditoría (GPS / fingerprint) ======
+    $ids = $seguridad->auditoria_registrar(
+        $mysqli,
+        $basicas,
+        $_POST,
+        'LoginFAIL',
+        $_POST['Host'] ?? $_SERVER['PHP_SELF']
+    );
     header('Location: https://kasu.com.mx/login/index.php?data=4'); exit;
 }
 
@@ -85,19 +83,21 @@ if (!empty($_POST['CambiarPass'])) {
     $idEmp = $basicas->BuscarCampos($mysqli, "Id", "Empleados", "IdUsuario", $Usuario);
     $basicas->ActCampo($mysqli, "Empleados", "Pass", hash('sha256', $P1), $idEmp);
 
-    $basicas->InsertCampo($mysqli, "Eventos", [
-      "IdFInger"      => $_POST['fingerprint'] ?? '',
-      "Idgps"         => null,
-      "Host"          => $Host,
-      "Evento"        => "PassChangeOK",
-      "Usuario"       => $Usuario,
-      "FechaRegistro" => date('Y-m-d H:i:s')
-    ]);
+    // ====== Auditoría (GPS / fingerprint) ======
+    $ids = $seguridad->auditoria_registrar(
+        $mysqli,
+        $basicas,
+        $_POST,
+        'PassChangeOK',
+        $_POST['Host'] ?? $_SERVER['PHP_SELF']
+    );
 
-    header('Location: https://kasu.com.mx/login/index.php?data=6'); exit;
+    header('Location: https://kasu.com.mx/login/index.php?data=6'); 
+    exit;
 }
 
 /********************************* BLOQUE: PAGO DE COMISIONES *********************************/
+
 if (isset($_POST['PagoCom'])) {
     // Extraer y sanitizar las variables necesarias desde POST
     $Cantidad   = isset($_POST['Cantidad'])   ? $mysqli->real_escape_string($_POST['Cantidad'])   : '';
@@ -125,20 +125,41 @@ if (isset($_POST['PagoCom'])) {
     exit();
 }
 
-/********************************* BLOQUE: CAMBIO DE VENDEDOR *********************************/
+/********************************* BLOQUE: CAMBIO DE VENDEDOR REVISION 1/10/2025 JCCM *********************************/
 if (isset($_POST['CambiVend'])) {
+    $Host       = isset($_POST['Host']) ? $mysqli->real_escape_string($_POST['Host']) : '';
+    $name       = isset($_POST['name']) ? $mysqli->real_escape_string($_POST['name']) : '';
+    $IdVenta    = isset($_POST['IdVenta']) ? $mysqli->real_escape_string($_POST['IdVenta']) : '';
+    $IdContact  = isset($_POST['IdContact']) ? $mysqli->real_escape_string($_POST['IdContact']) : '';
+    $IdUsuario  = isset($_POST['IdUsuario']) ? $mysqli->real_escape_string($_POST['IdUsuario']) : '';
     $IdEmpleado = isset($_POST['IdEmpleado']) ? $mysqli->real_escape_string($_POST['IdEmpleado']) : '';
-    $NvoVend   = isset($_POST['NvoVend'])   ? $mysqli->real_escape_string($_POST['NvoVend'])   : '';
-    $Host      = isset($_POST['Host'])      ? $mysqli->real_escape_string($_POST['Host'])      : '';
-    $name      = isset($_POST['name'])      ? $mysqli->real_escape_string($_POST['name'])      : '';
+    $IdSucursal = isset($_POST['IdSucursal']) ? $mysqli->real_escape_string($_POST['IdSucursal']) : '';
+    $NvoSuperior= isset($_POST['NvoSuperior']) ? $mysqli->real_escape_string($_POST['NvoSuperior']) : '';
 
-    // Verificar el equipo actual del empleado
-    $IdBAse = $basicas->BuscarCampos($mysqli, "Equipo", "Empleados", "Id", $IdEmpleado);
-    if ($IdBAse != $NvoVend) {
-        $basicas->ActCampo($mysqli, "Empleados", "Equipo", $NvoVend, $IdEmpleado);
+    //comparamos los datos actuales de el usuario
+    $BaseSuperior = $basicas->BuscarCampos($mysqli, "Equipo", "Empleados", "Id", $IdEmpleado);
+    $BaseSucursal = $basicas->BuscarCampos($mysqli, "Sucursal", "Empleados", "Id", $IdEmpleado);
+    //Validamos que se haya echo un cambio
+    if($IdSucursal != $BaseSucursal || $NvoSuperior != $BaseSuperior){
+        // ====== Auditoría (GPS / fingerprint) ======
+        $ids = $seguridad->auditoria_registrar(
+            $mysqli,
+            $basicas,
+            $_POST,
+            'Cambio_de_Superior',
+            $_POST['Host'] ?? $_SERVER['PHP_SELF']
+        );
+        //Actualizamos los registros
+        $basicas->ActCampo($mysqli, "Empleados", "Sucursal", $IdSucursal, $IdEmpleado);
+        $basicas->ActCampo($mysqli, "Empleados", "Equipo", $NvoSuperior, $IdEmpleado);
+        //Armamos el mensaje de alerta 
+        $alert = "El colaborador se actualizo correctamente";
+    } else {
+        //Armamos el mensaje de alerta 
+        $alert = "El colaborador no puede registrarse en la misma sucursal o en el mismo equipo";
     }
-
-    header('Location: https://kasu.com.mx' . $Host . '?Vt=1&name=' . $name);
+    //Redireccionamos al origen
+    header('Location: https://kasu.com.mx' . $Host . '?&name=' . $name.'&Msg='.$alert);
     exit();
 }
 
@@ -165,7 +186,7 @@ if (isset($_POST['BajaEmp'])) {
     exit();
 }
 
-/********************************* BLOQUE: CREAR EMPLEADO Y ENVIAR CORREO *********************************/
+/**************************** BLOQUE: CREAR EMPLEADO  Revisado 1/10/2025 JCCM *******************************************/
 if (isset($_POST['CreaEmpl'])) {
 
     // Extraer y sanitizar las variables necesarias
@@ -248,12 +269,14 @@ if (isset($_POST['CreaEmpl'])) {
                 'Autorizacion_Distibuidor',
                 $_POST['Host'] ?? $_SERVER['PHP_SELF']
             );
+            //Buscamos la sucursal de el que autoriza el Distribuidor
+            $Sucursal = $IdUsuario = $basicas->BuscarCampos($mysqli, "Sucursal", "Empleados", "IdUsuario", $_SESSION["Vendedor"]);
             //Registranmos el empleado en la base de datos empleados
             $basicas->ActCampo($mysqli, "Empleados", "Nombre", $Reg['FullName'], $EspEMp);
             $basicas->ActCampo($mysqli, "Empleados", "IdUsuario", $DirUrl, $EspEMp);
             $basicas->ActCampo($mysqli, "Empleados", "IdContacto", $IdContacto, $EspEMp);
             $basicas->ActCampo($mysqli, "Empleados", "FechaAlta", $hoy, $EspEMp);
-            $basicas->ActCampo($mysqli, "Empleados", "Sucursal", 1, $EspEMp); //Este dato lo cambia mesa de control 
+            $basicas->ActCampo($mysqli, "Empleados", "Sucursal", $Sucursal, $EspEMp); //Este dato lo cambia mesa de control 
             $basicas->ActCampo($mysqli, "Empleados", "Telefono", $Telefono, $EspEMp);
         }
         //Creamos un alert de registro de DISTRIBUIDOR 

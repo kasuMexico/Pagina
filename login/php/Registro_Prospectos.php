@@ -191,45 +191,101 @@ $HoraActual = date('H:i:s');
 /***************************************** BLOQUE: Descarga Cotizacion a prospecto ********************************************/
 /************************************** REVISADO 25/09/2025 JOSE CARLOS CABRERA MONROY ****************************************/
 
-    if(isset($_POST['DescargaPres'])){
+if(isset($_POST['DescargaPres'])){
+    //Alineamos los POST
+    $Host = isset($_POST['Host']) ? $mysqli->real_escape_string($_POST['Host']) : '';
+    $IdVenta = isset($_POST['IdVenta']) ? $mysqli->real_escape_string($_POST['IdVenta']) : '';
+    $IdContact = isset($_POST['IdContact']) ? $mysqli->real_escape_string($_POST['IdContact']) : '';
+    $IdUsuario = isset($_POST['IdUsuario']) ? $mysqli->real_escape_string($_POST['IdUsuario']) : '';
+    $Producto = isset($_POST['Producto']) ? $mysqli->real_escape_string($_POST['Producto']) : '';
+    $Id = isset($_POST['Id']) ? $mysqli->real_escape_string($_POST['Id']) : '';
+    $IdVendedor = isset($_POST['IdVendedor']) ? $mysqli->real_escape_string($_POST['IdVendedor']) : '';
+    $name = isset($_POST['name']) ? $mysqli->real_escape_string($_POST['name']) : '';
+    $tipo_plan = isset($_POST['tipo_plan']) ? $mysqli->real_escape_string($_POST['tipo_plan']) : '';
+    $a02a29 = isset($_POST['a02a29']) ? $mysqli->real_escape_string($_POST['a02a29']) : '';
+    $a30a49 = isset($_POST['a30a49']) ? $mysqli->real_escape_string($_POST['a30a49']) : '';
+    $a50a54 = isset($_POST['a50a54']) ? $mysqli->real_escape_string($_POST['a50a54']) : '';
+    $a55a59 = isset($_POST['a55a59']) ? $mysqli->real_escape_string($_POST['a55a59']) : '';
+    $a60a64 = isset($_POST['a60a64']) ? $mysqli->real_escape_string($_POST['a60a64']) : '';
+    $a65a69 = isset($_POST['a65a69']) ? $mysqli->real_escape_string($_POST['a65a69']) : '';
+    $Retiro = isset($_POST['Retiro']) ? $mysqli->real_escape_string($_POST['Retiro']) : '';
+    $plazo = isset($_POST['plazo']) ? $mysqli->real_escape_string($_POST['plazo']) : '';
+    $DescargaPres = isset($_POST['DescargaPres']) ? $mysqli->real_escape_string($_POST['DescargaPres']) : '';
 
-
-
-
-      /*/codigo por si registra un pago un ejecutivo superior
-      if(empty($IdVendedor)){
-          $Usuario = $_SESSION["Vendedor"];
-      }else{
-          $Usuario = $IdVendedor;
-      }
-      //seleccionamos la informacion de la BD correspondiente al email del user
-      $sql = "SELECT * FROM prospectos WHERE  Id = '$Id'";
-      //Realiza consulta
-      $res = mysqli_query($pros, $sql);
-      //Si existe el registro se asocia en un fetch_assoc
-      if($Reg=mysqli_fetch_assoc($res)){
-          //Creamos el array para guardar los datos
-            $DatEventos = array(
-                "IdProspecto"   => $Id,
-                "IdUser"        => $Usuario,
-                "a0a29"         => $a0a29,
-                "a30a49"        => $a30a49,
-                "a50a54"        => $a50a54,
-                "a55a59"        => $a55a59,
-                "a60a64"        => $a60a64,
-                "a65a69"        => $a65a69,
-                "Univ"          => $Univ,
-                "plazo"         => $plazo,
-                "Pago"          => $Pago,
-                "FechaRegistro" => $hoy." ".$HoraActual
+    $Ventas = "SELECT * FROM prospectos WHERE Id = '".$IdVenta."'";
+    if ($resultado = $pros->query($Ventas)) {
+        while ($fila = $resultado->fetch_assoc()) {
+            //Validamos que el servicio sean varios o solo 1
+            if($tipo_plan == "INDIVIDUAL"){
+                $Edad = $basicas->ObtenerEdad($fila['Curp'] ?? '');
+                //Seleccionamos el tipo de Producto
+                if($fila['Servicio_Interes'] == "TRANSPORTE"){
+                    //Producto Funerario TRANSPORTE
+                    $ProdSel  = $basicas->ProdTrans($Edad);
+                }elseif($fila['Servicio_Interes'] == "SEGURIDAD"){
+                    //Producto Funerario SEGURIDAD
+                    $ProdSel  = $basicas->ProdPli($Edad);
+                }else{
+                    //Producto Funerario
+                    echo $Prodeda  = $basicas->ProdFune($Edad);
+                    $ProdSel = "A".$Prodeda;
+                }
+                //Obenemos el producto a cotizar
+                $Vtn = substr($ProdSel, 1, 6);
+                //Armamos una red de valores para identificar el producto seleccionado
+                $rangos = ['02a29','30a49','50a54','55a59','60a64','65a69'];
+                //Creamos el array de datos para registro en BD
+                $data = [
+                    "IdProspecto" => $IdVenta ,
+                    "IdUser" => $IdVendedor,
+                    "SubProducto" => $fila['Servicio_Interes'],
+                    "a02a29" => '',
+                    "a30a49" => '',
+                    "a50a54" => '',
+                    "a55a59" => '',
+                    "a60a64" => '',
+                    "a65a69" => '',
+                    "Retiro" => $Retiro,
+                    "plazo" => $plazo,
+                    "FechaRegistro" => $fila['Alta']
+                    ];
+                //Asi asignamos el valor de el producto seleccionado
+                if (in_array($Vtn, $rangos, true)) {
+                    $data['a'.$Vtn] = 1; // solo este va en 1
+                }
+            } else {
+                //Creamos el array de datos para registro en BD
+                $data = [
+                    "IdProspecto" => $IdVenta ,
+                    "IdUser" => $IdVendedor,
+                    "SubProducto" => $fila['Servicio_Interes'],
+                    "a02a29" => $a02a29,
+                    "a30a49" => $a30a49,
+                    "a50a54" => $a50a54,
+                    "a55a59" => $a55a59,
+                    "a60a64" => $a60a64,
+                    "a65a69" => $a65a69,
+                    "Retiro" => $Retiro,
+                    "plazo" => $plazo,
+                    "FechaRegistro" => $fila['Alta']
+                    ];
+            }
+            //Se registran los datos de el finger print, gps y Evento
+            $ids = $seguridad->auditoria_registrar(
+                $mysqli,                                // conexión principal
+                $basicas,                               // tu helper Basicas
+                $_POST,                                 // datos del form (fingerprint, gps, etc.)
+                'Envio_Cotizacion',                     // nombre del evento
+                $_POST['Host'] ?? $_SERVER['PHP_SELF']  // host/origen
             );
-          //Se realiza el insert en la base de datos
-          $IdPros = $basicas->InsertCampo($pros,"PrespEnviado",$DatEventos);
-          //Direccion de descarga
-          $dirUrl1 = "https://kasu.com.mx/login/Generar_PDF/Cotizacion_pdf.php";
-      }
-//Se redirecciona a la pagina de los presupuestos
-    //header('Location: '.$dirUrl1.'?Host='.$Host.'&name='.$name.'&busqueda='.$IdPros);*/
+            //Insertamos en la base de datos los datos
+            $NvoRegistro = $basicas->InsertCampo($pros, "PrespEnviado", $data);
+            //lo encriptamos
+            $NvoRegistro = base64_encode($NvoRegistro);
+        }
+    }
+    //redireccionamos a la pagina de descargas de presupuestos
+    header('Location: https://kasu.com.mx/login/Generar_PDF/Cotizacion_pdf.php?busqueda='.$NvoRegistro.'&Host='.$Host.'&name='.$name);
 }
 /*********************************** Envia Cotizacion a prospecto ***************************************/
     if(isset($_POST['EnviaPres'])){

@@ -58,14 +58,18 @@
       <select class="form-control" name="Servicio" required>
         <option value="FUNERARIO">GASTOS FUNERARIOS</option>
         <option value="RETIRO">AHORRO PARA EL RETIRO</option>
-        <? if($Niv == 1 || $Niv == 3):?>
-        <option value="SEGURIDAD">GASTOS FUNERARIOS OFICIALES</option>
-        <option value="TRANSPORTE">GASTOS FUNERARIOS SERVICIO DE TRANSPORTE</option>
-        <? elseif($Niv <= 4):?>
-        <option value="DISTRIBUIDOR">SER DISTRIBUIDOR</option>
-        <? endif;?>
+
+        <?php if ((int)$Niv === 1 || (int)$Niv === 3): ?>
+          <option value="SEGURIDAD">GASTOS FUNERARIOS OFICIALES</option>
+          <option value="TRANSPORTE">GASTOS FUNERARIOS SERVICIO DE TRANSPORTE</option>
+        <?php endif; ?>
+
+        <?php if (in_array((int)$Niv, [1, 3, 4], true)): ?>
+          <option value="DISTRIBUIDOR">SER DISTRIBUIDOR</option>
+        <?php endif; ?>
       </select>
     </div>
+
   </div>
 
   <div class="modal-footer">

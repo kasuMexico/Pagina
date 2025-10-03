@@ -2,7 +2,6 @@
 try {
 	ob_start(); // inicia la creacion de los documentos
 	//Se incluyen lo archivos prinicipales
-	//require_once '../../eia/Conexiones/cn_prosp.php';
 	require_once '../../eia/librerias.php'; //Cargamos las funciones Basicas
 	require_once 'dompdfMaster/dompdf_config.inc.php';//Bloqeuado para impresion
 	require_once 'dompdfMaster/include/autoload.inc.php'; //se carga el autoload para poder tener disponible la case DOMPDF
@@ -11,10 +10,11 @@ try {
 	//Archivo con el que se generan los Presupuestos
 	//Se pasan las variables POST a Variable
 	if(!isset($_POST['busqueda'])){
-	    $busqueda = $_GET['busqueda'];
+	    $busqueda = base64_decode($_GET['busqueda']);
 	}else{
 	    $busqueda = $_POST['busqueda'];
 	}
+	
 	//Cosnulta de la venta
 	$Cdbt3 = "SELECT * FROM PrespEnviado WHERE Id = '".$busqueda."'";
 	$lsCt3a = mysqli_query($pros, $Cdbt3);

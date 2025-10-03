@@ -66,9 +66,10 @@ if (!empty($_GET['Add'])) {
   header('Location: https://kasu.com.mx/login/Generar_PDF/Contrato_Ejecutivo_pdf.php?Add='.rawurlencode($_GET['Add']));
   exit;
 }
-
-// Alertas de correo
-require_once 'php/Selector_Emergentes_Ml.php';
+// Alerts de mensajes recibidos
+if(isset($_GET['Msg'])){
+    echo "<script>alert('".htmlspecialchars($_GET['Msg'], ENT_QUOTES)."');</script>";
+}
 
 // Cache bust
 $VerCache = $VerCache ?? time();
@@ -93,7 +94,6 @@ $VerCache = $VerCache ?? time();
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?=h($VerCache)?>">
-  <link rel="stylesheet" href="assets/css/Grafica.css">
 </head>
 <body>
   <!-- Top bar fija -->
@@ -165,87 +165,11 @@ $VerCache = $VerCache ?? time();
       </div>
     </div>
 
-    <!-- Ventana3: Reasignar ejecutivo -->
+    <!-- Ventana3: Reasignar ejecutivo REVISION 1/10/2025 JCCM-->
     <div class="modal fade" id="Ventana3" tabindex="-1" role="dialog" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
-          <form method="POST" action="php/Funcionalidad_Empleados.php">
-            <div class="modal-header">
-              <h5 class="modal-title">Reasignar Colaborador</h5>
-              <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-            </div>
-            <div class="modal-body">
-              <input type="hidden" name="Host" value="<?= h($_SERVER['PHP_SELF']) ?>">
-              <input type="hidden" name="name" value="<?= h($name) ?>">
-              <input type="hidden" name="IdEmpleado" value="<?= h($Reg['Id'] ?? '') ?>">
-              <p>Nombre de el Colaborador</p>
-              <h4 class="text-center"><strong><?= h($Reg['Nombre'] ?? 'Colaborador') ?></strong></h4>
-              <p>Este ejecutivo está asignado a</p>
-              <h4 class="text-center">
-                <strong>
-                  <?php
-                    if (empty($Reg['Equipo'])) {
-                      echo 'Sistema';
-                    } else {
-                      $IdLider = $basicas->BuscarCampos($mysqli,'Id','Empleados','Id',$Reg['Equipo']);
-                      if ($IdLider) {
-                        $rs = $mysqli->query('SELECT * FROM Empleados WHERE Id = '.$IdLider.' LIMIT 1');
-                        if ($dis = $rs->fetch_assoc()) {
-                          $Sucur = $basicas->BuscarCampos($mysqli,'nombreSucursal','Sucursal','Id',$dis['Sucursal']);
-                          $Stats = $basicas->BuscarCampos($mysqli,'NombreNivel','Nivel','Id',$dis['Nivel']);
-                          echo h($dis['Nombre'].' - '.$Stats.' - '.$Sucur);
-                        }
-                      }
-                    }
-                    $nue = ($Reg['Nivel'] ?? 0) >= 5 ? 4 : max(1, (int)($Reg['Nivel'] ?? 1) - 1);
-                  ?>
-                </strong>
-              </h4>
-
-              <?php if ((int)($Reg['Equipo'] ?? 0) === 0): ?>
-                <label>Selecciona la Sucursal a la que se asignará</label>
-                <select class="form-control" name="IdSucursal" required>
-                  <?php
-                    if (!function_exists('h')) {
-                      function h($v){ return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
-                    }
-                    $actual = (int)($Reg['IdSucursal'] ?? 0); // opcional: preselección
-                    $stmt = $mysqli->prepare("SELECT IdSucursal, nombreSucursal FROM Sucursal WHERE Estatus=1 ORDER BY nombreSucursal");
-                    $stmt->execute();
-                    $rs = $stmt->get_result();
-                    while ($row = $rs->fetch_assoc()):
-                      $id  = (int)$row['IdSucursal'];
-                      $nom = $row['nombreSucursal'];
-                  ?>
-                    <option value="<?= $id ?>" <?= $actual === $id ? 'selected' : '' ?>>
-                      <?= h($nom) ?>
-                    </option>
-                  <?php endwhile; $stmt->close(); ?>
-                </select>
-                <br>
-              <?php endif; ?>
-
-              <label>Selecciona a quién se asignará</label>
-              <select class="form-control" name="NvoVend" required>
-                <?php
-                  $sql9 = "SELECT * FROM Empleados WHERE Nivel = ? AND Nombre != 'Vacante'";
-                  $st9 = $mysqli->prepare($sql9);
-                  $st9->bind_param('i',$nue);
-                  $st9->execute();
-                  $S629 = $st9->get_result();
-                  while ($S635 = $S629->fetch_assoc()):
-                    $Su2cur = $basicas->BuscarCampos($mysqli,'nombreSucursal','Sucursal','Id',$S635['Sucursal']);
-                    $St2ats = $basicas->BuscarCampos($mysqli,'NombreNivel','Nivel','Id',$S635['Nivel']);
-                ?>
-                  <option value="<?= h($S635['Id']) ?>"><?= h($S635['Nombre'].' - '.$St2ats.' - '.$Su2cur) ?></option>
-                <?php endwhile; $st9->close(); ?>
-              </select>
-              <br>
-            </div>
-            <div class="modal-footer">
-              <input type="submit" name="CambiVend" class="btn btn-primary" value="Cambiar el ejecutivo">
-            </div>
-          </form>
+          <?php require 'html/ReasignarEjecutivo.php'; ?>
         </div>
       </div>
     </div>
@@ -504,23 +428,34 @@ $VerCache = $VerCache ?? time();
               <td>
                 <div class="d-flex">
                   <form method="POST" action="<?= h($_SERVER['PHP_SELF']) ?>" class="mr-2">
+                    <!-- Boton de Pagar Comisiones -->
                     <input type="hidden" name="nombre" value="<?= h($name) ?>">
                     <input type="hidden" name="Saldo" value="<?= h($NvoSal) ?>">
                     <label for="P1<?= $btnId ?>" class="btn" title="Pagar comisiones" style="background:#58D68D;color:#F8F9F9;">
                       <i class="material-icons">attach_money</i>
                     </label>
-                    <input id="P1<?= $btnId ?>" type="submit" name="IdEmpleado" value="1<?= $btnId ?>" hidden>
-                    <label for="R3<?= $btnId ?>" class="btn" title="Reasignar superior" style="background:#AF7AC5;color:#F8F9F9;">
-                      <i class="material-icons">people_alt</i>
-                    </label>
+                    <?
+                    if($row['Nivel'] > 3){
+                      echo '
+                      <!-- Boton de Reasignar Comisiones -->
+                      <input id="P1'.$btnId.'" type="submit" name="IdEmpleado" value="1'.$btnId.'" hidden>
+                      <label for="R3'.$btnId.'" class="btn" title="Reasignar superior" style="background:#AF7AC5;color:#F8F9F9;">
+                        <i class="material-icons">people_alt</i>
+                      </label>
+                      ';
+                    }
+                    ?>
+                    <!-- Boton de Reenviar Contraseñas -->
                     <input id="R3<?= $btnId ?>" type="submit" name="IdEmpleado" value="3<?= $btnId ?>" hidden>
                     <label for="C5<?= $btnId ?>" class="btn" title="Reenviar contraseña" style="background:#3498DB;color:#F8F9F9;">
                       <i class="material-icons">outbox</i>
                     </label>
+                    <!-- Boton de Dar de Baja empleado -->
                     <input id="C5<?= $btnId ?>" type="submit" name="IdEmpleado" value="5<?= $btnId ?>" hidden>
                     <label for="B6<?= $btnId ?>" class="btn" title="Dar de baja" style="background:#E74C3C;color:#F8F9F9;">
                       <i class="material-icons">cancel</i>
                     </label>
+                    <!-- Boton de Cambiar de puesto -->
                     <input id="B6<?= $btnId ?>" type="submit" name="IdEmpleado" value="6<?= $btnId ?>" hidden>
                     <label for="N7<?= $btnId ?>" class="btn" title="Cambiar puesto" style="background:#C0392B;color:#F8F9F9;">
                       <i class="material-icons">swap_vert</i>

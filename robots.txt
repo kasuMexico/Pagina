@@ -1,0 +1,32 @@
+# robots.txt for https://kasu.com.mx
+
+User-agent: *
+# Privado / internos
+Disallow: /login/
+Disallow: /eia/
+Disallow: /vendor/
+Disallow: /cgi-bin/
+Disallow: /phpmyadmin/
+Disallow: /error.php
+
+# Evita URLs con parámetros de tracking o sesiones
+Disallow: /*?*utm_*
+Disallow: /*?*gclid=*
+Disallow: /*?*fbclid=*
+Disallow: /*?*session=
+Disallow: /*?*PHPSESSID=
+
+# Evita duplicados de productos por querystring
+Disallow: /*?*Art=
+Disallow: /*?*Pro=
+
+# WordPress en /blog
+Disallow: /blog/wp-admin/
+Allow: /blog/wp-admin/admin-ajax.php
+
+# Sitemaps
+Sitemap: https://kasu.com.mx/sitemap.xml
+Sitemap: https://kasu.com.mx/blog/sitemap_index.xml
+
+# Host preferido (algunos bots como Yandex lo usan)
+Host: kasu.com.mx

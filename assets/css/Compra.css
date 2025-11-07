@@ -1,0 +1,242 @@
+/* ===== Base ===== */
+html, body { height: 100%; }
+body{
+  font-family:'Open Sans',sans-serif;
+  overflow: hidden; /* evita scroll global en escritorio */
+}
+
+/* ===== Layout formulario ===== */
+.AreaTrabajo{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  /* contexto de scroll local en escritorio */
+  height:100vh;
+  overflow-y:auto;
+  -webkit-overflow-scrolling: touch;
+  padding:24px;
+}
+
+.Contenedor{
+  border:solid 1px white;
+  height:auto;
+  display:flex;
+  background-color:white;
+  flex-wrap:wrap;
+  border-radius:10px;
+  display:initial;
+}
+
+.logo{text-align:center}
+.logo img{height:98px}
+
+/* ===== Textos ===== */
+.NombreProducto{text-align:left;padding-left:10%;width:98%}
+.NombreProducto h1{color:#fff;font-weight:700}
+.InformacionProducto{text-align:justify;padding:5%;width:98%}
+.InformacionProducto p{color:#fff;font-weight:700}
+
+/* ===== Form ===== */
+.Formulario{text-align:center;width:98%}
+.Formulario input{
+  border:solid 1px #d6dbdf;
+  width:95%;
+  height:40px;
+  font-weight:700;
+  margin-bottom:10px;
+  left:5px;
+  border-radius:5px;
+  padding:5px
+}
+.Formulario select{
+  border:solid 1px #d6dbdf;
+  width:95%;
+  height:40px;
+  font-weight:700;
+  margin-bottom:10px;
+  left:5px;
+  border-radius:5px;
+  padding:5px
+}
+
+/* ===== Productos (cards con imagen) ===== */
+.Botones{
+  height:auto;
+  display:flex;
+  width:98%;
+  margin-bottom:15px;
+  gap:16px;
+  justify-content:center;
+  flex-wrap:wrap
+}
+.Botones label{display:flex;margin:auto}
+
+/* Compat: radios ocultos en cards clásicas */
+.Botones input{display:none}
+.Botones img{
+  display:flex;
+  margin:auto;
+  height:70px;width:70px;
+  border-radius:50%;
+  background:#f5da81;
+  border:solid 1px #f3e2a9
+}
+.Botones img:hover{background:#a9d0f5}
+
+/* Si usas .ProdCard del registro.php */
+.ProdCard{width:190px}
+.ProdCard img{width:120px}
+
+/* ===== Legales y util ===== */
+.Ligas{display:flex;flex-wrap:wrap;text-align:center}
+.Ligas a:link{text-decoration:none;color:#00008b;width:48%}
+#Curp{text-transform:uppercase}
+.Legales{text-align:justify;width:98%;padding-left:40px}
+.Precio{display:flex;flex-wrap:wrap;justify-content:center}
+.derTit{width:50%;text-align:right;padding:10px;font-size:15px}
+.IzqTit{width:50%;text-align:left}
+
+/* ===== Imagen principal familia ===== */
+#Formulario .col-md-6:first-child{display:block}
+#Formulario .col-md-6:first-child img{
+  width:100%;
+  height:100%;
+  max-height:640px;
+  object-fit:cover;
+  border-radius:18px;
+}
+
+/* ===== Botones principal ===== */
+input.main-button {
+  background-color:#012F91;
+  text-transform:uppercase;
+  color:#fff;
+  letter-spacing:.25px;
+  transition:all .3s ease
+}
+input.main-button:hover {background-color:#911F66}
+a.main-button {
+  background-color:#012F91;
+  text-transform:uppercase;
+  color:#fff;
+  letter-spacing:.25px;
+  padding:15px 32px;
+  text-align:center;
+  text-decoration:none;
+  display:inline-block;
+  font-size:16px;
+  border-radius:4px;
+  transition:all .3s ease
+}
+a.main-button:hover {
+  background-color:#911F66;
+  padding:15px 32px;
+  text-align:center;
+  text-decoration:none;
+  display:inline-block;
+  font-size:16px;
+  border-radius:4px
+}
+
+/* ===== Compatibilidad Bootstrap 3 con .is-valid/.is-invalid */
+.form-control.is-valid{
+  border-color:#28a745;
+  box-shadow:
+    inset 0 1px 1px rgba(0,0,0,.075),
+    0 0 6px rgba(40,167,69,.3);
+}
+.form-control.is-invalid{
+  border-color:#dc3545;
+  box-shadow:
+    inset 0 1px 1px rgba(0,0,0,.075),
+    0 0 6px rgba(220,53,69,.25);
+}
+
+/* ===== Quitar márgenes y paddings del contenedor/fila ===== */
+#Formulario.container-fluid { padding-left:0; padding-right:0; }
+#Formulario .row.no-gutter {
+  margin-left:0; margin-right:0;
+  display:flex;            /* split layout */
+  min-height:100vh;
+}
+#Formulario .row.no-gutter > [class*="col-"] { padding-left:0; padding-right:0; }
+
+/* ===== Vista dividida fija en escritorio ===== */
+/* Columna izquierda: imagen fija sin scroll */
+#Formulario .row.no-gutter > .col-md-6:first-child{
+  flex:0 0 50vw;
+  max-width:50vw;
+  height:100vh;
+  overflow:hidden;
+}
+#Formulario .row.no-gutter > .col-md-6:first-child img{
+  width:100%;
+  height:100%;
+  max-height:none;      /* anula límite anterior en split */
+  border-radius:0;
+  object-fit:cover;     /* llena sin deformar */
+  display:block;
+}
+
+/* Columna derecha: área de trabajo con scroll propio */
+#Formulario .row.no-gutter > .AreaTrabajo{
+  flex:1 1 50vw;
+  max-width:50vw;
+}
+
+/* ===== Overrides de tamaño productos 50% ===== */
+.ProdCard{width:95px;padding:6px;border-radius:10px}
+.ProdCard img{width:60px;height:auto}
+.ProdCard .PTitle{font-size:12px;line-height:1;margin-top:2px}
+.ProdCard .PDesc{font-size:11px;line-height:1.1;margin:0}
+
+/* ===== Responsive fino ===== */
+@media (max-width:576px){
+  .ProdCard{width:90px}
+  .ProdCard img{width:56px}
+}
+
+/* Teléfono (≤ 768px): mostrar */
+@media (max-width:768px){
+  .logo{display:block;text-align:center;margin:12px 0}
+  .logo img{max-width:120px;height:auto}
+}
+
+/* ===== Responsivo: en móviles se desactiva el split ===== */
+@media (max-width:1020px){
+  body { overflow:auto; } /* vuelve scroll global */
+  #Formulario .row.no-gutter{
+    display:block;
+    min-height:unset;
+  }
+  #Formulario .row.no-gutter > .col-md-6:first-child{
+    display:none; /* oculta imagen grande */
+  }
+  #Formulario .row.no-gutter > .AreaTrabajo{
+    max-width:100%;
+    height:auto;
+    overflow:visible;
+    padding:16px;
+  }
+}
+
+/* ===== Ajustes tablet ===== */
+@media screen and (max-width:768px){
+  .ProdCard{width:160px}
+  .ProdCard img{width:96px}
+  .Legales{padding-left:10px}
+}
+
+/* ===== Ajustes móvil chico ===== */
+@media screen and (max-width:576px){
+  .ProdCard{width:140px;padding:8px}
+  .ProdCard img{width:80px}
+  .Botones{gap:12px}
+  .Formulario input,.Formulario select{width:100%}
+}
+
+/* ===== Ajustes móvil muy chico ===== */
+@media screen and (max-width:360px){
+  .ProdCard{width:120px}
+  .ProdCard img{width:64px}
+}

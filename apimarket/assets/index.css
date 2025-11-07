@@ -1,0 +1,25 @@
+/* Establecemos el ancho de las celdas */
+.table td {
+  width: 33%;
+}
+
+/* Color de las celdas */
+.table .blue {
+  background-color: #48A0E9;
+  padding: 15px;
+}
+
+.table .red {
+  background-color: #E84444;
+  padding: 15px;
+}
+
+.table .green {
+  background-color: #8CE948;
+  padding: 15px;
+}
+
+.table .purple {
+  background-color: #AE48E9;
+  padding: 15px;
+}

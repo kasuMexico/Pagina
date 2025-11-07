@@ -1,0 +1,135 @@
+.welcome-area{
+  overflow:hidden;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background-image:url(../images/patrocinios_en_mexico.jpeg);
+  background-repeat:no-repeat;
+  background-position:center center;
+  background-size:cover;
+  height:100vh;
+}
+ul,li{
+  list-style:none;
+  text-align:inherit;
+}
+.content-input input,
+.content-select select{
+  appearance:none;
+  -webkit-appearance:none;
+  -moz-appearance:none;
+}
+.content-input input{
+  visibility:hidden;
+  position:absolute;
+  right:0;
+}
+.content-input{
+  position:relative;
+  margin-bottom:30px;
+  padding:5px 40px 5px 60px;
+  display:block;
+  }
+.content-input input+i{
+  background:#f0f0f0;
+  border:2px solid rgba(0,0,0,0.2);
+  position:absolute;
+  left:0;
+  top:0;
+  }
+.content-input input[type=checkbox ]+i{
+  width:52px;
+  height:30px;
+  border-radius:15px
+}
+.content-input input[type=checkbox]+i:before{
+  content:'';
+  width:26px;
+  height:26px;
+  background:#fff;
+  border-radius:50%;
+  position:absolute;
+  z-index:1;
+  left:0px;
+  top:0px;
+  -webkit-box-shadow:3px 0 3px 0 rgba(0,0,0,0.2);
+  box-shadow:3px 0 3px 0 rgba(0,0,0,0.2)
+}
+.content-input input[type=checkbox]:checked+i:before{
+  left:22px;
+  -webkit-box-shadow:-3px 0 3px 0 rgba(0,0,0,0.2)
+  ;box-shadow:3px 0 -3px 0 rgba(0,0,0,0.2)
+}
+.content-input input[type=checkbox]:checked+i{
+  background:#2AC176
+}
+.content-input input[type=checkbox]+i:after{
+  content:'si';
+  position:absolute;
+  font-size:10px;
+  color:rgba(255,255,255,0.6);
+  top:8px;
+  left:4px;
+  opacity:0;
+  transition:all 0.25s ease 0.25s;
+}
+.content-input input[type=checkbox]:checked+i:after{
+  opacity:1;
+}
+.fotper{
+  border-radius:50%;
+}
+.Usr{
+  display:flex;border:5px;
+}
+.Usr img{
+  border-radius:50%;
+  width:50px;
+  height:50px;
+}
+.video-responsive{
+  position:relative;
+  padding-bottom:56.25%;
+  padding-top:30px;
+  height:0;
+  overflow:hidden;
+}
+.Img_Prod img{
+  width:90%;
+  border-radius:10px;
+}
+.pricing-header button{
+  background-color:white;
+  border:white;
+}
+.ImgFb{
+  width:50px;
+}
+.Formulario{
+  display:none;
+}
+modal-content{
+  height:auto;
+  padding:1em;
+}
+.imgBlog{
+  border-radius:10px;
+}
+.TexBlog{
+  text-align:justify;
+}
+.list-price{
+  font-size: 15px;
+  line-height: 20px;
+  padding: 7px 40px ;
+  text-align: justify;
+  width: 50%;
+}
+.list-price2{
+  font-size: 15px;
+  line-height: 20px;
+  padding: 7px 20px ;
+  text-align: justify;
+  width: 50%;
+}

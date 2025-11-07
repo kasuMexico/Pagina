@@ -1,0 +1,60 @@
+/* Estilos para la ventana modal */
+.modal-dialog {
+  max-width: 800px;
+}
+
+.modal-header {
+  background-color: #f8f9fa;
+}
+
+.modal-title {
+  color: #343a40;
+}
+
+.modal-body {
+  padding: 0;
+}
+
+.carousel-indicators {
+  bottom: 0;
+  margin-bottom: 10px;
+}
+
+.carousel-indicators li {
+  background-color: #6c757d;
+  border-radius: 50%;
+  height: 10px;
+  width: 10px;
+}
+
+.carousel-indicators .active {
+  background-color: #007bff;
+}
+
+.carousel-control-prev, .carousel-control-next {
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  height: 40px;
+  opacity: 1;
+  width: 40px;
+}
+
+.carousel-control-prev-icon, .carousel-control-next-icon {
+  height: 20px;
+  position: absolute;
+  top: 50%;
+  width: 20px;
+  transform: translate(-50%, -50%);
+}
+
+.carousel-control-prev-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%23fff' viewBox='0 0 8 8'%3e%3cpath d='M5.25 0l-.28.31-3 3 .28.31 3 3 .69-.72-2.47-2.53 2.47-2.53-.69-.72z'/%3e%3c/svg%3e");
+}
+
+.carousel-control-next-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%23fff' viewBox='0 0 8 8'%3e%3cpath d='M2.75 0l-.28.31 2.47 2.53-2.47 2.53.28.31 3-3-.69-.72-2.47 2.53-2.47-2.53.69-.72z'/%3e%3c/svg%3e");
+}
+
+.carousel-control-prev:hover, .carousel-control-next:hover {
+  background-color: rgba(0, 0, 0, 0.9);
+}

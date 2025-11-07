@@ -1,0 +1,25 @@
+.col-md-6{padding:1em; text-align:center}
+
+.Grafica{
+  width:100%;
+  max-width:100%;
+  margin:0 auto;
+  height:auto;            /* ← no 100% */
+}
+
+#curve_chart{
+  width:100%;
+  min-height:280px;
+  height:320px;
+}
+@media (min-width:992px){
+  #curve_chart{height:420px}
+}
+
+/* Google Charts genera un <svg width="1250" height="400">.
+   Forzamos que se adapte al contenedor. */
+#curve_chart svg{
+  width:100% !important;
+  height:100% !important;
+  display:block;
+}

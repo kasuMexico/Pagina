@@ -1,0 +1,77 @@
+* {
+  box-sizing: border-box;
+}
+.container {
+  border-radius: 14px;
+  background-color: #f1f7fc;
+  padding: 20px 10px;
+  width: 70%;
+
+}
+select {
+  width: 70%;
+  height: 40px;
+  padding: 8px 8px;
+  border: none;
+  border-radius: 8px;
+  background-color: #ffffff;
+}
+input.btnEnviar{
+  width: 20%;
+  height: 40px;
+  padding: 8px 8px;
+  border: none;
+  border-radius: 8px;
+  background-color: #4cacaa;
+  color: white;
+}
+input.search{
+  width: 30%;
+  padding: 12px 12px;
+  border: none;
+  border-radius: 8px;
+  background-color: #4cacaa;
+  color: white;
+}
+h6{
+  text-align: center;
+}
+
+@media only screen and (max-width: 800px){
+  .container {
+    border-radius: 14px;
+    background-color: #f1f7fc;
+    padding: 12px 10px;
+    width: 95%;
+    float: right;
+  }
+  select {
+    width: 60%;
+    height: 40px;
+    padding: 8px 8px;
+    border: none;
+    border-radius: 8px;
+    background-color: #ffffff;
+  }
+  input.btnEnviar{
+    width: 30%;
+    height: 40px;
+    padding: 8px 8px;
+    border: none;
+    border-radius: 8px;
+    background-color: #4cacaa;
+    color: white;
+  }
+  input.search{
+    width: 30%;
+    padding: 12px 12px;
+    border: none;
+    border-radius: 8px;
+    background-color: #4cacaa;
+    color: white;
+    align-self: center;
+  }
+  h6{
+    text-align: center;
+  }
+}

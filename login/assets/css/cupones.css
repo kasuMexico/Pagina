@@ -1,0 +1,36 @@
+/*Estilo general de el contenedor de cupones*/
+.ContCupon img{
+    /* height: 200px; */
+    width: 100%;
+    /* transform: translateY(10%); */
+    /* padding: 5px; */
+    border-radius: 10px;
+}
+
+.BtnSocial{
+  transform:translate(0,-2em);
+}
+
+.ContCupon{
+    padding: 10px;
+    text-align: center;
+}
+
+.ContCupon h2{
+    transform:translate(0,-2em);
+    font-size: 18px;
+}
+
+.ContCupon h3{
+    transform:translate(0,-2em);
+    font-size: 12px;
+}
+
+.ContCupon p{
+    transform:translate(0,-2em);
+    width: 90%;
+    font-size: 10px;
+}
+.col{
+  padding: 1em;
+}

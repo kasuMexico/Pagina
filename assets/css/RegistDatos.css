@@ -1,0 +1,94 @@
+html,body{
+  color:black;
+  height:100%;
+  width:100%;
+  background: whitesmoke;
+  margin: 0px;
+  position: relative;
+}
+p, ul, li {
+   margin: 8px;    
+   text-align: justify;
+   padding-left: 15px;
+   padding-right: 15px;
+
+}
+
+/**********************Aqui se encuentra el cuerpo de la pagina****************/
+.ContenidoBlog{
+    text-align: center;
+}
+
+.Logo {
+    width: 75px;
+    margin: auto;
+}
+
+img {
+    width: 90%;
+}
+/*************************Seccion de estilos del boton*************************/
+.enlaceboton {
+   font-family: verdana, arial, sans-serif;
+   font-size: 20px;
+   font-weight: bold;
+   text-decoration: none;
+   width: 90%;
+   height: 25px;
+   padding: 10px;
+   border-radius: 10px;
+   margin: auto;
+}
+
+.enlaceboton:hover {
+    border-bottom: 1px solid #cccccc;
+   border-top: 2px solid #666666;
+   border-right: 1px solid #cccccc;
+   border-left: 2px solid #666666;
+}
+/*************************Seccion de estilos del boton*************************/
+
+.BtnRegis{
+    text-align: center;
+    width: 100%;
+    height: 60px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.ImgFb {
+    border: 10px;
+    width: 50px; 
+    border-radius: 20%; 
+    padding: 10px;
+    margin: auto;
+}
+
+.BtnRegis p{
+    width: 100%;
+    text-align: center;
+}
+
+/***********************Aqui termina el cuerpo de la pagina********************/
+/****************Aqui se ecuentra la publicacion de el pie de pagina***********/
+footer{
+    width: 100%;
+    height: 70px;
+    background: black;    
+    position: absolute;
+    bottom: 0;
+}
+
+footer p{
+    transform: translateY(15px);
+    margin: auto;
+    text-align: center;
+    color: white;    
+
+}
+footer a{
+    text-decoration: none;
+    color: white;    
+
+}
+/*Aqui se encuentra el estilo de la imagen mostrada en la creacion de login fb*/

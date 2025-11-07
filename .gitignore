@@ -1,12 +1,12 @@
 # =========================
 # BLOG WORDPRESS (fuera de Git)
 # =========================
-/blog/                                   # blog en raíz
-/public_html/blog/                       # blog dentro de public_html
+/blog/                                   # blog en raíz LOCAL (no versionar)
+/public_html/blog/                       # blog si estuviera bajo public_html
 /blog/wp-content/uploads/                # medios del blog
 /blog/wp-content/cache/                  # caché del blog
-/public_html/blog/wp-content/uploads/    # medios si el blog vive en public_html
-/public_html/blog/wp-content/cache/      # caché si el blog vive en public_html
+/public_html/blog/wp-content/uploads/    # medios si vive en public_html
+/public_html/blog/wp-content/cache/      # caché si vive en public_html
 
 # =========================
 # ENTORNOS Y SECRETOS
@@ -16,17 +16,17 @@
 *.pem                                    # llaves/SSL
 *.key
 *.crt
-config/mercadopago.php                   # credenciales MP directas
-config/mercadopago_*.php                 # variantes de MP
+config/mercadopago.php                   # credenciales Mercado Pago
+config/mercadopago_*.php                 # variantes Mercado Pago
 config/smtp.php                          # SMTP directo
 config/smtp_*.php                        # variantes SMTP
-config/*secret*.php                      # cualquier archivo con “secret”
-config/*local*.php                       # configs locales no productivas
+config/*secret*.php                      # archivos con “secret”
+config/*local*.php                       # configs locales
 
 # =========================
 # CONFIGS LOCALES DE EDITOR / DEPLOY
 # =========================
-.vscode/                                 # configuración local de VS Code
+.vscode/                                 # ajustes locales VS Code
 .vscode/sftp.json                        # credenciales SFTP locales
 .vscode/ftp-simple.json                  # credenciales FTP locales
 sftp.json                                # posibles configs en raíz
@@ -36,7 +36,7 @@ ftp-simple.json
 # DEPENDENCIAS GENERADAS
 # =========================
 node_modules/                            # dependencias JS
-vendor/                                  # dependencias PHP (quítalo si subes vendor por FTP y no usas Composer en el server)
+vendor/                                  # dependencias PHP (ignora si no instalas en server)
 
 # =========================
 # BUILDS Y ARTEFACTOS
@@ -48,7 +48,7 @@ build/                                   # build alterno
 tmp/                                     # temporales
 temp/
 cache/
-coverage/                                # reportes de test/coverage
+coverage/                                # reportes de tests/coverage
 
 # =========================
 # LOGS Y BACKUPS
@@ -81,5 +81,6 @@ ehthumbs.db
 *.swo
 *.tmp
 sync_config.jsonc
-# Mantener config del sync tool
-!sync_config.jsonc
+# Entornos
+.env
+.env.*

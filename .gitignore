@@ -1,6 +1,83 @@
-/blog/
-/blog/
-.env
-.env.*
-config/mercadopago.php
-config/mercadopago_*.php
+# =========================
+# BLOG WORDPRESS (fuera de Git)
+# =========================
+/blog/                                   # blog en raíz
+/public_html/blog/                       # blog dentro de public_html
+/blog/wp-content/uploads/                # medios del blog
+/blog/wp-content/cache/                  # caché del blog
+/public_html/blog/wp-content/uploads/    # medios si el blog vive en public_html
+/public_html/blog/wp-content/cache/      # caché si el blog vive en public_html
+
+# =========================
+# ENTORNOS Y SECRETOS
+# =========================
+.env                                     # variables de entorno
+.env.*                                   # variantes (.env.local, etc.)
+*.pem                                    # llaves/SSL
+*.key
+*.crt
+config/mercadopago.php                   # credenciales MP directas
+config/mercadopago_*.php                 # variantes de MP
+config/smtp.php                          # SMTP directo
+config/smtp_*.php                        # variantes SMTP
+config/*secret*.php                      # cualquier archivo con “secret”
+config/*local*.php                       # configs locales no productivas
+
+# =========================
+# CONFIGS LOCALES DE EDITOR / DEPLOY
+# =========================
+.vscode/                                 # configuración local de VS Code
+.vscode/sftp.json                        # credenciales SFTP locales
+.vscode/ftp-simple.json                  # credenciales FTP locales
+sftp.json                                # posibles configs en raíz
+ftp-simple.json
+
+# =========================
+# DEPENDENCIAS GENERADAS
+# =========================
+node_modules/                            # dependencias JS
+vendor/                                  # dependencias PHP (quítalo si subes vendor por FTP y no usas Composer en el server)
+
+# =========================
+# BUILDS Y ARTEFACTOS
+# =========================
+dist/                                    # build front
+build/                                   # build alterno
+.esbuild/                                # caché esbuild
+.cache/                                  # cachés varias
+tmp/                                     # temporales
+temp/
+cache/
+coverage/                                # reportes de test/coverage
+
+# =========================
+# LOGS Y BACKUPS
+# =========================
+*.log
+*.gz
+*.zip
+*.tar
+*.tar.gz
+*.bak
+*.old
+*.orig
+*.sql                                    # dumps de BD
+*.sqlite
+backups/
+
+# =========================
+# BASURA SO / IDE
+# =========================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+.idea/                                   # JetBrains
+
+# =========================
+# ARCHIVOS TEMPORALES DE EDICIÓN
+# =========================
+*~
+*.swp
+*.swo
+*.tmp
+sync_config.jsonc

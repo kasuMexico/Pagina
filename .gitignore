@@ -1,2 +1,6 @@
 /blog/
 /blog/
+.env
+.env.*
+config/mercadopago.php
+config/mercadopago_*.php

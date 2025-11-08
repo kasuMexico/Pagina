@@ -89,6 +89,11 @@ $AvVtas   = isset($AvVtas)   ? (float)$AvVtas    : 0.0;
 
 // Cache-busting para CSS si $VerCache no está definido
 $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
+
+date_default_timezone_set('America/Mexico_City');
+$ini = (new DateTime('first day of this month'))->format('d/m/Y');
+$fin = (new DateTime('last day of this month'))->format('d/m/Y');
+
 ?>
 <!DOCTYPE html>
 <html lang="es-MX">
@@ -174,7 +179,7 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
             <?php if ($Niv !== 7): ?>
               <div class="col-md-6">
                 <hr>
-                <p><strong>Meta de Cobranza del ___ al ___</strong></p>
+                <p><strong>Meta de Cobranza del <?= $ini ?> al <?= $fin ?></strong></p>
                 <h3>$<?= number_format($MetaCob, 2) ?></h3>
                 <p>Avance de Cobranza</p>
                 <a href="Pwa_Registro_Pagos.php">
@@ -188,7 +193,7 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
             <?php if ($Niv !== 5): ?>
               <div class="col-md-6">
                 <hr>
-                <p><strong>Meta de Venta del Mes</strong></p>
+                <p><strong>Meta de Venta del <?= $ini ?> al <?= $fin ?></strong></p>
                 <h3>$<?= number_format($MetaVta, 2) ?></h3>
                 <p>Avance de Venta</p>
                 <a href="Pwa_Clientes.php">

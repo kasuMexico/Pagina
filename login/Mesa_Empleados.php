@@ -164,7 +164,7 @@ $VerCache = $VerCache ?? time();
   <section id="Menu" class="mb-2">
     <div class="MenuPrincipal">
       <a class="BtnMenu" href="Pwa_Principal.php"><img src="assets/img/FlorKasu.png" alt="Inicio"></a>
-      <a class="BtnMenu" href="Mesa_Herramientas.php"><img src="assets/img/ajustes.png" style="background:#A9D0F5;" alt="Herramientas"></a>
+      <a class="BtnMenu" href="Mesa_Herramientas.php"><img src="assets/img/Iconos_menu/ajustes.png" style="background:#A9D0F5;" alt="Herramientas"></a>
     </div>
   </section>
 

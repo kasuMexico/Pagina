@@ -1,4 +1,9 @@
 <?php
+/**
+ * Este cogiod neceita Revision de contenido
+ * Fecha de actualización: 00/00/0000
+ * Actualizó: NNNNNN NNNNNN NNNNNNN
+ */
 // Sesión
 session_start();
 // Google Tag Manager

@@ -27,11 +27,21 @@ html, body {
 /* Logo superior derecho sin deformación */
 .header {
   position: absolute;
-  top: 14mm;           /* alineado con margen superior de página */
-  right: 14mm;         /* alineado con margen derecho de página */
+  top: 8mm;           /* alineado con margen superior de página */
+  left: 6mm;         /* alineado con margen derecho de página */
   width: 28mm;         /* cuadrado */
   height: 28mm;        /* cuadrado */
-  object-fit: contain; /* no distorsiona */
+  /*object-fit: contain;  no distorsiona 
+  z-index: 2;*/
+}
+/* Logo inferior derecho sin deformación */
+.hc-header {
+  position: sticky;
+  top: 8mm;
+  left: 6mm;
+  width: 28mm; 
+  height: 28mm;
+  object-fit: contain;
   z-index: 2;
 }
 
@@ -39,7 +49,7 @@ html, body {
 .h-line { width: 100%; height: 1px; margin: 4px 0; }
 
 /* Bloques icono + tabla */
-.w-tab { width: 80%; margin: 0 auto; }
+.w-tab { width: 100%; margin: 0 auto; }
 .t-one { margin-top: 0; }
 
 /* Iconos de secciones (ajuste de proporción sin estirar) */
@@ -66,6 +76,10 @@ table { width: 100%; border-collapse: collapse; }
 .mda { background-color: #c5b1d0; }
 .md  { background-color: #dfd8e7; }
 .ser td { padding: 4px; text-align: center; }
+
+/* Igualar estética de la tabla de servicio a la de “Solicitante” */
+table.ser-uniform { width: 100%; border-collapse: collapse; table-layout: fixed; }
+table.ser-uniform td { width: 25%; padding: 4px; } /* mismo padding que .ba */
 
 /* Observaciones */
 .ob-texto { font-size: 10px; padding: .6em; text-align: justify; }
@@ -112,20 +126,13 @@ ul, ol { margin: 4px 0 4px 18px; padding: 0; }
 li { margin: 2px 0; }
 
 /* Clases agregadas por JCCM, compactadas */
-.hd-entrada { position: relative; left: 30px; width: 96%; text-align: justify; }
+.hd-entrada { position: relative; left: 20px; width: 96%; text-align: justify; }
 .Div-Cobrar { width: 38%; left: 60%; position: relative; font-size: 9px; }
-.ul-adver { position: relative; left: 20px; font-size: 8px; }
+.ul-adver { position: relative; left: 10px; font-size: 8px; }
 
 /* Párrafos compactos en preguntas frecuentes */
 .hc-tab2 { margin-top: 14pt; padding: 0; }
-.hc-header {
-  position: absolute;
-  top: 14mm;
-  right: 14mm;
-  width: 28mm; height: 28mm;
-  object-fit: contain;
-  z-index: 2;
-}
+
 .tc-le { position: relative; z-index: 1; }
 .hc-text { font-size: 1em; text-align: right; }
 .hc-tit  { font-size: 2em; text-align: center; }

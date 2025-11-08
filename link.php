@@ -1,4 +1,11 @@
 <?php
+/**
+ * Qué hace: Página tipo “link in bio” que muestra una grilla de artículos del blog de KASU.
+ *           Incluye buscador por título (insensible a acentos y mayúsculas), paginación 12/página
+ *           y soporte de URL con parámetro ?q= para enlazar búsquedas.
+ * Fecha de actualización: 07/11/2025
+ * Actualizó: Jose Carlos Cabrera Monroy (JCCM)
+ */
 // Iniciar la sesión
 session_start();
 // Archvo de rastreo de google tag manager
@@ -54,6 +61,9 @@ require_once __DIR__ . '/eia/analytics_bootstrap.php';
   <link rel="stylesheet" href="assets/css/instagram.css">
 
 <style>
+  /* Utilidad accesible */
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,1,1);white-space:nowrap;border:0;}
+
   /* Contenedor amplio y centrado */
   #Clientes .container{ max-width:1280px; margin:0 auto; padding:0 12px; }
 
@@ -87,6 +97,22 @@ require_once __DIR__ . '/eia/analytics_bootstrap.php';
   /* Encabezado compacto */
   .features-small-item .icon img{ width:88px; height:auto; }
   .features-small-item .descri{ text-align:center; margin-bottom:16px; }
+
+  /* Buscador */
+  .search-bar{
+    display:flex; gap:8px; justify-content:center; align-items:center;
+    margin:10px auto 22px; padding:6px; max-width:720px; flex-wrap:wrap;
+  }
+  .search-input{
+    flex:1 1 420px; min-width:220px;
+    border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px;
+    font-size:16px; line-height:1.2;
+  }
+  .clear-btn{
+    border:1px solid #e5e7eb; background:#fff; color:#374151;
+    padding:10px 12px; border-radius:10px; cursor:pointer;
+  }
+  .no-results{ text-align:center; margin-top:8px; color:#6b7280; }
 </style>
 
   <script defer src="eia/javascript/Registro.js"></script>
@@ -103,6 +129,15 @@ require_once __DIR__ . '/eia/analytics_bootstrap.php';
         </div>
         <h1 id="kasu-linktree-title" class="text-center">Link in Bio de KASU</h1>
         <p class="text-center">Selecciona un artículo para abrirlo.</p>
+      </div>
+
+      <!-- Buscador por título -->
+      <div class="search-bar" role="search">
+        <label for="searchInput" class="sr-only">Buscar por título</label>
+        <input id="searchInput" class="search-input" type="search" placeholder="Buscar por título…"
+               autocomplete="off" spellcheck="false" list="titleList">
+        <datalist id="titleList"></datalist>
+        <button id="clearBtn" class="clear-btn" type="button" aria-label="Limpiar búsqueda">Limpiar</button>
       </div>
 
       <!-- Contenedor paginable -->
@@ -228,6 +263,9 @@ require_once __DIR__ . '/eia/analytics_bootstrap.php';
         <div class="post"><a href="https://kasu.com.mx/blog/cuanto-se-gasta-en-una-carrera-universitaria/" rel="noopener" target="_blank"><img loading="lazy" decoding="async" src="blog/wp-content/uploads/2023/03/16.jpg" alt="Gasto en una carrera universitaria" width="1080" height="1080"></a></div>
       </div>
 
+      <!-- Sin resultados -->
+      <p id="noResults" class="no-results" hidden>No hay resultados para esta búsqueda.</p>
+
       <!-- Paginación -->
       <nav class="pagination-wrap" aria-label="Paginación de artículos">
         <button class="page-btn" id="prevBtn" type="button" aria-label="Página anterior">«</button>
@@ -243,20 +281,79 @@ require_once __DIR__ . '/eia/analytics_bootstrap.php';
     (function () {
       const perPage = 12; // 4 columnas x 3 filas
       const feed = document.getElementById('feed');
-      const items = Array.from(feed.querySelectorAll('.post'));
+      const postNodes = Array.from(feed.querySelectorAll('.post'));
       const pageNums = document.getElementById('pageNums');
       const prevBtn = document.getElementById('prevBtn');
       const nextBtn = document.getElementById('nextBtn');
-      const totalPages = Math.max(1, Math.ceil(items.length / perPage));
-      let current = 1;
+      const searchInput = document.getElementById('searchInput');
+      const clearBtn = document.getElementById('clearBtn');
+      const noResults = document.getElementById('noResults');
+      const titleList = document.getElementById('titleList');
 
-      function render() {
+      // Utilidad: normalizar texto para búsqueda sin acentos
+      const normalize = (s) => (s || '')
+        .toString()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+
+      // Índice de items con su título
+      const items = postNodes.map(el => {
+        const img = el.querySelector('img');
+        const title = img ? img.alt : '';
+        return { el, title, ntitle: normalize(title) };
+      });
+
+      // Poblar datalist con títulos únicos
+      (() => {
+        const seen = new Set();
+        items.forEach(({ title }) => {
+          const t = title.trim();
+          if (!t || seen.has(t)) return;
+          seen.add(t);
+          const opt = document.createElement('option');
+          opt.value = t;
+          titleList.appendChild(opt);
+        });
+      })();
+
+      // Estado
+      let current = 1;
+      let query = '';
+      let visible = items.slice();
+
+      const updateURL = (q) => {
+        const url = new URL(window.location.href);
+        if (q) url.searchParams.set('q', q);
+        else url.searchParams.delete('q');
+        history.replaceState(null, '', url.toString());
+      };
+
+      const filterItems = () => {
+        const nq = normalize(query);
+        visible = nq ? items.filter(it => it.ntitle.includes(nq)) : items.slice();
+        if (current > Math.ceil(Math.max(1, visible.length) / perPage)) current = 1;
+      };
+
+      const render = () => {
+        // Mostrar solo los visibles en la página actual
+        const totalPages = Math.max(1, Math.ceil(visible.length / perPage));
         const start = (current - 1) * perPage;
         const end = start + perPage;
-        items.forEach((el, i) => {
-          el.style.display = (i >= start && i < end) ? '' : 'none';
+
+        // Ocultar todo
+        items.forEach(it => { it.el.style.display = 'none'; });
+
+        // Mostrar solo el rango visible
+        visible.forEach((it, i) => {
+          if (i >= start && i < end) it.el.style.display = '';
         });
-        // botones
+
+        // Mensaje de sin resultados
+        noResults.hidden = visible.length > 0;
+
+        // Botones de páginas
         pageNums.innerHTML = '';
         for (let p = 1; p <= totalPages; p++) {
           const b = document.createElement('button');
@@ -267,17 +364,52 @@ require_once __DIR__ . '/eia/analytics_bootstrap.php';
           b.addEventListener('click', () => { current = p; render(); window.scrollTo({top: 0, behavior: 'smooth'}); });
           pageNums.appendChild(b);
         }
-        prevBtn.disabled = current === 1;
-        nextBtn.disabled = current === totalPages;
-      }
+
+        prevBtn.disabled = current === 1 || visible.length === 0;
+        nextBtn.disabled = current === totalPages || visible.length === 0;
+      };
 
       prevBtn.addEventListener('click', () => {
         if (current > 1) { current--; render(); window.scrollTo({top: 0, behavior: 'smooth'}); }
       });
       nextBtn.addEventListener('click', () => {
+        const totalPages = Math.max(1, Math.ceil(visible.length / perPage));
         if (current < totalPages) { current++; render(); window.scrollTo({top: 0, behavior: 'smooth'}); }
       });
 
+      // Búsqueda con debounce
+      let t = null;
+      const onSearchChange = () => {
+        query = searchInput.value || '';
+        updateURL(query);
+        current = 1;
+        filterItems();
+        render();
+      };
+      searchInput.addEventListener('input', () => {
+        clearTimeout(t);
+        t = setTimeout(onSearchChange, 200);
+      });
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { clearTimeout(t); onSearchChange(); }
+      });
+
+      clearBtn.addEventListener('click', () => {
+        if (!searchInput.value) return;
+        searchInput.value = '';
+        onSearchChange();
+        searchInput.focus();
+      });
+
+      // Cargar q de la URL si existe
+      (function initFromURL(){
+        const url = new URL(window.location.href);
+        const q = url.searchParams.get('q') || '';
+        if (q) searchInput.value = q;
+        query = q;
+      })();
+
+      filterItems();
       render();
     })();
   </script>

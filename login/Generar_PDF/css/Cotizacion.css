@@ -1,0 +1,32 @@
+/* ===== Página ===== */
+@page { /* size: Letter; */ margin: 0; }
+html,body{font-family:'OpenSans',sans-serif;font-size:10pt;margin:0;padding:0;color:#111}
+h1,h2{margin:0}
+
+/* ===== Tipografía ===== */
+.doc-title{font-family:'Montserrat',sans-serif;font-weight:700;font-size:13pt}
+.doc-subtitle{font-size:9pt;color:#333}
+.u-muted{color:#333;font-size:9pt}
+
+/* ===== Header con logo ===== */
+.doc-header{width:100%;border-collapse:collapse;margin: 0 45px 5px 0 0}
+.doc-header td{vertical-align:top}
+.doc-header__logo-cell{width:96px}
+.doc-header__logo-box{width:96px;height:96px}
+.doc-header__logo{display:block;max-width:150px;max-height:150px;width:auto;height:auto}
+.doc-header__text { padding-left: 60pt; }
+
+
+/* ===== Contenedores y secciones ===== */
+.doc-container{padding:0 15mm}            /* mismos márgenes laterales que usas */
+.doc-section{margin-top:8pt;border:0}
+.doc-section__header{background:#606a78;color:#fff;padding:8pt 10pt}
+.doc-section__body{padding:8pt 10pt}
+
+/* ===== Tablas ===== */
+.doc-table{width:100%;border-collapse:collapse;margin-top:8pt}
+.doc-table th,.doc-table td{border-top:1px solid #ddd;border-bottom:1px solid #ddd;padding:6pt 4pt;text-align:left}
+.u-right{text-align:right}
+
+/* ===== Decorativos ===== */
+.doc-divider{width:100%;height:auto;margin:6pt 0}

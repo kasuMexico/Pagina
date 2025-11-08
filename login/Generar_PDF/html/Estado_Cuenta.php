@@ -1,98 +1,148 @@
 <?php
-// Asegura que las variables estén definidas
-$tel = isset($tel) ? $tel : '';
-$saldo = isset($saldo) ? $saldo : '0.00';
+/**
+ * Template: Estado de Cuenta (HTML para Dompdf) homologado a .doc-*
+ * Requisitos en scope:
+ *  - $venta, $persona, $datos, $saldo, $Credito, $mysqli, $tel
+ */
 
-// Usar number_format para montos
-$costoVenta = isset($venta['CostoVenta']) ? number_format($venta['CostoVenta'], 2) : '0.00';
+if (!function_exists('h')) {
+    function h($v){ return htmlspecialchars((string)$v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
+}
 
-// Comienza el buffer para la impresión del HTML
-echo '
+/* ===== Defaults y formatos ===== */
+$tel        = $tel ?? '';
+$saldoFmt   = isset($saldo) ? number_format((float)$saldo, 2) : '0.00';
+$costoVenta = isset($venta['CostoVenta']) ? number_format((float)$venta['CostoVenta'], 2) : '0.00';
+$idVenta    = isset($venta['Id']) ? (int)$venta['Id'] : 0;
+
+$fechaVenta   = isset($venta['FechaRegistro'])   ? substr((string)$venta['FechaRegistro'], 0, 10)   : '';
+$fechaPersona = isset($persona['FechaRegistro']) ? substr((string)$persona['FechaRegistro'], 0, 10) : '';
+
+$direccion = trim((string)($datos['Direccion'] ?? ''));
+$telefono  = (string)($datos['Telefono'] ?? '');
+$email     = (string)($datos['Mail'] ?? '');
+$producto  = (string)($venta['Producto'] ?? '');
+$idFirma   = (string)($venta['IdFIrma'] ?? '');
+
+/* ===== Pagos (consulta preparada) ===== */
+$pagos = [];
+if (isset($mysqli) && $mysqli instanceof mysqli && $idVenta > 0) {
+    if ($st = $mysqli->prepare("SELECT FechaRegistro, status, Cantidad FROM Pagos WHERE IdVenta = ? ORDER BY FechaRegistro ASC")) {
+        $st->bind_param('i', $idVenta);
+        $st->execute();
+        if ($rs = $st->get_result()) {
+            while ($row = $rs->fetch_assoc()) { $row['Cantidad'] = (float)$row['Cantidad']; $pagos[] = $row; }
+        }
+        $st->close();
+    }
+}
+?>
+<!DOCTYPE html>
 <html lang="es">
 <head>
+    <meta charset="utf-8">
     <title>Estado de Cuenta</title>
-    <link rel="stylesheet" href="css/EstadoCta.css">
+    <!-- Mantén tu hoja sin cambios -->
+    <link rel="stylesheet" href="https://kasu.com.mx/login/Generar_PDF/css/Cotizacion.css?v=3">
 </head>
 <body>
-    <table class="t-h">
-        <tr>
-            <td>
-                <h1 class="ha-text"><strong>KASU, Servicios a Futuro S.A de C.V.</strong></h1>
-                <p class="hb-text">Julian Gonzalez 10 2do piso, Fermin J. Villaloz</p>
-                <p class="hb-text">Atlacomulco, Estado de Mexico, Mexico C.P. 50450</p>
-                <p class="hb-text"> Teléfono: '.htmlspecialchars($tel).'</p>
-            </td>
-        </tr>
-    </table>
-    <img src="https://kasu.com.mx/assets/poliza/img2/transp.jpg" class="header">
-    <div class="container">
-        <div class="cardheader">Datos del Cliente</div>
-        <div class="cardbody">
-            Nombre : '.htmlspecialchars($persona['Nombre']).'<br>
-            CURP : '.htmlspecialchars($persona['ClaveCurp']).'<br>
-            Fecha Registro : '.htmlspecialchars(substr($venta['FechaRegistro'], 0, 10)).'<br>
-            Fecha Última Modificación : '.htmlspecialchars(substr($persona['FechaRegistro'], 0, 10)).'<br>
+
+  <!-- ===== Encabezado ===== -->
+  <table class="doc-header">
+    <tr>
+      <td class="doc-header__logo-cell">
+        <div class="doc-header__logo-box">
+            <img src="https://kasu.com.mx/assets/poliza/transp.jpg" class="doc-header__logo" alt="KASU">
         </div>
-        <div class="cardheader"></div>
-        <div class="cardbody">
-            Dirección : ' . (isset($datos['Direccion']) && !empty($datos['Direccion']) ? htmlspecialchars($datos['Direccion']) : "<span class='text-danger'>No disponible</span>") . '<br>
-            Teléfono : '.htmlspecialchars($datos['Telefono']).'<br>
-            Email : '.htmlspecialchars($datos['Mail']).'<br>
-            Producto : '.htmlspecialchars($venta['Producto']).'<br>
-            N. Activador : '.htmlspecialchars($venta['IdFIrma']).'<br>
-            Status : '.htmlspecialchars($venta['Status']).'<br>
-            '.htmlspecialchars($Credito).'<br>
-        </div>
-        <div class="card">
-            <div class="cardheader">Historial de transacciones</div>
-            <div class="cardbody">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Concepto</th>
-                            <th>Saldo</th>
-                            <th>Pagos</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>'.htmlspecialchars(substr($venta['FechaRegistro'], 0, 10)).'</td>
-                            <td>Compra de servicio '.htmlspecialchars($datos['Producto']).'</td>
-                            <td>'.$costoVenta.'</td>
-                            <td> - </td>
-                        </tr>';
-                        // Realiza consulta
-                        $Ct4 = "SELECT * FROM Pagos WHERE IdVenta = '".htmlspecialchars($busqueda)."'";
-                        if ($resultado = $mysqli->query($Ct4)) {
-                            while ($pago = $resultado->fetch_assoc()) {
-                                echo '
-                                <tr>
-                                    <td>'.htmlspecialchars(substr($pago['FechaRegistro'], 0, 10)).'</td>
-                                    <td>'.htmlspecialchars($pago['status']).' de Servicio '.htmlspecialchars($venta['Producto']).'</td>
-                                    <td> - </td>
-                                    <td>'.number_format($pago['Cantidad'], 2).'</td>
-                                </tr>
-                                ';
-                            }
-                        }
-                        echo '
-                    </tbody>
-                </table>
-                <table class="table">
-                    <tbody>
-                        <tr>
-                            <td>Saldo de la cuenta</td>
-                            <td>'.htmlspecialchars($saldo).'</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    <img src="https://kasu.com.mx/assets/poliza/img2/LINE7.jpg" class="h-line">
-    <h2 class="url">CONSULTA NUESTRO AVISO DE PRIVACIDAD EN : WWW.KASU.COM.MX/AVISOPRIVACIDAD.HTML</h2>
-    <img src="https://kasu.com.mx/assets/poliza/img2/img.jpg" class="fin2">
+      </td>
+      <td class="doc-header__text">
+        <h1 class="doc-title">KASU, Servicios a Futuro S.A. de C.V.</h1>
+        <h2 class="doc-subtitle">RFC: KSF201022441 &nbsp; WEB: www.kasu.com.mx</h2>
+        <p class="u-muted">Bosque de Chapultepec, Pedregal 24, Molino del Rey, Ciudad de México, CDMX, C.P. 11000</p>
+        <p class="u-muted">Teléfono: <?= h($tel) ?> &nbsp; Email: antcliente@kasu.com.mx</p>
+      </td>
+    </tr>
+  </table>
+
+  <div class="doc-container">
+    <!-- ===== Sección: Datos del Cliente ===== -->
+    <section class="doc-section">
+      <div class="doc-section__header">Datos del Cliente</div>
+      <div class="doc-section__body">
+        Nombre: <?= h($persona['Nombre'] ?? '') ?><br>
+        CURP: <?= h($persona['ClaveCurp'] ?? '') ?><br>
+        Fecha Registro: <?= h($fechaVenta) ?><br>
+        Fecha Última Modificación: <?= h($fechaPersona) ?><br>
+      </div>
+    </section>
+
+    <!-- ===== Sección: Detalle de servicio ===== -->
+    <section class="doc-section">
+      <div class="doc-section__header">Detalle del servicio</div>
+      <div class="doc-section__body">
+        Dirección:
+        <?php if ($direccion !== ''): ?>
+          <?= h($direccion) ?>
+        <?php else: ?>
+          <span class="text-danger">No disponible</span>
+        <?php endif; ?>
+        <br>
+        Teléfono: <?= h($telefono) ?><br>
+        Email: <?= h($email) ?><br>
+        Producto: <?= h($producto) ?><br>
+        N. Activador: <?= h($idFirma) ?><br>
+        <?= h($Credito ?? '') ?><br>
+      </div>
+    </section>
+
+    <!-- ===== Sección: Historial de transacciones ===== -->
+    <section class="doc-section avoid-break">
+      <div class="doc-section__header">Historial de transacciones</div>
+      <div class="doc-section__body">
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Concepto</th>
+              <th>Saldo</th>
+              <th>Pagos</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><?= h($fechaVenta) ?></td>
+              <td>Compra de servicio <?= h($producto) ?></td>
+              <td><?= h($costoVenta) ?></td>
+              <td>-</td>
+            </tr>
+            <?php foreach ($pagos as $pago): ?>
+              <tr>
+                <td><?= h(substr((string)$pago['FechaRegistro'], 0, 10)) ?></td>
+                <td><?= h((string)$pago['status']) ?> de Servicio <?= h($producto) ?></td>
+                <td>-</td>
+                <td><?= number_format((float)$pago['Cantidad'], 2) ?></td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+
+        <table class="doc-table" style="margin-top:8pt">
+          <tbody>
+            <tr>
+              <td><strong>Saldo para liquidar</strong></td>
+              <td class="u-right"><strong><?= h($saldoFmt) ?></strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Separador visual según tu CSS -->
+    <div class="doc-divider"></div>
+
+    <!-- Aviso de privacidad con estilo existente -->
+    <p class="u-muted">Consulta nuestro aviso de privacidad en: kasu.com.mx/privacidad</p>
+  </div>
+
 </body>
-</html>';
-?>
+</html>

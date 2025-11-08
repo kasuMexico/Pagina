@@ -35,10 +35,10 @@ $FechaR      = $FechaR      ?? '';
   </table>
 
   <!-- Logo cuadrado controlado por CSS -->
-  <img src="https://kasu.com.mx/assets/poliza/img2/transp.jpg" class="header" alt="KASU">
+  <img src="https://kasu.com.mx/assets/poliza/transp.jpg" class="header" alt="KASU">
   <br><br><br><br><br><br><br><br><br><br><br><br><br>
   <div class="w-tab t-one">
-    <img src="https://kasu.com.mx/assets/poliza/img2/1.jpg" class="h-lo" alt="">
+    <img src="https://kasu.com.mx/assets/poliza/1.jpg" class="h-lo" alt="">
     <table class="date">
       <tr><td>NOMBRE:</td><td></td><td>CAPITAL &amp; FONDEO MEXICO S.A.P.I. SOFOM ENR</td></tr>
       <tr><td>DOMICILIO:</td><td></td><td>Avenida Presiente Masarik,No. 61,Int 901-9, Colonia Polanco V secci&oacute;n</td></tr>
@@ -47,10 +47,10 @@ $FechaR      = $FechaR      ?? '';
     </table>
   </div>
 
-  <img src="https://kasu.com.mx/assets/poliza/img2/LINE7.jpg" class="h-line" alt="">
+  <img src="https://kasu.com.mx/assets/poliza/LINE7.jpg" class="h-line" alt="">
 
   <div class="w-tab">
-    <img src="https://kasu.com.mx/assets/poliza/img2/2.jpg" class="h-lt" alt="">
+    <img src="https://kasu.com.mx/assets/poliza/2.jpg" class="h-lt" alt="">
     <table class="date">
       <tr><td>NOMBRE:</td><td>KASU, SERVICIOS A FUTURO S.A. DE C.V.</td></tr>
       <tr><td>DOMICILIO:</td><td>Privada Vire, No.2 Int.10 col.Centro,Atlacomulco esatdo de M&eacute;xico</td></tr>
@@ -59,8 +59,8 @@ $FechaR      = $FechaR      ?? '';
     </table>
   </div>
 
-  <img src="https://kasu.com.mx/assets/poliza/img2/LINE7.jpg" class="h-line" alt="">
-  <img src="https://kasu.com.mx/assets/poliza/img2/3.jpg" class="h-ltr" alt="">
+  <img src="https://kasu.com.mx/assets/poliza/LINE7.jpg" class="h-line" alt="">
+  <img src="https://kasu.com.mx/assets/poliza/3.jpg" class="h-ltr" alt="">
 
   <table class="ba date">
     <tr>
@@ -77,8 +77,8 @@ $FechaR      = $FechaR      ?? '';
     </tr>
   </table>
 
-  <img src="https://kasu.com.mx/assets/poliza/img2/LINE7.jpg" class="h-line" alt="">
-  <img src="https://kasu.com.mx/assets/poliza/img2/4.jpg" class="h-lf" alt="">
+  <img src="https://kasu.com.mx/assets/poliza/LINE7.jpg" class="h-line" alt="">
+  <img src="https://kasu.com.mx/assets/poliza/4.jpg" class="h-lf" alt="">
 
   <table class="ba date ser-uniform">
   <tr>
@@ -99,8 +99,8 @@ $FechaR      = $FechaR      ?? '';
   </tr>
   </table>
 
-  <img src="https://kasu.com.mx/assets/poliza/img2/LINE7.jpg" class="h-line" alt="">
-  <img src="https://kasu.com.mx/assets/poliza/img2/5.jpg" class="h-lfi" alt="">
+  <img src="https://kasu.com.mx/assets/poliza/LINE7.jpg" class="h-line" alt="">
+  <img src="https://kasu.com.mx/assets/poliza/5.jpg" class="h-lfi" alt="">
 
   <table class="ba date">
     <tr>
@@ -118,8 +118,8 @@ $FechaR      = $FechaR      ?? '';
     </tr>
   </table>
 
-  <img src="https://kasu.com.mx/assets/poliza/img2/LINE7.jpg" class="h-line" alt="">
-  <img src="https://kasu.com.mx/assets/poliza/img2/6.jpg" class="h-ls" alt="">
+  <img src="https://kasu.com.mx/assets/poliza/LINE7.jpg" class="h-line" alt="">
+  <img src="https://kasu.com.mx/assets/poliza/6.jpg" class="h-ls" alt="">
 
   <table class="ba date">
     <tr>
@@ -150,7 +150,7 @@ $FechaR      = $FechaR      ?? '';
       </ul>
   </div>
   
-  <img src="https://kasu.com.mx/assets/poliza/img2/pagin.jpg" class="img-f2" alt="">
+  <img src="https://kasu.com.mx/assets/poliza/pagin.jpg" class="img-f2" alt="">
 
   <h2 class="url">Consulta nuestro aviso de privacidad en kasu.com.mx/privacidad</h2>
   <br><br>
@@ -429,7 +429,7 @@ $FechaR      = $FechaR      ?? '';
     <tr class="hc-tab2"><td><h1 class="hc-text">KASU, SERVICIOS A FUTURO S.A DE C.V </h1></td></tr>
     <tr><td><h1 class="hc-text">Atlacomulco, Estado de M&eacute;xico, M&eacute;xico </h1></td></tr>
   </table>
-  <img src="https://kasu.com.mx/assets/poliza/img2/transp.jpg" class="hc-header" alt="">
+  <img src="https://kasu.com.mx/assets/poliza/transp.jpg" class="hc-header" alt="">
 
   <h1 class="hc-tit">&#161;Felicidades&#33;</h1>
   <h1 class="hc-tit"><?= $DatosSolicitante ?></h1>
@@ -437,7 +437,7 @@ $FechaR      = $FechaR      ?? '';
     acabas de adquirir el mejor respaldo para gastos disponible en M&eacute;xico. <br>
     &#161;Gracias por permitirnos estar cerca de ti&#33;</p>
 
-  <img src="https://kasu.com.mx/assets/poliza/img2/question.jpg" class="ask" alt="">
+  <img src="https://kasu.com.mx/assets/poliza/question.jpg" class="ask" alt="">
   <div class="ask-q">
     <h2 class="hc-tsub">DUDAS Y PREGUNTAS FRECUENTES</h2>
     <p class="hc-ts"><strong>- &#191;C&oacute;mo funciona&#63;</strong> <br>KASU atrav&eacute;s de sus agencias tiene la obligaci&oacute;n de prestar el servicio establezca el contrato ya sea funerario o universitario simplemente con realizar una llamada a los telefonos en su p&oacute;liza,el servicio es integramente realizado.</p>
@@ -507,7 +507,7 @@ $FechaR      = $FechaR      ?? '';
     </tr>
   </table>
 
-  <img src="https://kasu.com.mx/assets/poliza/img2/trans2.jpg" class="hc-pie" alt="">
+  <img src="https://kasu.com.mx/assets/poliza/trans2.jpg" class="hc-pie" alt="">
 </div>
 
 </body>

@@ -75,7 +75,7 @@ try {
 
     $pdf = new Dompdf($opts);
     $pdf->loadHtml($html, 'UTF-8');
-    $pdf->setPaper('A4', 'portrait');
+    $pdf->setPaper('letter', 'portrait');
     $pdf->render();
     $pdfBytes = $pdf->output();
 

@@ -1,59 +1,50 @@
 <?php
 /**
- * Fichas_Pago → Generación de PDF
- * Qué hace:
- *  - Acepta una de tres entradas:
- *      • GET ?busqueda  = base64(IdContact)
- *      • POST IdVenta   = Id directo de Venta
- *      • GET  ?Cte      = base64(IdVenta)  (compatibilidad)
- *  - Carga Venta, Usuario y Contacto con consultas preparadas.
- *  - Inyecta $row, $fec, $basicas, $financieras en el template html/Fichas_Pago.php.
- *  - Renderiza PDF con DOMPDF (legacy si existe clase DOMPDF, si no usa namespaced Dompdf).
- *  - Guarda el PDF en /DATES y lo envía al navegador.
- *
- * Notas de seguridad:
- *  - Sanitiza entradas y usa mysqli prepare.
- *  - Evita salida previa con ob_* antes del stream PDF.
- *
+ * Fichas_Pago → Generación de PDF (Composer / vendor)
+ * Entradas:
+ *   - GET ?busqueda = base64(IdContact)
+ *   - POST IdVenta  = Id directo de Venta
+ *   - GET  ?Cte     = base64(IdVenta)  (compat)
+ *   - POST data     = fecha promesa (opcional)
  * Dependencias:
- *  - ../../eia/librerias.php  (expone $mysqli y clases auxiliares)
- *  - dompdfMaster/…           (DOMPDF legacy y autoload)
- *  - html/Fichas_Pago.php     (template HTML)
- *
- * Fecha: 05/11/2025
+ *   - ../../eia/librerias.php  ($mysqli, clases)
+ *   - vendor/autoload.php      (dompdf/dompdf)
+ *   - html/Fichas_Pago.php     (template)
+ * Fecha: 07/11/2025
  * Revisado por: JCCM
  */
 
 declare(strict_types=1);
 
 try {
-    /* ===================== BLOQUE: Control de salida ===================== */
-    // Evita salida antes de enviar el PDF
+    /* ===== Salida controlada ===== */
     if (!ob_get_level()) { ob_start(); }
-
-    /* ===================== BLOQUE: Cargas base ===================== */
-    require_once '../../eia/librerias.php';                      // $mysqli y tus clases
-    require_once 'dompdfMaster/dompdf_config.inc.php';          // DOMPDF (legacy)
-    require_once 'dompdfMaster/include/autoload.inc.php';       // Autoload DOMPDF
-
-    // Si usas la versión namespaced, estos "use" no rompen con legacy
-    if (class_exists('\\Dompdf\\Dompdf')) {
-        /** @noinspection PhpUnusedAliasInspection */
-        use Dompdf\Dompdf;
-        /** @noinspection PhpUnusedAliasInspection */
-        use Dompdf\Options;
-    }
-
     date_default_timezone_set('America/Mexico_City');
+    error_reporting(E_ALL);
 
-    /* ===================== BLOQUE: Resolver parámetros de entrada ===================== */
-    //  - GET busqueda  : base64(IdContact)
-    //  - POST IdVenta  : Id de Venta directo
-    //  - GET  Cte      : base64(IdVenta) (compatibilidad)
-    //  - POST data     : fecha de promesa (opcional)
+    /* ===== Autoload Composer ===== */
+    $candidates = [
+        dirname(__DIR__, 2) . '/vendor/autoload.php', // ../../vendor
+        dirname(__DIR__)     . '/vendor/autoload.php', // ../vendor
+        __DIR__              . '/vendor/autoload.php', // ./vendor
+        $_SERVER['DOCUMENT_ROOT'] . '/vendor/autoload.php',
+    ];
+    $autoload = null;
+    foreach ($candidates as $cand) {
+        if (is_file($cand)) { $autoload = $cand; break; }
+    }
+    if ($autoload === null) {
+        throw new Exception('No se encontró vendor/autoload.php. Ejecuta "composer install".');
+    }
+    require_once $autoload;
+
+    /* ===== App deps ===== */
+    require_once '../../eia/librerias.php'; // Debe definir $mysqli, Basicas, Financieras
+
+    /* ===== Resolver parámetros ===== */
     $idVenta   = null;
     $idContact = null;
-    $fec       = $_POST['data'] ?? null;
+    $fecRaw    = $_POST['data'] ?? null;
 
     if (isset($_GET['busqueda'])) {
         $dec = base64_decode((string)$_GET['busqueda'], true);
@@ -71,8 +62,18 @@ try {
         throw new Exception('Parámetros de entrada insuficientes.');
     }
 
-    /* ===================== BLOQUE: Cargar Venta ===================== */
-    if ($idVenta) {
+    // Fecha promesa amigable al template
+    $fec = null;
+    if (is_string($fecRaw)) {
+        $fecRaw = trim($fecRaw);
+        if ($fecRaw !== '') {
+            $t = strtotime($fecRaw);
+            $fec = $t ? date('Y-m-d', $t) : $fecRaw; // si no parsea, pasa literal
+        }
+    }
+
+    /* ===== Cargar Venta ===== */
+    if ($idVenta && $idVenta > 0) {
         $stmtV = $mysqli->prepare("SELECT * FROM Venta WHERE Id = ? LIMIT 1");
         $stmtV->bind_param('i', $idVenta);
     } else {
@@ -83,14 +84,13 @@ try {
     $resV  = $stmtV->get_result();
     $venta = $resV->fetch_assoc();
     $stmtV->close();
-
     if (!$venta) { throw new Exception('Venta no encontrada.'); }
 
-    // Mantén el nombre esperado por el template
+    // Nombre esperado por el template
     $row       = $venta;
     $idContact = (int)$venta['IdContact'];
 
-    /* ===================== BLOQUE: Cargar Usuario y Contacto ===================== */
+    /* ===== Cargar Usuario y Contacto ===== */
     $stmtU = $mysqli->prepare("SELECT * FROM Usuario WHERE IdContact = ? LIMIT 1");
     $stmtU->bind_param('i', $idContact);
     $stmtU->execute();
@@ -103,54 +103,57 @@ try {
     $contacto = $stmtC->get_result()->fetch_assoc();
     $stmtC->close();
 
-    /* ===================== BLOQUE: Instancias auxiliares para el template ===================== */
-    // Si librerias.php ya los instancia, estos "new" no estorban; mantenemos para acoplamiento débil
+    /* ===== Instancias auxiliares ===== */
+    // Si ya existen globales en librerias.php, estos new no afectan
     $basicas     = new Basicas();
     $financieras = new Financieras();
 
-    /* ===================== BLOQUE: Render HTML del template ===================== */
-    // Variables que el template espera disponibles: $row, $fec, $basicas, $financieras, $usuario, $contacto
+    /* ===== Render HTML ===== */
+    // Variables disponibles en el template: $row, $fec, $basicas, $financieras, $usuario, $contacto
     ob_start();
     require __DIR__ . '/html/Fichas_Pago.php';
     $html = ob_get_clean();
-
     if ($html === '' || $html === false) {
         throw new Exception('El template Fichas_Pago.php no produjo salida.');
     }
 
-    /* ===================== BLOQUE: Construcción de DOMPDF ===================== */
-    // Soporta legacy DOMPDF y también la versión namespaced moderna.
-    if (class_exists('DOMPDF')) {
-        // Legacy
-        $dompdf = new DOMPDF();
-        if (method_exists($dompdf, 'set_option')) {
-            $dompdf->set_option('enable_html5_parser', true);
-            $dompdf->set_option('enable_remote', true);
-        }
-    } else {
-        // Namespaced
-        $opts = new Options();
-        $opts->set('enable_html5_parser', true);
-        $opts->set('isRemoteEnabled', true);
-        $dompdf = new Dompdf($opts);
+    /* ===== Dompdf (vendor) ===== */
+    $opts = new \Dompdf\Options();
+    $opts->set('enable_html5_parser', true);
+    $opts->set('isRemoteEnabled', true);
+    $opts->set('defaultFont', 'DejaVu Sans'); // UTF-8 safe
+    // Limita accesos de archivos al directorio actual
+    $opts->setChroot(__DIR__);
+
+    $dompdf = new \Dompdf\Dompdf($opts);
+    if (method_exists($dompdf, 'setBasePath')) {
+        $dompdf->setBasePath(__DIR__ . '/html/'); // assets relativos del template
     }
 
-    $dompdf->set_paper('A4', 'portrait');
-    $dompdf->load_html($html);
+    $dompdf->loadHtml($html, 'UTF-8');
+    $dompdf->setPaper('letter', 'portrait');
     $dompdf->render();
 
-    /* ===================== BLOQUE: Persistencia y entrega ===================== */
-    $NomFichas = preg_replace('/\s+/', '', (string)($row['Nombre'] ?? 'Cliente'));
+    /* ===== Persistencia y entrega ===== */
+    $nombreCliente = '';
+    if (!empty($usuario['Nombre']))         $nombreCliente = (string)$usuario['Nombre'];
+    elseif (!empty($contacto['Nombre']))    $nombreCliente = (string)$contacto['Nombre'];
+    elseif (!empty($row['Nombre']))         $nombreCliente = (string)$row['Nombre'];
+    else                                    $nombreCliente = 'Cliente';
+
+    $NomFichas = preg_replace('/[^A-Za-z0-9_-]+/', '', preg_replace('/\s+/', '', $nombreCliente));
+    if ($NomFichas === '') $NomFichas = 'FICHAS';
     $nombrePdf = "FICHAS_{$NomFichas}.pdf";
 
     $rutaCarpeta = __DIR__ . '/DATES';
-    if (!is_dir($rutaCarpeta)) { @mkdir($rutaCarpeta, 0775, true); }
+    if (!is_dir($rutaCarpeta) && !@mkdir($rutaCarpeta, 0775, true) && !is_dir($rutaCarpeta)) {
+        throw new Exception('No se pudo crear el directorio DATES.');
+    }
     @file_put_contents($rutaCarpeta . '/' . $nombrePdf, $dompdf->output());
 
-    // Limpia cualquier salida previa antes de mandar el PDF
     if (ob_get_length()) { ob_end_clean(); }
-    // Para inline en navegador: stream($nombrePdf, ['Attachment' => 0])
-    $dompdf->stream($nombrePdf);
+    // Mostrar inline en el navegador
+    $dompdf->stream($nombrePdf, ['Attachment' => 0]);
     exit;
 
 } catch (Throwable $e) {

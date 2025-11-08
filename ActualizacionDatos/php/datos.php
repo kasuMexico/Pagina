@@ -262,7 +262,8 @@ for ($i=0; $i<6; $i++) {
   <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
   <link rel="stylesheet" href="../../assets/css/bootstrap.min.css">
   <link rel="stylesheet" href="../../assets/css/font-awesome.css">
-  <link rel="stylesheet" href="../estadocta.css?v=1">
+  <link rel="stylesheet" href="../assets/estadocta.css?v=1">
+  <link rel="stylesheet" href="../../login/assets/css/cupones.css">
 </head>
 <body>
   <!-- Botón hamburguesa (no afecta tu menú global) -->

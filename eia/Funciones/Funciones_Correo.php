@@ -426,7 +426,7 @@ HTML;
       </tr>
 HTML;
 
-            case 'ENVIO DE ESTADO DE CUENTA':
+            case 'ENVÍO DE ESTADO DE CUENTA':
                 return <<<HTML
         <tr>
           <td align="center" style="padding:2px; font-size:25px; color:#153643; font-family:Arial, sans-serif;">
@@ -470,7 +470,7 @@ HTML;
         </tr>
 HTML;
 
-            case 'ENVIO DE FICHAS':
+            case 'ENVÍO DE FICHAS DE PAGO':
                 return <<<HTML
         <tr>
           <td align="center" style="padding:2px; font-size:25px; color:#153643; font-family:Arial, sans-serif;">
@@ -524,20 +524,20 @@ HTML;
           </td>
         </tr>
         <tr>
-          <td bgcolor="#4CACA9" align="justify" style="padding:20px 15px 5px 25px; font-family:Arial, sans-serif; font-size:16px; color:#ffffff;">
+          <td bgcolor="#ffffff" align="justify" style="padding:20px 15px 5px 25px; font-family:Arial, sans-serif; font-size:16px; color:#153643;">
             <b>{$Nombre}</b>
           </td>
         </tr>
         <tr>
-          <td align="left" bgcolor="#4CACA9" style="padding:10px 30px 5px 30px;">
-            <p style="font-size:16px; font-family:arial, sans-serif; line-height:24px; color:#ffffff;">
+          <td align="left" bgcolor="#ffffff" style="padding:10px 30px 5px 30px;">
+            <p style="font-size:16px; font-family:arial, sans-serif; line-height:24px; color:#666666;">
               Te enviamos el <b>Presupuesto de KASU</b>.<br>
               Puedes visualizarlo haciendo clic en el siguiente boton:
             </p>
           </td>
         </tr>
         <tr>
-          <td bgcolor="#4CACA9" align="center" style="padding:30px;">
+          <td bgcolor="#ffffff" align="center" style="padding:30px;">
             <span style="border:solid #ee3a87; background:#ee3a87; border-width:20px; display:inline-block; border-radius:5px;">
               <a href="{$dirUrl}" class="es-button" target="_blank" style="text-decoration:none; font-family:Arial, sans-serif; font-size:30px; color:#FFFFFF; background:#ee3a87; border-radius:5px; line-height:30px;">
                 Revisar presupuesto
@@ -546,12 +546,12 @@ HTML;
           </td>
         </tr>
         <tr>
-          <td bgcolor="#4CACA9" align="justify" style="padding:5px 25px 30px 25px; font-family:Arial, sans-serif; font-size:16px; line-height:20px; color:#153643;">
+          <td bgcolor="#ffffff" align="justify" style="padding:5px 25px 30px 25px; font-family:Arial, sans-serif; font-size:16px; line-height:20px; color:#666666;">
             <p style="font-size:16px; font-family:Arial, sans-serif; line-height:24px; color:#ffffff;">
               Si tienes alguna duda o necesitas asistencia, por favor comunicate a nuestro centro de atencion:<br>
               <b>720 817 7632</b>
             </p>
-            <p style="font-size:12px; font-family:Arial, sans-serif; line-height:24px; color:#ffffff;">
+            <p style="font-size:12px; font-family:Arial, sans-serif; line-height:24px; color:#666666;">
               Saludos<br>Equipo KASU
             </p>
           </td>

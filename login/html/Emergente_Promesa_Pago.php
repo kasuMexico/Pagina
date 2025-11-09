@@ -7,7 +7,6 @@
  * Revisado por: JCCM
  */
 
-// Helper de escape
 if (!function_exists('h')) {
     function h(?string $v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 }
@@ -22,28 +21,33 @@ $hostPath      = $_SERVER['PHP_SELF']   ?? '';
 $nombreParam   = $nombre                ?? '';
 
 // Cálculos de mora y pago mínimo
-$Pago1_num         = isset($Pago1) ? (float)$Pago1 : 0.0;
-$moraNum           = isset($financieras) ? (float)$financieras->Mora($Pago1_num) : 0.0;
-$moraFmt           = number_format($moraNum, 2);
+$Pago1_num     = isset($Pago1) ? (float)$Pago1 : 0.0;
+$moraNum       = isset($financieras) ? (float)$financieras->Mora($Pago1_num) : 0.0;
+$moraFmt       = number_format($moraNum, 2);
 
-$estadoCliente     = $StatVtas['estado'] ?? '';
-$pagoNormalNum     = isset($Pago) ? (float)$Pago : 0.0;
-$pagoPendFmt       = isset($PagoPend) ? (string)$PagoPend : '0';
+$estadoCliente = $StatVtas['estado'] ?? '';
+$pagoNormalNum = isset($Pago) ? (float)$Pago : 0.0;
+$pagoPendFmt   = isset($PagoPend) ? (string)$PagoPend : '0';
 
-$pagoMinimoNum     = ($estadoCliente !== 'AL CORRIENTE') ? $moraNum : $pagoNormalNum;
-$pagoMinimoFmt     = number_format($pagoMinimoNum, 2);
+$pagoMinimoNum = ($estadoCliente !== 'AL CORRIENTE') ? $moraNum : $pagoNormalNum;
+$pagoMinimoFmt = number_format($pagoMinimoNum, 2);
 
-// Si viene una promesa por POST, formatear para mostrar
-$promesaPostNum    = isset($_POST['Promesa']) ? (float)$_POST['Promesa'] : null;
-$promesaPostFmt    = is_null($promesaPostNum) ? null : number_format($promesaPostNum, 2);
+// Defaults y valores posteados
+$fechaSugerida   = date('Y-m-d', strtotime('+14 days'));
+$fechaDef        = $_POST['FechaPromesa'] ?? $fechaSugerida;
 
-// Fecha sugerida +14 días
-$fechaSugerida     = date('Y-m-d', strtotime('+14 days'));
+$promesaPostNum  = isset($_POST['Cantidad']) ? (float)$_POST['Cantidad'] : null;
+$promesaPostFmt  = is_null($promesaPostNum) ? null : number_format($promesaPostNum, 2);
+
+// Valor por defecto del input number: conserva POST o cae al mínimo
+$cantidadDef = isset($_POST['Cantidad'])
+    ? (string)$_POST['Cantidad']
+    : number_format($pagoMinimoNum, 2, '.', '');
 ?>
 <form method="POST" action="php/Funcionalidad_Pwa.php">
   <!-- *********************************************** Bloque de registro de Eventos ************************************************************************* -->
-  <div id="Gps"></div> <!-- Div que lanza el GPS -->
-  <div data-fingerprint-slot></div> <!-- DIV que lanza el Finger Print -->
+  <div id="Gps"></div>
+  <div data-fingerprint-slot></div>
 
   <input type="hidden" name="nombre"    value="<?= h($nombreParam) ?>">
   <input type="hidden" name="Host"      value="<?= h($hostPath) ?>">
@@ -81,10 +85,27 @@ $fechaSugerida     = date('Y-m-d', strtotime('+14 days'));
     <input type="hidden" name="PagoMinimo" value="<?= h((string)$pagoMinimoNum) ?>">
 
     <label for="promesa-fecha">Fecha Promesa de Pago</label>
-    <input id="promesa-fecha" class="form-control" type="date" name="Promesa" value="<?= h($fechaSugerida) ?>" required>
+    <input
+      id="promesa-fecha"
+      class="form-control"
+      type="date"
+      name="FechaPromesa"
+      value="<?= h($fechaDef) ?>"
+      required>
 
     <label for="promesa-cantidad" class="mt-2">Promesa de Pago</label>
-    <input id="promesa-cantidad" class="form-control" type="number" name="Cantidad" placeholder="Cantidad" step="0.01" min="0" required>
+    <input
+      id="promesa-cantidad"
+      class="form-control"
+      type="number"
+      name="Cantidad"
+      placeholder="Cantidad"
+      step="0.01"
+      min="0"
+      value="<?= h($cantidadDef) ?>"
+      inputmode="decimal"
+      autocomplete="off"
+      required>
   </div>
 
   <div class="modal-footer">

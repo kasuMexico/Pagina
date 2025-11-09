@@ -270,13 +270,25 @@ if (isset($_POST['DescargaPres']) || isset($_POST['EnviaPres'])) {
     ];
   }
 
-  $idInsert     = (int)$basicas->InsertCampo($pros, 'PrespEnviado', $data);
+  $idInsert = (int)$basicas->InsertCampo($pros, 'PrespEnviado', $data);
   $NvoRegistro  = base64_encode((string)$idInsert);
 
   if (isset($_POST['EnviaPres'])) {
+    //Registramos el historico de envio
     $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Enviar_Cotizacion', $Host);
-    $url = 'https://kasu.com.mx/eia/EnviarCorreo.php?EnCoti='.$NvoRegistro.'&Host='.rawurlencode((string)$Host).'&name='.rawurlencode((string)$name);
-    redirect303($url);
+    // 1) Genera token one-shot
+    $_SESSION['mail_token'] = bin2hex(random_bytes(32));
+    // 2) Arma parámetros de forma segura
+    $params = [
+      'EnCoti'      => $NvoRegistro,
+      'mail_token'  => $_SESSION['mail_token'],
+      'Redireccion' => 'https://kasu.com.mx' . $Host,
+      'name'        => rawurlencode((string)$name),
+    ];
+    // 3) Redirige
+    $base = 'https://kasu.com.mx/eia/EnviarCorreo.php';
+    header('Location: ' . $base . '?' . http_build_query($params));
+    exit;
   } else {
     $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Descargar_Cotizacion', $Host);
     $url = 'https://kasu.com.mx/login/Generar_PDF/Cotizacion_pdf.php?busqueda='.$NvoRegistro.'&Host='.rawurlencode((string)$Host).'&name='.rawurlencode((string)$name);
@@ -514,7 +526,9 @@ if (isset($_POST['FormCotizar'])) {
   if ($idInsert <= 0) {
     error_log('PRESUP_ENVIADO_FALLÓ data=' . json_encode($data, JSON_UNESCAPED_UNICODE));
   }
-
+  // 1) Genera token one-shot
+  $_SESSION['mail_token'] = bin2hex(random_bytes(32));
+  
   // Mensaje y redirección a módulo de correo
   $paginaRedireccion = 'https://kasu.com.mx/productos/gastos-funerarios';
   $mensaje = $FullNameMsg . ' tu servicio de gastos funerarios KASU tiene un costo de $' . number_format($Costo, 2, '.', ',');
@@ -524,6 +538,7 @@ if (isset($_POST['FormCotizar'])) {
     . '?EnCoti='      . rawurlencode(base64_encode((string)$idInsert))
     . '&Redireccion=' . rawurlencode($paginaRedireccion)
     . '&Msg='         . rawurlencode($mensaje)
+    . '&mail_token='  . $_SESSION['mail_token']
   );
 
 }

@@ -236,14 +236,70 @@ if (isset($_POST['Pago'])) {
         }
     }
 
-    //Validamos si el usuario estaba canceldo para cambiarlo a cobranza o activo
-    $StatusVta = $basicas->BuscarCampos($mysqli, 'Status', 'Venta', 'Id', $IdVenta);
-    if($StatusVta == 'CANCELADO' || 'PREVENTA'){
-        //Si esta cancelada la venta dar un pago la mueve a cobranza
+    /**
+     * Cambios de status conforme a pagos
+     * CANCELADO o PREVENTA -> COBRANZA
+     * COBRANZA o PREVENTA con saldo <= 0 -> ACTIVACION + correo
+     */
+
+    // 1) Datos base
+    $saldoPendiente = ($IdVenta && $financieras)
+    ? (float)$financieras->SaldoCredito($mysqli, $IdVenta)
+    : 0.0;
+
+    $StatusVta = (string)$basicas->BuscarCampos($mysqli, 'Status', 'Venta', 'Id', $IdVenta);
+
+    // Debug claro
+    echo "<br>Imprimimos el saldo pendiente => {$saldoPendiente}";
+    echo "<br>Imprimimos el Id de la Venta => {$IdVenta}";
+    echo "<br>Imprimimos el Status de la Venta => {$StatusVta}";
+
+    // Normaliza a centavos para comparar con precisión
+    $saldoCents = (int)round($saldoPendiente * 100);
+
+    // 2) Caso A: liquidado y estado en {COBRANZA, PREVENTA} => ACTIVACION + correo
+    if ($saldoCents <= 0 && in_array($StatusVta, ['COBRANZA', 'PREVENTA'], true)) {
+
+        // Auditoría
+        $seguridad->auditoria_registrar(
+            $mysqli,
+            $basicas,
+            $_POST,
+            'Correo_Liquidacion_Poliza',
+            $HostPost ?? $_SERVER['PHP_SELF']
+        );
+
+        // Cambia a ACTIVACION
+        $basicas->ActCampo($mysqli, "Venta", "Status", 'ACTIVACION', $IdVenta);
+
+        // Token one-shot para envío de correo
+        $_SESSION['mail_token'] = bin2hex(random_bytes(32));
+        echo "<br>Imprimimos el Token correo de la Venta => " . $_SESSION['mail_token'];
+
+        // Parámetros para EnviarCorreo.php
+        $base   = 'https://kasu.com.mx/eia/EnviarCorreo.php';
+        $next   = 'https://kasu.com.mx' . ($host ?? '/login/Mesa_Herramientas.php');
+        $params = [
+            'Vta_Liquidada' => (int)$IdVenta,
+            'mail_token'    => $_SESSION['mail_token'],
+            'Redireccion'   => $next,
+            'Msg'           => 'Liquidacion de poliza y envio de correo exitoso',
+        ];
+
+        // Redirección (descomenta si quieres ejecutar el envío inmediato)
+         $query = http_build_query($params, '', '&', PHP_QUERY_RFC3986);
+         header('Location: ' . $base . '?' . $query, true, 303);
+         exit;
+
+    }
+    // 3) Caso B: si no está liquidado, pero el estado es CANCELADO o PREVENTA => COBRANZA
+    elseif (in_array($StatusVta, ['CANCELADO', 'PREVENTA'], true)) {
+
         $basicas->ActCampo($mysqli, "Venta", "Status", 'COBRANZA', $IdVenta);
+        echo "<br>Cambio de status => COBRANZA";
     }
 
-    //Redireccionamos a el origen
+    //Redireccionamos al origen de la peticion
     $Msg = "Pago registrado correctamente";
     header('Location: https://kasu.com.mx' . $host . '?Msg=' . rawurlencode($Msg) . '&nombre=' . rawurlencode($nombre), true, 303);
     exit();
@@ -255,33 +311,38 @@ if (isset($_POST['Pago'])) {
 // === Fecha: 05/11/2025 | Revisado por: JCCM ===========================
 // ======================================================================
 if (isset($_POST['PromPago'])) {
-    $IdVenta    = isset($_POST['IdVenta'])    ? (int)$_POST['IdVenta'] : 0;
-    $Promesa    = isset($_POST['Promesa'])    ? $mysqli->real_escape_string((string)$_POST['Promesa']) : null;
-    $Cantidad   = isset($_POST['Cantidad'])   ? (float)$_POST['Cantidad']   : 0.0;
-    $PagoMinimo = isset($_POST['PagoMinimo']) ? (float)$_POST['PagoMinimo'] : 0.0;
+    $IdVenta       = (int)($_POST['IdVenta'] ?? 0);
 
-    if ($PagoMinimo < $Cantidad) {
-        $ids = $seguridad->auditoria_registrar(
-            $mysqli, $basicas, $_POST, 'Promesa_Pago', $_POST['Host'] ?? $_SERVER['PHP_SELF']
-        );
+    // La fecha venía como FechaPromesa en el form
+    $FechaPromesa  = $_POST['FechaPromesa'] ?? ($_POST['Promesa'] ?? null);
+    $FechaPromesa  = $FechaPromesa ? $mysqli->real_escape_string((string)$FechaPromesa) : null;
+
+    // Normaliza decimales y compara en centavos para evitar errores de punto flotante
+    $Cantidad      = isset($_POST['Cantidad'])   ? (float)str_replace([',',' '], ['.',''], (string)$_POST['Cantidad'])   : 0.0;
+    $PagoMinimo    = isset($_POST['PagoMinimo']) ? (float)str_replace([',',' '], ['.',''], (string)$_POST['PagoMinimo']) : 0.0;
+    $ok = (int)round($Cantidad * 100) >= (int)round($PagoMinimo * 100); // permitir >=
+
+    if ($ok) {
+        $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Promesa_Pago', $_POST['Host'] ?? $_SERVER['PHP_SELF']);
         $Vendedor = $basicas->BuscarCampos($mysqli, 'Usuario', 'Venta', 'Id', $IdVenta);
+
         $basicas->InsertCampo($mysqli, "PromesaPago", [
             "IdVenta"       => $IdVenta,
             "Cantidad"      => $Cantidad,
-            "Promesa"       => $Promesa,
+            "Promesa"       => $FechaPromesa,       // guarda la fecha
             "Vendedor"      => (string)$Vendedor,
             "Usuario"       => $_SESSION["Vendedor"],
             "FechaRegistro" => $hoy . " " . $HoraActual
         ]);
         $Msg = "Promesa de pago registrada correctamente";
     } else {
-        $seguridad->auditoria_registrar(
-            $mysqli, $basicas, $_POST, 'Promesa_No_Registrada', $_POST['Host'] ?? $_SERVER['PHP_SELF']
-        );
+        $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Promesa_No_Registrada', $_POST['Host'] ?? $_SERVER['PHP_SELF']);
         $Msg = "No se puede registrar una promesa menor al pago mínimo";
     }
 
-    header('Location: https://kasu.com.mx' . ($_POST['Host'] ?? '/login/Mesa_Herramientas.php') . '?Vt=1&Msg=' . rawurlencode($Msg) . '&nombre=' . rawurlencode((string)($_POST['nombre'] ?? '')), true, 303);
+    header('Location: https://kasu.com.mx' . ($_POST['Host'] ?? '/login/Mesa_Herramientas.php')
+         . '?Vt=1&Msg=' . rawurlencode($Msg)
+         . '&nombre=' . rawurlencode((string)($_POST['nombre'] ?? '')), true, 303);
     exit();
 }
 

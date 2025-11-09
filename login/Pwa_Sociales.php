@@ -60,6 +60,10 @@ function comisionPorProducto(mysqli $db, string $producto, float $porcentaje): f
 // Cache-busting seguro para CSS si no viene de fuera
 $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
 
+/* ===== Mensaje opcional por GET — 05/11/2025, JCCM ===== */
+if (isset($_GET['Msg'])) {
+  echo "<script>alert('".($_GET['Msg'])."');</script>";
+}
 ?>
 <!DOCTYPE html>
 <html lang="es-MX">

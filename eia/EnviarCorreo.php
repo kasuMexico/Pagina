@@ -13,8 +13,22 @@ require_once 'librerias.php'; // Debe definir: $Correo, $basicas, $seguridad, $p
 /** @var Correo $Correo */
 $Correo = new Correo();
 
+/* ===== Token por POST o GET  recepcion y validacion===== */
+$token  = $_POST['mail_token'] ?? $_GET['mail_token'] ?? '';
+$tok_ok = ($token && hash_equals($_SESSION['mail_token'] ?? '', $token));
+
+if (!$tok_ok) {
+  http_response_code(400);
+  exit('Solicitud inválida');
+}
+
+// One-shot
+unset($_SESSION['mail_token']);
+
 /* ===== Debug helpers (no alteran flujo) ===== */
-/* Cambia a 1 para activar debug, 0 para desactivarlo. */
+/* Cambia a 1 para activar debug, 0 para desactivarlo. 
+*  Debes comentar los reenvios de la pagina para poder ver la impresion del debug
+*/
 $DBG = 0;
 
 function dbg(string $label, $val = null): void {
@@ -43,45 +57,38 @@ function mask_email(?string $e): string {
 }
 
 /* ===== Inputs ===== */
-$EnCoti        = filter_input(INPUT_GET,  'EnCoti',       FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-$hash          = filter_input(INPUT_GET,  'hash',         FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-$MxVta         = filter_input(INPUT_GET,  'MxVta',        FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-$EnFi          = filter_input(INPUT_GET,  'EnFi',         FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-$ProReIn       = filter_input(INPUT_GET,  'ProReIn',      FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-$Servicio      = filter_input(INPUT_GET,  'Servicio',     FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-$HostGet       = filter_input(INPUT_GET,  'Host',         FILTER_UNSAFE_RAW);
-$NombreGet     = filter_input(INPUT_POST, 'name',         FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$EnCoti        = filter_input(INPUT_GET,  'EnCoti',         FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$hash          = filter_input(INPUT_GET,  'hash',           FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$MxVta         = filter_input(INPUT_GET,  'MxVta',          FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$EnFi          = filter_input(INPUT_GET,  'EnFi',           FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$ProReIn       = filter_input(INPUT_GET,  'ProReIn',        FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$Servicio      = filter_input(INPUT_GET,  'Servicio',       FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$HostGet       = filter_input(INPUT_GET,  'Host',           FILTER_UNSAFE_RAW);
+$NombreGet     = filter_input(INPUT_POST, 'name',           FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
-$EnviarPoliza  = filter_input(INPUT_POST, 'EnviarPoliza', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-$EnviarFichas  = filter_input(INPUT_POST, 'EnviarFichas', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-$EnviarEdoCta  = filter_input(INPUT_POST, 'EnviarEdoCta', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$EnviarPoliza  = filter_input(INPUT_POST, 'EnviarPoliza',   FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$EnviarFichas  = filter_input(INPUT_POST, 'EnviarFichas',   FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$EnviarEdoCta  = filter_input(INPUT_POST, 'EnviarEdoCta',   FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
-$Descripcion   = filter_input(INPUT_POST, 'Descripcion',  FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-$IdVenta       = filter_input(INPUT_POST, 'IdVenta',      FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-$Usuario       = filter_input(INPUT_POST, 'Usuario',      FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-$Event         = filter_input(INPUT_POST, 'Event',        FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-$Cupon         = filter_input(INPUT_POST, 'Cupon',        FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$Descripcion   = filter_input(INPUT_POST, 'Descripcion',    FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$Usuario       = filter_input(INPUT_POST, 'Usuario',        FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$Event         = filter_input(INPUT_POST, 'Event',          FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$Cupon         = filter_input(INPUT_POST, 'Cupon',          FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$FullNamePost  = filter_input(INPUT_POST, 'FullName',       FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$HostPost      = filter_input(INPUT_POST, 'Host',           FILTER_UNSAFE_RAW);
+$NombrePost    = filter_input(INPUT_POST, 'nombre',         FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
-$FullNamePost  = filter_input(INPUT_POST, 'FullName',     FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-$EmailPost     = filter_input(INPUT_POST, 'Email',        FILTER_SANITIZE_EMAIL);
-$IdContactPost = filter_input(INPUT_POST, 'IdContact',    FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-$HostPost      = filter_input(INPUT_POST, 'Host',         FILTER_UNSAFE_RAW);
-$NombrePost    = filter_input(INPUT_POST, 'nombre',       FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$IdVenta       = $_POST['IdVenta']   ?? $_GET['IdVenta']   ?? null;
+$IdContactPost = $_POST['IdContact'] ?? $_GET['IdContact'] ?? null;
+$EmailPost = filter_input(INPUT_POST, 'Email', FILTER_VALIDATE_EMAIL) ?? filter_input(INPUT_GET, 'Email', FILTER_VALIDATE_EMAIL);
+
+/* ===== Parámetros que enviaste en la URL ===== */
+$Vta_Liquidada = (int)($_GET['Vta_Liquidada'] ?? $_POST['Vta_Liquidada'] ?? 0);
+$Redireccion   = (string)($_GET['Redireccion']   ?? $_POST['Redireccion']   ?? '');
+$Msg           = (string)($_GET['Msg']           ?? $_POST['Msg']           ?? '');
 
 dbg('INPUT.GET', $_GET);
 dbg('INPUT.POST', $_POST);
-
-/* ===== One-shot token POST ===== */
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $token = $_POST['mail_token'] ?? '';
-  $tok_ok = ($token && hash_equals($_SESSION['mail_token'] ?? '', $token));
-  dbg('POST token check', ['provided'=> (bool)$token, 'ok'=>$tok_ok]);
-  if (!$tok_ok) {
-    http_response_code(400);
-    exit('Solicitud inválida');
-  }
-  unset($_SESSION['mail_token']);
-}
 
 /* ===== Variables base ===== */
 $stat = ""; $Asunto = ""; $Email = ""; $FullName = ""; $Id = ""; $Msg = ""; $data = []; $Redireccion = "";
@@ -155,7 +162,7 @@ if (!empty($EnCoti)) { // Enviar cotización (seguro) Revisado y funcionado 7 No
   ];
   $Id  = $IdVenta;
   $Msg = "Se enviaron las fichas de pago";
-  echo '<pre>'; print_r($_GET); echo '</pre>'; // existente
+  //echo '<pre>'; print_r($_GET); echo '</pre>'; // existente
 
 } elseif (!empty($EnviarEdoCta)) {  // Estado de cuenta Revisado y funcionado 7 Nov 2025
   dbg('Ruta: EnviarEdoCta', ['IdVenta'=>$IdVenta, 'EmailPost'=>$EmailPost]);
@@ -192,7 +199,15 @@ if (!empty($EnCoti)) { // Enviar cotización (seguro) Revisado y funcionado 7 No
   $Id   = $MxVta;
   $stat = "2";
 
-} elseif (!empty($ProReIn)) {  // Bienvenida prospecto
+} elseif (!empty($Vta_Liquidada)) {  // Bienvenida al cliente cuando ya esta pagado su servicio.
+  dbg('Ruta: Poliza_Liquidada');
+  $Asunto    = "¡BIENVENIDO A KASU!";
+  $FullName  = $basicas->BuscarCampos($mysqli, "Nombre", "Venta", "Id", $Vta_Liquidada);
+  $IdContact = $basicas->BuscarCampos($mysqli, "IdContact", "Venta",  "Id", $Vta_Liquidada);
+  $Email     = $basicas->BuscarCampos($mysqli, "Email", "Usuario", "IdContact", $IdContact);
+  $data      = ['Cte'=>$FullName, 'DirUrl'=>base64_encode((string)$IdContact)];
+  $Id        = $Vta_Liquidada;
+} elseif (!empty($ProReIn)) {  // Bienvenida al cliente cuando se registra como prospecto.
   dbg('Ruta: ProReIn', ['ProReIn'=>$ProReIn, 'Servicio'=>$Servicio]);
   $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Envio_Bienvenida', $HostPost ?? $_SERVER['PHP_SELF']);
   $FullName = $basicas->BuscarCampos($pros, "FullName", "prospectos", "Id", $ProReIn);
@@ -335,9 +350,11 @@ if ($destinatarioValido) {
   $Msg = 'No se pudo enviar: correo inválido.';
   dbg('Abortado por email inválido', $Email);
 }
+  /**
+   * ========= Redirecciones =========
+   * Se debe comentar las siguientes ligas para el Debug
+   */
 
-
- // ========= Redirecciones =========
  if ($Redireccion !== '') {
      redirect_with_msg($Redireccion, (string)$Msg,);
 

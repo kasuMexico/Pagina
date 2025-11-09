@@ -91,6 +91,8 @@ if (strcasecmp($categoria, (string)$Producto) === 0 && empty($ClaveCurpBen)) {
     // Cancelamos el registro y retornamos un mensaje
     $Msg = $NombreVenta . " El telefono o Email ya se encentra registrado en la base de datos";
 } else {
+    //Registramos el valor del mensaje exitoso si en el camino de el script se renombra con un error lo imprime
+    $Msg = "Venta registrada con exito";
     // Validamos la Clave CURP con la API Rest  
     $datosCurp = $seguridad->peticion_get($CURP);
     // Si la curp es incorrecta retona al inicio y manda un mensaje de error
@@ -307,7 +309,7 @@ if (strcasecmp($categoria, (string)$Producto) === 0 && empty($ClaveCurpBen)) {
             : (float)$basicas->BuscarCampos($mysqli, 'Subtotal', 'Venta', 'Id', $Registrar_Venta);
 
         if (method_exists($financieras, 'PagoMensual')) {
-            $amount = (float)$financieras->PagoMensual($mysqli, $Registrar_Venta);
+            $amount = (float)$financieras->PagoCredito($mysqli, $Registrar_Venta);
         } else {
             $meses  = max(1, (int)$plazo);
             $amount = round($totalFinanciado / $meses, 2);
@@ -337,10 +339,15 @@ if (strcasecmp($categoria, (string)$Producto) === 0 && empty($ClaveCurpBen)) {
         }
         // Nota: el redirect a /pago/crear_preferencia.php ya existe abajo y usa ref={$FirmaUnica}
     }
-    //Si el cliente se registro por plataforma enviar a liga de pago para cubrir el primer pago
+    //Validaciones para redirecciones segun pagos o correos
     if($Host == "/registro.php"){
+    //Si el cliente se registro por plataforma enviar a liga de pago para cubrir el primer pago
         header("Location: /pago/crear_preferencia.php?ref={$FirmaUnica}");
         exit;
+    }elseif($Host == "/Pwa_Clientes.php" || $Host == "/Pwa_Clientes.php"){
+    //Si el cliente proviene de PWA donde solo se registra la venta se envia un mensaje de bienvenida
+        header('Location: /EnviarCorreo.php?Email=' . $Email . '&IdVenta=' . $Registrar_Venta) . '&IdContact=' . $Registrar_Contacto . '&Vta_Liquidada=' . $Vta_Liquidada;
+        exit();
     }
 }
 

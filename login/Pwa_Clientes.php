@@ -79,6 +79,9 @@ if ($selCte === "CrearProspecto") {
 } elseif ($selCte === "Agregar Pago") {
   $Ventana = "Ventana2";
   $Lanzar  = "#Ventana";
+} elseif ($selCte === "Promesa de Pago"){
+  $Ventana = "Ventana3";
+  $Lanzar  = "#Ventana";
 }
 
 /* ===== Mensaje opcional por GET — 05/11/2025, JCCM ===== */
@@ -142,6 +145,8 @@ if (isset($_GET['Msg'])) {
             require 'html/EmEdoCte.php';
           } elseif ($Ventana === "Ventana2") {
             require 'html/Emergente_Registrar_Pago.php';
+          } elseif ($Ventana === "Ventana3") {
+            require 'html/Emergente_Promesa_Pago.php';
           } elseif ($Ventana === "Ventana4") {
             require 'html/NvoCliente.php';
           }

@@ -228,7 +228,7 @@ if ($qsMsg !== null) {
                         <div class="consulta">
                             <div class="form-group">
                                 <form method="POST" id="Cotizar" action="/login/php/Registro_Prospectos.php">
-                                    <div id="FingerPrint" style="display: none;"></div>
+                                    <div data-fingerprint-slot></div> <!-- DIV que lanza el Finger Print -->
                                     <input name="CURP" id="CURP" class="form-control" placeholder="Ingresar CURP" autocomplete="on" aria-label="Ingresar CURP">
                                     <br>
                                     <input type="email" name="Email" id="Email" class="form-control" placeholder="Correo electrónico" autocomplete="email" aria-label="Ingresar correo electrónico">
@@ -360,6 +360,9 @@ if ($qsMsg !== null) {
     <!-- Scripts al final -->
     <script src="/assets/js/jquery-2.1.0.min.js" defer></script>  <!-- si usas Bootstrap 3 -->
     <script src="/assets/js/bootstrap.min.js" defer></script>
+    <!-- Scripts que imprime el finger print -->
+    <script src="/login/Javascript/finger.js?v=3"></script>
+
     <script src="/assets/js/scrollreveal.min.js" defer></script>
     <script src="/assets/js/custom.js" defer></script>
     <script src="/eia/javascript/consulta_modal.js" defer></script>

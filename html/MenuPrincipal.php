@@ -43,9 +43,13 @@
               echo '<li role="none"><a style="color:black;" href="/fundacion" role="menuitem" itemprop="url"><span itemprop="name">Fundación</span></a></li>';
             }
             if ($uri_norm === '/') {
-              echo '<li role="none"><a style="font-weight: bold; color: purple;" href="#Clientes" class="comprar" role="menuitem" itemprop="url"><span itemprop="name">Comprar</span></a></li>';
+              echo '
+              <li role="none"><a style="font-weight: bold; color: purple;" href="#Clientes" class="comprar" role="menuitem" itemprop="url"><span itemprop="name">Comprar</span></a></li>
+              <li role="none"><a style="font-weight: bold; color: orange;" href="/ActualizacionDatos" class="comprar" role="menuitem" itemprop="url"><span itemprop="name">Mi Cuenta</span></a></li>
+              ';
             }
             ?>
+
           </ul>
 
           <!-- Botón hamburguesa -->

@@ -17,6 +17,7 @@ $CP             = isset($_POST['Codigo_Postal'])   ? $mysqli->real_escape_string
 $Vendedor       = isset($_POST['IdEmpleado'])      ? $mysqli->real_escape_string($_POST['IdEmpleado']) : 'Plataforma';
 $plazo          = isset($_POST['plazo'])           ? $mysqli->real_escape_string($_POST['plazo']) : '';
 $TipoServicio   = isset($_POST['TipoServicio'])    ? $mysqli->real_escape_string($_POST['TipoServicio']) : '';
+$Referencia_KASU    = isset($_POST['Referencia_KASU'])    ? $mysqli->real_escape_string($_POST['Referencia_KASU']) : '';
 
 // Normalizas los datos legales
 $TerminosRaw    = isset($_POST['Terminos'])    ? $mysqli->real_escape_string($_POST['Terminos'])    : '';
@@ -221,6 +222,34 @@ if (strcasecmp($categoria, (string)$Producto) === 0 && empty($ClaveCurpBen)) {
     $Registrar_Usuario = $basicas->InsertCampo($mysqli, 'Usuario', $data_Usuario);
 
     //Paso 5.- Registramos la venta final siempre con Status PREVENTA
+    // Paso 5.1 - llenamos tarjeta con la sesión o null si no existe
+    $tarjeta         = $_SESSION['tarjeta'] ?? null;
+    $Referencia_KASU = null;
+    $Descuento       = 0; // default cuando no hay tarjeta
+
+    // Asegura que $ids exista como arreglo
+    $ids = isset($ids) && is_array($ids) ? $ids : [];
+
+    // Validamos que tarjeta esté vacía y lanzamos el if
+    if (empty($tarjeta)) {
+        $fpId = (int)($ids['fingerprint_id'] ?? 0);
+        if ($fpId > 0) {
+            // último Id en Eventos por IdFInger y de tipo 'Cupones'
+            $IdUltimoEvento = (int)$basicas->Max2Dat(
+                $mysqli, 'Id', 'Eventos', 'IdFInger', $fpId, 'Usuario', 'Cupones'
+            );
+            if ($IdUltimoEvento > 0) {
+                // Llenamos las variables si es que existen
+                $Referencia_KASU = (string)($basicas->BuscarCampos($mysqli, 'IdUsr', 'Eventos', 'Id', $IdUltimoEvento) ?? '');
+                $tarjeta = 0;        // sin descuento
+                $Descuento = 0;      // explícito para evitar warnings posteriores
+            }
+        }
+    } else {
+        // Buscamos el descuento de la tarjeta en cuestión
+        $Descuento = (float)($basicas->BuscarCampos($mysqli, 'Descuento', 'PostSociales', 'Id', $tarjeta) ?? 0);
+    }
+
     //Generamos el Id Unico de la poliza
     $FirmaUnica = $seguridad->Firma($mysqli, $Registrar_Contacto, $Vendedor);
     //Creamos el nombre de el cliente
@@ -229,42 +258,52 @@ if (strcasecmp($categoria, (string)$Producto) === 0 && empty($ClaveCurpBen)) {
         $EdadBenef = $basicas->ObtenerEdad($ClaveCurpBen);
         //Obtenemos el producto de el beneficiario
         $Produc_Beneficiarios = $basicas->ProdFune($EdadBenef);
-        //Calculamos el valor de el producuto
-        $CostoVenta = (int)$basicas->BuscarCampos($mysqli, 'Costo', 'Productos', 'Producto', $Produc_Beneficiarios);
+        //Calculamos el valor de el producuto INICIO - REVISION 9 DE Noviembre 2025        
+        $CostoVentaOriginal = (float)$basicas->BuscarCampos($mysqli, 'Costo', 'Productos', 'Producto', $Produc_Beneficiarios);
+        // No permitir negativos ni sobre-descuento
+        $Descuento = max(0.0, (float)$Descuento);
+        if ($Descuento > $CostoVentaOriginal) $Descuento = $CostoVentaOriginal;
+        // Precio final
+        $CostoVenta = round($CostoVentaOriginal - $Descuento, 2);
+        //Calculamos el valor de el producuto FINAL - REVISION 9 DE Noviembre 2025  
         // Arma el payload
         $data_venta = [
-            'Usuario'       => $Vendedor,
-            'IdContact'     => $Registrar_Contacto,
-            'Nombre'        => $datosCurpBenef['Nombre']." ".$datosCurpBenef['Materno']." ".$datosCurpBenef['Paterno'],
-            'Producto'      => $Produc_Beneficiarios,
-            'CostoVenta'    => $CostoVenta,
-            'Idgps'         => $ids['gps_id'],
-            'Subtotal'      => 0,
-            'NumeroPagos'   => $plazo,
-            'IdFIrma'       => $FirmaUnica,
-            'Status'        => "PREVENTA",
-            'Mes'           => date("M"),
-            'Cupon'         => $_SESSION["tarjeta"],
-            'TipoServicio'  => $TipoServicio
+            'Usuario'           => $Vendedor,
+            'IdContact'         => $Registrar_Contacto,
+            'Nombre'            => $datosCurpBenef['Nombre']." ".$datosCurpBenef['Materno']." ".$datosCurpBenef['Paterno'],
+            'Producto'          => $Produc_Beneficiarios,
+            'CostoVenta'        => $CostoVenta,
+            'Idgps'             => $ids['gps_id'],
+            'Subtotal'          => 0,
+            'NumeroPagos'       => $plazo,
+            'IdFIrma'           => $FirmaUnica,
+            'Status'            => "PREVENTA",
+            'Mes'               => date("M"),
+            'Cupon'             => $tarjeta,
+            'Referencia_KASU'   => $Referencia_KASU,
+            'TipoServicio'      => $TipoServicio
         ];
     } else {
         //Calculamos el valor de el producuto
-        $CostoVenta = (int)$basicas->BuscarCampos($mysqli, 'Costo', 'Productos', 'Producto', $Produc_Registro);
+        $CostoVentaOriginal = (float)$basicas->BuscarCampos($mysqli, 'Costo', 'Productos', 'Producto', $Produc_Registro);
+        // Precio final
+        $CostoVenta = round($CostoVentaOriginal - $Descuento, 2);
         // Arma el payload
         $data_venta = [
-            'Usuario'       => $Vendedor,
-            'IdContact'     => $Registrar_Contacto,
-            'Nombre'        => $datosCurp['Nombre']." ".$datosCurp['Paterno']." ". $datosCurp['Materno'],
-            'Producto'      => $Produc_Registro,
-            'CostoVenta'    => $CostoVenta,
-            'Idgps'         => $ids['gps_id'],
-            'Subtotal'      => 0,
-            'NumeroPagos'   => $plazo,
-            'IdFIrma'       => $FirmaUnica,
-            'Status'        => "PREVENTA",
-            'Mes'           => date("M"),
-            'Cupon'         => $_SESSION["tarjeta"] ?? '',
-            'TipoServicio'  => $TipoServicio
+            'Usuario'           => $Vendedor,
+            'IdContact'         => $Registrar_Contacto,
+            'Nombre'            => $datosCurp['Nombre']." ".$datosCurp['Paterno']." ". $datosCurp['Materno'],
+            'Producto'          => $Produc_Registro,
+            'CostoVenta'        => $CostoVenta,
+            'Idgps'             => $ids['gps_id'],
+            'Subtotal'          => 0,
+            'NumeroPagos'       => $plazo,
+            'IdFIrma'           => $FirmaUnica,
+            'Status'            => "PREVENTA",
+            'Mes'               => date("M"),
+            'Cupon'             => $tarjeta,
+            'Referencia_KASU'   => $Referencia_KASU,
+            'TipoServicio'      => $TipoServicio
         ];
     }
     //Insertamos en la base de datos los datos legales

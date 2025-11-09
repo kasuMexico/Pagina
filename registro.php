@@ -66,6 +66,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'price_quote') {
     $edad = (int)$basicas->ObtenerEdad($curp);
     $prodTarifa = ($producto === 'Retiro') ? 'Retiro' : $basicas->ProdFune($edad);
     $costo = (float)$basicas->BuscarCampos($mysqli, 'Costo', 'Productos', 'Producto', $prodTarifa);
+    $tasaAnual = (float)$basicas->BuscarCampos($mysqli, 'TasaAnual', 'Productos', 'Producto', $prodTarifa);
+    $descuento = 0.0;
+    if (!empty($_SESSION['tarjeta'])) {
+      $descuento = (float)$basicas->BuscarCampos($mysqli, 'Descuento', 'PostSociales', 'Id', $_SESSION['tarjeta']);
+    }
 
     if ($producto === 'Retiro') {
       $pago = ['CONTADO' => 'CONTADO'];
@@ -82,7 +87,9 @@ if (isset($_GET['action']) && $_GET['action'] === 'price_quote') {
         'prodTarifa' => $prodTarifa,
         'edad'       => $edad,
         'pago'       => $pago,
-        'plazos'     => $plazos
+        'plazos'     => $plazos,
+        'tasaAnual'  => $tasaAnual,
+        'descuento'  => $descuento
       ]
     ], JSON_UNESCAPED_UNICODE);
   } catch (Throwable $e) {
@@ -103,15 +110,6 @@ $proName  = $proMap[$pro] ?? '';
 
 /* ===== Cupón (opcional) ===== */
 $Producto  = $_SESSION['Producto'] ?? ($proName ?: null);
-$Img=''; $Descuento=0.0; $Costo=(float)($_SESSION['Costo'] ?? 0);
-if ($Producto && !empty($_SESSION['tarjeta'])) {
-  $IdProd=(int)$basicas->BuscarCampos($mysqli,'Id','Productos','Producto',$Producto);
-  $Img   =(string)$basicas->BuscarCampos($mysqli,'Img','PostSociales','Id',$_SESSION['tarjeta']);
-  $Descuento=(float)$basicas->BuscarCampos($mysqli,'Descuento','PostSociales','Id',$_SESSION['tarjeta']);
-  $Prod  =(string)$basicas->BuscarCampos($mysqli,'Producto','PostSociales','Id',$_SESSION['tarjeta']);
-  $IdPCup=(int)$basicas->BuscarCampos($mysqli,'Id','Productos','Producto',$Prod);
-  if ($IdProd >= $IdPCup) { $Costo = max(0, $Costo - $Descuento); }
-}
 
 //Validamos si ya tiene un IdProspecto
 if(isset($_GET['idp'])){
@@ -222,9 +220,25 @@ if (isset($_GET['Msg'])) {
         <input type="hidden" name="Host" value="<?= htmlspecialchars($_SERVER['PHP_SELF'] ?? '',ENT_QUOTES,'UTF-8') ?>">
         <input type="hidden" name="Vendedor" value="Sistema">
         <input type="hidden" name="Cupon" value="<?= htmlspecialchars($_SESSION['data'] ?? '',ENT_QUOTES,'UTF-8') ?>">
+        <input type="hidden" name="tarjeta" value="<?= htmlspecialchars($_SESSION['tarjeta'] ?? '',ENT_QUOTES,'UTF-8') ?>">
+        <input type="hidden" name="Referencia_KASU" value="<?= htmlspecialchars($_SESSION['IdUsr'] ?? '',ENT_QUOTES,'UTF-8') ?>">
 
-        <div class="logo"><img src="assets/images/kasu_logo.jpeg" alt="KASU"></div>
-        <h1 class="text-center">Registra tu servicio</h1>
+        <?php
+        if(isset($_SESSION["tarjeta"])){
+            $imgCupon = $basicas->BuscarCampos($mysqli, "Img", "PostSociales", "Id", $_SESSION["tarjeta"]);
+            $Descuento = $basicas->BuscarCampos($mysqli, "Descuento", "PostSociales", "Id", $_SESSION["tarjeta"]);
+            echo '
+              <div class="logo"><img class="img-thumbnail" src="/assets/images/cupones/' . htmlspecialchars($imgCupon, ENT_QUOTES) . '"></div>
+              <h1 class="text-center">Registra tu servicio con un descuento de $ '. number_format((float)$Descuento, 2) . '</h1>
+            ';
+            
+        }else{
+            echo '
+              <div class="logo"><img src="assets/images/kasu_logo.jpeg" alt="KASU"></div>
+              <h1 class="text-center">Registra tu servicio</h1>
+            ';
+        }
+        ?>
 
         <!-- Precio -->
         <div id="preview-precio" style="display:none; margin:10px 0 18px 0">
@@ -258,6 +272,11 @@ if (isset($_GET['Msg'])) {
           <input type="hidden" id="pp_prodTarifa" name="ProdTarifa" value="">
           <input type="hidden" id="pp_edad" name="Edad" value="">
           <input type="hidden" id="pp_costo" name="Costo" value="">
+          <!-- NUEVOS: para intereses y descuento -->
+          <input type="hidden" id="pp_tasa" name="TasaAnual" value="">
+          <input type="hidden" id="pp_descuento" name="DescuentoAplicado" value="">
+          <input type="hidden" id="pp_total" name="MontoTotal" value="">
+          <input type="hidden" id="pp_mensual" name="PagoMensual" value="">
         </div>
 
         <!-- Selección de producto -->
@@ -365,6 +384,34 @@ async function curpLookup(curp){
   }catch(e){}
 }
 
+/* ===== Cálculo con descuento y tasa ===== */
+// Pago periódico francés
+function pagoSI(tasaAnual, meses, principal){
+  principal = Math.max(+principal || 0, 0);
+  meses = parseInt(meses,10) || 1;
+  if (meses <= 1) return { mensual: principal, total: principal }; // contado sin interés
+  var tm = (+tasaAnual / 100) / 12;
+  if (!isFinite(tm) || tm <= 0) return { mensual: principal/meses, total: principal };
+  var factor = Math.pow(1 + tm, meses);
+  var p = (principal * tm * factor) / (factor - 1);
+  return { mensual: p, total: p * meses };
+}
+
+function updateMonto(){
+  var costo = +document.getElementById('pp_costo').value || 0;
+  var tasa  = +document.getElementById('pp_tasa').value  || 0;
+  var desc  = +document.getElementById('pp_descuento').value || 0;
+  var meses = parseInt(document.getElementById('pp_plazo').value,10);
+  if (!isFinite(meses)) meses = 1;
+
+  var principal = Math.max(costo - desc, 0);
+  var r = pagoSI(tasa, meses, principal);
+
+  document.getElementById('pp_monto').textContent = formato(r.total);
+  document.getElementById('pp_total').value = r.total.toFixed(2);
+  document.getElementById('pp_mensual').value = r.mensual.toFixed(2);
+}
+
 // Cotización + único select de plazos
 async function cotizar(){
   const priceWrap = document.getElementById('preview-precio');
@@ -381,10 +428,11 @@ async function cotizar(){
     if(!j.ok){ if(priceWrap) priceWrap.style.display='none'; return; }
 
     const d=j.data||{};
-    document.getElementById('pp_monto').textContent = formato(d.costo||0);
     document.getElementById('pp_costo').value       = d.costo||0;
     document.getElementById('pp_prodTarifa').value  = d.prodTarifa||'';
     document.getElementById('pp_edad').value        = d.edad||'';
+    document.getElementById('pp_tasa').value        = d.tasaAnual||0;
+    document.getElementById('pp_descuento').value   = d.descuento||0;
 
     const $plazo     = document.getElementById('pp_plazo');
     const $plazoWrap = document.getElementById('pp_plazo_wrap');
@@ -404,6 +452,8 @@ async function cotizar(){
     });
 
     if ($plazoWrap) $plazoWrap.style.display = '';
+
+    updateMonto();
     if (priceWrap) priceWrap.style.display='';
   }catch(e){
     if(priceWrap) priceWrap.style.display='none';
@@ -430,6 +480,11 @@ $curp.addEventListener('blur', () => {
   if (!ok) return;
   curpLookup($curp.value);
   cotizar();
+});
+
+// Recalcula al cambiar el select de plazo
+document.addEventListener('change', function(e){
+  if (e.target && e.target.id === 'pp_plazo') updateMonto();
 });
 
 document.addEventListener('DOMContentLoaded', function(){

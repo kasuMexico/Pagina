@@ -11,7 +11,6 @@ declare(strict_types=1);
 /* ==========================================================================================
  * BLOQUE: Datos de usuario / comisiones
  * ========================================================================================== */
-
 $PorCom = (float)($basicas->BuscarCampos($mysqli, 'N' . 7, 'Comision', 'Id', 2) ?? 0);
 
 /* ==========================================================================================
@@ -32,6 +31,7 @@ function getPostById(mysqli $db, int $id, string $tipo): ?array {
   return $row ?: null;
 }
 
+/** Comisión por producto mostrado */
 function comisionPorProducto(mysqli $db, string $producto, float $porcentaje): float {
   $gen = (float)($GLOBALS['basicas']->BuscarCampos($db, 'comision', 'Productos', 'Producto', $producto) ?? 0);
   return $gen * ($porcentaje / 100.0);
@@ -40,47 +40,35 @@ function comisionPorProducto(mysqli $db, string $producto, float $porcentaje): f
 /* ==========================================================================================
  * BLOQUE: Identidad de referidos y share URLs
  * ========================================================================================== */
+$IdFirma = (string)($venta['IdFIrma'] ?? ($_SESSION['Vendedor'] ?? ''));
 
-// IdFirma del vendedor definida desde la venta
-$IdFirma = (string)($venta['IdFirma'] ?? '');
-// Fallback seguro si por alguna razón no viene en $venta
-if ($IdFirma === '') {
-  $IdFirma = (string)($_SESSION['Vendedor'] ?? '');
-}
-// Variable usada en payloads anteriores
-$Vendedor = $IdFirma;
-
-// Helper para construir URLs de share con payload y UTM
+/** URLs de share por red */
 function buildShare(array $reg, string $idFirma): array {
-  $payload = (string)($reg['Id'] ?? '') . '|' . $idFirma; // IdPost|IdFirma
-  $dest    = 'https://kasu.com.mx/constructor.php?datafb=' . urlencode(base64_encode($payload));
-  // UTM para analítica
-  $destUtm = $dest
-    . '&utm_source=' . rawurlencode((string)($reg['Red'] ?? ''))
-    . '&utm_medium=social_share'
-    . '&utm_campaign=referral'
-    . '&utm_content=' . rawurlencode((string)($reg['Id'] ?? ''));
+  $payload = (string)($reg['Id'] ?? '') . '|' . $idFirma;
+  $dest = 'https://kasu.com.mx/constructor.php?datafb=' . base64_encode($payload);
+  $tit  = (string)($reg['TitA'] ?? '');
+  $txt  = (string)($reg['DesA'] ?? '');
 
   return [
-    'dest' => $destUtm, // URL canónica a compartir con Web Share API
-    'fb'   => 'https://www.facebook.com/sharer/sharer.php?u=' . urlencode($destUtm),
-    'x'    => 'https://twitter.com/intent/tweet?text='
-              . urlencode((string)($reg['DesA'] ?? ''))
-              . '&url=' . urlencode($destUtm),
+    'dest' => $dest,
+    'fb'   => 'https://www.facebook.com/sharer/sharer.php?u=' . rawurlencode($dest),
+    'x'    => 'https://twitter.com/intent/tweet?text=' . rawurlencode(trim("$tit $txt"))
+             . '&url=' . rawurlencode($dest),
+    'li'   => 'https://www.linkedin.com/sharing/share-offsite/?url=' . rawurlencode($dest),
   ];
 }
-
-// Cache-busting seguro para CSS si no viene de fuera
-$VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
-
 ?>
+<style>
+  .share-row{display:flex;gap:.5rem;align-items:center;margin:.5rem 0}
+  .ico-social{width:36px;height:36px;object-fit:contain;vertical-align:middle}
+  .thumb-social{width:28px;height:28px;border-radius:50%;object-fit:cover}
+  .x-wrap{display:flex;align-items:center;gap:.35rem}
+</style>
+
 <section id="sec-sociales" class="section">
-  <!-- Contenido entre barras -->
   <main class="page-content">
     <div class="container">
-      <!-- Bootstrap 4: sin g-4. Espaciado con mb-4 en columnas -->
       <div class="row">
-
         <?php
         /* ======= Cupones de Venta (6 items) ======= */
         $b = (int)$basicas->Max1Dat($mysqli, 'Id', 'PostSociales', 'Tipo', 'Vta');
@@ -89,25 +77,36 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
           $Reg = getPostById($mysqli, $c, 'Vta');
           if ($Reg) {
             $share = buildShare($Reg, $IdFirma);
-
             $Comis = comisionPorProducto($mysqli, (string)$Reg['Producto'], $PorCom);
             ?>
-            <div class="col-12 col-md-6 mb-4"><!-- 1 por fila en móvil, 2 en >=md -->
+            <div class="col-12 col-md-6 mb-4">
               <div class="card h-100">
                 <div class="card-body">
-                  <a class="ContCupon d-block mb-2" href="javascript:void(0);"
-                     onclick="shareSmart('<?= $share['dest'] ?>','<?= htmlspecialchars((string)$Reg['TitA'], ENT_QUOTES) ?>','<?= htmlspecialchars((string)$Reg['DesA'], ENT_QUOTES) ?>','<?= $share['fb'] ?>'); return false;">
-                    <img class="img-fluid w-100"
-                         src="https://kasu.com.mx/assets/images/cupones/<?= htmlspecialchars((string)$Reg['Img'], ENT_QUOTES) ?>"
-                         alt="">
-                  </a>
+                  <!-- Imagen principal: ya NO es link -->
+                  <img class="img-fluid w-100"
+                       src="https://kasu.com.mx/assets/images/cupones/<?= htmlspecialchars((string)$Reg['Img'], ENT_QUOTES) ?>"
+                       alt="Cupón">
 
-                  <a class="BtnSocial d-inline-block mb-2" href="javascript:void(0);"
-                     onclick="shareSmart('<?= $share['dest'] ?>','<?= htmlspecialchars((string)$Reg['TitA'], ENT_QUOTES) ?>','<?= htmlspecialchars((string)$Reg['DesA'], ENT_QUOTES) ?>','<?= $share['fb'] ?>'); return false;">
-                    <img src="/login/assets/img/sociales/<?= htmlspecialchars((string)$Reg['Red'], ENT_QUOTES) ?>.png"
-                         alt="Compartir cupones" style="width: 50px;">
-                  </a>
+                  <!-- Íconos de share -->
+                  <div class="share-row">
+                    <a href="<?= htmlspecialchars($share['fb'], ENT_QUOTES) ?>" target="_blank" rel="noopener" aria-label="Compartir en Facebook">
+                      <img class="ico-social" src="/login/assets/img/sociales/facebook.png" alt="Facebook">
+                    </a>
 
+                    <a href="<?= htmlspecialchars($share['x'], ENT_QUOTES) ?>" target="_blank" rel="noopener" aria-label="Compartir en X">
+                      <img class="ico-social" src="/login/assets/img/sociales/x.png" alt="X">
+                    </a>
+
+                    <a href="<?= htmlspecialchars($share['li'], ENT_QUOTES) ?>" target="_blank" rel="noopener" aria-label="Compartir en LinkedIn">
+                      <img class="ico-social" src="/login/assets/img/sociales/LinkedIn.png" alt="LinkedIn">
+                    </a>
+
+                    <a href="#" onclick="shareInstagram('<?= htmlspecialchars($share['dest'], ENT_QUOTES) ?>');return false;" aria-label="Compartir en Instagram">
+                      <img class="ico-social" src="/login/assets/img/sociales/instagram.png" alt="Instagram">
+                    </a>
+                  </div>
+                  <hr>
+                  <br>
                   <div class="ContCupon">
                     <h2 class="h5">Com/Vta $<?= number_format($Comis, 2) ?></h2>
                     <h3 class="h6 mb-2"><?= htmlspecialchars((string)$Reg['TitA'], ENT_QUOTES) ?></h3>
@@ -142,18 +141,30 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
             <div class="col-12 col-md-6 mb-4">
               <div class="card h-100">
                 <div class="card-body">
-                  <a class="ContCupon d-block mb-2" href="javascript:void(0);"
-                     onclick="shareSmart('<?= $share['dest'] ?>','<?= htmlspecialchars((string)$Reg['TitA'], ENT_QUOTES) ?>','<?= htmlspecialchars((string)$Reg['DesA'], ENT_QUOTES) ?>','<?= $share['fb'] ?>'); return false;">
-                    <img class="img-fluid w-100"
-                         src="<?= htmlspecialchars((string)$Reg['Img'], ENT_QUOTES) ?>" alt="">
-                  </a>
+                  <!-- Imagen principal: ya NO es link -->
+                  <img class="img-fluid w-100"
+                       src="<?= htmlspecialchars((string)$Reg['Img'], ENT_QUOTES) ?>" alt="Artículo">
 
-                  <a class="BtnSocial d-inline-block mb-2" href="javascript:void(0);"
-                     onclick="shareSmart('<?= $share['dest'] ?>','<?= htmlspecialchars((string)$Reg['TitA'], ENT_QUOTES) ?>','<?= htmlspecialchars((string)$Reg['DesA'], ENT_QUOTES) ?>','<?= $share['fb'] ?>'); return false;">
-                    <img src="/login/assets/img/sociales/<?= htmlspecialchars((string)$Reg['Red'], ENT_QUOTES) ?>.png"
-                         alt="Archivo a compartir" style="width: 50px;">
-                  </a>
+                  <!-- Íconos de share -->
+                  <div class="share-row">
+                    <a href="<?= htmlspecialchars($share['fb'], ENT_QUOTES) ?>" target="_blank" rel="noopener" aria-label="Compartir en Facebook">
+                      <img class="ico-social" src="/login/assets/img/sociales/facebook.png" alt="Facebook">
+                    </a>
 
+                    <a href="<?= htmlspecialchars($share['x'], ENT_QUOTES) ?>" target="_blank" rel="noopener" aria-label="Compartir en X">
+                      <img class="ico-social" src="/login/assets/img/sociales/x.png" alt="X">
+                    </a>
+
+                    <a href="<?= htmlspecialchars($share['li'], ENT_QUOTES) ?>" target="_blank" rel="noopener" aria-label="Compartir en LinkedIn">
+                      <img class="ico-social" src="/login/assets/img/sociales/LinkedIn.png" alt="LinkedIn">
+                    </a>
+
+                    <a href="#" onclick="shareInstagram('<?= htmlspecialchars($share['dest'], ENT_QUOTES) ?>');return false;" aria-label="Compartir en Instagram">
+                      <img class="ico-social" src="/login/assets/img/sociales/instagram.png" alt="Instagram">
+                    </a>
+                  </div>
+                  <hr>
+                  <br>
                   <div class="ContCupon">
                     <h2 class="h5">Lectura $<?= number_format($Comis, 2) ?></h2>
                     <h3 class="h6 mb-2"><?= htmlspecialchars((string)$Reg['TitA'], ENT_QUOTES) ?></h3>
@@ -167,25 +178,27 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
           }
         }
         ?>
-
       </div><!-- /.row -->
       <br><br><br><br>
     </div><!-- /.container -->
   </main>
 </section>
 
-<!-- Web Share API primero; fallback sharer de Facebook -->
+<!-- Instagram: Web Share o copiar enlace -->
 <script>
-function shareSmart(url, titulo, texto, fallbackFb){
-  try{
-    if (navigator.share) {
-      navigator.share({ title: titulo || '', text: texto || '', url: url })
-        .catch(function(){ window.open(fallbackFb, '_blank', 'noopener,noreferrer'); });
-    } else {
-      window.open(fallbackFb, '_blank', 'noopener,noreferrer');
-    }
-  } catch(_){
-    window.open(fallbackFb, '_blank', 'noopener,noreferrer');
+function shareInstagram(url){
+  if (navigator.share){
+    navigator.share({url}).catch(function(){copyUrl(url);});
+  } else {
+    copyUrl(url);
+  }
+}
+function copyUrl(text){
+  try {
+    navigator.clipboard.writeText(text);
+    alert('Enlace copiado. Abre Instagram y pégalo en tu publicación o bio.');
+  } catch(e){
+    prompt('Copia el enlace:', text);
   }
 }
 </script>

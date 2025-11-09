@@ -278,7 +278,7 @@ if($Reg['Producto'] === 'Policias') {
               $imgCupon = $basicas->BuscarCampos($mysqli, "Img", "PostSociales", "Id", $_SESSION["tarjeta"]);
               echo '<br><img class="img-thumbnail" src="/assets/images/cupones/' . htmlspecialchars($imgCupon, ENT_QUOTES) . '" style="width: 15em;"><br>';
               $buyUrl = url_with_idp('/registro.php?pro=' . $dat, $idp);
-              echo '<a href="' . htmlspecialchars($buyUrl, ENT_QUOTES) . '" class="main-button-slider-pol"><strong>Comprar - $' . number_format((float)$Desc, 2) . '</strong></a><br>';
+              echo '<a href="' . htmlspecialchars($buyUrl, ENT_QUOTES) . '" class="main-button-slider-pol"><strong>Descuento hoy $ ' . number_format((float)$Desc, 2) . '</strong></a><br>';
             } elseif (!empty($preference)) {
               // Enlace directo a Mercado Pago: no se anexa idp
               echo '<br><a href="' . htmlspecialchars($preference, ENT_QUOTES) . '" class="main-button-slider-pol"><strong>Comprar</strong></a><br><br>';
@@ -339,7 +339,7 @@ if($Reg['Producto'] === 'Policias') {
                 $imgCupon = $basicas->BuscarCampos($mysqli, "Img", "PostSociales", "Id", $_SESSION["tarjeta"]);
                 echo '<br><img class="img-thumbnail" src="/assets/images/cupones/' . htmlspecialchars($imgCupon, ENT_QUOTES) . '" style="width: 15em;"><br>';
                 $buyUrl = url_with_idp('/registro.php?pro=' . $dat, $idp);
-                echo '<a href="' . htmlspecialchars($buyUrl, ENT_QUOTES) . '" class="main-button-slider-pol"><strong>Comprar - $' . number_format((float)$Desc, 2) . '</strong></a><br>';
+                echo '<a href="' . htmlspecialchars($buyUrl, ENT_QUOTES) . '" class="main-button-slider-pol"><strong>Descuento hoy $ ' . number_format((float)$Desc, 2) . '</strong></a><br>';
               } elseif (!empty($preference)) {
                 echo '<br><a href="' . htmlspecialchars($preference, ENT_QUOTES) . '" class="main-button-slider-pol"><strong>Comprar</strong></a><br><br>';
               } elseif($Reg['Producto'] !== 'Funerario') {

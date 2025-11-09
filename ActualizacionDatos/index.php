@@ -120,46 +120,25 @@ function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES,
             <div class="icon">
               <img src="../assets/images/Index/florkasu.png" alt="Kasu Logo">
             </div>
-            <h1 class="features-title">Ingresar a mi cuenta</h1>
+            <h1 class="features-title">Ingresar a mi cuenta KASU</h1>
             
             <div class="pricing-body">
               </br>
               <hr>
-              <h2 class="mb-1">Plan de Referidos</h2>
-              <p class="mb-1">Recuerda que por cada cliente efectivo que refieras para cualquier producto KASU, puedes obtener</p>
-              <h2>Hasta $300 MXN</h2>
+              <h2 class="mb-1"><strong>Plan de Referidos</strong></h2>
+              <p class="mb-1">Genera ingresos extras solo por ser cliente KASU</p>
+              <h2>Comparte en redes sociales y <strong>genera dinero real</strong></h2>
               <hr>
             </div>
-
-            <?php if ($curp === ''): ?>
-              <!-- Form: solo CURP -->
-              <form method="POST" id="FormCurp" action="php/datos.php" autocomplete="off" novalidate class="consulta">
-                <label for="txtCurp_St1">Ingresa tu CURP</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="txtCurp_St1"
-                  name="txtCurp_St1"
-                  maxlength="18"
-                  inputmode="latin"
-                  pattern="^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z0-9]{2}$"
-                  placeholder="AAAA000000HAAAXX"
-                  required
-                >
-                <!-- honeypot -->
-                <input type="text" name="hp" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0;">
-                <div class="text-center mt-3">
-                  <button type="submit" id="btnVerCur" name="btnVerCur" class="main-button-slider">Continuar</button>
-                </div>
-              </form>
-
-            <?php else: ?>
               <!-- Form: CURP fija + Póliza -->
               <form method="POST" id="FormCurpPoliza" action="php/datos.php" autocomplete="off" novalidate class="consulta">
                 <label>CURP</label>
-                <input type="text" class="form-control" value="<?php echo h($curp); ?>" disabled>
-                <input type="hidden" name="txtCurp_ActIndCli" value="<?php echo h($curp); ?>">
-
+                <?php if (isset($_GET['value'])): ?>
+                  <input type="text" class="form-control" value="<?php echo h($curp); ?>" disabled>
+                  <input type="hidden" name="txtCurp_ActIndCli" value="<?php echo h($curp); ?>">
+                <?php else: ?>
+                  <input type="text" class="form-control" name="txtCurp_ActIndCli" placeholder="Clave CURP">
+                <?php endif; ?>
                 <label for="txtNumTarjeta_ActIndCli" class="mt-3">No. de Póliza</label>
                 <input
                   type="text"
@@ -167,7 +146,7 @@ function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES,
                   id="txtNumTarjeta_ActIndCli"
                   name="txtNumTarjeta_ActIndCli"
                   maxlength="20"
-                  placeholder="Ej. ABCD1234"
+                  placeholder="Identificador unico de Poliza"
                   required
                 >
                 <!-- honeypot -->
@@ -178,7 +157,6 @@ function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES,
                 </div>
 
               </form>
-            <?php endif; ?>
 
           </div><!-- /.features-small-item -->
 

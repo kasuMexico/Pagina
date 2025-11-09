@@ -194,6 +194,11 @@ if ($Niv >= 5) {
     collect_bucket($mysqli, $bucket_sem2,     $vend, $nomS, 'pp.Promesa BETWEEN ? AND ?', [$vend, $W2_I, $W2_F]);
   }
 }
+
+/* ===== Mensaje opcional por GET — 05/11/2025, JCCM ===== */
+if (isset($_GET['Msg'])) {
+  echo "<script>alert('".($_GET['Msg'])."');</script>";
+}
 ?>
 <!DOCTYPE html>
 <html lang="es-MX">
@@ -263,9 +268,9 @@ if ($Niv >= 5) {
   <!-- JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
-  <script src="Javascript/fingerprint-core-y-utils.js"></script>
-  <script src="Javascript/finger.js"></script>
-  <script src="Javascript/localize.js"></script>
+  <script src="Javascript/finger.js?v=3"></script>
+  <script src="Javascript/localize.js?v=3"></script>
+  <script src="Javascript/Inyectar_gps_form.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       <?php if (!empty($Ventana)) : ?> $('#Ventana2').modal('show'); <?php endif; ?>

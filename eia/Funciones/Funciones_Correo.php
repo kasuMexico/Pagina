@@ -547,7 +547,7 @@ HTML;
         </tr>
         <tr>
           <td bgcolor="#ffffff" align="justify" style="padding:5px 25px 30px 25px; font-family:Arial, sans-serif; font-size:16px; line-height:20px; color:#666666;">
-            <p style="font-size:16px; font-family:Arial, sans-serif; line-height:24px; color:#ffffff;">
+            <p style="font-size:16px; font-family:Arial, sans-serif; line-height:24px; color:#666666;">
               Si tienes alguna duda o necesitas asistencia, por favor comunicate a nuestro centro de atencion:<br>
               <b>720 817 7632</b>
             </p>

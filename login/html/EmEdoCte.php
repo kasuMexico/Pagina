@@ -38,10 +38,7 @@ $NumeroSUc     = (int)$basicas->BuscarCampos($mysqli, 'Sucursal', 'Empleados', '
 $Sucursal      = h((string)$basicas->BuscarCampos($mysqli, 'nombreSucursal', 'Sucursal', 'IdSucursal', $NumeroSUc));
 
 // Botones según nivel/estatus
-$BtnPago = '';
-if ($Niv !== 7 && ($statusVtaPost === 'COBRANZA' || $statusVtaPost === 'PREVENTA')) {
-    $BtnPago = '<input type="submit" name="SelCte" class="btn btn-primary" value="Agregar Pago">';
-}
+
 //SI LA VENTA ESTA EN ESTATUS DE PREVENTA
 if($statusVtaPost === 'PREVENTA'){
     $estadoTxt = 'POLIZA EN PREVENTA';
@@ -89,6 +86,15 @@ if ($Niv !== 2 && $idRegForLink > 0) {
   </div>
 
   <div class="modal-footer">
-    <?= $BtnPago . $BtnCta ?>
+    <?= 
+    $BtnPago = '';
+    if ($Niv !== 7 && $statusVtaPost === 'COBRANZA') {
+        echo $BtnPago = '<input type="submit" name="SelCte" class="btn btn-primary" value="Agregar Pago">';
+        echo $BtnCta; 
+    }elseif ($Niv !== 7 && $statusVtaPost === 'PREVENTA') {
+        echo $BtnPago = '<input type="submit" name="SelCte" class="btn btn-primary" value="Agregar Pago">';
+        echo $BtnPrmesa = '<input type="submit" name="SelCte" class="btn btn-warning" value="Promesa de Pago">';
+    }
+    ?>
   </div>
 </form>

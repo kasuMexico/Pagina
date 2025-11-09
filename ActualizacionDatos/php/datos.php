@@ -118,54 +118,88 @@ foreach ($checkers as $label => $method) {
 /* 3.1 Mes filtrado */
 $mesSel = $_POST['fmes'] ?? '';
 if (!preg_match('/^\d{4}-\d{2}$/', $mesSel)) { $mesSel = date('Y-m'); }
-$iniMes = $mesSel . '-01 00:00:00';
-$finMes = date('Y-m-t 23:59:59', strtotime($mesSel.'-01'));
+$iniMes = $mesSel . '-01 00:00:00'; //Fecha Inicio de Mes
+$finMes = date('Y-m-t 23:59:59', strtotime($mesSel.'-01')); //Fecha final de Mes
 
 /* 3.2 Porcentaje de cobro por producto y año */
+
+/* 3.2.1) Determina el año a usar, para calculo de los montos de referencia segun esten validos en el año
+      - Preferente: año de FechaRegistro de la venta
+      - Alterno: año de $iniMes si no hay FechaRegistro */
 $anioVenta = !empty($venta['FechaRegistro'])
   ? (int)date('Y', strtotime($venta['FechaRegistro']))
   : (int)date('Y', strtotime($iniMes));
 
+/* 3.2.2) Inicializa el porcentaje como null para saber si hubo match en BD */
 $porcCobr = null;
+
+/* 3.2.3) Intenta obtener Porc_Cobr para el producto en el año de la venta */
 $qPC = 'SELECT `Porc_Cobr` FROM `Productos` WHERE `Producto`=? AND `Validez`=? LIMIT 1';
 if ($st = $mysqli->prepare($qPC)) {
+  // 'si' = string (Producto), int (Validez)
   $st->bind_param('si', $venta['Producto'], $anioVenta);
-  $st->execute(); $r = $st->get_result();
-  if ($r && $r->num_rows) { $porcCobr = (float)$r->fetch_assoc()['Porc_Cobr']; }
+  $st->execute();
+  $r = $st->get_result();
+  if ($r && $r->num_rows) {
+    $porcCobr = (float)$r->fetch_assoc()['Porc_Cobr'];
+  }
   $st->close();
 }
+
+/* 3.2.4) Fallback: si no hay registro para ese año, intenta con el año actual */
 if ($porcCobr === null) {
   $anioHoy = (int)date('Y');
   if ($st = $mysqli->prepare($qPC)) {
     $st->bind_param('si', $venta['Producto'], $anioHoy);
-    $st->execute(); $r = $st->get_result();
-    if ($r && $r->num_rows) { $porcCobr = (float)$r->fetch_assoc()['Porc_Cobr']; }
+    $st->execute();
+    $r = $st->get_result();
+    if ($r && $r->num_rows) {
+      $porcCobr = (float)$r->fetch_assoc()['Porc_Cobr'];
+    }
     $st->close();
   }
 }
+
+/* 3.2.5) Fallback final: toma el último porcentaje disponible por Validez descendente */
 if ($porcCobr === null) {
   $qUlt = 'SELECT `Porc_Cobr` FROM `Productos` WHERE `Producto`=? ORDER BY `Validez` DESC LIMIT 1';
   if ($st = $mysqli->prepare($qUlt)) {
     $st->bind_param('s', $venta['Producto']);
-    $st->execute(); $r = $st->get_result();
-    if ($r && $r->num_rows) { $porcCobr = (float)$r->fetch_assoc()['Porc_Cobr']; }
+    $st->execute();
+    $r = $st->get_result();
+    if ($r && $r->num_rows) {
+      $porcCobr = (float)$r->fetch_assoc()['Porc_Cobr'];
+    }
     $st->close();
   }
 }
+
+/* 3.2.6) Si no se encontró nada en BD, usa 0.0 por defecto */
 if ($porcCobr === null) { $porcCobr = 0.0; }
-$porc = max(0.0, min(1.0, $porcCobr / 100.0)); // ejemplo: 14 -> 0.14
 
-/* 3.3 Pagos del periodo: ventas ligadas + aplicación de pagos POR MES (FIFO) */
+/* 3.2.7) Normaliza a proporción [0..1] y acota:
+      - Ejemplo: 14 => 0.14
+      - Protege contra valores negativos o >100 */
+$porc = max(0.0, min(1.0, $porcCobr / 100.0));
 
-/* 3.3.1 IdFirma e identificación de ventas ligadas */
-$miIdFirma = trim((string)($venta['IdFIrma'] ?? ''));
+/* 3.3 Pagos del periodo */
+
+/* 3.3.1 IdFirma e identificación de ventas ligadas
+   - Toma el IdFIrma/Referencia del vendedor desde la venta actual.
+   - Busca TODAS las ventas cuya TRIM(Usuario) = IdFIrma.
+   - Llena $ventasMeta con Id, Producto y FechaRegistro.
+   - Si no hay resultados, al menos agrega la venta actual para no romper el flujo. 
+   - Debemos buscar las ventas que t
+   */
+$Vendedor = $miIdFirma = trim((string)($venta['IdFIrma'] ?? ''));
+
 
 $ventasMeta = []; // [IdVenta] => ['Producto'=>..., 'FechaRegistro'=>...]
 $qVL = 'SELECT v.`Id`, v.`Producto`, v.`FechaRegistro`
         FROM `Venta` v
-        WHERE TRIM(v.`Referencia_KASU`) = ? OR TRIM(v.`IdFIrma`) = ?';
+        WHERE TRIM(v.`Referencia_KASU`) = ?';
 $stVL = $mysqli->prepare($qVL);
-$stVL->bind_param('ss', $miIdFirma, $miIdFirma);
+$stVL->bind_param('s', $miIdFirma);
 $stVL->execute();
 $rsVL = $stVL->get_result();
 while ($rsVL && $rowVL = $rsVL->fetch_assoc()) {
@@ -175,19 +209,16 @@ while ($rsVL && $rowVL = $rsVL->fetch_assoc()) {
   ];
 }
 $stVL->close();
-if (!$ventasMeta && !empty($venta['Id'])) {
-  $ventasMeta[(int)$venta['Id']] = [
-    'Producto'      => (string)($venta['Producto'] ?? ''),
-    'FechaRegistro' => (string)($venta['FechaRegistro'] ?? ''),
-  ];
-}
 
-/* 3.3.2 Pagos del MES para esas ventas */
+/* 3.3.2 Pagos del MES para esas ventas
+   - Si hay ventas relacionadas, arma un IN dinámico con placeholders.
+   - Recupera pagos dentro del rango [iniMes, finMes].
+   - Ordena por FechaRegistro e Id para aplicar FIFO después. */
 $pagos = [];
 if ($ventasMeta) {
   $ids = array_keys($ventasMeta);
-  $ph  = implode(',', array_fill(0, count($ids), '?'));
-  $tp  = str_repeat('i', count($ids)) . 'ss';
+  $ph  = implode(',', array_fill(0, count($ids), '?')); // ?,?,?... tantos como ids
+  $tp  = str_repeat('i', count($ids)) . 'ss';           // tipos: i...i + s + s (fechas)
 
   $qPag = "SELECT `Id`,`Cantidad`,`IdVenta`,`FechaRegistro`,`Referencia`
            FROM `Pagos`
@@ -195,14 +226,16 @@ if ($ventasMeta) {
              AND `FechaRegistro` BETWEEN ? AND ?
            ORDER BY `FechaRegistro` ASC, `Id` ASC";
   $stP = $mysqli->prepare($qPag);
-  $bind = $ids;
-  $bind[] = $iniMes;
-  $bind[] = $finMes;
+  $bind = $ids;        // primeros N = IdVenta (int)
+  $bind[] = $iniMes;   // penúltimo = inicio rango (string)
+  $bind[] = $finMes;   // último   = fin rango (string)
   $stP->bind_param($tp, ...$bind);
   $stP->execute();
   $rP = $stP->get_result();
 
-  /* 3.3.3 Total de comisiones pagadas del MES a este IdVendedor */
+  /* 3.3.3 Total de comisiones pagadas del MES a este IdVendedor
+     - Suma lo que YA fue pagado al vendedor en el mes.
+     - Se usará para cubrir comisiones esperadas (FIFO). */
   $totPagadoMes = 0.0;
   $qCom = "SELECT COALESCE(SUM(`Cantidad`),0) AS s
            FROM `Comisiones_pagos`
@@ -213,15 +246,18 @@ if ($ventasMeta) {
   if ($rc = $stC->get_result()) { $totPagadoMes = (float)$rc->fetch_assoc()['s']; }
   $stC->close();
 
-  /* 3.3.4 FIFO: aplica lo pagado del MES contra comisiones del MES */
+  /* 3.3.4 FIFO: aplica lo pagado del MES contra comisiones del MES
+     - Para cada pago de cliente calcula comisión esperada = monto * $porc.
+     - Resta del “saldoPago” lo ya cubierto en el mes.
+     - Marca cada renglón como Pagado si la comisión quedó en 0, si no Pendiente. */
   $saldoPago = $totPagadoMes;
   while ($rP && $row = $rP->fetch_assoc()) {
     $monto  = (float)$row['Cantidad'];
     $comEsp = round($monto * $porc, 2);
 
-    $cubierto   = min($comEsp, max(0.0, $saldoPago));
-    $saldoPago -= $cubierto;
-    $pendiente  = max(0.0, $comEsp - $cubierto);
+    $cubierto   = min($comEsp, max(0.0, $saldoPago)); // lo que alcanza a cubrirse
+    $saldoPago -= $cubierto;                          // baja el saldo de pago del mes
+    $pendiente  = max(0.0, $comEsp - $cubierto);      // lo que aún falta
 
     $row['Concepto']       = 'Cobro';
     $row['Comision']       = $comEsp;
@@ -234,9 +270,14 @@ if ($ventasMeta) {
   $stP->close();
 }
 
-/* 3.3.5 Total pendiente del MES para el botón "Solicitar pago" */
+/* 3.3.5 Total pendiente del MES para el botón "Solicitar pago"
+   - Suma todos los pendientes de comisión calculados.
+   - Este total alimenta la UI para solicitar pago de comisiones. */
 $totalPendiente = 0.0;
-foreach ($pagos as $p) { $totalPendiente += (float)($p['Pendiente'] ?? 0); }
+foreach ($pagos as $p) {
+  $totalPendiente += (float)($p['Pendiente'] ?? 0);
+}
+
 
 /* 3.6 Selector de meses (últimos 6) sin strftime */
 $opcMeses = [];

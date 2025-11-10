@@ -133,8 +133,9 @@ $VerCache = time();
 </div>
 
 <!-- =================== Menú inferior ===================
-     Qué hace: Carga menú principal de la PWA
-     Fecha: 05/11/2025 | Revisado por: JCCM -->
+  Qué hace: Carga menú principal de la PWA
+  Fecha: 05/11/2025 | Revisado por: JCCM 
+-->
 <section id="Menu">
   <?php require_once 'html/Menuprinc.php'; ?>
 </section>

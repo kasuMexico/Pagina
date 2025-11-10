@@ -82,16 +82,6 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
         'Inicio'
       );
 
-      // Mesa_Herramientas (siempre visible)
-      btnIcon(
-        'Mesa_Herramientas.php',
-        'assets/img/Iconos_menu/heramientas_black.png',
-        'assets/img/Iconos_menu/ajustes.png',
-        $isTools,
-        $anchorDisabled,
-        'Herramientas'
-      );
-
       // Mesa_Marketing (solo niveles 1 y 2)
       if ($canSeeMesaMF) {
         btnIcon(
@@ -116,6 +106,15 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
         );
       }
 
+      // Mesa_Herramientas (siempre visible)
+      btnIcon(
+        'Mesa_Herramientas.php',
+        'assets/img/Iconos_menu/heramientas_black.png',
+        'assets/img/Iconos_menu/ajustes.png',
+        $isTools,
+        $anchorDisabled,
+        'Herramientas'
+      );
     } else {
       /* ================================================================================
        * MODO normal
@@ -193,16 +192,6 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
         );
       }
 
-      // Herramientas (siempre)
-      btnIcon(
-        'Mesa_Herramientas.php',
-        'assets/img/Iconos_menu/heramientas_black.png',
-        'assets/img/Iconos_menu/ajustes.png',
-        $isTools,
-        $anchorDisabled,
-        'Herramientas'
-      );
-
       // Marketing y Finanzas: ocultar si estamos en una Pwa_*
       if (!$isPwaGroup && $canSeeMesaMF) {
         // Mesa_Marketing
@@ -225,6 +214,15 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
           'Finanzas'
         );
       }
+      // Herramientas (siempre)
+      btnIcon(
+        'Mesa_Herramientas.php',
+        'assets/img/Iconos_menu/heramientas_black.png',
+        'assets/img/Iconos_menu/ajustes.png',
+        $isTools,
+        $anchorDisabled,
+        'Herramientas'
+      );
     }
   ?>
 </div>

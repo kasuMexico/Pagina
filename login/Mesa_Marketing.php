@@ -31,13 +31,14 @@ if (empty($_SESSION['csrf_mm'])) $_SESSION['csrf_mm'] = bin2hex(random_bytes(16)
 $csrf = $_SESSION['csrf_mm'];
 
 // ==== Catálogo Productos (para select) ====
-$productos = [];
-if ($st = $mysqli->prepare("SELECT Producto FROM Productos ORDER BY Producto ASC")) {
-  $st->execute();
-  $rs = $st->get_result();
-  while ($r = $rs->fetch_assoc()) $productos[] = $r['Producto'];
-  $st->close();
-}
+// Solo categorías madre; el descuento es lateral y no depende de edad.
+$productos = ['Funerario','Oficiales','Transporte','Retiro'];
+
+// Si tu backend usa "Seguridad" en vez de "Oficiales", normaliza antes de guardar:
+$mapProducto = ['Oficiales' => 'Seguridad'];
+$productoSeleccionado = $_POST['Producto'] ?? '';
+$productoNormalizado  = $mapProducto[$productoSeleccionado] ?? $productoSeleccionado;
+
 
 // ==== Filtros de lista ====
 $f_status  = isset($_GET['status']) ? (int)$_GET['status'] : -1; // -1=todos, 1=activos, 0=inactivos

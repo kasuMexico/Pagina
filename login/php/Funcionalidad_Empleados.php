@@ -643,7 +643,7 @@ if (isset($_POST['accion'])) {
         // Resolver imagen: archivo o texto
         $imgValue = '';
         $rootPath = dirname(__DIR__); // / (raíz del sitio)
-        $uploadDir = $rootPath . '/assets/images/cupones/';
+        $uploadDir = $rootPath . '../../assets/images/cupones/';
         if (!is_dir($uploadDir)) { @mkdir($uploadDir, 0755, true); }
 
         if (!empty($_FILES['ImgFile']['name']) && $_FILES['ImgFile']['error'] === UPLOAD_ERR_OK) {

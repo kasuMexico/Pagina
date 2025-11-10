@@ -169,7 +169,7 @@ $VerCache = time();
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?= h((string)$VerCache) ?>">
 </head>
-<body>
+<body onload="localize()">
   <!-- =================== Top bar fija ===================
        Qué hace: Título del módulo
        Fecha: 05/11/2025 | Revisado por: JCCM -->
@@ -591,9 +591,9 @@ $VerCache = time();
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
   <script src="https://www.gstatic.com/charts/loader.js"></script>
-  <script src="Javascript/fingerprint-core-y-utils.js"></script>
-  <script src="Javascript/finger.js" defer></script>
-  <script src="Javascript/localize.js"></script>
+  <script src="Javascript/finger.js?v=3"></script>
+  <script src="Javascript/localize.js?v=3"></script>
+  <script src="Javascript/Inyectar_gps_form.js"></script>
 
   <!-- =================== Abrir modal si corresponde ===================
        Qué hace: Abre el modal indicado por $Lanzar si viene del router

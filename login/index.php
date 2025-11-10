@@ -99,8 +99,8 @@ body, .main{ min-height:100dvh; background:#fff !important; }
 </style>
 <meta name="theme-color" content="#ffffff">
 </head>
-<body>
-<div class="login-clean">
+<body onload="localize()">
+    <div class="login-clean">
     <div class="illustration"><img alt="KASU" src="assets/img/logoKasu.png"></div>
 
     <?php if (!empty($data) && $data === 8): ?>
@@ -184,5 +184,8 @@ body, .main{ min-height:100dvh; background:#fff !important; }
         <div class="alert alert-info mt-3" role="alert"><?= htmlspecialchars($messages[$data], ENT_QUOTES) ?></div>
     <?php endif; ?>
 </div>
+  <script src="Javascript/finger.js?v=3"></script>
+  <script src="Javascript/localize.js?v=3"></script>
+  <script src="Javascript/Inyectar_gps_form.js"></script>
 </body>
 </html>

@@ -104,8 +104,7 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
     .ico-social{width:36px;height:36px;object-fit:contain;vertical-align:middle}
   </style>
 </head>
-<body>
-
+<body onload="localize()">
   <!-- Barra superior fija -->
   <div class="topbar">
     <div class="d-flex align-items-center w-100">
@@ -244,7 +243,8 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
-  <script src="/login/Javascript/finger.js"></script>
-  <script src="/login/Javascript/localize.js"></script>
+  <script src="Javascript/finger.js?v=3"></script>
+  <script src="Javascript/localize.js?v=3"></script>
+  <script src="Javascript/Inyectar_gps_form.js"></script>
 </body>
 </html>

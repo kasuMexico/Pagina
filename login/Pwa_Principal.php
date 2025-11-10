@@ -121,8 +121,7 @@ $fin = (new DateTime('last day of this month'))->format('d/m/Y');
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
   <script src="Javascript/GenGrafica.js"></script>
 </head>
-<body>
-
+<body onload="localize()">
   <!-- TOP BAR -->
   <div class="topbar">
     <img alt="logo" src="/login/assets/img/logoKasu.png" style="height:38px">
@@ -210,8 +209,9 @@ $fin = (new DateTime('last day of this month'))->format('d/m/Y');
   </main>
 
   <!-- PWA / helpers -->
-  <script defer src="Javascript/finger.js"></script>
-  <script defer src="Javascript/localize.js"></script>
+  <script src="Javascript/finger.js?v=3"></script>
+  <script src="Javascript/localize.js?v=3"></script>
+  <script src="Javascript/Inyectar_gps_form.js"></script>
   <script defer src="Javascript/install.js"></script>
   <script>
     if ('serviceWorker' in navigator) {

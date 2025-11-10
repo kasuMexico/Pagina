@@ -159,8 +159,8 @@ if (isset($_POST['PagoCom'])) {
     exit;
 }
 
-/********************************* BLOQUE: CAMBIO DE VENDEDOR REVISION 05/11/2025 JCCM *********************************/
-/* Qué hace: Actualiza sucursal/equipo del empleado y registra auditoría */
+/********************************* BLOQUE: CAMBIO DE VENDEDOR — Rev. 10/11/2025 JCCM *********************************/
+/* Qué hace: Actualiza sucursal y/o superior (Equipo) del empleado. Registra auditoría y redirige con Msg base64. */
 if (isset($_POST['CambiVend'])) {
     // CSRF opcional
     if (isset($_POST['csrf']) && !hash_equals($_SESSION['csrf_auth'] ?? '', (string)$_POST['csrf'])) {
@@ -168,36 +168,50 @@ if (isset($_POST['CambiVend'])) {
         exit;
     }
 
-    $Host        = $mysqli->real_escape_string((string)($_POST['Host']       ?? ''));
-    $name        = $mysqli->real_escape_string((string)($_POST['name']       ?? ''));
-    $IdVenta     = $mysqli->real_escape_string((string)($_POST['IdVenta']    ?? ''));
-    $IdContact   = $mysqli->real_escape_string((string)($_POST['IdContact']  ?? ''));
-    $IdUsuario   = $mysqli->real_escape_string((string)($_POST['IdUsuario']  ?? ''));
-    $IdEmpleado  = $mysqli->real_escape_string((string)($_POST['IdEmpleado'] ?? ''));
-    $IdSucursal  = $mysqli->real_escape_string((string)($_POST['IdSucursal'] ?? ''));
-    $NvoSuperior = $mysqli->real_escape_string((string)($_POST['NvoSuperior']?? ''));
+    /* === Entradas normalizadas === */
+    $hostIn       = (string)($_POST['Host'] ?? '');
+    $name         = (string)($_POST['name'] ?? '');
+    $idEmpleado   = (int)($_POST['IdEmpleado'] ?? 0);
+    $idSucursal   = (int)($_POST['IdSucursal'] ?? 0);  // puede venir vacío en algunos flujos
+    $nvaSucursal  = (int)($_POST['NvaSucursal'] ?? 0); // NUEVO: sucursal destino
+    $nvoSuperior  = (int)($_POST['NvoSuperior'] ?? 0);
 
-    $BaseSuperior = $basicas->BuscarCampos($mysqli, "Equipo",   "Empleados", "Id", $IdEmpleado);
-    $BaseSucursal = $basicas->BuscarCampos($mysqli, "Sucursal", "Empleados", "Id", $IdEmpleado);
+    // Destino de sucursal: prioriza NvaSucursal, si no viene usa IdSucursal
+    $sucDestino = $nvaSucursal > 0 ? $nvaSucursal : $idSucursal;
 
-    if ($IdSucursal != $BaseSucursal || $NvoSuperior != $BaseSuperior) {
+    // Valores actuales en BD
+    $baseSuperior = (int)$basicas->BuscarCampos($mysqli, "Equipo",   "Empleados", "Id", $idEmpleado);
+    $baseSucursal = (int)$basicas->BuscarCampos($mysqli, "Sucursal", "Empleados", "Id", $idEmpleado);
+
+    $cambiaSup = ($nvoSuperior > 0 && $nvoSuperior !== $baseSuperior);
+    $cambiaSuc = ($sucDestino  > 0 && $sucDestino  !== $baseSucursal);
+
+    if ($cambiaSup || $cambiaSuc) {
         // Auditoría
         $seguridad->auditoria_registrar(
-            $mysqli,
-            $basicas,
-            $_POST,
-            'Cambio_de_Superior',
-            $_POST['Host'] ?? $_SERVER['PHP_SELF']
+            $mysqli, $basicas, $_POST, 'Cambio_de_Superior', $_POST['Host'] ?? $_SERVER['PHP_SELF']
         );
-        // Actualización
-        $basicas->ActCampo($mysqli, "Empleados", "Sucursal", $IdSucursal, $IdEmpleado);
-        $basicas->ActCampo($mysqli, "Empleados", "Equipo",   $NvoSuperior, $IdEmpleado);
-        $alert = "El colaborador se actualizó correctamente";
+
+        // Actualizaciones puntuales
+        if ($cambiaSuc) $basicas->ActCampo($mysqli, "Empleados", "Sucursal", $sucDestino,  $idEmpleado);
+        if ($cambiaSup) $basicas->ActCampo($mysqli, "Empleados", "Equipo",   $nvoSuperior, $idEmpleado);
+
+        $alert = 'El colaborador se actualizó correctamente';
     } else {
-        $alert = "El colaborador no puede registrarse en la misma sucursal o en el mismo equipo";
+        $alert = 'Sin cambios: mismo superior y sucursal';
     }
 
-    header('Location: https://kasu.com.mx' . $Host . '?&name=' . $name . '&Msg=' . $alert);
+    /* === Redirección POST→GET con ?Msg= en base64 === */
+    $msg = rawurlencode(base64_encode($alert));
+
+    // Resuelve URL destino
+    $host = $hostIn !== '' ? $hostIn : ($_SERVER['HTTP_REFERER'] ?? $_SERVER['PHP_SELF']);
+    // Si no es absoluta, préfix con dominio
+    if (!preg_match('~^https?://~i', $host)) {
+        $host = 'https://kasu.com.mx' . $host;
+    }
+    $sep = (strpos($host, '?') !== false) ? '&' : '?';
+    header('Location: ' . $host . $sep . 'name=' . rawurlencode($name) . '&Msg=' . $msg, true, 303);
     exit;
 }
 

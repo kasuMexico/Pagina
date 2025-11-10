@@ -542,4 +542,156 @@ if (!empty($_POST['btnEnviar'])) {
     $redirect('Foto de perfil actualizada.');
 }
 
-// Fin del archivo
+/********************************************************************************************
+ * Qué hace
+ *   1) Inserta/actualiza metas para TODOS los NIVEL 6 (uno por persona) con la meta indicada.
+ *   2) Consolida usando lo ya grabado en `Asignacion`: suma MVtas por `Equipo` y registra
+ *      a los niveles 4, luego 3 y finalmente 1. (7 no participa).
+ *   3) Ignora empleados con Equipo=0.
+ *   4) Redirige al host de origen con ?Msg=... en base64.
+ *
+ * Requisito de índice (una sola vez):
+ *   ALTER TABLE Asignacion ADD UNIQUE KEY uq_usuario_fecha (Usuario, Fecha);
+ *
+ * Modificado: 2025-11-10 — JCCM
+ ********************************************************************************************/
+
+// Helper: POST→GET con ?Msg=... en base64
+function go_back_with_msg(string $url, string $msg): never {
+    if ($url === '') $url = $_SERVER['HTTP_REFERER'] ?? $_SERVER['PHP_SELF'];
+    $enc = base64_encode($msg);
+    $sep = (strpos($url, '?') !== false) ? '&' : '?';
+    $loc = $url . $sep . 'Msg=' . rawurlencode($enc);
+    if (!headers_sent()) { header('Location: '.$loc, true, 303); exit; }
+    $safe = htmlspecialchars($loc, ENT_QUOTES, 'UTF-8');
+    echo "<script>location.href='{$safe}'</script><noscript><meta http-equiv='refresh' content='0;url={$safe}'></noscript>";
+    exit;
+}
+
+if (!empty($_POST['Asignar'])) {
+    /* ===== Auditoría ===== */
+    $seguridad->auditoria_registrar(
+        $mysqli, $basicas, $_POST, 'Registro_Metas', $_POST['Host'] ?? $_SERVER['PHP_SELF']
+    );
+
+    /* ===== Entradas ===== */
+    $metaNivel6   = max(0.0, (float)($_POST['MetaMes'] ?? 0)); // meta por persona de nivel 6
+    $normalidad   = max(0, min(100, (int)($_POST['Normalidad'] ?? 0)));
+    $fechaPeriodo = date('Y-m-01');
+    $hostReturn   = (string)($_POST['Host'] ?? ($_SERVER['HTTP_REFERER'] ?? $_SERVER['PHP_SELF']));
+
+    /* ===== Utilitarios ===== */
+    // Carga empleados por nivel → [Id => ['u'=>IdUsuario, 'sup'=>Equipo]]
+    $load_level = function(int $nivel) use ($mysqli): array {
+        $out = [];
+        $st = $mysqli->prepare("SELECT Id, IdUsuario, Equipo FROM Empleados WHERE Nivel = ?");
+        $st->bind_param('i', $nivel);
+        $st->execute();
+        $rs = $st->get_result();
+        while ($r = $rs->fetch_assoc()) $out[(int)$r['Id']] = ['u'=>(string)$r['IdUsuario'], 'sup'=>(int)$r['Equipo']];
+        $st->close();
+        return $out;
+    };
+
+    // Suma MVtas en Asignacion para un conjunto de IDs, agrupando por Equipo = IdEmpleado
+    $sum_from_asignacion = function(array $idsMap, string $fecha) use ($mysqli): array {
+        if (!$idsMap) return [];
+        $ids = implode(',', array_map('intval', array_keys($idsMap)));
+        $sql = "SELECT Equipo AS IdEmpleado, SUM(MVtas) AS Total
+                FROM Asignacion
+                WHERE Fecha = ? AND Equipo IN ($ids)
+                GROUP BY Equipo";
+        $st = $mysqli->prepare($sql);
+        $st->bind_param('s', $fecha);
+        $st->execute();
+        $rs = $st->get_result();
+        $out = [];
+        while ($r = $rs->fetch_assoc()) $out[(int)$r['IdEmpleado']] = (float)$r['Total'];
+        $st->close();
+        return $out;
+    };
+
+    /* ===== UPSERT Asignacion ===== */
+    $sqlUp = "INSERT INTO Asignacion
+                (Usuario, Equipo, MVtas, MCob, Normalidad, Fecha, FechaRegistro)
+              VALUES (?,?,?,?,?, ?, NOW())
+              ON DUPLICATE KEY UPDATE
+                Equipo=VALUES(Equipo),
+                MVtas=VALUES(MVtas),
+                MCob=VALUES(MCob),
+                Normalidad=VALUES(Normalidad),
+                FechaRegistro=NOW()";
+    $ins = $mysqli->prepare($sqlUp);
+    if (!$ins) go_back_with_msg($hostReturn, 'Error prepare: '.$mysqli->error);
+
+    // Variables ligadas (bind una vez)
+    $UsuarioVar = '';            // s
+    $EquipoVar  = 0;             // i
+    $MVtasVar   = 0.0;           // d
+    $MCobVar    = 0.0;           // d
+    $NormVar    = $normalidad;   // i
+    $FechaVar   = $fechaPeriodo; // s
+    $ins->bind_param('siddis', $UsuarioVar, $EquipoVar, $MVtasVar, $MCobVar, $NormVar, $FechaVar);
+
+    /* ===== Transacción ===== */
+    $mysqli->begin_transaction();
+    try {
+        /* 1) Nivel 6: asigna uno por persona, ignora Equipo=0 */
+        $L6 = $load_level(6);
+        foreach ($L6 as $id6 => $d6) {
+            $sup = (int)$d6['sup'];
+            if ($sup <= 0) continue; // ignora no asignados
+            $UsuarioVar = $d6['u'];
+            $EquipoVar  = $sup;                 // su superior es nivel 4
+            $MVtasVar   = round($metaNivel6, 2);
+            $MCobVar    = 0.0;
+            if (!$ins->execute()) throw new Exception($ins->error);
+        }
+
+        /* 2) Nivel 4: suma lo ya insertado donde Equipo = Id del 4 */
+        $L4   = $load_level(4);
+        $tot4 = $sum_from_asignacion($L4, $fechaPeriodo);
+        foreach ($tot4 as $id4 => $total) {
+            if ($total <= 0 || !isset($L4[$id4])) continue;
+            $UsuarioVar = $L4[$id4]['u'];
+            $EquipoVar  = $L4[$id4]['sup'];     // su superior es nivel 3 (puede ser 0? normalmente >0)
+            if ($EquipoVar <= 0) continue;      // ignora si no tiene superior
+            $MVtasVar   = round($total, 2);
+            $MCobVar    = 0.0;
+            if (!$ins->execute()) throw new Exception($ins->error);
+        }
+
+        /* 3) Nivel 3: suma lo ya insertado donde Equipo = Id del 3 */
+        $L3   = $load_level(3);
+        $tot3 = $sum_from_asignacion($L3, $fechaPeriodo);
+        foreach ($tot3 as $id3 => $total) {
+            if ($total <= 0 || !isset($L3[$id3])) continue;
+            $UsuarioVar = $L3[$id3]['u'];
+            $EquipoVar  = $L3[$id3]['sup'];     // su superior es nivel 1
+            if ($EquipoVar <= 0) continue;
+            $MVtasVar   = round($total, 2);
+            $MCobVar    = 0.0;
+            if (!$ins->execute()) throw new Exception($ins->error);
+        }
+
+        /* 4) Nivel 1: suma lo ya insertado donde Equipo = Id del 1 */
+        $L1   = $load_level(1);
+        $tot1 = $sum_from_asignacion($L1, $fechaPeriodo);
+        foreach ($tot1 as $id1 => $total) {
+            if ($total <= 0 || !isset($L1[$id1])) continue;
+            $UsuarioVar = $L1[$id1]['u'];
+            $EquipoVar  = $L1[$id1]['sup'];     // puede ser 0
+            $MVtasVar   = round($total, 2);
+            $MCobVar    = 0.0;
+            if (!$ins->execute()) throw new Exception($ins->error);
+        }
+
+        $ins->close();
+        $mysqli->commit();
+
+        go_back_with_msg($hostReturn, 'Asignacion realizada correctamente');
+    } catch (Throwable $e) {
+        $mysqli->rollback();
+        go_back_with_msg($hostReturn, 'Error en asignacion: '.$e->getMessage());
+    }
+}

@@ -69,8 +69,7 @@ $VerCache = $VerCache ?? 1;
   <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?= h($VerCache) ?>">
   <link rel="stylesheet" href="assets/css/Grafica.css">
 </head>
-<body>
-
+<body onload="localize()">
   <div class="topbar">
     <h4 class="title">Estado de Cuenta</h4>
   </div>
@@ -171,5 +170,8 @@ $VerCache = $VerCache ?? 1;
   <!-- JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+  <script src="Javascript/finger.js?v=3"></script>
+  <script src="Javascript/localize.js?v=3"></script>
+  <script src="Javascript/Inyectar_gps_form.js"></script>
 </body>
 </html>

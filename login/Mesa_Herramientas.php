@@ -123,8 +123,7 @@ $VerCache = time();
 <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?php echo (int)$VerCache; ?>">
 
 </head>
-<body>
-
+<body onload="localize()">
 <!-- =================== TOP BAR fija ===================
      Qué hace: Encabezado de la sección
      Fecha: 05/11/2025 | Revisado por: JCCM -->
@@ -282,11 +281,20 @@ $VerCache = time();
       <?php endif; ?>
 
       <form method="POST" action="php/Funcionalidad_Pwa.php">
+      <!-- Insertamos los datos ocultos -->
+        <input type="hidden" name="Host" value="<?php echo h($_SERVER['PHP_SELF']); ?>">
+        <input type="hidden" name="Evento" value="LogOut">
+        <input type="hidden" name="csrf" value="<?php echo h($_SESSION['csrf_logout']); ?>">
+        <div id="Gps" style="display:none;"></div>
+        <div data-fingerprint-slot></div>
+
         <?php if ((int)$Vende <= 2): ?>
-          <label>Metas de Colocación y Cobranza (mes corriente)</label>
+          <label>Metas de ventas por ejecutivo</label>
           <div class="form-group">
             <input class="form-control form-control-sm" type="number" name="MetaMes" placeholder="Meta de colocación del mes de <?php echo h($meses[(int)date('n')]); ?>">
             <small class="form-text text-muted">No agregues símbolos ni decimales.</small>
+            <br>
+          <label>Normalidad de Cobranza</label>
             <input class="form-control form-control-sm mt-2" type="number" name="Normalidad" placeholder="% de normalidad del mes de <?php echo h($meses[(int)date('n')]); ?>">
             <small class="form-text text-muted">No agregues símbolos ni decimales.</small>
           </div>
@@ -308,7 +316,6 @@ $VerCache = time();
       <form id="perfilForm" method="POST" enctype="multipart/form-data" action="php/Funcionalidad_Pwa.php">
         <input type="hidden" name="Host" value="<?php echo h($_SERVER['PHP_SELF']); ?>">
         <input type="hidden" name="btnEnviar" value="1">
-
         <input type="file" id="subirImg" name="subirImg" accept="image/*" class="d-none">
         <button type="button" id="btnFoto" class="btn btn-secondary btn-sm btn-block">Nueva foto de perfil</button>
 
@@ -337,9 +344,11 @@ $VerCache = time();
 <!-- =================== JS (única versión) ===================
      Qué hace: Dependencias y scripts de interacción
      Fecha: 05/11/2025 | Revisado por: JCCM -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+  <script src="Javascript/finger.js?v=3"></script>
+  <script src="Javascript/localize.js?v=3"></script>
+  <script src="Javascript/Inyectar_gps_form.js"></script>
 <!-- =================== Mostrar modal si aplica ===================
      Qué hace: Abre modal #Ventana1 o #Ventana2 según $Ventana
      Fecha: 05/11/2025 | Revisado por: JCCM -->

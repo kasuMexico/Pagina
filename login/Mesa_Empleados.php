@@ -136,7 +136,7 @@ $VerCache = $VerCache ?? time();
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?= h((string)$VerCache) ?>">
 </head>
-<body>
+<body onload="localize()"> 
   <!-- =================== Top bar fija ===================
        Qué hace: Encabezado y botón para crear empleado
        Fecha: 05/11/2025 | Revisado por: JCCM -->
@@ -530,9 +530,9 @@ $VerCache = $VerCache ?? time();
        Fecha: 05/11/2025 | Revisado por: JCCM -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
-  <script src="Javascript/fingerprint-core-y-utils.js"></script>
-  <script src="Javascript/finger.js"></script>
-  <script src="Javascript/localize.js"></script>
+  <script src="Javascript/finger.js?v=3"></script>
+  <script src="Javascript/localize.js?v=3"></script>
+  <script src="Javascript/Inyectar_gps_form.js"></script>
 
   <!-- =================== Auto-apertura de modal ===================
        Qué hace: Abre el modal dirigido por $Lanzar si existe

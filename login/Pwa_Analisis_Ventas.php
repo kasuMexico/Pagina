@@ -586,7 +586,8 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
   </main>
 
   <!-- Helpers -->
-  <script defer src="Javascript/finger.js"></script>
-  <script defer src="Javascript/localize.js"></script>
+  <script src="Javascript/finger.js?v=3"></script>
+  <script src="Javascript/localize.js?v=3"></script>
+  <script src="Javascript/Inyectar_gps_form.js"></script>
 </body>
 </html>

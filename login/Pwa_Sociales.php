@@ -154,10 +154,10 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
                   target="_blank" rel="external noopener noreferrer" aria-label="Compartir en LinkedIn">
                   <img class="ico-social" src="/login/assets/img/sociales/LinkedIn.png" alt="LinkedIn">
                 </a>
-
                 <hr>
+                <br>
                 <div class="ContCupon">
-                  <h2 class="h5">Com/Vta $<?= number_format($Comis, 2) ?></h2>
+                  <h2 class="h5"><Strong>Comision por compra</strong></h2>
                   <h3 class="h6 mb-2"><?= htmlspecialchars((string)$Reg['TitA'], ENT_QUOTES) ?></h3>
                   <p class="mb-0"><?= htmlspecialchars((string)$Reg['DesA'], ENT_QUOTES) ?></p>
                 </div>

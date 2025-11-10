@@ -67,9 +67,22 @@ if (isset($_GET['action']) && $_GET['action'] === 'price_quote') {
     $prodTarifa = ($producto === 'Retiro') ? 'Retiro' : $basicas->ProdFune($edad);
     $costo = (float)$basicas->BuscarCampos($mysqli, 'Costo', 'Productos', 'Producto', $prodTarifa);
     $tasaAnual = (float)$basicas->BuscarCampos($mysqli, 'TasaAnual', 'Productos', 'Producto', $prodTarifa);
+    //Valida el descuento
     $descuento = 0.0;
     if (!empty($_SESSION['tarjeta'])) {
-      $descuento = (float)$basicas->BuscarCampos($mysqli, 'Descuento', 'PostSociales', 'Id', $_SESSION['tarjeta']);
+      if ($st = $mysqli->prepare("SELECT Descuento
+                                  FROM PostSociales
+                                  WHERE Id=? AND Status=1
+                                    AND (Validez_Fin IS NULL OR Validez_Fin='' OR Validez_Fin >= CURDATE())
+                                  LIMIT 1")) {
+        $st->bind_param('i', $_SESSION['tarjeta']);
+        $st->execute();
+        $rs = $st->get_result();
+        if ($row = $rs->fetch_assoc()) {
+          $descuento = (float)$row['Descuento'];
+        }
+        $st->close();
+      }
     }
 
     if ($producto === 'Retiro') {
@@ -110,6 +123,29 @@ $proName  = $proMap[$pro] ?? '';
 
 /* ===== Cupón (opcional) ===== */
 $Producto  = $_SESSION['Producto'] ?? ($proName ?: null);
+
+// Validación de tarjeta activa por Validez_Fin
+$tarjetaActivaId = null;
+$tarjetaDescuento = 0.0;
+$tarjetaImg = '';
+
+if (!empty($_SESSION['tarjeta'])) {
+  if ($st = $mysqli->prepare("SELECT Id,Descuento,Img
+                              FROM PostSociales
+                              WHERE Id=? AND Status=1
+                                AND (Validez_Fin IS NULL OR Validez_Fin='' OR Validez_Fin >= CURDATE())
+                              LIMIT 1")) {
+    $st->bind_param('i', $_SESSION['tarjeta']);
+    $st->execute();
+    $rs = $st->get_result();
+    if ($row = $rs->fetch_assoc()) {
+      $tarjetaActivaId   = (int)$row['Id'];
+      $tarjetaDescuento  = (float)$row['Descuento'];
+      $tarjetaImg        = (string)$row['Img'];
+    }
+    $st->close();
+  }
+}
 
 //Validamos si ya tiene un IdProspecto
 if(isset($_GET['idp'])){
@@ -220,19 +256,21 @@ if (isset($_GET['Msg'])) {
         <input type="hidden" name="Host" value="<?= htmlspecialchars($_SERVER['PHP_SELF'] ?? '',ENT_QUOTES,'UTF-8') ?>">
         <input type="hidden" name="Vendedor" value="Sistema">
         <input type="hidden" name="Cupon" value="<?= htmlspecialchars($_SESSION['data'] ?? '',ENT_QUOTES,'UTF-8') ?>">
-        <input type="hidden" name="tarjeta" value="<?= htmlspecialchars($_SESSION['tarjeta'] ?? '',ENT_QUOTES,'UTF-8') ?>">
+        <input type="hidden" name="tarjeta" value="<?= htmlspecialchars((string)($tarjetaActivaId ?? ''), ENT_QUOTES, 'UTF-8') ?>">
         <input type="hidden" name="Referencia_KASU" value="<?= htmlspecialchars($_SESSION['IdUsr'] ?? '',ENT_QUOTES,'UTF-8') ?>">
 
         <?php
-        if(isset($_SESSION["tarjeta"])){
-            $imgCupon = $basicas->BuscarCampos($mysqli, "Img", "PostSociales", "Id", $_SESSION["tarjeta"]);
-            $Descuento = $basicas->BuscarCampos($mysqli, "Descuento", "PostSociales", "Id", $_SESSION["tarjeta"]);
+        if (!empty($tarjetaActivaId)) {
             echo '
-              <div class="logo"><img class="img-thumbnail" src="/assets/images/cupones/' . htmlspecialchars($imgCupon, ENT_QUOTES) . '"></div>
-              <h1 class="text-center">Registra tu servicio con un descuento de $ '. number_format((float)$Descuento, 2) . '</h1>
+              <div class="logo"><img class="img-thumbnail" src="/assets/images/cupones/' . htmlspecialchars($tarjetaImg, ENT_QUOTES) . '"></div>
+              <h1 class="text-center">Registra tu servicio con un descuento de $ ' . number_format((float)$tarjetaDescuento, 2) . '</h1>
             ';
-            
-        }else{
+        } elseif (!empty($_SESSION['tarjeta'])) {
+            echo '
+              <div class="logo"><img src="assets/images/kasu_logo.jpeg" alt="KASU"></div>
+              <h1 class="text-center">lo lamentas esta tarjeta ya no esta activa</h1>
+            ';
+        } else {
             echo '
               <div class="logo"><img src="assets/images/kasu_logo.jpeg" alt="KASU"></div>
               <h1 class="text-center">Registra tu servicio</h1>

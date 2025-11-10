@@ -168,11 +168,9 @@ if (!empty($_POST['CancelaCte'])) {
   <!-- =================== Menú inferior compacto ===================
        Qué hace: Navegación inferior de la PWA
        Fecha: 05/11/2025 | Revisado por: JCCM -->
-  <section id="Menu" class="mb-2">
-    <div class="MenuPrincipal">
-      <a class="BtnMenu" href="Pwa_Principal.php"><img src="assets/img/FlorKasu.png" alt="Inicio"></a>
-      <a class="BtnMenu" href="Mesa_Herramientas.php"><img src="assets/img/Iconos_menu/ajustes.png" style="background:#A9D0F5;" alt="Herramientas"></a>
-    </div>
+  <!-- Menú inferior fijo -->
+  <section id="Menu">
+    <?php require_once __DIR__ . '/html/Menuprinc.php'; ?>
   </section>
 
   <!-- =================== Modal único ===================

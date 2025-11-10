@@ -3,14 +3,17 @@
  * Qué hace: Renderiza el menú inferior de la PWA con iconos activos/inactivos por página.
  * Fecha: 05/11/2025
  * Revisado por: JCCM
+ * Cambios:
+ *  - Si la página actual inicia con "Mesa_": solo mostrar "Pwa_Principal.php" y opciones Mesa_*.
+ *  - Agregar Mesa_Marketing.php y Mesa_Finanzas.php con iconos color/B&N.
+ *  - Ocultar Marketing y Finanzas cuando la página actual inicia con "Pwa_".
+ *  - Marketing y Finanzas visibles solo para niveles 1 y 2.
  ********************************************************************************************/
 
 declare(strict_types=1);
 
 /* ==========================================================================================
  * BLOQUE: Variables de contexto
- * Qué hace: Obtiene nivel del usuario y el nombre del archivo actual para marcar activos.
- * Fecha: 05/11/2025 — Revisado por: JCCM
  * ========================================================================================== */
 $Niv  = (int)($basicas->BuscarCampos($mysqli, 'Nivel', 'Empleados', 'IdUsuario', $_SESSION['Vendedor'] ?? '') ?? 0);
 $CoMn = basename((string)($_SERVER['PHP_SELF'] ?? ''));
@@ -20,15 +23,6 @@ $anchorDisabled = 'style="pointer-events:none;cursor:default" aria-current="page
 
 /* ==========================================================================================
  * FUNCIÓN: btnIcon
- * Qué hace: Imprime un <a> con el ícono en color si está activa la vista, B/N si no.
- * Parámetros:
- *   - string $href: URL de destino
- *   - string $imgBW: ruta icono en B/N
- *   - string $imgColor: ruta icono en color
- *   - bool   $isActive: indica si la opción corresponde a la página actual
- *   - string $anchorDisabled: atributos para deshabilitar el <a> activo
- *   - string $alt: texto alternativo del icono
- * Fecha: 05/11/2025 — Revisado por: JCCM
  * ========================================================================================== */
 function btnIcon(
   string $href,
@@ -52,8 +46,6 @@ function btnIcon(
 
 /* ==========================================================================================
  * BLOQUE: Flags de página activa
- * Qué hace: Determina qué botón se marca como activo.
- * Fecha: 05/11/2025 — Revisado por: JCCM
  * ========================================================================================== */
 $isPpal   = ($CoMn === 'Pwa_Principal.php');
 $isPros   = ($CoMn === 'Pwa_Prospectos.php');
@@ -62,87 +54,177 @@ $isCltes  = ($CoMn === 'Pwa_Clientes.php');
 $isTools  = ($CoMn === 'Mesa_Herramientas.php');
 $isAnalis = ($CoMn === 'Pwa_Analisis_Ventas.php');
 $isSocial = ($CoMn === 'Pwa_Sociales.php');
+
+$isMesaMarketing = ($CoMn === 'Mesa_Marketing.php');
+$isMesaFinanzas  = ($CoMn === 'Mesa_Finanzas.php');
+
+/* Grupos */
+$isMesaGroup = (strncmp($CoMn, 'Mesa_', 5) === 0);
+$isPwaGroup  = (strncmp($CoMn, 'Pwa_', 4) === 0);
+
+/* Visibilidad por nivel para Marketing/Finanzas */
+$canSeeMesaMF = ($Niv === 1 || $Niv === 2);
 ?>
 <div class="MenuPrincipal">
   <?php
-    // Inicio
-    btnIcon(
-      'Pwa_Principal.php',
-      'assets/img/Iconos_menu/kasu_black.png',
-      'assets/img/kasu_logo.jpeg', // versión a color
-      $isPpal,
-      $anchorDisabled,
-      'Inicio'
-    );
+    /* ======================================================================================
+     * MODO "Mesa_*": Solo mostrar Principal y las páginas del grupo Mesa_
+     * ====================================================================================== */
+    if ($isMesaGroup) {
 
-    // Análisis (solo Nivel 1)
-    if ($Niv === 1) {
+      // Inicio
       btnIcon(
-        'Pwa_Analisis_Ventas.php',
-        'assets/img/Iconos_menu/analisis_black.png',
-        'assets/img/Iconos_menu/analisis.png',
-        $isAnalis,
+        'Pwa_Principal.php',
+        'assets/img/Iconos_menu/kasu_black.png',
+        'assets/img/kasu_logo.jpeg',
+        $isPpal,
         $anchorDisabled,
-        'Análisis'
+        'Inicio'
       );
-    }
 
-    // Clientes (todos excepto Nivel 2)
-    if ($Niv !== 2) {
+      // Mesa_Herramientas (siempre visible)
       btnIcon(
-        'Pwa_Clientes.php',
-        'assets/img/Iconos_menu/usuario_black.png',
-        'assets/img/Iconos_menu/usuario.png',
-        $isCltes,
+        'Mesa_Herramientas.php',
+        'assets/img/Iconos_menu/heramientas_black.png',
+        'assets/img/Iconos_menu/ajustes.png',
+        $isTools,
         $anchorDisabled,
-        'Clientes'
+        'Herramientas'
       );
-    }
 
-    // Prospectos (no 5,3,2)
-    if ($Niv !== 5 && $Niv !== 3 && $Niv !== 2) {
+      // Mesa_Marketing (solo niveles 1 y 2)
+      if ($canSeeMesaMF) {
+        btnIcon(
+          'Mesa_Marketing.php',
+          'assets/img/Iconos_menu/marketing_black.png',
+          'assets/img/Iconos_menu/marketing.png',
+          $isMesaMarketing,
+          $anchorDisabled,
+          'Marketing'
+        );
+      }
+
+      // Mesa_Finanzas (solo niveles 1 y 2)
+      if ($canSeeMesaMF) {
+        btnIcon(
+          'Mesa_Finanzas.php',
+          'assets/img/Iconos_menu/Finanzas_black.png',
+          'assets/img/Iconos_menu/Finanzas.png',
+          $isMesaFinanzas,
+          $anchorDisabled,
+          'Finanzas'
+        );
+      }
+
+    } else {
+      /* ================================================================================
+       * MODO normal
+       * - Si la página actual inicia con "Pwa_": ocultar Marketing y Finanzas.
+       * - Herramientas siempre visible.
+       * ================================================================================ */
+
+      // Inicio
       btnIcon(
-        'Pwa_Prospectos.php',
-        'assets/img/Iconos_menu/prospectos_black.png',
-        'assets/img/Iconos_menu/prospectos.png',
-        $isPros,
+        'Pwa_Principal.php',
+        'assets/img/Iconos_menu/kasu_black.png',
+        'assets/img/kasu_logo.jpeg',
+        $isPpal,
         $anchorDisabled,
-        'Prospectos'
+        'Inicio'
       );
-    }
 
-    // Cobranza/Pagos (no 7)
-    if ($Niv !== 7) {
+      // Análisis (solo Nivel 1)
+      if ($Niv === 1) {
+        btnIcon(
+          'Pwa_Analisis_Ventas.php',
+          'assets/img/Iconos_menu/analisis_black.png',
+          'assets/img/Iconos_menu/analisis.png',
+          $isAnalis,
+          $anchorDisabled,
+          'Análisis'
+        );
+      }
+
+      // Clientes (todos excepto Nivel 2)
+      if ($Niv !== 2) {
+        btnIcon(
+          'Pwa_Clientes.php',
+          'assets/img/Iconos_menu/usuario_black.png',
+          'assets/img/Iconos_menu/usuario.png',
+          $isCltes,
+          $anchorDisabled,
+          'Clientes'
+        );
+      }
+
+      // Prospectos (no 5,3,2)
+      if ($Niv !== 5 && $Niv !== 3 && $Niv !== 2) {
+        btnIcon(
+          'Pwa_Prospectos.php',
+          'assets/img/Iconos_menu/prospectos_black.png',
+          'assets/img/Iconos_menu/prospectos.png',
+          $isPros,
+          $anchorDisabled,
+          'Prospectos'
+        );
+      }
+
+      // Cobranza/Pagos (no 7)
+      if ($Niv !== 7) {
+        btnIcon(
+          'Pwa_Registro_Pagos.php',
+          'assets/img/Iconos_menu/Cobrar_black.png',
+          'assets/img/Iconos_menu/cobranza.png',
+          $isCob,
+          $anchorDisabled,
+          'Cobranza'
+        );
+      }
+
+      // Sociales (niveles 7, 6, 1)
+      if ($Niv === 7 || $Niv === 6 || $Niv === 1) {
+        btnIcon(
+          'Pwa_Sociales.php',
+          'assets/img/Iconos_menu/facebook_black.png',
+          'assets/img/sociales/facebook.png',
+          $isSocial,
+          $anchorDisabled,
+          'Social'
+        );
+      }
+
+      // Herramientas (siempre)
       btnIcon(
-        'Pwa_Registro_Pagos.php',
-        'assets/img/Iconos_menu/Cobrar_black.png',
-        'assets/img/Iconos_menu/cobranza.png', // versión a color
-        $isCob,
+        'Mesa_Herramientas.php',
+        'assets/img/Iconos_menu/heramientas_black.png',
+        'assets/img/Iconos_menu/ajustes.png',
+        $isTools,
         $anchorDisabled,
-        'Cobranza'
+        'Herramientas'
       );
-    }
 
-    // Sociales (niveles 7, 6, 1)
-    if ($Niv === 7 || $Niv === 6 || $Niv === 1) {
-      btnIcon(
-        'Pwa_Sociales.php',
-        'assets/img/Iconos_menu/facebook_black.png',
-        'assets/img/sociales/facebook.png', // versión a color
-        $isSocial,
-        $anchorDisabled,
-        'Social'
-      );
-    }
+      // Marketing y Finanzas: ocultar si estamos en una Pwa_*
+      if (!$isPwaGroup && $canSeeMesaMF) {
+        // Mesa_Marketing
+        btnIcon(
+          'Mesa_Marketing.php',
+          'assets/img/Iconos_menu/marketing_black.png',
+          'assets/img/Iconos_menu/marketing.png',
+          $isMesaMarketing,
+          $anchorDisabled,
+          'Marketing'
+        );
 
-    // Herramientas
-    btnIcon(
-      'Mesa_Herramientas.php',
-      'assets/img/Iconos_menu/heramientas_black.png',
-      'assets/img/Iconos_menu/ajustes.png', // versión a color
-      $isTools,
-      $anchorDisabled,
-      'Herramientas'
-    );
+        // Mesa_Finanzas
+        btnIcon(
+          'Mesa_Finanzas.php',
+          'assets/img/Iconos_menu/Finanzas_black.png',
+          'assets/img/Iconos_menu/Finanzas.png',
+          $isMesaFinanzas,
+          $anchorDisabled,
+          'Finanzas'
+        );
+      }
+    }
   ?>
 </div>

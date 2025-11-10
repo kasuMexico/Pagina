@@ -566,4 +566,310 @@ if (isset($_POST['Reporte'])) {
     header('Location: https://kasu.com.mx' . $Host . '?Msg=' . $msg);
     exit;
 }
+/********************************* BLOQUE: MESA MARKETING — TARJETAS *********************************/
+/* Qué hace:
+   - crear_tarjeta: inserta en PostSociales. Sube imagen a /assets/images/cupones/ si viene archivo.
+   - activar_tarjeta / desactivar_tarjeta: cambia Status.
+   - borrar_tarjeta: elimina registro.
+   - actualizar_vigencia: define Validez_Fin (acepta NULL).
+   - Todas las acciones: registran auditoría con $seguridad->auditoria_registrar y redirigen al Host con Msg.
+   Requiere que la vista haya puesto un token CSRF en $_SESSION['csrf_mm'] y campo POST 'csrf'.
+*/
+if (isset($_POST['accion'])) {
+    // ---------- CSRF ----------
+    $csrfPost = (string)($_POST['csrf'] ?? '');
+    $csrfOk   = $csrfPost !== ''
+             && (hash_equals($_SESSION['csrf_mm']   ?? '', $csrfPost)
+              || hash_equals($_SESSION['csrf_auth'] ?? '', $csrfPost));
+    if (!$csrfOk) {
+        http_response_code(403);
+        exit('CSRF inválido');
+    }
+
+    // ---------- Utilidades comunes ----------
+    $Host      = $mysqli->real_escape_string((string)($_POST['Host'] ?? '/login/Mesa_Marketing.php'));
+    $Vendedor  = (string)($_SESSION['Vendedor'] ?? '');
+    $accion    = (string)$_POST['accion'];
+    $go = function(string $msg) use ($Host){
+        header('Location: https://kasu.com.mx' . $Host . '?Msg=' . urlencode($msg));
+        exit;
+    };
+
+    // === Helper: optimiza imagen a JPG máx 1200px, fondo blanco si PNG ===
+    function saveOptimizedImage(string $tmp, string $destJpgPath, string $mime, int $maxW=1200, int $maxH=1200, int $quality=82): bool {
+        [$w,$h] = @getimagesize($tmp);
+        if (!$w || !$h) return false;
+        $scale = min($maxW/$w, $maxH/$h, 1);
+        $nw = (int)floor($w*$scale);
+        $nh = (int)floor($h*$scale);
+
+        // Carga
+        if ($mime === 'image/png')      { $src = @imagecreatefrompng($tmp); }
+        elseif ($mime === 'image/jpeg') { $src = @imagecreatefromjpeg($tmp); }
+        else                            { return false; }
+
+        if (!$src) return false;
+
+        // Lienzo destino JPG
+        $dst = imagecreatetruecolor($nw,$nh);
+        // Fondo blanco por si la fuente tenía transparencia
+        $white = imagecolorallocate($dst, 255,255,255);
+        imagefilledrectangle($dst, 0,0, $nw,$nh, $white);
+
+        // Reescalado
+        imagecopyresampled($dst, $src, 0,0, 0,0, $nw,$nh, $w,$h);
+
+        // Guardar como JPG comprimido
+        $ok = imagejpeg($dst, $destJpgPath, $quality);
+
+        imagedestroy($src);
+        imagedestroy($dst);
+        return $ok;
+    }
+
+    // ---------- Crear tarjeta ----------
+    if ($accion === 'crear_tarjeta') {
+        // Campos base
+        $Tipo       = $mysqli->real_escape_string((string)($_POST['Tipo']      ?? 'Vta'));      // Vta | Art
+        $Red        = $mysqli->real_escape_string((string)($_POST['Red']       ?? 'facebook'));
+        $TitA       = $mysqli->real_escape_string((string)($_POST['TitA']      ?? ''));
+        $DesA       = $mysqli->real_escape_string((string)($_POST['DesA']      ?? ''));
+        $Producto   = $mysqli->real_escape_string((string)($_POST['Producto']  ?? ''));
+        $Dire       = $mysqli->real_escape_string((string)($_POST['Dire']      ?? ''));
+        $Status     = (int)($_POST['Status'] ?? 1);
+        $Descuento  = (int)($_POST['Descuento'] ?? 0);
+        $ValidezFin = trim((string)($_POST['Validez_Fin'] ?? ''));
+
+        // Resolver imagen: archivo o texto
+        $imgValue = '';
+        $rootPath = dirname(__DIR__); // / (raíz del sitio)
+        $uploadDir = $rootPath . '/assets/images/cupones/';
+        if (!is_dir($uploadDir)) { @mkdir($uploadDir, 0755, true); }
+
+        if (!empty($_FILES['ImgFile']['name']) && $_FILES['ImgFile']['error'] === UPLOAD_ERR_OK) {
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            $mime  = $finfo->file($_FILES['ImgFile']['tmp_name']);
+            if (!in_array($mime, ['image/jpeg','image/png'], true)) {
+                $go('Formato no permitido. Usa JPG o PNG.');
+            }
+
+            // Nombre base y destino .jpg optimizado
+            $base = preg_replace('/[^a-zA-Z0-9_-]/','', pathinfo($_FILES['ImgFile']['name'], PATHINFO_FILENAME));
+            $file = $base . '_' . date('Ymd_His') . '_' . substr(sha1(random_bytes(8)),0,6) . '.jpg';
+            $dest = $uploadDir . $file;
+
+            // Redimensiona y comprime
+            if (!saveOptimizedImage($_FILES['ImgFile']['tmp_name'], $dest, $mime, 1200, 1200, 82)) {
+                $go('No se pudo optimizar la imagen.');
+            }
+
+            // Valor a guardar en DB
+            $imgValue = ($Tipo === 'Art')
+                ? 'https://kasu.com.mx/assets/images/cupones/' . $file
+                : $file;
+        }else {
+            // Tomar texto de imagen (nombre o URL)
+            $imgTxt = trim((string)($_POST['Img'] ?? ''));
+            if ($imgTxt === '') {
+                $go('Debes subir una imagen o indicar un nombre/URL de imagen.');
+            }
+            if ($Tipo === 'Art') {
+                // Art espera URL completa; si dieron nombre, lo convertimos a URL interna
+                $imgValue = preg_match('#^https?://#i', $imgTxt)
+                    ? $imgTxt
+                    : ('https://kasu.com.mx/assets/images/cupones/' . ltrim($imgTxt, '/'));
+            } else {
+                // Vta almacena solo el nombre de archivo
+                $imgValue = basename($imgTxt);
+            }
+        }
+
+        // Armar payload para PostSociales
+        $row = [
+            'Img'          => $imgValue,
+            'TitA'         => $TitA,
+            'DesA'         => $DesA,
+            'Dire'         => $Dire,
+            'Red'          => $Red,
+            'Descuento'    => $Descuento,
+            'Producto'     => $Producto,
+            'Status'       => $Status,
+            'Tipo'         => $Tipo,
+            // timestamp permite NULL
+            'Validez_Fin'  => ($ValidezFin !== '' ? $ValidezFin : null),
+        ];
+
+        // Insertar
+        $idNew = $basicas->InsertCampo($mysqli, 'PostSociales', $row);
+
+        // Auditoría de creación
+        $aud = $_POST;
+        $aud['IdTarjeta'] = $idNew;
+        $aud['ImgFinal']  = $imgValue;
+        $aud['Usuario']   = $Vendedor;
+        $seguridad->auditoria_registrar(
+            $mysqli,
+            $basicas,
+            $aud,
+            'TarjetaCrear',
+            $_POST['Host'] ?? $_SERVER['PHP_SELF']
+        );
+
+        $go('Tarjeta creada correctamente. Id=' . (int)$idNew);
+    }
+
+    // ---------- Activar tarjeta ----------
+    if ($accion === 'activar_tarjeta') {
+        $Id = (int)($_POST['Id'] ?? 0);
+        if ($Id <= 0) $go('Id inválido');
+        $basicas->ActCampo($mysqli, 'PostSociales', 'Status', 1, $Id);
+
+        $seguridad->auditoria_registrar(
+            $mysqli, $basicas, ['Id'=>$Id,'Usuario'=>$Vendedor],
+            'TarjetaActivar', $_POST['Host'] ?? $_SERVER['PHP_SELF']
+        );
+        $go('Tarjeta activada');
+    }
+
+    // ---------- Desactivar tarjeta ----------
+    if ($accion === 'desactivar_tarjeta') {
+        $Id = (int)($_POST['Id'] ?? 0);
+        if ($Id <= 0) $go('Id inválido');
+        $basicas->ActCampo($mysqli, 'PostSociales', 'Status', 0, $Id);
+
+        $seguridad->auditoria_registrar(
+            $mysqli, $basicas, ['Id'=>$Id,'Usuario'=>$Vendedor],
+            'TarjetaDesactivar', $_POST['Host'] ?? $_SERVER['PHP_SELF']
+        );
+        $go('Tarjeta desactivada');
+    }
+
+    // ---------- Borrar tarjeta ----------
+    if ($accion === 'borrar_tarjeta') {
+        $Id = (int)($_POST['Id'] ?? 0);
+        if ($Id <= 0) $go('Id inválido');
+
+        if ($stmt = $mysqli->prepare("DELETE FROM PostSociales WHERE Id=? LIMIT 1")) {
+            $stmt->bind_param('i', $Id);
+            $stmt->execute();
+            $stmt->close();
+        }
+
+        $seguridad->auditoria_registrar(
+            $mysqli, $basicas, ['Id'=>$Id,'Usuario'=>$Vendedor],
+            'TarjetaBorrar', $_POST['Host'] ?? $_SERVER['PHP_SELF']
+        );
+        $go('Tarjeta borrada');
+    }
+
+    // ---------- Actualizar vigencia ----------
+    if ($accion === 'actualizar_vigencia') {
+        $Id = (int)($_POST['Id'] ?? 0);
+        if ($Id <= 0) $go('Id inválido');
+        $ValidezFin = trim((string)($_POST['Validez_Fin'] ?? ''));
+
+        // Prepared para permitir NULL real
+        $sql = "UPDATE PostSociales SET Validez_Fin=? WHERE Id=?";
+        $stmt = $mysqli->prepare($sql);
+        if ($ValidezFin === '') {
+            $null = null;
+            $stmt->bind_param('si', $null, $Id);
+        } else {
+            $stmt->bind_param('si', $ValidezFin, $Id);
+        }
+        $stmt->execute();
+        $stmt->close();
+
+        $seguridad->auditoria_registrar(
+            $mysqli, $basicas, ['Id'=>$Id,'Validez_Fin'=>$ValidezFin,'Usuario'=>$Vendedor],
+            'TarjetaVigencia', $_POST['Host'] ?? $_SERVER['PHP_SELF']
+        );
+        $go('Vigencia actualizada');
+    }
+
+    // Si llegó una acción desconocida
+    $go('Acción no reconocida');
+}
+
+
+/* ==================== BOTONES: Activar | Desactivar | Borrar | Actualizar vigencia ==================== */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
+  // --- utilidades locales ---
+  $redir = function(string $msg) {
+    $ref = $_SERVER['HTTP_REFERER'] ?? '/login/Mesa_Marketing.php';
+    // aseguremos ruta interna
+    $url = (strpos($ref, 'http') === 0) ? $ref : ('https://kasu.com.mx' . $ref);
+    $glue = (strpos($url, '?') !== false) ? '&' : '?';
+    header('Location: ' . $url . $glue . 'Msg=' . urlencode($msg));
+    exit;
+  };
+  $assert_csrf = function() {
+    if (isset($_POST['csrf']) && !hash_equals($_SESSION['csrf_auth'] ?? '', (string)$_POST['csrf'])) {
+      http_response_code(403); exit;
+    }
+  };
+
+  try {
+    $assert_csrf();
+
+    $accion = (string)$_POST['accion'];
+    $id     = (int)($_POST['Id'] ?? 0);
+    $host   = $_POST['Host'] ?? ($_SERVER['PHP_SELF'] ?? '/php/Funcionalidad_Empleados.php');
+
+    if ($id <= 0) { $redir('ID inválido'); }
+
+    switch ($accion) {
+      case 'activar_tarjeta':
+        // Status = 1
+        $basicas->ActCampo($mysqli, 'PostSociales', 'Status', 1, $id);
+        // Auditoría
+        $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Tarjeta_Activar', $host);
+        $redir('Tarjeta activada');
+        break;
+
+      case 'desactivar_tarjeta':
+        // Status = 0
+        $basicas->ActCampo($mysqli, 'PostSociales', 'Status', 0, $id);
+        $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Tarjeta_Desactivar', $host);
+        $redir('Tarjeta desactivada');
+        break;
+
+      case 'borrar_tarjeta':
+        // Borrado lógico: Status = 9 (evita perder histórico y conteos)
+        $basicas->ActCampo($mysqli, 'PostSociales', 'Status', 9, $id);
+        $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Tarjeta_Borrar', $host);
+        $redir('Tarjeta eliminada');
+        break;
+
+      case 'actualizar_vigencia':
+        // Validez_Fin desde <input type="date"> → Y-m-d 23:59:59
+        $val = trim((string)($_POST['Validez_Fin'] ?? ''));
+        if ($val === '') { $redir('Fecha vacía'); }
+        $dt = DateTime::createFromFormat('Y-m-d', $val);
+        if ($dt === false) { $redir('Fecha inválida'); }
+        $dt->setTime(23, 59, 59);
+        $fecha = $dt->format('Y-m-d H:i:s');
+
+        $stmt = $mysqli->prepare('UPDATE PostSociales SET Validez_Fin=? WHERE Id=? LIMIT 1');
+        $stmt->bind_param('si', $fecha, $id);
+        $stmt->execute();
+        $stmt->close();
+
+        $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Tarjeta_Vigencia', $host);
+        $redir('Vigencia actualizada');
+        break;
+
+      default:
+        $redir('Acción no reconocida');
+    }
+  } catch (Throwable $e) {
+    $msg = 'Error: ' . substr($e->getMessage(), 0, 120);
+    if (isset($seguridad)) {
+      $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Tarjeta_Error', $_POST['Host'] ?? ($_SERVER['PHP_SELF'] ?? ''));
+    }
+    // Evita filtrar stack completo al usuario
+    $redir($msg);
+  }
+}
+
 ?>

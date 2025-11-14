@@ -48,6 +48,70 @@ class Seguridad {
         return null;
     }
 
+    /**
+     * Genera un identificador compacto y verificable para pólizas.
+     *
+     * Diseño:
+     * - Entradas firmadas: CURP + FechaRegistro de la tabla Usuario + versión fija "K2".
+     * - Autenticación: HMAC-SHA256 con clave maestra privada.
+     * - Formato: "K2" + 12 chars base36 + 1 dígito de control = 15 caracteres.
+     * - Resistente a falsificación (≈2^60 espacio efectivo) y estable aunque cambie Contacto.
+     *
+     * @param string $curp                 CURP del titular (18 chars). Se usa en mayúsculas.
+     * @param string $fechaAltaUsuario     Fecha/hora de alta en Usuario, p.ej. "2025-11-09 13:45:02".
+     * @param string $claveMaestra         Clave secreta del sistema (guárdala en .env).
+     * @return string                      Código de póliza de 15 caracteres (p.ej. "K2C8R1WZ7M4Q3F").
+     */
+    function poliza_id_compacto(string $curp, string $fechaAltaUsuario, string $claveMaestra): string {
+        $ver = 'K2';
+        $msg = strtoupper($curp) . '|' . $fechaAltaUsuario . '|' . $ver;
+
+        // HMAC-SHA256 → tomamos 60 bits (15 hex) y convertimos a base36 en 12 chars
+        $mac   = hash_hmac('sha256', $msg, $claveMaestra);     // 64 hex
+        $hex60 = substr($mac, 0, 15);                          // 60 bits
+        $b36   = strtoupper(str_pad(base_convert($hex60, 16, 36), 12, '0', STR_PAD_LEFT));
+
+        // Dígito de control: CRC32B(ver|body) → últimos 8 bits → base36 → 1 char
+        $chk   = strtoupper(base_convert(substr(hash('crc32b', $ver . $b36), -2), 16, 36));
+        $chk   = substr(str_pad($chk, 2, '0', STR_PAD_LEFT), 0, 1);
+
+        return $ver . $b36 . $chk; // 15 chars
+    }
+
+    /**
+     * Verifica que un código de póliza sea válido para los datos provistos.
+     *
+     * Reglas:
+     * - Debe iniciar con "K2" y medir 15 caracteres.
+     * - Recalcula el cuerpo con HMAC-SHA256 y compara.
+     * - Recalcula y valida el dígito de control.
+     *
+     * @param string $code                Código a verificar (15 chars).
+     * @param string $curp               CURP asociada a la póliza.
+     * @param string $fechaAltaUsuario   Fecha/hora de alta en Usuario.
+     * @param string $claveMaestra       Misma clave maestra usada en la generación.
+     * @return bool                      true si pasa todas las validaciones, false en caso contrario.
+     */
+    
+    function poliza_id_verificar(string $code, string $curp, string $fechaAltaUsuario, string $claveMaestra): bool {
+        if (strlen($code) !== 15 || substr($code, 0, 2) !== 'K2') return false;
+        $body = substr($code, 2, 12);
+        $chk  = substr($code, 14, 1);
+        if (!preg_match('/^[A-Z0-9]{12}$/', $body)) return false;
+
+        $ver = 'K2';
+        $msg = strtoupper($curp) . '|' . $fechaAltaUsuario . '|' . $ver;
+
+        $mac   = hash_hmac('sha256', $msg, $claveMaestra);
+        $hex60 = substr($mac, 0, 15);
+        $b36   = strtoupper(str_pad(base_convert($hex60, 16, 36), 12, '0', STR_PAD_LEFT));
+        if ($b36 !== $body) return false;
+
+        $chk2 = strtoupper(base_convert(substr(hash('crc32b', $ver . $b36), -2), 16, 36));
+        $chk2 = substr(str_pad($chk2, 2, '0', STR_PAD_LEFT), 0, 1);
+
+        return hash_equals($chk, $chk2);
+    }    
     /********************************************************************************************************************
      * peticion_get()
      * Llama API REST para validar CURP y retorna array decodificado.

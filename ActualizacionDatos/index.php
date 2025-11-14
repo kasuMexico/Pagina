@@ -70,12 +70,11 @@ function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES,
   <div id="Instruccion" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-sm">
       <div class="modal-content" style="padding:1em;">
-        <h5 class="text-center mb-2">Ingreso a mi cuenta</h5>
+        <h5 class="text-center mb-2">Para ingresar a tu cuenta</h5>
         <p class="text-center mb-2">KASU</p>
         <ol style="padding-left:22px;">
-          <li>Ten a la mano tu CURP y Póliza</li>
-          <li>Captura los datos solicitados</li>
-          <li>Haz clic en <b>Continuar</b></li>
+          <li>Solamente ten a la mano tu CURP y Póliza</li>
+          <li>Si no cuentas con ella, puedes descargarla en la pagina principal</li>
         </ol>
         <p class="text-center" style="font-size:12px;">
           <b>NOTA:</b> Atención personalizada:

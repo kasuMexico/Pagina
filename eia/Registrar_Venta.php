@@ -250,8 +250,18 @@ if (strcasecmp($categoria, (string)$Producto) === 0 && empty($ClaveCurpBen)) {
         $Descuento = (float)($basicas->BuscarCampos($mysqli, 'Descuento', 'PostSociales', 'Id', $tarjeta) ?? 0);
     }
 
-    //Generamos el Id Unico de la poliza
-    $FirmaUnica = $seguridad->Firma($mysqli, $Registrar_Contacto, $Vendedor);
+    // Genera Id único K2 con CURP + FechaRegistro(Usuario) + clave maestra (.env POLIZA_SECRET)
+    $curpParaFirma     = !empty($ClaveCurpBen) ? (string)$ClaveCurpBen : (string)($datosCurp['Curp'] ?? $CURP);
+    $fechaAltaUsuario  = (string)$basicas->BuscarCampos($mysqli, 'FechaRegistro', 'Usuario', 'Id', $Registrar_Usuario);
+    //Obtenemos la clave maestra de el archivo de claves seguras
+    $claveMaestra = (string)(getenv('KASU_MASTER_KEY') ?: ($_ENV['KASU_MASTER_KEY'] ?? ''));
+    if ($claveMaestra === '') {
+    http_response_code(500);
+    exit('Config faltante: KASU_MASTER_KEY');
+    }
+    //Generamos la Firma
+    $FirmaUnica = $Seguridad->poliza_id_compacto($curpParaFirma, $fechaAltaUsuario, $claveMaestra);
+
     //Creamos el nombre de el cliente
     if (!empty($ClaveCurpBen)) {
         //Obtenemos el producto que corresponde al servicio

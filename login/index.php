@@ -57,9 +57,10 @@ if (empty($_SESSION['csrf_auth'])) {
  * - Usr:    usuario pasado por enlace
  * Fecha: 05/11/2025 — Revisado por: JCCM
  * ========================================================================================== */
-$action = $_GET['action'] ?? '';                               // '', 'cp'
-$data   = filter_input(INPUT_GET, 'data', FILTER_VALIDATE_INT);
-$usr    = filter_input(INPUT_GET, 'Usr', FILTER_SANITIZE_SPECIAL_CHARS);
+$action   = $_GET['action'] ?? '';                               // '', 'cp'
+$dataRaw  = $_GET['data'] ?? null;
+$data     = filter_input(INPUT_GET, 'data', FILTER_VALIDATE_INT);
+$usr      = filter_input(INPUT_GET, 'Usr', FILTER_SANITIZE_SPECIAL_CHARS);
 
 /* ==========================================================================================
  * BLOQUE: Mensajes de estado
@@ -83,27 +84,49 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Acceso seguro a KASU Ventas">
+<meta name="theme-color" content="#F2F2F2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>KASU | Ventas</title>
 <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
+<link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png">
+<link rel="manifest" href="/login/manifest.webmanifest">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
 <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?= htmlspecialchars($VerCacheSafe, ENT_QUOTES) ?>">
-<style>
-html,body{ height:100%; background:#fff; }
-body, .main{ min-height:100dvh; background:#fff !important; }
-.login-clean{ background:#fff !important; }
-.login-clean form{
-  background:#fff !important;
-  box-shadow:none !important; /* quita “tarjeta gris” */
-  border:0 !important;
-}
-</style>
-<meta name="theme-color" content="#ffffff">
 </head>
-<body onload="localize()">
+<body>
     <div class="login-clean">
-    <div class="illustration"><img alt="KASU" src="assets/img/logoKasu.png"></div>
+      <div class="login-card">
+        <div class="illustration"><img alt="KASU" src="assets/img/logoKasu.png"></div>
 
-    <?php if (!empty($data) && $data === 8): ?>
+<?php
+  $isTokenReset = ($dataRaw !== null && !ctype_digit((string)$dataRaw) && !empty($usr));
+?>
+
+<?php if ($isTokenReset): ?>
+        <!-- ==================================================================================
+             FORMULARIO: ACTIVAR/REGISTRAR CONTRASEÑA vía enlace con token
+             ================================================================================== -->
+        <form method="POST" action="php/Funcionalidad_Empleados.php" autocomplete="off">
+            <input type="hidden" name="csrf" value="<?= $_SESSION['csrf_auth'] ?>">
+            <input type="hidden" name="Host" value="<?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES) ?>">
+            <input type="hidden" name="data" value="<?= htmlspecialchars($dataRaw, ENT_QUOTES) ?>">
+            <input type="hidden" name="User" value="<?= htmlspecialchars($usr ?? '', ENT_QUOTES) ?>">
+
+            <div class="form-group">
+                <input class="form-control" type="password" name="PassWord1" placeholder="Nueva contraseña" required autocomplete="new-password">
+            </div>
+            <div class="form-group">
+                <input class="form-control" type="password" name="PassWord2" placeholder="Confirmar contraseña" required autocomplete="new-password">
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary btn-block" name="GenCont" value="1" type="submit">Guardar contraseña</button>
+            </div>
+            <div class="text-center"><a href="/login/index.php">Volver a iniciar sesión</a></div>
+        </form>
+
+    <?php elseif (!empty($data) && $data === 8): ?>
         <!-- ==================================================================================
              FORMULARIO: ACTIVAR/REGISTRAR CONTRASEÑA vía enlace
              Qué hace: Permite establecer una nueva contraseña desde un link de activación
@@ -138,7 +161,7 @@ body, .main{ min-height:100dvh; background:#fff !important; }
             <input type="hidden" name="Host" value="<?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES) ?>">
 
             <div class="form-group">
-                <input class="form-control" type="text" name="Usuario" placeholder="Usuario" required autocomplete="username">
+                <input class="form-control" type="text" name="Usuario" placeholder="Usuario (ej. JCARLOS)" required autocomplete="username">
             </div>
             <div class="form-group">
                 <input class="form-control" type="password" name="PassAct" placeholder="Contraseña actual" required autocomplete="current-password">
@@ -181,11 +204,13 @@ body, .main{ min-height:100dvh; background:#fff !important; }
     <?php endif; ?>
 
     <?php if (!empty($data) && isset($messages[$data])): ?>
-        <div class="alert alert-info mt-3" role="alert"><?= htmlspecialchars($messages[$data], ENT_QUOTES) ?></div>
+        <div class="alert alert-info" role="alert"><?= htmlspecialchars($messages[$data], ENT_QUOTES) ?></div>
     <?php endif; ?>
-</div>
-  <script src="Javascript/finger.js?v=3"></script>
-  <script src="Javascript/localize.js?v=3"></script>
-  <script src="Javascript/Inyectar_gps_form.js"></script>
+      </div>
+    </div>
+  <script defer src="Javascript/finger.js?v=3"></script>
+  <script defer src="Javascript/localize.js?v=3"></script>
+  <script defer src="Javascript/Inyectar_gps_form.js"></script>
+  <script defer src="/login/Javascript/install.js"></script>
 </body>
 </html>

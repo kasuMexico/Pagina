@@ -11,6 +11,7 @@
 // Fecha: 05/11/2025 | Revisado por: JCCM
 session_start();
 require_once '../eia/librerias.php';
+require_once __DIR__ . '/php/mesa_helpers.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 // =================== Guardia de sesión ===================
@@ -274,16 +275,19 @@ if (!empty($_POST['CancelaCte'])) {
        Qué hace: Lista prospectos activos, calcula semanas y muestra acciones
        Fecha: 05/11/2025 | Revisado por: JCCM -->
   <section name="impresion de datos finales">
-    <div class="table-responsive">
-      <table class="table">
-        <tr>
-          <th>Nombre Prospecto</th>
-          <th>Sem. Activo</th>
-          <th>Servicio</th>
-          <th>Origen</th>
-          <th>Asignado</th>
-          <th>Acciones</th>
-        </tr>
+    <div class="table-responsive mesa-table-wrapper">
+      <table class="table mesa-table" data-mesa="prospectos">
+        <thead>
+          <tr>
+            <th>Nombre Prospecto</th>
+            <th>Sem. Activo</th>
+            <th>Servicio</th>
+            <th>Origen</th>
+            <th>Asignado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
         <?php
         // Mostrar solo Cancelacion = 0
         if ($nombre === ' ') {
@@ -305,8 +309,8 @@ if (!empty($_POST['CancelaCte'])) {
             <td><?= h($row['Servicio_Interes']) ?></td>
             <td><?= h($row['Origen']) ?></td>
             <td><?= h($basicas->BuscarCampos($mysqli,'IdUsuario','Empleados','Id',(int)$row['Asignado'])) ?></td>
-            <td>
-              <div class="d-flex">
+            <td class="mesa-actions" data-label="Acciones">
+              <div class="mesa-actions-grid">
                 <form method="POST" action="<?= h($_SERVER['PHP_SELF']) ?>">
                   <input type="hidden" name="Host"   value="<?= h($_SERVER['PHP_SELF']) ?>">
                   <input type="hidden" name="nombre" value="<?= h($nombre) ?>">
@@ -352,6 +356,7 @@ if (!empty($_POST['CancelaCte'])) {
             </td>
           </tr>
         <?php endforeach; ?>
+        </tbody>
       </table>
     </div>
   </section>

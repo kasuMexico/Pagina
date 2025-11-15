@@ -28,7 +28,7 @@
     var slot = form.querySelector('[data-gps-slot]');
     if (!slot) return;              // este form no usa GPS
     // Si ya tiene campos GPS, no detengas
-    if (slot.querySelector('input[name="Lat"]')) return;
+    if (slot.querySelector('input[name="latitud"], input[name="Lat"]')) return;
 
     ev.preventDefault();            // espera GPS y luego envía
     requestAndSubmit(form, slot);

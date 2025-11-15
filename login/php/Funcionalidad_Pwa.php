@@ -539,6 +539,8 @@ if (!empty($_POST['btnEnviar'])) {
     // Si requieres guardar el nombre en BD:
     // $basicas->ActCampo($mysqli, 'Empleados', 'Foto', basename($fileHist), $VendId);
 
+    $_SESSION['FotoCacheBust'] = time();
+
     $redirect('Foto de perfil actualizada.');
 }
 

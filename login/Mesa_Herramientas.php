@@ -310,19 +310,6 @@ $VerCache = time();
         </div>
       </form>
 
-      <!-- =================== Foto de perfil ===================
-           Qué hace: Sube nueva foto de perfil por POST multipart
-           Fecha: 05/11/2025 | Revisado por: JCCM -->
-      <form id="perfilForm" method="POST" enctype="multipart/form-data" action="php/Funcionalidad_Pwa.php">
-        <input type="hidden" name="Host" value="<?php echo h($_SERVER['PHP_SELF']); ?>">
-        <input type="hidden" name="btnEnviar" value="1">
-        <input type="file" id="subirImg" name="subirImg" accept="image/*" class="d-none">
-        <button type="button" id="btnFoto" class="btn btn-secondary btn-sm btn-block">Nueva foto de perfil</button>
-
-        <div id="info" class="small text-muted"></div>
-      </form>
-      <hr>
-
       <!-- =================== Salir ===================
            Qué hace: Cierra sesión con token CSRF y marca de tiempo
            Fecha: 05/11/2025 | Revisado por: JCCM -->
@@ -357,44 +344,6 @@ document.addEventListener('DOMContentLoaded', function () {
   var v = <?php echo $Ventana ? json_encode('#'.$Ventana, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) : 'null'; ?>;
   if (v) { $(v).modal('show'); }
 });
-
-function cambiar(){
-  var inp = document.getElementById('subirImg');
-  if (inp && inp.files && inp.files[0]) {
-    document.getElementById('info').textContent = inp.files[0].name;
-  }
-}
-
-function OcuForCurp(el){
-  // toggle botón "Cargar Foto" si aplica en vistas relacionadas
-  var btnUp = document.getElementById("RegCurCli");
-  if (btnUp) btnUp.style.display = "";
-}
 </script>
-
-<!-- =================== Auto-subir foto ===================
-     Qué hace: Dispara input file y envía el formulario al seleccionar imagen
-     Fecha: 05/11/2025 | Revisado por: JCCM -->
-<script>
-(function () {
-  var form = document.getElementById('perfilForm');
-  var file = document.getElementById('subirImg');
-  var btn  = document.getElementById('btnFoto');
-  var info = document.getElementById('info');
-  var locked = false;
-
-  if (btn && file && form) {
-    btn.addEventListener('click', function () { file.click(); });
-    file.addEventListener('change', function () {
-      if (!file.files || !file.files[0] || locked) return;
-      locked = true;
-      if (info) info.textContent = 'Cargando foto...';
-      form.submit();
-    });
-  }
-})();
-</script>
-
 </body>
 </html>
-

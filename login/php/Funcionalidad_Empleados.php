@@ -40,26 +40,35 @@ $HoraActual = date('H:i:s');
 /**************************************** BLOQUE: LOGIN Revisado 05/11/2025 JCCM ****************************************/
 /* Qué hace: Autentica al usuario contra Empleados.Pass (sha256) y registra auditoría */
 if (!empty($_POST['Login'])) {
+    ini_set('log_errors', '1');
+    ini_set('error_log', __DIR__ . '/../debug_login.log');
     // CSRF (obligatorio si viene en el formulario)
     if (isset($_POST['csrf']) && !hash_equals($_SESSION['csrf_auth'] ?? '', (string)$_POST['csrf'])) {
+        error_log('[KASU][Login] CSRF inválido');
         http_response_code(403);
         exit;
     }
 
-    $Host    = $mysqli->real_escape_string($_POST['Host'] ?? '/login/index.php');
+    $HostRaw = (string)($_POST['Host'] ?? '/login/index.php');
+    $Host    = $mysqli->real_escape_string($HostRaw);
     $Usuario = trim((string)($_POST['Usuario'] ?? ''));
     $Pass    = (string)($_POST['PassWord'] ?? '');
 
     if ($Usuario === '' || $Pass === '') {
+        error_log('[KASU][Login] Usuario o contraseña vacíos');
         header('Location: https://kasu.com.mx/login/index.php?data=4');
         exit;
     }
 
-    $hashDB = $basicas->BuscarCampos($mysqli, "Pass", "Empleados", "IdUsuario", $Usuario);
-    if (!empty($hashDB) && hash('sha256', $Pass) === $hashDB) {
-        $idEmp = $basicas->BuscarCampos($mysqli, "Id", "Empleados", "IdUsuario", $Usuario);
-        $_SESSION['Vendedor']   = $Usuario;
-        $_SESSION['IdVendedor'] = $idEmp;
+    error_log("[KASU][Login] Intento de acceso para {$Usuario}");
+    if (autenticarVendedor($mysqli)) {
+        $usuarioSesion = (string)($_SESSION['Vendedor'] ?? $Usuario);
+        $idEmp = (int)$basicas->BuscarCampos($mysqli, "Id", "Empleados", "IdUsuario", $usuarioSesion);
+        $_SESSION['IdEmpleado'] = $idEmp;
+        $_SESSION['IdVendedor'] = $usuarioSesion;
+        if (empty($_SESSION['csrf_logout'])) {
+            $_SESSION['csrf_logout'] = bin2hex(random_bytes(32));
+        }
 
         // Auditoría
         $seguridad->auditoria_registrar(
@@ -70,6 +79,7 @@ if (!empty($_POST['Login'])) {
             $_POST['Host'] ?? $_SERVER['PHP_SELF']
         );
 
+        error_log("[KASU][Login] Acceso concedido a {$usuarioSesion}");
         header('Location: https://kasu.com.mx/login/Pwa_Principal.php');
         exit;
     }
@@ -91,6 +101,7 @@ if (!empty($_POST['Login'])) {
 /* Qué hace: Verifica Pass actual y actualiza a nuevo hash sha256; registra auditoría */
 if (!empty($_POST['CambiarPass'])) {
     if (isset($_POST['csrf']) && !hash_equals($_SESSION['csrf_auth'] ?? '', (string)$_POST['csrf'])) {
+        error_log('[KASU][CambiarPass] CSRF inválido');
         http_response_code(403);
         exit;
     }
@@ -102,18 +113,21 @@ if (!empty($_POST['CambiarPass'])) {
     $P2      = (string)($_POST['PassWord2'] ?? '');
 
     if ($P1 !== $P2) {
+        error_log('[KASU][CambiarPass] Nueva contraseña no coincide');
         header('Location: https://kasu.com.mx/login/index.php?action=cp&data=2');
         exit;
     }
 
     $hashDB = $basicas->BuscarCampos($mysqli, "Pass", "Empleados", "IdUsuario", $Usuario);
     if (empty($hashDB) || hash('sha256', $PassAct) !== $hashDB) {
+        error_log("[KASU][CambiarPass] Contraseña actual incorrecta para {$Usuario}");
         header('Location: https://kasu.com.mx/login/index.php?action=cp&data=5');
         exit;
     }
 
     $idEmp = $basicas->BuscarCampos($mysqli, "Id", "Empleados", "IdUsuario", $Usuario);
     $basicas->ActCampo($mysqli, "Empleados", "Pass", hash('sha256', $P1), $idEmp);
+    error_log("[KASU][CambiarPass] Contraseña actualizada para {$Usuario}");
 
     // Auditoría
     $seguridad->auditoria_registrar(
@@ -369,7 +383,7 @@ if (isset($_POST['CreaEmpl'])) {
         if (!empty($RegIdPlaza)) {
             $basicas->ActCampo($mysqli, "Empleados", "Nombre",     $Nombre,  $RegIdPlaza);
             $basicas->ActCampo($mysqli, "Empleados", "IdContacto", $uSR,     $RegIdPlaza);
-            $basicas->ActCampo($mysqli, "Empleados", "IdUsuario",  null,     $RegIdPlaza);
+            $basicas->ActCampo($mysqli, "Empleados", "IdUsuario",  $DirUrl,  $RegIdPlaza);
             $basicas->ActCampo($mysqli, "Empleados", "Pass",       $dRc,     $RegIdPlaza);
             $basicas->ActCampo($mysqli, "Empleados", "Equipo",     $Lider,   $RegIdPlaza);
             $basicas->ActCampo($mysqli, "Empleados", "Sucursal",   $Sucursal,$RegIdPlaza);
@@ -395,22 +409,24 @@ if (isset($_POST['CreaEmpl'])) {
 if (isset($_POST['ReenCOntra'])) {
     // CSRF opcional
     if (isset($_POST['csrf']) && !hash_equals($_SESSION['csrf_auth'] ?? '', (string)$_POST['csrf'])) {
+        error_log('[KASU][ReenCOntra] CSRF inválido');
         http_response_code(403);
         exit;
     }
 
-    $Id    = $mysqli->real_escape_string((string)($_POST['Id']    ?? ''));
-    $Nombre= $mysqli->real_escape_string((string)($_POST['Nombre']?? ''));
-    $Email = $mysqli->real_escape_string((string)($_POST['Email'] ?? ''));
-    $User  = $mysqli->real_escape_string((string)($_POST['User']  ?? ''));
-    $Host  = $mysqli->real_escape_string((string)($_POST['Host']  ?? ''));
-    $name  = $mysqli->real_escape_string((string)($_POST['name']  ?? ''));
+    $Id        = $mysqli->real_escape_string((string)($_POST['Id']        ?? ''));
+    $Nombre    = $mysqli->real_escape_string((string)($_POST['Nombre']    ?? ''));
+    $Email     = $mysqli->real_escape_string((string)($_POST['Email']     ?? ''));
+    $IdUsuario = $mysqli->real_escape_string((string)($_POST['IdUsuario'] ?? ''));
+    $Host      = $mysqli->real_escape_string((string)($_POST['Host']      ?? ''));
+    $name      = $mysqli->real_escape_string((string)($_POST['name']      ?? ''));
 
     $dRc     = mt_rand();
     $dirUrl1 = base64_encode((string)$dRc);
-    $DirUrl  = "https://kasu.com.mx/login/index.php?data=" . $dirUrl1 . "&Usr=" . $Id;
+    $DirUrl  = "https://kasu.com.mx/login/index.php?data=" . $dirUrl1 . "&Usr=" . rawurlencode($IdUsuario !== '' ? $IdUsuario : (string)$Id);
 
     $basicas->ActCampo($mysqli, "Empleados", "Pass", $dRc, $Id);
+    error_log("[KASU][ReenCOntra] Token generado para {$IdUsuario}");
 
     $Mensaje = $Correo->Mensaje('RESTABLECIMIENTO DE CONTRASEÑA', $Nombre, $DirUrl, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '');
     $Correo->EnviarCorreo($Nombre, $Email, 'RESTABLECIMIENTO DE CONTRASEÑA', $Mensaje);
@@ -424,21 +440,23 @@ if (isset($_POST['ReenCOntra'])) {
 if (!empty($_POST['GenCont'])) {
     // CSRF opcional
     if (isset($_POST['csrf']) && !hash_equals($_SESSION['csrf_auth'] ?? '', (string)$_POST['csrf'])) {
+        error_log('[KASU][GenCont] CSRF inválido');
         http_response_code(403);
         exit;
     }
 
     $PassWord1   = (string)($_POST['PassWord1'] ?? '');
     $PassWord2   = (string)($_POST['PassWord2'] ?? '');
-    $data        = (string)($_POST['data']      ?? '');
+    $tokenRaw    = (string)($_POST['data']      ?? '');
     $fingerprint = (string)($_POST['fingerprint'] ?? '');
-    $Host        = $mysqli->real_escape_string((string)($_POST['Host'] ?? ''));
+    $Host        = $mysqli->real_escape_string((string)($_POST['Host'] ?? '/login/index.php'));
 
     if ($PassWord1 === $PassWord2) {
-        $decodedPass  = base64_decode($data, true);
+        $decodedPass  = base64_decode($tokenRaw, true);
         $PassRecordId = $decodedPass !== false ? $basicas->BuscarCampos($mysqli, "Id", "Empleados", "Pass", $decodedPass) : '';
 
         if (!empty($PassRecordId)) {
+            error_log("[KASU][GenCont] Token válido para empleado {$PassRecordId}");
             // GPS
             $gpsLogin = $basicas->InsertCampo($mysqli, "gps", [
                 "latitud"  => $mysqli->real_escape_string((string)($_POST['latitud']  ?? '')),
@@ -485,18 +503,19 @@ if (!empty($_POST['GenCont'])) {
 
             // Actualiza pass
             $PassSHa = hash('sha256', $PassWord1);
-            $basicas->ActCampo($mysqli, "Empleados", "IdUsuario", (string)($_POST['User'] ?? ''), $PassRecordId);
             $basicas->ActCampo($mysqli, "Empleados", "Pass", $PassSHa, $PassRecordId);
 
             $dta = 3; // Exitoso
         } else {
+            error_log('[KASU][GenCont] Token inválido o ya utilizado');
             $dta = 1; // Token ya usado/no válido
         }
     } else {
+        error_log('[KASU][GenCont] Contraseñas no coinciden');
         $dta = 2; // No coinciden
     }
 
-    header('Location: https://kasu.com.mx' . $Host . '?Vt=1&Data=' . $dta);
+    header('Location: https://kasu.com.mx' . $Host . '?Vt=1&Data=' . (int)$dta);
     exit;
 }
 

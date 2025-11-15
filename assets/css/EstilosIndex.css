@@ -31,24 +31,61 @@ img{width:90%;border-radius:10px}
 /* Viñetas contrato */
 ol.viñeta>li::before{content:"• ";color:#666;font-weight:700;margin-right:4px}
 
-/* === Módulos del archivo dos que no chocan gravemente === */
+/* === Portada (main-banner) + slider de fondo === */
 .main-banner{
-  background-repeat:no-repeat;background-position:center center;background-size:cover;
-  padding:120px 0 120px;position:relative;overflow:hidden;
+  position:relative;
+  overflow:hidden;
+  background-repeat:no-repeat;
+  background-position:center center;
+  background-size:cover;
+  padding:120px 0 120px;
 }
+
+/* (Si no usas estas figuras decorativas puedes dejarlas en blanco o comentar) */
 .main-banner:after{
-  content:'';background-repeat:no-repeat;position:absolute;left:0;top:100px;width:193px;height:467px;
+  content:'';
+  background-repeat:no-repeat;
+  position:absolute;
+  left:0;
+  top:100px;
+  width:193px;
+  height:467px;
 }
 .main-banner:before{
-  content:'';background-repeat:no-repeat;position:absolute;right:0;top:100px;width:98px;height:290px;
+  content:'';
+  background-repeat:no-repeat;
+  position:absolute;
+  right:0;
+  top:100px;
+  width:98px;
+  height:290px;
 }
+
+/* Texto de la portada (igual que en el diseño) */
 .main-banner .left-content{margin-right:45px}
-.main-banner .left-content h6{text-transform:uppercase;font-size:18px;color:#fe3f40;margin-bottom:15px}
-.main-banner .left-content h2{font-size:50px;font-weight:700;color:#2a2a2a;line-height:72px}
+.main-banner .left-content h6{
+  text-transform:uppercase;
+  font-size:18px;
+  color:#fe3f40;
+  margin-bottom:15px
+}
+.main-banner .left-content h2{
+  font-size:50px;
+  font-weight:700;
+  color:#2a2a2a;
+  line-height:72px
+}
 .main-banner .left-content h2 em{color:#03a4ed;font-style:normal}
 .main-banner .left-content h2 span{color:#fe3f40}
 .main-banner .left-content p{margin:20px 0}
-.form{margin-top:30px;width:470px;height:66px;position:relative}
+
+/* Formulario CURP */
+.form{
+  margin-top:30px;
+  width:470px;
+  height:66px;
+  position:relative
+}
 .form button{
   position:absolute;right:10px;top:10px;display:inline-block;background-color:#fff;
   font-size:15px;font-weight:500;color:#fe3f40;text-transform:capitalize;
@@ -59,83 +96,202 @@ ol.viñeta>li::before{content:"• ";color:#666;font-weight:700;margin-right:4px
   padding:0 25px;color:#fff;letter-spacing:.25px;font-size:15px;font-weight:300
 }
 .form input::placeholder{color:#fff}
-.right-image img{max-width:100%;display:block;margin:0 auto}
+
+/* Imagen derecha del hero (por si en algún momento vuelves a usarla) */
+.right-image img{
+  max-width:100%;
+  display:block;
+  margin:0 auto
+}
+
+/* Responsive portada */
 @media (max-width:767px){
   .form{width:100%}
-  .form button{position:static;display:block;margin-top:10px;margin-left:auto;margin-right:auto}
+  .form button{
+    position:static;
+    display:block;
+    margin-top:10px;
+    margin-left:auto;
+    margin-right:auto
+  }
   .form input{width:100%;max-width:470px}
 }
 @media (max-width:992px){
   .main-banner{padding-top:196px}
-  .main-banner .left-content{margin-right:0;text-align:center;margin-bottom:45px}
+  .main-banner .left-content{
+    margin-right:0;
+    text-align:center;
+    margin-bottom:45px
+  }
   .main-banner:after{top:76px;z-index:-1}
   .main-banner .left-content form,
   .main-banner .left-content form input{width:100%!important}
 }
+
 /* Testimonios: imagen circular y tamaño fijo */
 #testimonials .team-info img{
-  width: 60px !important;
-  height: 60px !important;
-  object-fit: cover;
-  border-radius: 50%;
-  display: block;
-  margin: 0 auto 12px;
+  width:60px!important;
+  height:60px!important;
+  object-fit:cover;
+  border-radius:50%;
+  display:block;
+  margin:0 auto 12px;
 }
-@media (max-width: 600px){
+@media (max-width:600px){
   #testimonials .team-info img{
-    width: 60px;
-    height: 600px;
+    width:60px;
+    height:60px;
   }
 }
-/* Oculta la imagen del hero en móvil */
-@media (max-width: 767px){
+
+/* Oculta la imagen del hero en móvil (si hubiera .right-image) */
+@media (max-width:767px){
   .main-banner .right-image,
   .welcome-area .right-image{
-    display: none !important;
+    display:none!important;
   }
 }
-/* Esta es la seccion de los sliders de la pagina index de la portada*/
-.main-banner {
-    position: relative;
-    overflow: hidden;
-    background-color: #000; /* color de respaldo si tarda el fondo */
-}
 
-.banner-bg-slider {
-    position: absolute;
-    inset: 0;           /* top:0; right:0; bottom:0; left:0 */
-    z-index: 1;
+/* ==== Slider de fondo en la portada ==== */
+.banner-bg-slider{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
 }
-
-.banner-bg {
-    position: absolute;
-    inset: 0;
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
-    opacity: 0;
-    transition: opacity 1s ease-in-out;
+.banner-bg{
+  position:absolute;
+  inset:0;
+  background-size:cover;
+  background-position:center center;
+  background-repeat:no-repeat;
+  opacity:0;
+  transition:opacity 1s ease-in-out;
 }
-
 /* Slide visible */
-.banner-bg.is-active {
-    opacity: 1;
-}
+.banner-bg.is-active{opacity:1}
 
 /* Contenido por encima del fondo */
-.main-banner-content {
-    position: relative;
-    z-index: 2;
+.main-banner-content{
+  position:relative;
+  z-index:2;
 }
 
+/* Fondo general de las secciones moradas (productos, clientes, testimonios) */
+.section.colored{
+  background:#f2f2fe;
+}
 
 /* En móvil: usar solo color liso y ocultar el slider */
-@media (max-width: 768px) {
-    .main-banner {
-        background: #f2f2fe !important; /* mismo color que .section.colored */
-    }
+@media (max-width:768px){
+  .main-banner{
+    background:#f2f2fe!important;
+    padding-top:160px;
+    padding-bottom:80px;
+  }
+  .main-banner .banner-bg-slider{
+    display:none!important;
+  }
+}
 
-    .main-banner .banner-bg-slider {
-        display: none !important; /* oculta las imágenes de fondo en teléfono */
-    }
+/* Fondo general de la sección de productos */
+.Productos-Index {
+  background:#f2f2fe;
+  position:relative;
+  z-index:3;
+  padding:80px 0 80px;
+}
+
+/* SOLO las tarjetas (row de productos) se suben para encimarse al slider */
+.Productos-Index .row[role="list"]{
+  margin-top:-130px;
+}
+
+/* En móvil: no encimar para que no se corte nada */
+@media (max-width:768px){
+  .Productos-Index{
+    padding-top:40px;
+  }
+  .Productos-Index .row[role="list"]{
+    margin-top:0;
+  }
+}
+
+/* IMPORTANTE: en esta sección desactivamos scrollReveal
+   para que las tarjetas se vean desde que carga la página */
+.Productos-Index [data-scroll-reveal]{
+  opacity:1!important;
+  visibility:visible!important;
+  transform:none!important;
+}
+
+/* Tarjetas de productos en la portada */
+.team-item.product-card{
+  padding:0;
+  overflow:hidden;
+  border-radius:20px;
+  text-align:center;
+}
+
+.product-card-link{
+  display:block;
+  color:inherit;
+}
+
+.product-card-title{
+  background:#ffffff;
+  padding:18px 16px 10px;
+  font-size:20px;
+  line-height:1.3;
+  border-radius:20px 20px 0 0;
+}
+
+.product-card-image{
+  position:relative;
+  overflow:hidden;
+  border-radius:0 0 20px 20px;
+}
+
+/* AQUÍ se sobreescribe el borde global de img */
+.Productos-Index .product-card-image img{
+  display:block;
+  width:100% !important;
+  height:330px;
+  object-fit:cover;
+  border-radius:0 0 20px 20px !important; /* recto arriba, redondeado abajo */
+}
+
+/* Banda “CONOCER MÁS” sobre la imagen */
+.product-card-cta{
+  position:absolute;
+  top:16px;
+  left:16px;
+  background-color:#911F66;
+  color:#fff;
+  padding:8px 20px;
+  border-radius:8px;
+  font-size:14px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+
+/* Logo KASU (si lo vuelves a usar)
+.product-card-logo{
+  position:absolute;
+  right:16px;
+  bottom:16px;
+}
+.product-card-logo img{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+}
+*/
+
+/* Pequeño ajuste en móvil */
+@media (max-width:767px){
+  .Productos-Index .product-card-image img{
+    height:220px;
+  }
 }

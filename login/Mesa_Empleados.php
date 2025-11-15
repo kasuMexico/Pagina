@@ -14,6 +14,7 @@ declare(strict_types=1);
 // Fecha: 05/11/2025 | Revisado por: JCCM
 session_start();
 require_once '../eia/librerias.php';
+require_once __DIR__ . '/php/mesa_helpers.php';
 date_default_timezone_set('America/Mexico_City');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 header_remove('X-Powered-By');
@@ -405,17 +406,21 @@ $VerCache = $VerCache ?? time();
         <h2><strong>No se ha seleccionado ningún Colaborador</strong></h2>
       <?php endif; ?>
 
-      <div class="table-responsive">
-        <table class="table">
-          <tr>
-            <th>Nombre Empleado</th>
-            <th>Líder</th>
-            <th>Nivel</th>
-            <th>Sucursal</th>
-            <th>Com.Vtas</th>
-            <th>Com.Distr</th>
-            <th>Acciones</th>
-          </tr>
+      <div class="table-responsive mesa-table-wrapper">
+        <table class="table mesa-table" data-mesa="empleados">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Usuario</th>
+              <th>Líder</th>
+              <th>Nivel</th>
+              <th>Sucursal</th>
+              <th>Com.Vtas</th>
+              <th>Com.Distr</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
           <?php
           if (!empty($name)) {
             $buscar = $basicas->BLikes($mysqli,'Empleados','Nombre',$name);
@@ -470,15 +475,16 @@ $VerCache = $VerCache ?? time();
               $btnId = (int)$row['Id'];
           ?>
             <tr>
-              <td><?= h($row['Nombre']) ?></td>
-              <td><?= h($lidUsuario) ?></td>
-              <td><?= h($nivNombre) ?></td>
-              <td><?= h($sucNombre) ?></td>
+              <td data-label="Nombre"><?= h($row['Nombre']) ?></td>
+              <td data-label="Usuario"><?= h($row['IdUsuario']) ?></td>
+              <td data-label="Líder"><?= h($lidUsuario) ?></td>
+              <td data-label="Nivel"><?= h($nivNombre) ?></td>
+              <td data-label="Sucursal"><?= h($sucNombre) ?></td>
               <td>$ <?= number_format((float)$Saldo,2) ?></td>
               <td>$ <?= number_format((float)$ComGenHoy,2) ?></td>
-              <td>
-                <div class="d-flex">
-                  <form method="POST" action="<?= h($_SERVER['PHP_SELF']) ?>" class="mr-2">
+              <td class="mesa-actions" data-label="Acciones">
+                <div class="mesa-actions-grid">
+                  <form method="POST" action="<?= h($_SERVER['PHP_SELF']) ?>">
                     <!-- Botón de Pagar Comisiones -->
                     <input type="hidden" name="nombre" value="<?= h($name) ?>">
                     <input type="hidden" name="Saldo" value="<?= h((string)$NvoSal) ?>">
@@ -520,6 +526,7 @@ $VerCache = $VerCache ?? time();
             }
           }
           ?>
+          </tbody>
         </table>
       </div>
       <br><br><br><br>

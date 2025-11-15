@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 session_start();
 require_once '../eia/librerias.php';
+require_once __DIR__ . '/php/mesa_helpers.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 if (empty($_SESSION["Vendedor"])) {
@@ -261,92 +262,92 @@ if (isset($_GET['Msg'])) {
     </div>
   </form>
 
-  <!-- Tabla -->
   <h4 class="title">Tarjetas Registradas</h4>
   <br>
-  <div class="table-responsive">
-    <table class="table table-sm table-striped">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Tarjeta</th>
-          <th>Título</th>
-          <th>Producto</th>
-          <th>Descuento</th>
-          <th>Vence</th>
-          <th>Status</th>
-          <th>Usos</th>
-          <th style="min-width:220px">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-      <?php if (!$tarjetas): ?>
-        <tr><td colspan="9" class="text-center text-muted">Sin resultados</td></tr>
-      <?php endif; ?>
+  <?php if (!$tarjetas): ?>
+    <p class="text-center text-muted">Sin resultados</p>
+  <?php else: ?>
+    <div class="mesa-cards">
       <?php foreach ($tarjetas as $row): ?>
-        <tr>
-          <td><?= (int)$row['Id'] ?></td>
-          <td>
-            <?php
-              $src = ($row['Tipo']==='Art')
-                ? (string)$row['Img']
-                : "https://kasu.com.mx/assets/images/cupones/".ltrim((string)$row['Img'],'/');
-            ?>
-            <img class="img-cup" src="<?= h($src) ?>" alt="">
-          </td>
-          <td>
-            <div class="font-weight-bold"><?= h($row['TitA']) ?></div>
-            <div class="small text-muted"><?= h($row['Red']) ?> · <?= h($row['Tipo']) ?></div>
-          </td>
-          <td><?= h($row['Producto']) ?></td>
-          <td>$<?= number_format((float)$row['Descuento'],2) ?></td>
-          <td><?= h((string)($row['Validez_Fin'] ?? '')) ?></td>
-          <td>
-            <?php if ((int)$row['Status']===1): ?>
-              <span class="badge badge-on">Activa</span>
-            <?php else: ?>
-              <span class="badge badge-off">Inactiva</span>
-            <?php endif; ?>
-          </td>
-          <td><?= (int)$row['Usos'] ?></td>
-          <td>
-            <div class="d-flex flex-wrap" style="gap:.4rem">
-              <!-- Activar -->
+        <?php
+          $src = ($row['Tipo']==='Art')
+            ? (string)$row['Img']
+            : "https://kasu.com.mx/assets/images/cupones/".ltrim((string)$row['Img'],'/');
+        ?>
+        <article class="mesa-card">
+          <div class="mesa-card-header">
+            <div>
+              <p class="mesa-card-title"><?= h($row['TitA']) ?></p>
+              <p class="mesa-card-sub"><?= h($row['Red']) ?> · <?= h($row['Tipo']) ?></p>
+            </div>
+            <?= mesa_status_chip((int)$row['Status'] === 1 ? 'Activo' : 'Cancelado') ?>
+          </div>
+
+          <div class="mesa-card-media">
+            <img class="img-fluid img-cup" src="<?= h($src) ?>" alt="Tarjeta <?= h($row['TitA']) ?>">
+          </div>
+
+          <ul class="mesa-card-meta">
+            <li>
+              <span>ID</span>
+              <strong><?= (int)$row['Id'] ?></strong>
+            </li>
+            <li>
+              <span>Producto</span>
+              <strong><?= h($row['Producto']) ?></strong>
+            </li>
+            <li>
+              <span>Descuento</span>
+              <strong>$<?= number_format((float)$row['Descuento'],2) ?></strong>
+            </li>
+            <li>
+              <span>Vigencia</span>
+              <strong><?= h((string)($row['Validez_Fin'] ?? '')) ?></strong>
+            </li>
+            <li>
+              <span>Usos</span>
+              <strong><?= (int)$row['Usos'] ?></strong>
+            </li>
+          </ul>
+
+          <div class="mesa-card-actions">
+            <div class="mesa-actions-grid">
               <form method="POST" action="/login/php/Funcionalidad_Empleados.php" class="m-0">
                 <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
                 <input type="hidden" name="accion" value="activar_tarjeta">
                 <input type="hidden" name="Id" value="<?= (int)$row['Id'] ?>">
-                <button class="btn btn-sm btn-outline-success" type="submit" <?= (int)$row['Status']===1?'disabled':''; ?>>Activar</button>
+                <button class="btn btn-sm btn-outline-success btn-block" type="submit" <?= (int)$row['Status']===1?'disabled':''; ?>>Activar</button>
               </form>
-              <!-- Desactivar -->
+
               <form method="POST" action="/login/php/Funcionalidad_Empleados.php" class="m-0">
                 <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
                 <input type="hidden" name="accion" value="desactivar_tarjeta">
                 <input type="hidden" name="Id" value="<?= (int)$row['Id'] ?>">
-                <button class="btn btn-sm btn-outline-warning" type="submit" <?= (int)$row['Status']===0?'disabled':''; ?>>Desactivar</button>
+                <button class="btn btn-sm btn-outline-warning btn-block" type="submit" <?= (int)$row['Status']===0?'disabled':''; ?>>Desactivar</button>
               </form>
-              <!-- Borrar -->
-              <form method="POST" action="/login/php/Funcionalidad_Empleados.php" class="m-0" onsubmit="return confirm('¿Borrar tarjeta <?= (int)$row['Id'] ?>?');">
+
+              <form method="POST" action="/login/php/Funcionalidad_Empleados.php" class="m-0">
                 <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
                 <input type="hidden" name="accion" value="borrar_tarjeta">
                 <input type="hidden" name="Id" value="<?= (int)$row['Id'] ?>">
-                <button class="btn btn-sm btn-outline-danger" type="submit">Borrar</button>
+                <button class="btn btn-sm btn-outline-danger btn-block" type="submit" onclick="return confirm('¿Borrar tarjeta <?= (int)$row['Id'] ?>?');">Borrar</button>
               </form>
-              <!-- Actualizar vigencia rápida -->
-              <form method="POST" action="/login/php/Funcionalidad_Empleados.php" class="form-inline m-0">
+
+              <form method="POST" action="/login/php/Funcionalidad_Empleados.php" class="m-0">
                 <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
                 <input type="hidden" name="accion" value="actualizar_vigencia">
                 <input type="hidden" name="Id" value="<?= (int)$row['Id'] ?>">
-                <input type="date" name="Validez_Fin" class="form-control form-control-sm" value="<?= h((string)$row['Validez_Fin']) ?>">
-                <button class="btn btn-sm btn-outline-primary ml-1" type="submit">Actualizar</button>
+                <div class="d-flex align-items-center" style="gap:.25rem">
+                  <input type="date" name="Validez_Fin" class="form-control form-control-sm" value="<?= h((string)$row['Validez_Fin']) ?>">
+                  <button class="btn btn-sm btn-outline-primary" type="submit">Actualizar</button>
+                </div>
               </form>
             </div>
-          </td>
-        </tr>
+          </div>
+        </article>
       <?php endforeach; ?>
-      </tbody>
-    </table>
-  </div>
+    </div>
+  <?php endif; ?>
 
   <br><br><br><br>
 </main>

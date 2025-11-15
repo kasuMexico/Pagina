@@ -16,6 +16,7 @@ declare(strict_types=1);
 // Fecha: 05/11/2025 | Revisado por: JCCM
 session_start();
 require_once '../eia/librerias.php';
+require_once __DIR__ . '/php/mesa_helpers.php';
 date_default_timezone_set('America/Mexico_City');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 header_remove('X-Powered-By');

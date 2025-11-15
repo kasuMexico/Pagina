@@ -16,6 +16,7 @@ require_once __DIR__ . '/Funciones/Funciones_Basicas.php';
 require_once __DIR__ . '/Funciones/Funciones_Correo.php';
 require_once __DIR__ . '/Funciones/Funciones_Financieras.php';
 require_once __DIR__ . '/Funciones/Funciones_Seguridad.php';
+require_once __DIR__ . '/Funciones/Funciones_Auth.php';
 
 //datos locales
 date_default_timezone_set('America/Mexico_City');
@@ -48,6 +49,7 @@ $HoraActual = date('H:i:s');
 $basicas     = new Basicas();
 $seguridad   = new Seguridad();
 $financieras = new Financieras();
+$Correo      = new Correo();
 
 // DEBUG: Activar todos los errores y mostrar datos importantes (eliminar en producción)
 ini_set('display_errors', '1');
@@ -55,4 +57,4 @@ ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
 
 //Temporal para actualizar cache de PWA
-$VerCache = 54;
+$VerCache = 58;

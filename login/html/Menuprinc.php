@@ -226,3 +226,17 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
     }
   ?>
 </div>
+<?php
+if (!defined('KASU_PWA_INSTALL_LOADED')) {
+  define('KASU_PWA_INSTALL_LOADED', true);
+  echo '<script defer src="/login/Javascript/install.js"></script>';
+}
+if (!defined('KASU_PWA_SWIPE_LOADED')) {
+  define('KASU_PWA_SWIPE_LOADED', true);
+  echo '<script defer src="/login/Javascript/swipe-nav.js"></script>';
+}
+if (!defined('KASU_MESA_TABLE_LOADED')) {
+  define('KASU_MESA_TABLE_LOADED', true);
+  echo '<script defer src="/login/Javascript/mesa-table.js"></script>';
+}
+?>

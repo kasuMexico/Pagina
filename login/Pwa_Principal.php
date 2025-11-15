@@ -61,6 +61,12 @@ if ($last !== '' && is_file($fsDir . $last)) {
     }
 }
 
+if (!empty($_SESSION['FotoCacheBust'])) {
+    $separator = str_contains($profileUrl, '?') ? '&' : '?';
+    $profileUrl .= $separator . 'cb=' . rawurlencode((string)$_SESSION['FotoCacheBust']);
+    unset($_SESSION['FotoCacheBust']);
+}
+
 /* ==========================================================================================
  * BLOQUE: Datos del usuario para cabecera
  * Qué hace: Obtiene nombre, nivel, sucursal y etiquetas legibles.
@@ -137,14 +143,22 @@ $fin = (new DateTime('last day of this month'))->format('d/m/Y');
     <!-- Perfil -->
     <div class="dpersonales">
       <div class="imgPerfil">
-        <img class="img-thumbnail" alt="perfil" src="<?= htmlspecialchars($profileUrl, ENT_QUOTES) ?>">
+        <img class="img-thumbnail" alt="perfil" src="<?= htmlspecialchars($profileUrl, ENT_QUOTES) ?>" id="FotoPerfil">
+        <button type="button" class="btn-change-photo" id="btnFoto" aria-label="Actualizar foto">
+          <i class="fa fa-camera"></i>
+        </button>
+        <form id="perfilForm" method="POST" enctype="multipart/form-data" action="php/Funcionalidad_Pwa.php" class="perfil-uploader">
+          <input type="hidden" name="Host" value="<?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES) ?>">
+          <input type="hidden" name="btnEnviar" value="1">
+          <input class="d-none" type="file" id="subirImg" name="subirImg" accept="image/*">
+        </form>
       </div>
       <div class="Nombre">
         <p class="mb-1"><?= htmlspecialchars($SL1, ENT_QUOTES) ?></p>
         <p class="mb-0"><?= htmlspecialchars($nombreNivel . ' - ' . $su2, ENT_QUOTES) ?></p>
       </div>
       <div class="flex-grow-1 text-right">
-        <button class="btn btn-success" id="btnInstall">Instalar KASU</button>
+        <button class="btn btn-success btn-install" id="btnInstall">Instalar KASU</button>
       </div>
     </div>
 
@@ -212,11 +226,6 @@ $fin = (new DateTime('last day of this month'))->format('d/m/Y');
   <script src="Javascript/finger.js?v=3"></script>
   <script src="Javascript/localize.js?v=3"></script>
   <script src="Javascript/Inyectar_gps_form.js"></script>
-  <script defer src="Javascript/install.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/login/service-worker.js', { scope: '/login/' });
-    }
-  </script>
+  <script src="Javascript/perfil.js?v=<?= htmlspecialchars($VerCacheSafe, ENT_QUOTES) ?>"></script>
 </body>
 </html>

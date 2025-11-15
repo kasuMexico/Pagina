@@ -15,6 +15,7 @@ declare(strict_types=1);
 // Fecha: 05/11/2025 | Revisado por: JCCM
 session_start();
 require_once '../eia/librerias.php';
+require_once __DIR__ . '/php/mesa_helpers.php';
 date_default_timezone_set('America/Mexico_City');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 header_remove('X-Powered-By');
@@ -466,15 +467,18 @@ $VerCache = time();
        Qué hace: Lista clientes por nombre o status y expone acciones por fila
        Fecha: 05/11/2025 | Revisado por: JCCM -->
   <main class="page-content" name="impresion de datos finales">
-    <div class="table-responsive">
-      <table class="table">
-        <tr>
-          <th>Nombre Cliente</th>
-          <th>Asignado</th>
-          <th>Status</th>
-          <th>Producto</th>
-          <th>Acciones</th>
-        </tr>
+    <div class="table-responsive mesa-table-wrapper">
+      <table class="table mesa-table" data-mesa="clientes">
+        <thead>
+          <tr>
+            <th>Nombre Cliente</th>
+            <th>Asignado</th>
+            <th>Status</th>
+            <th>Producto</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
         <?php
         if (!empty($_POST['Status'])) {
           $buscar = $basicas->BLikes($mysqli, "Venta", "Status", $_POST['Status']);
@@ -489,12 +493,12 @@ $VerCache = time();
           <tr>
             <td><?= h($row['Nombre']) ?></td>
             <td><?= h($row['Usuario']) ?></td>
-            <td><?= h($row['Status']) ?></td>
+            <td><?= mesa_status_chip((string)$row['Status']) ?></td>
             <td><?= h($row['Producto']) ?></td>
-            <td>
-              <div class="d-flex">
+            <td class="mesa-actions" data-label="Acciones">
+              <div class="mesa-actions-grid">
                 <!-- Estado de cuenta -->
-                <form method="POST" action="Mesa_Estado_Cuenta.php" class="mr-2">
+                <form method="POST" action="Mesa_Estado_Cuenta.php">
                   <input type="hidden" name="nombre" value="<?= h($nombre) ?>">
                   <?php if (in_array($row['Status'], ["ACTIVO","COBRANZA","CANCELADO"], true)): ?>
                     <label for="EC<?= (int)$row['Id'] ?>" title="Ver estado de cuenta" class="btn" style="background:#F7DC6F;color:#F8F9F9;">
@@ -580,6 +584,7 @@ $VerCache = time();
             </td>
           </tr>
         <?php endforeach; ?>
+        </tbody>
       </table>
     </div>
     <br><br><br><br>

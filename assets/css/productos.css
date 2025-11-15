@@ -58,3 +58,62 @@
 .carousel-control-prev:hover, .carousel-control-next:hover {
   background-color: rgba(0, 0, 0, 0.9);
 }
+/* Tarjetas de productos en modal/listado */
+.team-item.product-card {
+  padding: 0;
+  overflow: hidden;
+  border-radius: 20px;      /* redondea toda la tarjeta */
+  text-align: center;
+}
+
+.product-card-link {
+  display: block;
+  color: inherit;
+}
+
+/* Título en la parte superior, fondo blanco */
+.product-card-title {
+  background: #ffffff;
+  padding: 18px 16px 10px;
+  font-size: 20px;
+  line-height: 1.3;
+  border-radius: 20px 20px 0 0;  /* solo arriba redondeado */
+}
+
+/* Contenedor de imagen + botón, solo parte inferior redondeada */
+.product-card-image {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0 0 20px 20px;
+}
+
+/* Imagen: recta arriba, redondeada abajo */
+.product-card-image img {
+  display: block;
+  width: 100% !important;
+  height: 330px;                 /* ajusta si quieres más/menos alto */
+  object-fit: cover;
+  border-radius: 0 0 20px 20px !important;
+}
+
+/* Banda “CONOCER MÁS” sobre la imagen */
+.product-card-cta {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background-color: #911F66;
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Ajuste en móvil */
+@media (max-width: 767px) {
+  .product-card-image img {
+    height: 220px;
+  }
+}

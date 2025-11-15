@@ -89,7 +89,7 @@ if ($qsMsg !== null) {
     <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css">
     <link rel="stylesheet" href="/assets/css/templatemo-softy-pinko.css?v=3">
-    <link rel="stylesheet" href="/assets/css/EstilosIndex.css?v=9">
+    <link rel="stylesheet" href="/assets/css/EstilosIndex.css?v=27">
 
     <!-- JS propio -->
     <script src="/eia/javascript/Registro.js" defer></script>
@@ -195,7 +195,7 @@ if ($qsMsg !== null) {
     </div><!-- .main-banner -->
 
     <!-- Productos -->
-    <section class="section colored padding-top-70"> 
+    <section class="Productos-Index"> 
         <div class="container" itemscope itemtype="https://schema.org/CollectionPage">
             <!-- Productos -->
             <?php require_once __DIR__ . '/html/Section_Productos.php'; ?>
@@ -219,7 +219,7 @@ if ($qsMsg !== null) {
                 </div>
             </div>
         </div>
-    </body>
+    </div>
 
     <!-- Clientes -->
     <section class="section colored padding-top-70" id="Datos">

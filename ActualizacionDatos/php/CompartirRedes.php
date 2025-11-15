@@ -108,9 +108,8 @@ function buildShare(array $reg, string $idFirma): array {
                 <hr>
                 <br>
                 <div class="ContCupon">
-                  <h2 class="h5">Com/Vta $<?= number_format($Comis, 2) ?></h2>
-                  <h3 class="h6 mb-2"><?= htmlspecialchars((string)$Reg['TitA'], ENT_QUOTES) ?></h3>
-                  <p class="mb-0"><?= htmlspecialchars((string)$Reg['DesA'], ENT_QUOTES) ?></p>
+                  <h2 class="h6 mb-2"><?= htmlspecialchars((string)$Reg['TitA'], ENT_QUOTES) ?></h2>
+                  <h3 class="mb-0"><?= htmlspecialchars((string)$Reg['DesA'], ENT_QUOTES) ?></h3>
                 </div>
               </div>
             </div>

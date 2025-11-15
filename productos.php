@@ -191,7 +191,6 @@ if($Reg['Producto'] === 'Policias') {
   <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
   <link rel="stylesheet" href="/assets/css/font-awesome.css">
   <link rel="stylesheet" href="/assets/css/templatemo-softy-pinko.css">
-  <link rel="stylesheet" href="/assets/css/index.css">
   <link rel="stylesheet" href="/assets/css/productos.css">
   <script src="/assets/js/js_productos.js" defer></script>
 </head>
@@ -430,7 +429,17 @@ if($Reg['Producto'] === 'Policias') {
   </div>
 </section>
 
-<?php require_once __DIR__ . '/html/Section_Productos.php'; ?>
+<section class="section colored padding-top-70"> 
+  <div class="container" itemscope itemtype="https://schema.org/CollectionPage">
+    <div class="col-lg-12">
+      <div class="center-heading">
+        <h2 class="section-title" style="color: #333333;">Protege a quien amas, <strong> de la mano de KASU</strong></h2>
+      </div>
+    </div>
+    <!-- Productos -->
+    <?php require_once __DIR__ . '/html/Section_Productos.php'; ?>
+  </div>
+</section>
 
 <footer><?php require_once __DIR__ . '/html/footer.php'; ?></footer>
 

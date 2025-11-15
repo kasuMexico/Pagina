@@ -223,17 +223,14 @@ $VerCache = time();
           </div>
         </form>
 
-        <label>Buscar clientes por Status</label>
+        <label>Gestionar clientes para cobranza</label>
         <form method="POST" action="Mesa_Clientes.php">
           <div class="input-group mb-3">
             <select class="form-control" name="Status">
-              <option value="0">Buscar cliente por Status</option>
+              <option value="0">Buscar cliente por status cobranza</option>
               <option value="COBRANZA">COBRANZA</option>
-              <option value="ACTIVO">ACTIVO</option>
-              <option value="ACTIVACION">ACTIVACION</option>
-              <option value="CANCELADO">CANCELADO</option>
+              <option value="ATRASADO">ATRASADO</option>
               <option value="PREVENTA">PREVENTA</option>
-              <option value="FALLECIDO">FALLECIDO</option>
             </select>
             <div class="input-group-append">
               <button class="btn btn-outline-secondary" type="submit" name="action" value="buscar">Buscar</button>

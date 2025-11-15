@@ -89,7 +89,7 @@ if ($qsMsg !== null) {
     <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css">
     <link rel="stylesheet" href="/assets/css/templatemo-softy-pinko.css">
-    <link rel="stylesheet" href="/assets/css/EstilosIndex.css?v=4">
+    <link rel="stylesheet" href="/assets/css/EstilosIndex.css?v=6">
 
     <!-- JS propio -->
     <script src="/eia/javascript/Registro.js" defer></script>

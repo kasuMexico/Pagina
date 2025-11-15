@@ -11,7 +11,6 @@
           <a href="/" class="logo" itemprop="url" aria-label="Inicio KASU">
             <img src="/assets/images/Index/ksulogo.png"
                  alt="KASU — inicio"
-                 height="40"
                  loading="eager"
                  decoding="async"
                  itemprop="image" />

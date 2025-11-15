@@ -1,7 +1,7 @@
 <?php
 /*******************************************************************************************************
  * Qué hace: Página principal. Muestra landing, cotizador por CURP y gestiona baja de newsletter por GET.
- * Fecha: 03/11/2025
+ * Fecha: 15/11/2025
  * Revisado por: JCCM
  *******************************************************************************************************/
 
@@ -88,8 +88,8 @@ if ($qsMsg !== null) {
     <!-- CSS -->
     <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css">
-    <link rel="stylesheet" href="/assets/css/templatemo-softy-pinko.css">
-    <link rel="stylesheet" href="/assets/css/EstilosIndex.css?v=6">
+    <link rel="stylesheet" href="/assets/css/templatemo-softy-pinko.css?v=3">
+    <link rel="stylesheet" href="/assets/css/EstilosIndex.css?v=9">
 
     <!-- JS propio -->
     <script src="/eia/javascript/Registro.js" defer></script>
@@ -139,58 +139,87 @@ if ($qsMsg !== null) {
     <?php require_once __DIR__ . '/html/MenuPrincipal.php'; ?>
     
     <!-- Portada -->
-    <div class="main-banner wow fadeIn" id="top" data-wow-duration="1s" data-wow-delay="0.5s">
-        <h1 style="color: hsla(0, 0%, 0%, 0);">KASU | Servicios funerarios a futuro en México</h1>
-        <div class="container">
-            <div class="row" itemscope itemtype="https://schema.org/Service">
-                <meta itemprop="serviceType" content="Servicios funerarios a futuro">
-                <div class="col-lg-12">
-                    <div class="row">
-                        <div class="col-lg-6 align-self-center" data-scroll-reveal="enter right move 200px over 0.6s after 0.4s">
-                            <div class="left-content header-text wow fadeInLeft" data-wow-duration="1s" data-wow-delay="1s">
-                                <h6>
-                                  <img src="/assets/images/flor_redonda.svg" style="width: 10vh;" alt="Flor KASU" loading="lazy" decoding="async">
-                                </h6>
-                                <h2>Servicios <em>de Gastos <span>Funerarios</span> y mucho</em> más</h2>
-                                <p>La Visión de <strong>KASU</strong> es lograr una cobertura universal para las familias mexicanas en lo que se refiere a servicios funerarios.</p>
-                                <div class="form" role="search" aria-label="Cotizador por CURP">
-                                    <input id="curp" type="text" class="text" placeholder="Ingresa tu CURP" autocomplete="on" inputmode="latin" aria-label="Ingresa tu CURP" required>
-                                    <button type="button" id="form-submit" class="main-button" onclick="consultaModal()" aria-label="Consultar CURP">CONSULTAR</button>
+    <div class="main-banner wow fadeIn" id="top"
+        data-wow-duration="1s" data-wow-delay="0.5s">
+
+        <!-- Slider de fondo -->
+        <div class="banner-bg-slider">
+            <!-- Agrega aquí UNA fila por imagen que tengas en assets/images/Sliders -->
+            <div class="banner-bg" data-bg="/assets/images/Sliders/Protege_1.png"></div>
+            <div class="banner-bg" data-bg="/assets/images/Sliders/Protege_2.png"></div>
+            <div class="banner-bg" data-bg="/assets/images/Sliders/Protege_3.png"></div>
+            <!-- Duplica/ajusta estas líneas con los nombres reales de tus archivos -->
+        </div>
+
+        <!-- Contenido encima del fondo -->
+        <div class="main-banner-content">
+            <h1 style="color: hsla(0, 0%, 100%, 0.00);">
+                KASU | Servicios funerarios a futuro en México
+            </h1>
+            <div class="container">
+                <div class="row" itemscope itemtype="https://schema.org/Service">
+                    <meta itemprop="serviceType" content="Servicios funerarios a futuro">
+                    <div class="col-lg-12">
+                        <div class="row">
+                            <div class="col-lg-6 align-self-center"
+                                data-scroll-reveal="enter left move 50px over 0.6s after 0.4s">
+                                <div class="left-content header-text wow fadeInLeft"
+                                    data-wow-duration="1s" data-wow-delay="1s">
+                                    <h6>
+                                    <img src="/assets/images/flor_redonda.svg"
+                                        style="width: 10vh;"
+                                        alt="Flor KASU"
+                                        loading="lazy" decoding="async">
+                                    </h6>
+                                    <h2>Servicios <em>de Gastos <span>Funerarios</span> y mucho</em> más</h2>
+                                    <p>La Visión de <strong>KASU</strong> es lograr una cobertura universal para las familias mexicanas en lo que se refiere a servicios funerarios.</p>
+                                    <div class="form" role="search" aria-label="Cotizador por CURP">
+                                        <input id="curp" type="text" class="text"
+                                            placeholder="Ingresa tu CURP"
+                                            autocomplete="on" inputmode="latin"
+                                            aria-label="Ingresa tu CURP" required>
+                                        <button type="button" id="form-submit" class="main-button"
+                                                onclick="consultaModal()"
+                                                aria-label="Consultar CURP">CONSULTAR</button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="right-image wow fadeInRight" data-wow-duration="1s" data-wow-delay="0.5s">
-                                <img src="/assets/images/Sliders/Familia_Index.svg" alt="Familia protegida por el servicio funerario KASU" loading="lazy" decoding="async">
+                            <div class="col-lg-6">
+
                             </div>
-                        </div>
-                    </div>
+                        </div><!-- .row -->
+                    </div><!-- .col-lg-12 -->
+                </div><!-- .row schema -->
+            </div><!-- .container -->
+        </div><!-- .main-banner-content -->
+    </div><!-- .main-banner -->
+
+    <!-- Productos -->
+    <section class="section colored padding-top-70"> 
+        <div class="container" itemscope itemtype="https://schema.org/CollectionPage">
+            <!-- Productos -->
+            <?php require_once __DIR__ . '/html/Section_Productos.php'; ?>
+        </div>
+    </section>
+
+    <!-- Llamada -->
+    <div class="section colored">
+        <div class="LlamadaKASU">
+            <div class="row">
+                <div class="col-md-4 col-md-12 col-sm-12 align-self-center">
+                    <h2>LÍNEA DE ATENCIÓN INMEDIATA</h2>
+                    <br>
+                    <a href="tel:<?php echo isset($tel) ? htmlspecialchars($tel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : ''; ?>" class="btn btn-dark btn-lg" style="margin-bottom: 10px;"   aria-label="Llamar a emergencia funeraria KASU">
+                        📞 EMERGENCIA FUNERARIA
+                    </a>
+                    <br>
+                    <a href="https://wa.me/<?php echo preg_replace('/\D/', '', $tel ?? ''); ?>?text=Hola,%20requiero%20atención%20inmediata%20de%20KASU"  class="btn btn-success btn-lg" target="_blank" rel="noopener" aria-label="Abrir WhatsApp de atención inmediata KASU">
+                        💬 WhatsApp Inmediato
+                    </a>
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Llamada -->
-    <div class="LlamadaKASU">
-        <div class="row">
-            <div class="col-md-4 col-md-12 col-sm-12 align-self-center">
-                <h2>LÍNEA DE ATENCIÓN INMEDIATA</h2>
-                <br>
-                <a href="tel:<?php echo isset($tel) ? htmlspecialchars($tel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : ''; ?>" class="btn btn-dark btn-lg" style="margin-bottom: 10px;" aria-label="Llamar a emergencia funeraria KASU">
-                    📞 EMERGENCIA FUNERARIA
-                </a>
-                <br>
-                <a href="https://wa.me/<?php echo preg_replace('/\D/', '', $tel ?? ''); ?>?text=Hola,%20requiero%20atención%20inmediata%20de%20KASU" 
-                   class="btn btn-success btn-lg" target="_blank" rel="noopener" aria-label="Abrir WhatsApp de atención inmediata KASU">
-                    💬 WhatsApp Inmediato
-                </a>
-                <br><br>
-            </div>
-        </div>
-    </div>
-
-    <!-- Productos -->
-    <?php require_once __DIR__ . '/html/Section_Productos.php'; ?>
+    </body>
 
     <!-- Clientes -->
     <section class="section colored padding-top-70" id="Datos">
@@ -244,7 +273,7 @@ if ($qsMsg !== null) {
         </div>
     </section>
 
-    <!-- Beneficios -->
+    <!-- Beneficios
     <section class="mini" id="Beneficios">
         <div class="mini-content">
             <div class="container">
@@ -295,9 +324,9 @@ if ($qsMsg !== null) {
             </div>
         </div>
     </section>
-
+    -->
     <!-- Opiniones -->
-    <section class="section" id="testimonials" style="display:none">
+    <section class="section colored" id="testimonials" >
         <div class="container">
             <br><br>
             <div class="row">
@@ -366,5 +395,34 @@ if ($qsMsg !== null) {
     <script src="/assets/js/scrollreveal.min.js" defer></script>
     <script src="/assets/js/custom.js" defer></script>
     <script src="/eia/javascript/consulta_modal.js" defer></script>
+    <script>
+document.addEventListener('DOMContentLoaded', function () {
+    var banner = document.querySelector('.main-banner');
+    if (!banner) return;
+
+    var slides = banner.querySelectorAll('.banner-bg');
+    if (!slides.length) return;
+
+    // Asignar la imagen de fondo a cada slide desde data-bg
+    slides.forEach(function (slide) {
+        var url = slide.getAttribute('data-bg');
+        if (url) {
+            slide.style.backgroundImage = "url('" + url + "')";
+        }
+    });
+
+    var current = 0;
+    slides[current].classList.add('is-active');
+
+    var intervalMs = 7000; // tiempo entre cambios (7 segundos)
+
+    setInterval(function () {
+        slides[current].classList.remove('is-active');
+        current = (current + 1) % slides.length;
+        slides[current].classList.add('is-active');
+    }, intervalMs);
+});
+</script>
+
 </body>
 </html>

@@ -94,3 +94,48 @@ ol.viñeta>li::before{content:"• ";color:#666;font-weight:700;margin-right:4px
     display: none !important;
   }
 }
+/* Esta es la seccion de los sliders de la pagina index de la portada*/
+.main-banner {
+    position: relative;
+    overflow: hidden;
+    background-color: #000; /* color de respaldo si tarda el fondo */
+}
+
+.banner-bg-slider {
+    position: absolute;
+    inset: 0;           /* top:0; right:0; bottom:0; left:0 */
+    z-index: 1;
+}
+
+.banner-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+}
+
+/* Slide visible */
+.banner-bg.is-active {
+    opacity: 1;
+}
+
+/* Contenido por encima del fondo */
+.main-banner-content {
+    position: relative;
+    z-index: 2;
+}
+
+
+/* En móvil: usar solo color liso y ocultar el slider */
+@media (max-width: 768px) {
+    .main-banner {
+        background: #f2f2fe !important; /* mismo color que .section.colored */
+    }
+
+    .main-banner .banner-bg-slider {
+        display: none !important; /* oculta las imágenes de fondo en teléfono */
+    }
+}

@@ -1,0 +1,180 @@
+/* ====== POLIZA – DOMPDF READY ====== */
+
+/* Márgenes reales de impresión */
+@page { margin: 14mm 14mm 16mm 14mm; }
+
+/* Reset y tipografía base */
+* { border: 0; margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  font-family: "OpenSans", "Montserrat", Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1.22;
+  color: #000;
+}
+
+/* Contenedor general */
+.container {
+  width: 94%;
+  margin: 0 auto;
+  padding-top: 8pt; /* antes 30px, reduce espacios */
+}
+
+/* ===== Encabezado ===== */
+.t-h { position: relative; z-index: 1; margin-bottom: 6pt; }
+.ha-text { font-size: 1em; text-align: right; }
+.hb-text { font-size: .85em; text-align: right; }
+
+/* Logo superior derecho sin deformación */
+.header {
+  position: absolute;
+  top: 8mm;           /* alineado con margen superior de página */
+  left: 6mm;         /* alineado con margen derecho de página */
+  width: 28mm;         /* cuadrado */
+  height: 28mm;        /* cuadrado */
+  /*object-fit: contain;  no distorsiona 
+  z-index: 2;*/
+}
+/* Logo inferior derecho sin deformación */
+.hc-header {
+  position: sticky;
+  top: 8mm;
+  left: 6mm;
+  width: 28mm; 
+  height: 28mm;
+  object-fit: contain;
+  z-index: 2;
+}
+
+/* Línea divisoria */
+.h-line { width: 100%; height: 1px; margin: 4px 0; }
+
+/* Bloques icono + tabla */
+.w-tab { width: 100%; margin: 0 auto; }
+.t-one { margin-top: 0; }
+
+/* Iconos de secciones (ajuste de proporción sin estirar) */
+.h-lo, .h-lt, .h-ltr, .h-lf, .h-lfi, .h-ls {
+  border-radius: 2px;
+  height: auto;
+  max-width: 16%;
+}
+
+/* Tablas genéricas */
+table { width: 100%; border-collapse: collapse; }
+.date { margin-top: .5em; }
+
+/* === Tabla solicitante === */
+.ba { border: 2px solid #c5b1d0; }
+.ba tr { border: 0; }
+.bl { border-top: 2px solid #c5b1d0; }
+.ct { text-align: center; }
+.mb { background-color: #dfd8e7; }
+.mc { border-left: 2px solid #dfd8e7; border-right: 2px solid #dfd8e7; }
+
+/* === Tabla servicio === */
+.mw { color: #fff; background-color: #8764a2; }
+.mda { background-color: #c5b1d0; }
+.md  { background-color: #dfd8e7; }
+.ser td { padding: 4px; text-align: center; }
+
+/* Igualar estética de la tabla de servicio a la de “Solicitante” */
+table.ser-uniform { width: 100%; border-collapse: collapse; table-layout: fixed; }
+table.ser-uniform td { width: 25%; padding: 4px; } /* mismo padding que .ba */
+
+/* Observaciones */
+.ob-texto { font-size: 10px; padding: .6em; text-align: justify; }
+
+/* Firmas y pie */
+.url { color:#a34066; font-size: 1em; text-align: center; }
+.bt { border-top: 2px solid #8764a2; }
+.bt-l { border-left: 2px solid #c5b1d0; border-right: 2px solid #c5b1d0; }
+.sp-w { color:#fff; }
+.tab { position: relative; z-index: 1; }
+.fi-tx { font-size: 12px; text-align: center; width: 55%; }
+
+/* Firma imagen: evita solapes agresivos */
+.img-f {
+  position: relative;
+  width: 38%;
+  max-width: 230px;
+  height: auto;
+  margin: 6pt auto 0 auto;
+}
+.img-f2 {
+  position: relative;      /* antes absolute con márgenes negativos */
+  width: 38%;
+  max-width: 230px;
+  height: auto;
+  margin: 6pt auto 0 auto; /* centrada bajo la tabla de firmas */
+}
+
+/* Cinta final página */
+.fin, .fin2 {
+  width: 100%;
+  height: auto;
+  margin-top: 10pt;
+  position: relative;
+}
+
+/* ===== Página 2: contrato ===== */
+.hd-tit { font-size: 11px; text-align: center; }
+.hd-sub { font-size: 10px; text-align: center; }
+.hd-text { font-size: 9px; text-align: justify; width: 97%; margin: 4px 0; }
+
+/* Listas densas */
+ul, ol { margin: 4px 0 4px 18px; padding: 0; }
+li { margin: 2px 0; }
+
+/* Clases agregadas por JCCM, compactadas */
+.hd-entrada { position: relative; left: 20px; width: 96%; text-align: justify; }
+.Div-Cobrar { width: 38%; left: 60%; position: relative; font-size: 9px; }
+.ul-adver { position: relative; left: 10px; font-size: 8px; }
+
+/* Párrafos compactos en preguntas frecuentes */
+.hc-tab2 { margin-top: 14pt; padding: 0; }
+
+.tc-le { position: relative; z-index: 1; }
+.hc-text { font-size: 1em; text-align: right; }
+.hc-tit  { font-size: 2em; text-align: center; }
+.hc-sub  { font-size: 1.25em; text-align: center; }
+.ask     { width: 6%; height: auto; }
+.ask-q   { width: 95%; margin-left: auto; }
+.hc-tsub { font-size: 20px; text-align: left; }
+.hc-ts, .hc-ts strong, .hc-ques, .hc-ques-tex, .hc-vires, .hc-tedob { font-size: 0.95em; }
+
+/* Columnas FAQ */
+.dat { width: 100%; position: relative; }
+.hc-serf, .hc-seru {
+  border-left: 8px solid #aad063;
+  float: left;
+  padding-left: 18px;
+  width: 45%;
+}
+.hc-sert { font-size: 1.6em; }
+
+/* URL imagen */
+.hc-url { width: 60%; height: auto; }
+
+/* Pie final */
+.hc-pie { width: 100%; height: auto; }
+
+/* ===== Ajustes anti-espacios por <br> repetidos ===== */
+/* Dompdf respeta line-height, así que reducimos el impacto */
+br { line-height: 0.6; }
+
+/* ===== Fuentes locales opcionales (si existen en el servidor) ===== */
+@font-face{
+  font-family:'Montserrat';
+  font-weight:700;
+  src:url('https://kasu.com.mx/login/Generar_PDF/fonts/Montserrat-Bold.ttf') format('truetype');
+}
+@font-face{
+  font-family:'OpenSans';
+  font-weight:400;
+  src:url('https://kasu.com.mx/login/Generar_PDF/fonts/OpenSans-Regular.ttf') format('truetype');
+}
+@font-face{
+  font-family:'OpenSans';
+  font-weight:600;
+  src:url('https://kasu.com.mx/login/Generar_PDF/fonts/OpenSans-SemiBold.ttf') format('truetype');
+}

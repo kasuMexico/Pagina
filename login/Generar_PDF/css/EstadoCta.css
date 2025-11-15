@@ -1,0 +1,146 @@
+.container{
+  border-radius: .25rem;
+  margin-right:auto;
+  margin-left:auto;
+  font-family: Arial;
+  font-size: 12px;
+}
+.cardheader{
+  padding: .75rem 1.25rem;
+  border-bottom:1px solid rgba(0,0,0,.125);
+  background-color:#6c757d;
+  color:#f8f9fa;
+}
+.CardDoble{
+  display: flex;
+  padding: 7px;
+  justify-content: center;
+}
+.cardInterno{
+  position:relative;
+  border-radius: .25rem;
+  padding: 5%;
+  width: 100%;
+}
+.cardbody{
+  padding:1.25rem;
+}
+.table{
+  width:100%;
+  margin-bottom:1rem;
+  text-align: center;
+}
+th{
+  padding: .75rem;
+  vertical-align:top;
+  border-top:1px solid #dee2e6;
+}
+td{
+  border-left: 10px;
+  padding: .75rem;
+  vertical-align:top;
+  border-top:1px solid #dee2e6;
+}
+.fin2 {
+  height: 20%;
+  margin-top: 2em;
+  width: 100%;
+  position: relative;
+  /*top: -70px;*/
+}
+.url {
+  color:#a34066;
+  font-size: 1em;
+  text-align: center;
+}
+/* encabezado de documento */
+.header
+{
+  height:30%;
+  margin-top: -9em;
+  position: absolute;
+  width: 20%;
+  z-index:2;
+}
+.t-h
+{
+  position: relative;
+  z-index: 1;
+}
+/* texto header del documento */
+.ha-text
+{
+  font-size:1em;
+  text-align: right;
+  top:0;
+}
+.hb-text
+{
+  font-size: .8em;
+  text-align: right;
+}
+.w-tab
+{
+  margin-left: auto;
+  margin-right: auto;
+  width: 80%;
+}
+.t-one
+{
+  margin-top: -1em;
+}
+.h-line
+{
+  margin-bottom: 4px;
+  margin-top: 4px;
+  height: 1px;
+  width: 100%;
+}
+.h-lo
+{
+  border-radius: 2px;
+  height: 3.4%;
+  width: 11%;
+}
+.h-lt
+{
+  border-radius: 2px;
+  height: 3.8%;
+  width: 14%;
+}
+.h-ltr
+{
+  border-radius: 2px;
+  height: 3.4%;
+
+  width: 11%;
+}
+.h-lf
+{
+  border-radius: 2px;
+  height: 3.6%;
+  padding: 2px;
+  width: 12%;
+}
+.h-lfi
+{
+  border-radius: 2px;
+  height: 4%;
+  padding: 2px;
+  width: 16%;
+}
+.h-ls
+{
+  border-radius: 2px;
+  height: 4%;
+  padding: 2px;
+  width: 16%;
+}
+.date
+{
+  margin-top: .5em;
+}
+table
+{
+  width: 100%;
+}

@@ -1,0 +1,45 @@
+.feed {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: stretch;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.post {
+  width: calc(25% - 1em);
+  margin-bottom: 1em;
+  position: relative;
+}
+
+.post img {
+  width: 100%;
+  height: auto;
+}
+
+.post:before {
+  content: "";
+  display: block;
+  padding-top: 100%;
+}
+
+.post a {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+
+@media screen and (max-width: 800px) {
+  .post {
+    width: calc(33% - 5px);
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .post {
+    width: 25%%;
+  }
+}

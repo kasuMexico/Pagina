@@ -1,0 +1,122 @@
+# =========================================
+# KASU .htaccess
+# =========================================
+
+# === Canonical host + HTTPS ===
+RewriteEngine On
+
+# Excepciones (ACME y PWA)
+RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/
+RewriteCond %{REQUEST_URI} !^/login/(manifest\.webmanifest|service-worker\.js)$
+
+# Forzar dominio y HTTPS en un salto
+RewriteCond %{HTTP_HOST} !=kasu.com.mx [OR]
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://kasu.com.mx%{REQUEST_URI} [R=308,L]
+
+# =========================================
+# SWITCH DE CACHÉ (elige UNO)
+# -----------------------------------------
+# 1) NO CACHE global para HTML/PHP:
+#    Descomenta la siguiente línea para desactivar caché de páginas
+SetEnv NO_CACHE 1
+#
+# 2) CACHE NORMAL:
+#    Deja comentada la línea anterior.
+#
+# 3) Bypass puntual por URL con ?nocache=1
+RewriteCond %{QUERY_STRING} (^|&)nocache=1(&|$)
+RewriteRule .* - [E=NO_CACHE:1]
+# =========================================
+
+# === Productos: 301 de querystrings a slugs canónicos ===
+RewriteCond %{THE_REQUEST} \s/+productos\.php [NC]
+RewriteCond %{QUERY_STRING} (^|&)Art=1(&|$) [NC]
+RewriteRule ^productos\.php$ /productos/gastos-funerarios? [R=301,L]
+
+RewriteCond %{THE_REQUEST} \s/+productos\.php [NC]
+RewriteCond %{QUERY_STRING} (^|&)Art=2(&|$) [NC]
+RewriteRule ^productos\.php$ /productos/plan-privado-de-retiro? [R=301,L]
+
+RewriteCond %{THE_REQUEST} \s/+productos\.php [NC]
+RewriteCond %{QUERY_STRING} (^|&)Art=3(&|$) [NC]
+RewriteRule ^productos\.php$ /productos/gastos-funerarios-policias? [R=301,L]
+
+# Resolver slugs hacia productos.php (backend)
+RewriteRule ^productos/gastos-funerarios/?$          /productos.php?Art=1 [QSA,L]
+RewriteRule ^productos/plan-privado-de-retiro/?$     /productos.php?Art=2 [QSA,L]
+RewriteRule ^productos/gastos-funerarios-policias/?$ /productos.php?Art=3 [QSA,L]
+
+# === Páginas canónicas mapeadas (evita 404) ===
+RewriteRule ^testimonios/?$              /testimonios.php            [QSA,L]
+RewriteRule ^terminos-y-condiciones/?$   /terminos-y-condiciones.php [QSA,L]
+RewriteRule ^privacidad/?$               /privacidad.php             [QSA,L]
+RewriteRule ^prospectos/?$               /prospectos.php             [QSA,L]
+RewriteRule ^nft/?$                      /nft.php                    [QSA,L]
+RewriteRule ^fundacion/?$                /fundacion.php              [QSA,L]
+
+# === LOGIN: forzar slash final y servir index.php ===
+RewriteRule ^login$ /login/ [R=308,L]
+DirectoryIndex index.php index.html
+
+# === Pretty URLs genéricas (.php) — excluye /blog de WordPress ===
+RewriteCond %{REQUEST_URI} !^/blog/ [NC]
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME}\.php -f
+RewriteRule ^(.+?)/?$ $1.php [L]
+
+# === 404 personalizado ===
+ErrorDocument 404 /error.php
+
+# === Compresión (Brotli > Deflate si están habilitados) ===
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/html text/plain text/xml application/json application/javascript text/css image/svg+xml
+</IfModule>
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml application/json application/javascript text/css image/svg+xml
+</IfModule>
+
+# === CACHÉ ESTÁTICA (activos) ===
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/avif "access plus 90 days"
+  ExpiresByType image/webp "access plus 90 days"
+  ExpiresByType image/jpeg "access plus 90 days"
+  ExpiresByType image/png  "access plus 90 days"
+  ExpiresByType image/gif   "access plus 90 days"
+  ExpiresByType image/svg+xml "access plus 90 days"
+  ExpiresByType text/css "access plus 30 days"
+  ExpiresByType application/javascript "access plus 30 days"
+  ExpiresByType application/json "access plus 1 day"
+  ExpiresByType application/manifest+json "access plus 1 day"
+  ExpiresByType application/font-woff2 "access plus 180 days"
+</IfModule>
+
+# === HEADERS ===
+<IfModule mod_headers.c>
+  Header append Vary "Accept-Encoding"
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+  # No cache para HTML/PHP cuando el switch NO_CACHE está activo
+  <FilesMatch "\.(?:php|html?)$">
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0" env=NO_CACHE
+    Header set Pragma "no-cache" env=NO_CACHE
+    Header set Expires "0" env=NO_CACHE
+  </FilesMatch>
+</IfModule>
+# Archivo de .Env para mercado pago
+<Files ".env">
+  Require all denied
+</Files>
+
+<IfModule mod_autoindex.c>
+  Options -Indexes
+</IfModule>
+//Proteccion de Archivo de contraseñas de correo masivo
+<Files ".env">
+  Require all denied
+</Files>

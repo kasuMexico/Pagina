@@ -69,16 +69,18 @@ if ($currentArt > 0) { $stmt->bind_param('i', $currentArt); }
 $stmt->execute();
 $res = $stmt->get_result();
 ?>
-
-
 <section class="section colored padding-top-70"> 
   <div class="container" itemscope itemtype="https://schema.org/CollectionPage">
-    <div class="col-lg-12">
-        <div class="center-heading">
-            <h2 class="section-title" style="color: #333333;">Protege a quien amas, <strong> de la mano de KASU</strong></h2>
-        </div>
+    <div class="row">
+      <div class="decoration-bottom">
+        <h2 class="section-title" itemprop="name">
+          <span>Selecciona el producto que más se adecúa a tus necesidades</span>
+        </h2>
+        <meta itemprop="description" content="Catálogo de servicios y productos de previsión funeraria KASU con pago único y cobertura nacional.">
+        <br>
+      </div>
     </div>
-    <br>
+
     <div class="row" role="list">
       <?php while ($Pro = $res->fetch_assoc()):
         $proId   = (int)($Pro['Id'] ?? 0);

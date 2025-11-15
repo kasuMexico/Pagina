@@ -2,6 +2,7 @@
 /********************************************************************************************
  * Qué hace: Página "Mesa Marketing" de la PWA. Crea, activa/desactiva y lista tarjetas.
  *           Sube imagen a /assets/images/cupones/ vía /php/Funcionalidad_Empleados.php.
+ *           La lista usa el patrón .mesa-table: tabla en desktop, tarjetas en móvil.
  * Fecha: 09/11/2025
  * Revisado por: JCCM
  ********************************************************************************************/
@@ -23,52 +24,56 @@ if (!function_exists('h')) {
 }
 
 date_default_timezone_set('America/Mexico_City');
-$FechIni = date("Y-m-01");
-$FechFin = date("Y-m-d");
+$FechIni  = date("Y-m-01");
+$FechFin  = date("Y-m-d");
 $VerCache = '1';
 
-// CSRF simple
-if (empty($_SESSION['csrf_mm'])) $_SESSION['csrf_mm'] = bin2hex(random_bytes(16));
+// ================= CSRF simple =================
+if (empty($_SESSION['csrf_mm'])) {
+  $_SESSION['csrf_mm'] = bin2hex(random_bytes(16));
+}
 $csrf = $_SESSION['csrf_mm'];
 
-// ==== Catálogo Productos (para select) ====
+// ================= Catálogo Productos (para select) =================
 // Solo categorías madre; el descuento es lateral y no depende de edad.
 $productos = ['Funerario','Oficiales','Transporte','Retiro'];
 
 // Si tu backend usa "Seguridad" en vez de "Oficiales", normaliza antes de guardar:
-$mapProducto = ['Oficiales' => 'Seguridad'];
-$productoSeleccionado = $_POST['Producto'] ?? '';
-$productoNormalizado  = $mapProducto[$productoSeleccionado] ?? $productoSeleccionado;
+$mapProducto           = ['Oficiales' => 'Seguridad'];
+$productoSeleccionado  = $_POST['Producto'] ?? '';
+$productoNormalizado   = $mapProducto[$productoSeleccionado] ?? $productoSeleccionado;
 
-
-// ==== Filtros de lista ====
-$f_status  = isset($_GET['status']) ? (int)$_GET['status'] : -1; // -1=todos, 1=activos, 0=inactivos
-$f_buscar  = trim((string)($_GET['q'] ?? ''));
-$f_vig     = (string)($_GET['vig'] ?? 'todas'); // todas|vigentes|vencidas
+// ================= Filtros de lista =================
+$f_status = isset($_GET['status']) ? (int)$_GET['status'] : -1;     // -1=todos, 1=activos, 0=inactivos
+$f_buscar = trim((string)($_GET['q'] ?? ''));
+$f_vig    = (string)($_GET['vig'] ?? 'todas');                      // todas|vigentes|vencidas
 
 // Query base
-$q = "SELECT p.Id, p.Tipo, p.Red, p.TitA, p.DesA, p.Producto, p.Img, p.Status, p.Validez_Fin, p.Descuento, p.Dire,
+$q = "SELECT p.Id, p.Tipo, p.Red, p.TitA, p.DesA, p.Producto, p.Img, p.Status,
+             p.Validez_Fin, p.Descuento, p.Dire,
              COALESCE((SELECT COUNT(1) FROM Eventos e WHERE e.Cupon = p.Id),0) AS Usos
       FROM PostSociales p
       WHERE 1=1";
 
-$pars = [];
+$pars  = [];
 $types = "";
 
-// filtro status
+// Filtro status
 if ($f_status === 0 || $f_status === 1) {
-  $q .= " AND p.Status = ?";
+  $q     .= " AND p.Status = ?";
   $types .= "i";
   $pars[] = $f_status;
 }
-// filtro búsqueda por título/desc/producto
+
+// Filtro búsqueda por título/desc/producto
 if ($f_buscar !== '') {
-  $like = "%".$f_buscar."%";
-  $q .= " AND (p.TitA LIKE ? OR p.DesA LIKE ? OR p.Producto LIKE ?)";
+  $like   = "%".$f_buscar."%";
+  $q     .= " AND (p.TitA LIKE ? OR p.DesA LIKE ? OR p.Producto LIKE ?)";
   $types .= "sss";
   array_push($pars, $like, $like, $like);
 }
-// filtro vigencia
+
+// Filtro vigencia
 if ($f_vig === 'vigentes') {
   $q .= " AND (p.Validez_Fin IS NULL OR p.Validez_Fin='' OR p.Validez_Fin >= CURDATE())";
 } elseif ($f_vig === 'vencidas') {
@@ -79,10 +84,14 @@ $q .= " ORDER BY p.Id DESC LIMIT 300";
 
 $tarjetas = [];
 $st = $mysqli->prepare($q);
-if ($types !== "") { $st->bind_param($types, ...$pars); }
+if ($types !== "") {
+  $st->bind_param($types, ...$pars);
+}
 $st->execute();
 $rs = $st->get_result();
-while ($r = $rs->fetch_assoc()) $tarjetas[] = $r;
+while ($r = $rs->fetch_assoc()) {
+  $tarjetas[] = $r;
+}
 $st->close();
 
 // Mensaje GET
@@ -99,259 +108,306 @@ if (isset($_GET['Msg'])) {
   <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
   <title>Mesa Marketing</title>
 
+  <!-- PWA / iOS -->
   <link rel="manifest" href="/login/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
+  <!-- CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?= h($VerCache) ?>">
+
   <style>
-    .topbar{position:sticky;top:0;z-index:1000;background:#fff;border-bottom:1px solid #eee;padding:.75rem 1rem}
-    .title{margin:0}
+    .topbar{
+      position:fixed;top:0;left:0;right:0;z-index:1200;
+      height:56px;padding:.75rem 1rem;
+      background:#F2F2F2;border-bottom:1px solid #e5e7eb;
+      display:flex;align-items:center;justify-content:space-between;
+    }
+    .topbar .title{margin:0;font-size:1.1rem;font-weight:600;}
     .card-form{border:1px solid #e5e7eb;border-radius:12px;padding:16px;background:#fff}
-    .table td, .table th{vertical-align:middle}
-    .img-cup{width:90px;height:50px;object-fit:cover;border-radius:6px}
-    .badge-on{background:#27AE60;color:#fff}
-    .badge-off{background:#E74C3C;color:#fff}
+    .img-cup{width:70px;height:40px;object-fit:cover;border-radius:6px}
+    .mesa-table-wrapper{margin-bottom:30px;}
   </style>
 </head>
 <body onload="localize()">
 
-<div class="topbar d-flex align-items-center">
+  <!-- Barra superior -->
+  <div class="topbar">
     <h4 class="title">Mesa Marketing</h4>
     <button type="button" class="btn btn-primary" data-toggle="modal" data-target=".bd-example-modal-lg">
-        <i class="material-icons">difference</i>
+      <i class="material-icons">difference</i>
     </button>
-</div>
+  </div>
 
-<section id="Menu">
-  <?php require_once __DIR__ . '/html/Menuprinc.php'; ?>
-</section>
+  <!-- Menú inferior -->
+  <section id="Menu">
+    <?php require_once __DIR__ . '/html/Menuprinc.php'; ?>
+  </section>
 
-<!-- Modal de crear tarjeta -->
-<div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Crear tarjeta</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="card-form mb-4">
-            <form method="POST" action="/login/php/Funcionalidad_Empleados.php" enctype="multipart/form-data">
-            <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
-            <input type="hidden" name="Host" value="<?= h($_SERVER['PHP_SELF']) ?>">
-            <input type="hidden" name="Vendedor" value="<?= h((string)$_SESSION['Vendedor']) ?>">
-            <input type="hidden" name="accion" value="crear_tarjeta">
+  <!-- Modal de crear tarjeta -->
+  <div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Crear tarjeta</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
 
-            <div class="form-row">
+        <form method="POST" action="/login/php/Funcionalidad_Empleados.php" enctype="multipart/form-data">
+          <div class="modal-body">
+            <div class="card-form mb-0">
+              <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+              <input type="hidden" name="Host" value="<?= h($_SERVER['PHP_SELF']) ?>">
+              <input type="hidden" name="Vendedor" value="<?= h((string)$_SESSION['Vendedor']) ?>">
+              <input type="hidden" name="accion" value="crear_tarjeta">
+
+              <div class="form-row">
                 <div class="form-group col-md-2">
-                <label>Tipo</label>
-                <select name="Tipo" class="form-control" required>
+                  <label>Tipo</label>
+                  <select name="Tipo" class="form-control" required>
                     <option value="Vta">Vta (Cupón)</option>
                     <option value="Art">Art (Artículo)</option>
-                </select>
+                  </select>
                 </div>
                 <div class="form-group col-md-2">
-                <label>Red</label>
-                <select name="Red" class="form-control" required>
+                  <label>Red</label>
+                  <select name="Red" class="form-control" required>
                     <option value="facebook">facebook</option>
                     <option value="x">x</option>
                     <option value="LinkedIn">LinkedIn</option>
                     <option value="instagram">instagram</option>
-                </select>
+                  </select>
                 </div>
                 <div class="form-group col-md-4">
-                <label>Título</label>
-                <input type="text" name="TitA" class="form-control" maxlength="150" required>
+                  <label>Título</label>
+                  <input type="text" name="TitA" class="form-control" maxlength="150" required>
                 </div>
                 <div class="form-group col-md-4">
-                <label>Producto</label>
-                <select name="Producto" class="form-control" required>
+                  <label>Producto</label>
+                  <select name="Producto" class="form-control" required>
                     <?php foreach($productos as $p): ?>
-                    <option value="<?= h($p) ?>"><?= h($p) ?></option>
+                      <option value="<?= h($p) ?>"><?= h($p) ?></option>
                     <?php endforeach; ?>
-                </select>
+                  </select>
                 </div>
-            </div>
+              </div>
 
-            <div class="form-group">
+              <div class="form-group">
                 <label>Descripción</label>
                 <textarea name="DesA" class="form-control" rows="2" maxlength="240" required></textarea>
-            </div>
+              </div>
 
-            <div class="form-row">
+              <div class="form-row">
                 <div class="form-group col-md-3">
-                <label>Descuento (MXN)</label>
-                <input type="number" step="0.01" min="0" name="Descuento" class="form-control" value="0">
+                  <label>Descuento (MXN)</label>
+                  <input type="number" step="0.01" min="0" name="Descuento" class="form-control" value="0">
                 </div>
                 <div class="form-group col-md-3">
-                <label>Validez Fin</label>
-                <input type="date" name="Validez_Fin" class="form-control">
+                  <label>Validez Fin</label>
+                  <input type="date" name="Validez_Fin" class="form-control">
                 </div>
                 <div class="form-group col-md-4">
-                <label>URL destino (Dire)</label>
-                <input type="url" name="Dire" class="form-control" placeholder="https://kasu.com.mx/productos/...">
+                  <label>URL destino (Dire)</label>
+                  <input type="url" name="Dire" class="form-control" placeholder="https://kasu.com.mx/productos/...">
                 </div>
                 <div class="form-group col-md-2">
-                <label>Status</label>
-                <select name="Status" class="form-control">
+                  <label>Status</label>
+                  <select name="Status" class="form-control">
                     <option value="1">Activa</option>
                     <option value="0">Inactiva</option>
-                </select>
+                  </select>
                 </div>
-            </div>
+              </div>
 
-            <div class="form-row">
+              <div class="form-row">
                 <div class="form-group col-md-6">
-                <label>Imagen (JPG/PNG) — se guardará en /assets/images/cupones/</label>
-                <input type="file" name="ImgFile" class="form-control-file" accept=".jpg,.jpeg,.png">
+                  <label>Imagen (JPG/PNG) — se guardará en /assets/images/cupones/</label>
+                  <input type="file" name="ImgFile" class="form-control-file" accept=".jpg,.jpeg,.png">
                 </div>
                 <div class="form-group col-md-6">
-                <label>o Nombre de imagen ya existente</label>
-                <input type="text" name="Img" class="form-control" placeholder="ej. promo_123.jpg">
+                  <label>o Nombre de imagen ya existente</label>
+                  <input type="text" name="Img" class="form-control" placeholder="ej. promo_123.jpg">
                 </div>
+              </div>
             </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">
-            <i class="material-icons" style="vertical-align:middle;font-size:18px">add</i> Crear tarjeta
-        </button>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">
+              <i class="material-icons" style="vertical-align:middle;font-size:18px">add</i>
+              Crear tarjeta
+            </button>
+          </div>
         </form>
       </div>
     </div>
   </div>
-</div>
 
-<main class="page-content container mb-0 mt-n5">
-  <!-- Filtros -->
-  <h4 class="title">Buscar tarjeta</h4>
-  <br>
-  <form class="card-form mb-0 mt-n3" method="GET" action="<?= h($_SERVER['PHP_SELF']) ?>">
-    <div class="form-row">
-      <div class="form-group col-md-4">
-        <label>Buscar</label>
-        <input type="text" name="q" value="<?= h($f_buscar) ?>" class="form-control" placeholder="título, descripción o producto">
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="page-content container" style="padding-top:72px;">
+    <!-- Filtros -->
+    <h4 class="title">Buscar tarjeta</h4>
+    <br>
+    <form class="card-form mb-3 mt-n1" method="GET" action="<?= h($_SERVER['PHP_SELF']) ?>">
+      <div class="form-row">
+        <div class="form-group col-md-4">
+          <label>Buscar</label>
+          <input type="text" name="q" value="<?= h($f_buscar) ?>" class="form-control" placeholder="título, descripción o producto">
+        </div>
+        <div class="form-group col-md-3">
+          <label>Status</label>
+          <select name="status" class="form-control">
+            <option value="-1" <?= $f_status===-1?'selected':''; ?>>Todos</option>
+            <option value="1"  <?= $f_status===1?'selected':''; ?>>Activos</option>
+            <option value="0"  <?= $f_status===0?'selected':''; ?>>Inactivos</option>
+          </select>
+        </div>
+        <div class="form-group col-md-3">
+          <label>Vigencia</label>
+          <select name="vig" class="form-control">
+            <option value="todas"    <?= $f_vig==='todas'?'selected':''; ?>>Todas</option>
+            <option value="vigentes" <?= $f_vig==='vigentes'?'selected':''; ?>>Vigentes</option>
+            <option value="vencidas" <?= $f_vig==='vencidas'?'selected':''; ?>>Vencidas</option>
+          </select>
+        </div>
+        <div class="form-group col-md-2">
+          <label>&nbsp;</label>
+          <button class="btn btn-secondary btn-block" type="submit">Aplicar</button>
+        </div>
       </div>
-      <div class="form-group col-md-3">
-        <label>Status</label>
-        <select name="status" class="form-control">
-          <option value="-1" <?= $f_status===-1?'selected':''; ?>>Todos</option>
-          <option value="1"  <?= $f_status===1?'selected':''; ?>>Activos</option>
-          <option value="0"  <?= $f_status===0?'selected':''; ?>>Inactivos</option>
-        </select>
-      </div>
-      <div class="form-group col-md-3">
-        <label>Vigencia</label>
-        <select name="vig" class="form-control">
-          <option value="todas"   <?= $f_vig==='todas'?'selected':''; ?>>Todas</option>
-          <option value="vigentes"<?= $f_vig==='vigentes'?'selected':''; ?>>Vigentes</option>
-          <option value="vencidas"<?= $f_vig==='vencidas'?'selected':''; ?>>Vencidas</option>
-        </select>
-      </div>
-      <div class="form-group col-md-2">
-        <label>&nbsp;</label>
-        <button class="btn btn-secondary btn-block" type="submit">Aplicar</button>
-      </div>
-    </div>
-  </form>
+    </form>
 
-  <h4 class="title">Tarjetas Registradas</h4>
-  <br>
-  <?php if (!$tarjetas): ?>
-    <p class="text-center text-muted">Sin resultados</p>
-  <?php else: ?>
-    <div class="mesa-cards">
-      <?php foreach ($tarjetas as $row): ?>
-        <?php
-          $src = ($row['Tipo']==='Art')
-            ? (string)$row['Img']
-            : "https://kasu.com.mx/assets/images/cupones/".ltrim((string)$row['Img'],'/');
-        ?>
-        <article class="mesa-card">
-          <div class="mesa-card-header">
-            <div>
-              <p class="mesa-card-title"><?= h($row['TitA']) ?></p>
-              <p class="mesa-card-sub"><?= h($row['Red']) ?> · <?= h($row['Tipo']) ?></p>
-            </div>
-            <?= mesa_status_chip((int)$row['Status'] === 1 ? 'Activo' : 'Cancelado') ?>
-          </div>
+    <!-- Lista de tarjetas: TABLA + modo tarjetas en móvil -->
+    <h4 class="title">Tarjetas registradas</h4>
+    <br>
 
-          <div class="mesa-card-media">
-            <img class="img-fluid img-cup" src="<?= h($src) ?>" alt="Tarjeta <?= h($row['TitA']) ?>">
-          </div>
+    <?php if (!$tarjetas): ?>
+      <p class="text-center text-muted">Sin resultados</p>
+    <?php else: ?>
+      <div class="table-responsive mesa-table-wrapper">
+        <table class="table mesa-table" data-mesa="marketing">
+          <thead>
+            <tr>
+              <th>Tarjeta</th>      <!-- Imagen + título + producto -->
+              <th>Red / Tipo</th>
+              <th>Status</th>
+              <th>Vigencia</th>
+              <th>Usos</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+          <?php foreach ($tarjetas as $row):
+            // URL de imagen
+            $src = ($row['Tipo'] === 'Art')
+              ? (string)$row['Img']
+              : "https://kasu.com.mx/assets/images/cupones/".ltrim((string)$row['Img'], '/');
 
-          <ul class="mesa-card-meta">
-            <li>
-              <span>ID</span>
-              <strong><?= (int)$row['Id'] ?></strong>
-            </li>
-            <li>
-              <span>Producto</span>
-              <strong><?= h($row['Producto']) ?></strong>
-            </li>
-            <li>
-              <span>Descuento</span>
-              <strong>$<?= number_format((float)$row['Descuento'],2) ?></strong>
-            </li>
-            <li>
-              <span>Vigencia</span>
-              <strong><?= h((string)($row['Validez_Fin'] ?? '')) ?></strong>
-            </li>
-            <li>
-              <span>Usos</span>
-              <strong><?= (int)$row['Usos'] ?></strong>
-            </li>
-          </ul>
-
-          <div class="mesa-card-actions">
-            <div class="mesa-actions-grid">
-              <form method="POST" action="/login/php/Funcionalidad_Empleados.php" class="m-0">
-                <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
-                <input type="hidden" name="accion" value="activar_tarjeta">
-                <input type="hidden" name="Id" value="<?= (int)$row['Id'] ?>">
-                <button class="btn btn-sm btn-outline-success btn-block" type="submit" <?= (int)$row['Status']===1?'disabled':''; ?>>Activar</button>
-              </form>
-
-              <form method="POST" action="/login/php/Funcionalidad_Empleados.php" class="m-0">
-                <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
-                <input type="hidden" name="accion" value="desactivar_tarjeta">
-                <input type="hidden" name="Id" value="<?= (int)$row['Id'] ?>">
-                <button class="btn btn-sm btn-outline-warning btn-block" type="submit" <?= (int)$row['Status']===0?'disabled':''; ?>>Desactivar</button>
-              </form>
-
-              <form method="POST" action="/login/php/Funcionalidad_Empleados.php" class="m-0">
-                <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
-                <input type="hidden" name="accion" value="borrar_tarjeta">
-                <input type="hidden" name="Id" value="<?= (int)$row['Id'] ?>">
-                <button class="btn btn-sm btn-outline-danger btn-block" type="submit" onclick="return confirm('¿Borrar tarjeta <?= (int)$row['Id'] ?>?');">Borrar</button>
-              </form>
-
-              <form method="POST" action="/login/php/Funcionalidad_Empleados.php" class="m-0">
-                <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
-                <input type="hidden" name="accion" value="actualizar_vigencia">
-                <input type="hidden" name="Id" value="<?= (int)$row['Id'] ?>">
-                <div class="d-flex align-items-center" style="gap:.25rem">
-                  <input type="date" name="Validez_Fin" class="form-control form-control-sm" value="<?= h((string)$row['Validez_Fin']) ?>">
-                  <button class="btn btn-sm btn-outline-primary" type="submit">Actualizar</button>
+            $statusVisual = ((int)$row['Status'] === 1) ? 'Activo' : 'Cancelado';
+            $vigencia     = (string)($row['Validez_Fin'] ?? '');
+          ?>
+            <tr>
+              <!-- Tarjeta (imagen + título + producto) -->
+              <td data-label="Tarjeta">
+                <div class="d-flex align-items-center">
+                  <?php if (!empty($row['Img'])): ?>
+                    <img class="img-cup mr-2" src="<?= h($src) ?>" alt="Tarjeta <?= h($row['TitA']) ?>">
+                  <?php endif; ?>
+                  <div>
+                    <strong><?= h($row['TitA']) ?></strong><br>
+                    <small><?= h($row['Producto']) ?></small>
+                  </div>
                 </div>
-              </form>
-            </div>
-          </div>
-        </article>
-      <?php endforeach; ?>
-    </div>
-  <?php endif; ?>
+              </td>
 
-  <br><br><br><br>
-</main>
+              <!-- Red / Tipo -->
+              <td data-label="Red / Tipo">
+                <?= h($row['Red']) ?> · <?= h($row['Tipo']) ?>
+              </td>
 
+              <!-- Status visual (chip) -->
+              <td data-label="Status">
+                <?= mesa_status_chip($statusVisual) ?>
+              </td>
+
+              <!-- Vigencia -->
+              <td data-label="Vigencia">
+                <?= $vigencia !== '' ? h($vigencia) : '-' ?>
+              </td>
+
+              <!-- Usos -->
+              <td data-label="Usos">
+                <?= (int)$row['Usos'] ?>
+              </td>
+
+              <!-- Acciones -->
+              <td class="mesa-actions" data-label="Acciones">
+                <div class="mesa-actions-grid">
+                  <!-- Activar -->
+                  <form method="POST" action="/login/php/Funcionalidad_Empleados.php" class="m-0">
+                    <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+                    <input type="hidden" name="accion" value="activar_tarjeta">
+                    <input type="hidden" name="Id" value="<?= (int)$row['Id'] ?>">
+                    <button class="btn btn-sm btn-success" type="submit"
+                      <?= (int)$row['Status']===1 ? 'disabled' : '' ?>>
+                      <i class="material-icons" style="font-size:16px;">check_circle</i>
+                    </button>
+                  </form>
+
+                  <!-- Desactivar -->
+                  <form method="POST" action="/login/php/Funcionalidad_Empleados.php" class="m-0">
+                    <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+                    <input type="hidden" name="accion" value="desactivar_tarjeta">
+                    <input type="hidden" name="Id" value="<?= (int)$row['Id'] ?>">
+                    <button class="btn btn-sm btn-warning" type="submit"
+                      <?= (int)$row['Status']===0 ? 'disabled' : '' ?>>
+                      <i class="material-icons" style="font-size:16px;">cancel</i>
+                    </button>
+                  </form>
+
+                  <!-- Borrar -->
+                  <form method="POST" action="/login/php/Funcionalidad_Empleados.php" class="m-0">
+                    <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+                    <input type="hidden" name="accion" value="borrar_tarjeta">
+                    <input type="hidden" name="Id" value="<?= (int)$row['Id'] ?>">
+                    <button class="btn btn-sm btn-danger" type="submit"
+                      onclick="return confirm('¿Borrar tarjeta <?= (int)$row['Id'] ?>?');">
+                      <i class="material-icons" style="font-size:16px;">delete</i>
+                    </button>
+                  </form>
+
+                  <!-- Actualizar vigencia -->
+                  <form method="POST" action="/login/php/Funcionalidad_Empleados.php" class="m-0">
+                    <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+                    <input type="hidden" name="accion" value="actualizar_vigencia">
+                    <input type="hidden" name="Id" value="<?= (int)$row['Id'] ?>">
+                    <div class="d-flex align-items-center" style="gap:.25rem">
+                      <input type="date" name="Validez_Fin"
+                             class="form-control form-control-sm"
+                             value="<?= h((string)$row['Validez_Fin']) ?>">
+                      <button class="btn btn-sm btn-primary" type="submit">
+                        <i class="material-icons" style="font-size:16px;">event</i>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+    <?php endif; ?>
+
+    <br><br><br><br>
+  </main>
+
+  <!-- JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
   <script src="Javascript/finger.js?v=3"></script>

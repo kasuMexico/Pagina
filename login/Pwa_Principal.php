@@ -32,20 +32,36 @@ $Vend = (string)$_SESSION['Vendedor'];
 /* ==========================================================================================
  * BLOQUE: Foto de perfil
  * Qué hace: Resuelve la URL pública de la foto de perfil. Prioriza:
- *   1) Nombre de archivo guardado en BD (Empleados.Foto)
+ *   1) Nombre de archivo guardado en BD (Empleados.Foto), si la columna existe
  *   2) Archivo más reciente que haga match con IdEmpleado_*.jpg
  *   3) default.jpg
  * Fecha: 05/11/2025 — Revisado por: JCCM
  * ========================================================================================== */
-$docRoot   = rtrim((string)($_SERVER['DOCUMENT_ROOT'] ?? ''), DIRECTORY_SEPARATOR);
-$fsDir     = $docRoot . '/login/assets/img/perfil/';
+$docRoot    = rtrim((string)($_SERVER['DOCUMENT_ROOT'] ?? ''), DIRECTORY_SEPARATOR);
+$fsDir      = $docRoot . '/login/assets/img/perfil/';
 $publicBase = '/login/assets/img/perfil/';
 $profileUrl = $publicBase . 'default.jpg';
 
 $VendId = (int)$basicas->BuscarCampos($mysqli, 'Id', 'Empleados', 'IdUsuario', $Vend);
 
-// Nombre de archivo explícito en BD
-$last = (string) ($basicas->BuscarCampos($mysqli, 'Foto', 'Empleados', 'Id', $VendId) ?? '');
+// Detectar si existe la columna Foto en Empleados (para que no truene con tu BD actual)
+$colFotoExists = false;
+if ($result = $mysqli->query("SHOW COLUMNS FROM Empleados LIKE 'Foto'")) {
+    if ($result->num_rows > 0) {
+        $colFotoExists = true;
+    }
+    $result->close();
+}
+
+$last = '';
+if ($colFotoExists) {
+    $tmp = $basicas->BuscarCampos($mysqli, 'Foto', 'Empleados', 'Id', $VendId);
+    if ($tmp !== null) {
+        $last = (string)$tmp;
+    }
+}
+
+// Si hay nombre de archivo en BD y el archivo existe, úsalo
 if ($last !== '' && is_file($fsDir . $last)) {
     $profileUrl = $publicBase . $last . '?v=' . filemtime($fsDir . $last);
 } else {
@@ -56,13 +72,13 @@ if ($last !== '' && is_file($fsDir . $last)) {
         usort($matches, static function (string $a, string $b): int {
             return filemtime($b) <=> filemtime($a);
         });
-        $fname = basename($matches[0]);
+        $fname      = basename($matches[0]);
         $profileUrl = $publicBase . $fname . '?v=' . filemtime($matches[0]);
     }
 }
 
 if (!empty($_SESSION['FotoCacheBust'])) {
-    $separator = str_contains($profileUrl, '?') ? '&' : '?';
+    $separator  = str_contains($profileUrl, '?') ? '&' : '?';
     $profileUrl .= $separator . 'cb=' . rawurlencode((string)$_SESSION['FotoCacheBust']);
     unset($_SESSION['FotoCacheBust']);
 }
@@ -72,26 +88,26 @@ if (!empty($_SESSION['FotoCacheBust'])) {
  * Qué hace: Obtiene nombre, nivel, sucursal y etiquetas legibles.
  * Fecha: 05/11/2025 — Revisado por: JCCM
  * ========================================================================================== */
-$SL1          = (string)$basicas->BuscarCampos($mysqli, 'Nombre',         'Empleados', 'IdUsuario', $Vend);
-$NivRaw       = $basicas->BuscarCampos($mysqli, 'Nivel',          'Empleados', 'IdUsuario', $Vend);
-$suc          = (int)$basicas->BuscarCampos($mysqli, 'Sucursal',       'Empleados', 'IdUsuario', $Vend);
-$su2          = (string)$basicas->BuscarCampos($mysqli, 'NombreSucursal', 'Sucursal',  'Id',        $suc);
-$nombreNivel  = (string)$basicas->BuscarCampos($mysqli, 'NombreNivel',    'Nivel',     'Id',        $NivRaw);
-$Niv          = (int)$NivRaw;
+$SL1         = (string)$basicas->BuscarCampos($mysqli, 'Nombre',         'Empleados', 'IdUsuario', $Vend);
+$NivRaw      = $basicas->BuscarCampos($mysqli, 'Nivel',          'Empleados', 'IdUsuario', $Vend);
+$suc         = (int)$basicas->BuscarCampos($mysqli, 'Sucursal',       'Empleados', 'IdUsuario', $Vend);
+$su2         = (string)$basicas->BuscarCampos($mysqli, 'nombreSucursal', 'Sucursal',  'Id',        $suc);
+$nombreNivel = (string)$basicas->BuscarCampos($mysqli, 'NombreNivel',    'Nivel',     'Id',        $NivRaw);
+$Niv         = (int)$NivRaw;
 
 /* ==========================================================================================
  * BLOQUE: Defaults de variables de metas/KPIs (respaldo si no vienen desde Analisis_Metas.php)
  * Qué hace: Evita notices de variables no definidas en vistas.
  * Fecha: 05/11/2025 — Revisado por: JCCM
  * ========================================================================================== */
-$spv      = isset($spv)      ? (string)$spv      : '#2e7d32';
-$bxo      = isset($bxo)      ? (string)$bxo      : '#1565c0';
-$ComGenHoy= isset($ComGenHoy)? (float)$ComGenHoy : 0.0;
-$AvCob    = isset($AvCob)    ? (float)$AvCob     : 0.0;
-$MetaCob  = isset($MetaCob)  ? (float)$MetaCob   : 0.0;
-$CobHoy   = isset($CobHoy)   ? (float)$CobHoy    : 0.0;
-$MetaVta  = isset($MetaVta)  ? (float)$MetaVta   : 0.0;
-$AvVtas   = isset($AvVtas)   ? (float)$AvVtas    : 0.0;
+$spv       = isset($spv)       ? (string)$spv       : '#2e7d32';
+$bxo       = isset($bxo)       ? (string)$bxo       : '#1565c0';
+$ComGenHoy = isset($ComGenHoy) ? (float)$ComGenHoy  : 0.0;
+$AvCob     = isset($AvCob)     ? (float)$AvCob      : 0.0;
+$MetaCob   = isset($MetaCob)   ? (float)$MetaCob    : 0.0;
+$CobHoy    = isset($CobHoy)    ? (float)$CobHoy     : 0.0;
+$MetaVta   = isset($MetaVta)   ? (float)$MetaVta    : 0.0;
+$AvVtas    = isset($AvVtas)    ? (float)$AvVtas     : 0.0;
 
 // Cache-busting para CSS si $VerCache no está definido
 $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';

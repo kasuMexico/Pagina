@@ -17,14 +17,16 @@ if (!function_exists('str_starts_with')) {
  */
 function autenticarVendedor(mysqli $mysqli): bool
 {
+    // Log de errores a archivo dentro de /login (hermano de /eia)
     ini_set('log_errors', '1');
-    ini_set('error_log', __DIR__ . '/../login/debug_login.log');
-    // Entradas saneadas sin FILTER_SANITIZE_STRING (deprecado)
+    ini_set('error_log', __DIR__ . '/../../login/debug_login.log');
+
+    // Entradas saneadas
     $userInput = trim((string)($_POST['Usuario'] ?? ''));
     $pass      = (string)($_POST['PassWord'] ?? '');
 
     if ($userInput === '' || $pass === '') {
-        error_log("[KASU][Login] Usuario no encontrado: {$userInput}");
+        error_log("[KASU][Login] Usuario o password vacío: {$userInput}");
         return false;
     }
 
@@ -35,8 +37,8 @@ function autenticarVendedor(mysqli $mysqli): bool
     $stmt = $mysqli->prepare($sql);
     $stmt->bind_param('s', $userNorm);
     $stmt->execute();
-    $res = $stmt->get_result();
-    $row = $res->fetch_assoc() ?: null;
+    $res  = $stmt->get_result();
+    $row  = $res->fetch_assoc() ?: null;
     $stmt->close();
 
     if (!$row) {
@@ -55,9 +57,9 @@ function autenticarVendedor(mysqli $mysqli): bool
     }
     // 2) SHA-256 heredado (64 hex)
     elseif (ctype_xdigit($stored) && strlen($stored) === 64) {
-        $tipoHash = 'sha256';
-        $storedHex = strtolower($stored);
-        $inputHex  = strtolower(hash('sha256', $pass));
+        $tipoHash   = 'sha256';
+        $storedHex  = strtolower($stored);
+        $inputHex   = strtolower(hash('sha256', $pass));
         error_log("[KASU][Login] Comparando SHA-256 para {$row['IdUsuario']} -> BD={$storedHex} / INPUT={$inputHex}");
         $ok = hash_equals($storedHex, $inputHex);
     }
@@ -80,7 +82,7 @@ function autenticarVendedor(mysqli $mysqli): bool
         return false;
     }
 
-    // Sesión
+    // Sesión segura
     if (session_status() !== PHP_SESSION_ACTIVE) {
         session_start();
     }

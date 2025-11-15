@@ -307,6 +307,15 @@ if (isset($_GET['Msg'])) {
             <select id="pp_plazo" name="plazo" class="form-control"></select>
           </div>
 
+          <!-- Día de pago (solo crédito) -->
+          <div id="pp_dia_pago_wrap" class="mb12" style="display:none;">
+            <select id="pp_dia_pago" name="DiaPago" class="form-control">
+              <option value="">Selecciona el día que quieres pagar</option>
+              <option value="1">Día 1 de cada mes</option>
+              <option value="15">Día 15 de cada mes</option>
+            </select>
+          </div>
+
           <input type="hidden" id="pp_prodTarifa" name="ProdTarifa" value="">
           <input type="hidden" id="pp_edad" name="Edad" value="">
           <input type="hidden" id="pp_costo" name="Costo" value="">
@@ -391,6 +400,23 @@ function toggleTipoServicio() {
     wrap.style.display = 'none';
     sel.disabled = true;
     sel.selectedIndex = 0;
+  }
+}
+
+// NUEVO: mostrar/ocultar selector de día de pago cuando se elige crédito
+function toggleDiaPago() {
+  var plazoEl = document.getElementById('pp_plazo');
+  var wrap    = document.getElementById('pp_dia_pago_wrap');
+  var sel     = document.getElementById('pp_dia_pago');
+  if (!plazoEl || !wrap) return;
+  var meses = parseInt(plazoEl.value, 10) || 1;
+  if (meses > 1) {
+    // Crédito: mostrar selector
+    wrap.style.display = '';
+  } else {
+    // Contado: ocultar y limpiar
+    wrap.style.display = 'none';
+    if (sel) sel.value = '';
   }
 }
 
@@ -492,6 +518,8 @@ async function cotizar(){
     if ($plazoWrap) $plazoWrap.style.display = '';
 
     updateMonto();
+    toggleDiaPago(); // NUEVO: ajusta la visibilidad según el plazo
+
     if (priceWrap) priceWrap.style.display='';
   }catch(e){
     if(priceWrap) priceWrap.style.display='none';
@@ -522,11 +550,15 @@ $curp.addEventListener('blur', () => {
 
 // Recalcula al cambiar el select de plazo
 document.addEventListener('change', function(e){
-  if (e.target && e.target.id === 'pp_plazo') updateMonto();
+  if (e.target && e.target.id === 'pp_plazo') {
+    updateMonto();
+    toggleDiaPago(); // NUEVO
+  }
 });
 
 document.addEventListener('DOMContentLoaded', function(){
   toggleTipoServicio();
+  toggleDiaPago(); // NUEVO: estado inicial
 });
 </script>
 

@@ -11,8 +11,6 @@
 declare(strict_types=1);
 
 // =================== Sesión y dependencias ===================
-// Qué hace: Inicia sesión, carga librerías, fija zona horaria, endurece cabeceras
-// Fecha: 05/11/2025 | Revisado por: JCCM
 session_start();
 require_once '../eia/librerias.php';
 require_once __DIR__ . '/php/mesa_helpers.php';
@@ -21,36 +19,43 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 header_remove('X-Powered-By');
 
 // =================== Guardia de sesión ===================
-// Qué hace: Valida autenticación
-// Fecha: 05/11/2025 | Revisado por: JCCM
 if (empty($_SESSION['Vendedor'])) {
   header('Location: https://kasu.com.mx/login');
   exit;
 }
 
 // =================== Utils ===================
-// Qué hace: h() convierte a string y escapa para HTML
-// Fecha: 05/11/2025 | Revisado por: JCCM
 if (!function_exists('h')) {
   function h($v){ return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 }
 
 // =================== Variables base ===================
-// Qué hace: Inicializa estructuras y contexto del usuario actual
-// Fecha: 05/11/2025 | Revisado por: JCCM
-$Reg = [];
-$Recg = [];
-$Recg1 = [];
-$Pago = $Pago1 = $PagoPend = $Saldo = 0.0;
-$Status = '';
-$Ventana = null;
-$Lanzar  = null;
-$nombre  = $_POST['nombre'] ?? ($_GET['nombre'] ?? '');
-$Vende   = $basicas->BuscarCampos($mysqli, "Nivel", "Empleados", "IdUsuario", $_SESSION["Vendedor"]);
+$Reg      = [];
+$Recg     = [];
+$Recg1    = [];
+$Pago     = 0.0;
+$Pago1    = 0.0;
+$PagoPend = 0.0;
+$Saldo    = 0.0;
+$Status   = '';
+$Ventana  = null;
+$Lanzar   = null;
+
+// Filtros persistentes
+$nombreFiltro = isset($_POST['nombre'])
+  ? (string)$_POST['nombre']
+  : (string)($_GET['nombre'] ?? '');
+
+$statusFiltro = isset($_POST['Status'])
+  ? (string)$_POST['Status']
+  : (string)($_GET['Status'] ?? '');
+
+// Lo usamos igual que antes
+$nombre = $nombreFiltro;
+
+$Vende = $basicas->BuscarCampos($mysqli, "Nivel", "Empleados", "IdUsuario", $_SESSION["Vendedor"]);
 
 // =================== Router por POST IdCliente ===================
-// Qué hace: Interpreta "IdCliente" con patrón {Vtn}{Id} para abrir modal y precargar venta
-// Fecha: 05/11/2025 | Revisado por: JCCM
 if (!empty($_POST['IdCliente'])) {
   if ($_POST['IdCliente'] === "btnCrearCte") {
     $Vtn = 10;
@@ -75,7 +80,7 @@ if (!empty($_POST['IdCliente'])) {
       $PagoPend = (float)$financieras->PagosPend($mysqli, $Cte);
       $Saldo    = (float)number_format((float)$financieras->SaldoCredito($mysqli, $Cte), 2, '.', '');
 
-      // Estado de mora/corriente
+      // Estado de mora/corriente (para la venta seleccionada)
       $StatVtas = $financieras->estado_mora_corriente((int)$Reg['Id']);
       $Status   = (!empty($StatVtas['estado']) && $StatVtas['estado'] === "AL CORRIENTE") ? "Pago" : "Mora";
 
@@ -103,8 +108,6 @@ if (!empty($_POST['IdCliente'])) {
 }
 
 // =================== Acciones POST ===================
-// Qué hace: Procesa acciones de reasignación o cancelación
-// Fecha: 05/11/2025 | Revisado por: JCCM
 if (!empty($_POST['CambiVend'])) {
   // Reasignar ejecutivo en tablas relacionadas
   $idVta   = (int)($_POST['IdVenta'] ?? 0);
@@ -128,21 +131,15 @@ if (!empty($_POST['CambiVend'])) {
 }
 
 // =================== Alertas ===================
-// Qué hace: Lanza alert seguro si viene ?Msg=
-// Fecha: 05/11/2025 | Revisado por: JCCM
 if (isset($_GET['Msg'])) {
   $msg = (string)$_GET['Msg'];
   echo "<script>window.addEventListener('load',()=>alert(".json_encode($msg, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)."));</script>";
 }
 
 // =================== Token anti-duplicado correo ===================
-// Qué hace: Evita reenvíos múltiples
-// Fecha: 05/11/2025 | Revisado por: JCCM
 $_SESSION['mail_token'] = bin2hex(random_bytes(16));
 
 // =================== Cache bust ===================
-// Qué hace: Versiona recursos estáticos
-// Fecha: 05/11/2025 | Revisado por: JCCM
 $VerCache = time();
 ?>
 <!DOCTYPE html>
@@ -152,45 +149,34 @@ $VerCache = time();
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#F2F2F2">
   <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
-  <title>Mesa Prospectos</title>
+  <title>Mesa Clientes</title>
 
-  <!-- =================== PWA / iOS ===================
-       Qué hace: Archivos para instalación en móviles
-       Fecha: 05/11/2025 | Revisado por: JCCM -->
+  <!-- =================== PWA / iOS =================== -->
   <link rel="manifest" href="/login/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <!-- =================== CSS unificado ===================
-       Qué hace: Estilos base del panel
-       Fecha: 05/11/2025 | Revisado por: JCCM -->
+  <!-- =================== CSS unificado =================== -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?= h((string)$VerCache) ?>">
 </head>
 <body onload="localize()">
-  <!-- =================== Top bar fija ===================
-       Qué hace: Título del módulo
-       Fecha: 05/11/2025 | Revisado por: JCCM -->
+  <!-- =================== Top bar fija =================== -->
   <div class="topbar">
     <div class="d-flex align-items-center w-100">
       <h4 class="title">Cartera de Clientes</h4>
     </div>
   </div>
 
-  <!-- =================== Menú inferior ===================
-    Qué hace: Carga menú principal de la PWA
-    Fecha: 05/11/2025 | Revisado por: JCCM 
-  -->
+  <!-- =================== Menú inferior =================== -->
   <section id="Menu">
     <?php require_once 'html/Menuprinc.php'; ?>
   </section>
 
-  <!-- =================== Ventanas emergentes ===================
-       Qué hace: Modales para acciones sobre el cliente
-       Fecha: 05/11/2025 | Revisado por: JCCM -->
+  <!-- =================== Ventanas emergentes =================== -->
   <section id="VentanasEMergentes">
     <!-- Ventana1: Agregar pago -->
     <div class="modal fade" id="Ventana1" tabindex="-1" role="dialog" aria-labelledby="modalV1" aria-hidden="true">
@@ -216,8 +202,8 @@ $VerCache = time();
           </div>
           <div class="modal-body">
             <input type="hidden" name="IdVenta" value="<?= (int)($Reg['Id'] ?? 0) ?>">
-            <input type="hidden" name="nombre"  value="<?= h($nombre) ?>">
-            <input type="hidden" name="Status"  value="<?= h($_POST['Status'] ?? '') ?>">
+            <input type="hidden" name="nombre"  value="<?= h($nombreFiltro) ?>">
+            <input type="hidden" name="Status"  value="<?= h($statusFiltro) ?>">
 
             <p>Nombre del Cliente</p>
             <h4 class="text-center"><strong><?= h($Reg['Nombre'] ?? '') ?></strong></h4>
@@ -285,7 +271,8 @@ $VerCache = time();
           <div class="modal-body">
             <div id="Gps"></div>
             <div data-fingerprint-slot></div>
-            <input type="hidden" name="nombre"    value="<?= h($nombre) ?>">
+            <input type="hidden" name="nombre"    value="<?= h($nombreFiltro) ?>">
+            <input type="hidden" name="Status"    value="<?= h($statusFiltro) ?>">
             <input type="hidden" name="Host"      value="<?= h($_SERVER['PHP_SELF']) ?>">
             <input type="hidden" name="IdVenta"   value="<?= (int)($Reg['Id'] ?? 0) ?>">
             <input type="hidden" name="IdContact" value="<?= (int)($Recg['id'] ?? 0) ?>">
@@ -337,8 +324,8 @@ $VerCache = time();
         </div>
         <div class="modal-body">
           <input type="hidden" name="IdVenta" value="<?= (int)($Reg['Id'] ?? 0) ?>">
-          <input type="hidden" name="nombre"  value="<?= h($nombre) ?>">
-          <input type="hidden" name="Status"  value="<?= h($_POST['Status'] ?? '') ?>">
+          <input type="hidden" name="nombre"  value="<?= h($nombreFiltro) ?>">
+          <input type="hidden" name="Status"  value="<?= h($statusFiltro) ?>">
           <p><strong>Elige una opción para entregar las fichas al cliente</strong></p>
           <?php if (empty($Recg['Mail'])): ?>
             <h5 class="alert alert-danger">Este cliente no cuenta con un Email Registrado</h5>
@@ -349,7 +336,8 @@ $VerCache = time();
           <form action="../eia/EnviarCorreo.php" method="post" style="padding-right:5px;">
             <div id="Gps"></div>
             <div data-fingerprint-slot></div>
-            <input type="hidden" name="nombre"     value="<?= h($nombre) ?>">
+            <input type="hidden" name="nombre"     value="<?= h($nombreFiltro) ?>">
+            <input type="hidden" name="Status"     value="<?= h($statusFiltro) ?>">
             <input type="hidden" name="Host"       value="<?= h($_SERVER['PHP_SELF']) ?>">
             <input type="hidden" name="IdVenta"    value="<?= (int)($Reg['Id'] ?? 0) ?>">
             <input type="hidden" name="IdContact"  value="<?= (int)($Recg['id'] ?? 0) ?>">
@@ -375,8 +363,8 @@ $VerCache = time();
         </div>
         <div class="modal-body">
           <input type="hidden" name="IdVenta" value="<?= (int)($Reg['Id'] ?? 0) ?>">
-          <input type="hidden" name="nombre"  value="<?= h($nombre) ?>">
-          <input type="hidden" name="Status"  value="<?= h($_POST['Status'] ?? '') ?>">
+          <input type="hidden" name="nombre"  value="<?= h($nombreFiltro) ?>">
+          <input type="hidden" name="Status"  value="<?= h($statusFiltro) ?>">
           <p><strong>Elige una opción para entregar la póliza al cliente</strong></p>
           <?php if (empty($Recg['Mail'])): ?>
             <h5 class="alert alert-danger">Este cliente no cuenta con un Email Registrado</h5>
@@ -387,7 +375,8 @@ $VerCache = time();
           <form action="../eia/EnviarCorreo.php" method="post" style="padding-right:5px;">
             <div id="Gps" style="display:none;"></div>
             <div data-fingerprint-slot></div>
-            <input type="hidden" name="nombre"     value="<?= h($nombre) ?>">
+            <input type="hidden" name="nombre"     value="<?= h($nombreFiltro) ?>">
+            <input type="hidden" name="Status"     value="<?= h($statusFiltro) ?>">
             <input type="hidden" name="Host"       value="<?= h($_SERVER['PHP_SELF']) ?>">
             <input type="hidden" name="IdVenta"    value="<?= (int)($Reg['Id'] ?? 0) ?>">
             <input type="hidden" name="IdContact"  value="<?= (int)($Recg['id'] ?? 0) ?>">
@@ -411,7 +400,8 @@ $VerCache = time();
         <form method="POST" action="php/Funcionalidad_Pwa.php">
           <div id="Gps"></div>
           <div data-fingerprint-slot></div>
-          <input type="hidden" name="nombre"    value="<?= h($nombre) ?>">
+          <input type="hidden" name="nombre"    value="<?= h($nombreFiltro) ?>">
+          <input type="hidden" name="Status"    value="<?= h($statusFiltro) ?>">
           <input type="hidden" name="Host"      value="<?= h($_SERVER['PHP_SELF']) ?>">
           <input type="hidden" name="IdVenta"   value="<?= (int)($Reg['Id'] ?? 0) ?>">
           <input type="hidden" name="IdContact" value="<?= (int)($Recg['id'] ?? 0) ?>">
@@ -428,7 +418,7 @@ $VerCache = time();
               <textarea class="form-control" id="Descripcion" name="Descripcion" rows="3" required></textarea>
             </div>
             <label for="Status" class="form-label">Estado</label>
-            <select id="Status" name="Status" class="form-control" required>
+            <select id="Status" name="StatusTicket" class="form-control" required>
               <option value="">Selecciona estado</option>
               <option value="Abierto">Abierto</option>
               <option value="En progreso">En progreso</option>
@@ -463,9 +453,7 @@ $VerCache = time();
     </div>
   </section>
 
-  <!-- =================== Contenido ===================
-       Qué hace: Lista clientes por nombre o status y expone acciones por fila
-       Fecha: 05/11/2025 | Revisado por: JCCM -->
+  <!-- =================== Contenido =================== -->
   <main class="page-content" name="impresion de datos finales">
     <div class="table-responsive mesa-table-wrapper">
       <table class="table mesa-table" data-mesa="clientes">
@@ -474,32 +462,107 @@ $VerCache = time();
             <th>Nombre Cliente</th>
             <th>Asignado</th>
             <th>Status</th>
+            <th>Día pago</th>   <!-- NUEVO: muestra el día de pago (1 / 15) -->
             <th>Producto</th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
         <?php
-        if (!empty($_POST['Status'])) {
-          $buscar = $basicas->BLikes($mysqli, "Venta", "Status", $_POST['Status']);
-        } elseif (!empty($nombre)) {
-          $buscar = $basicas->BLikes($mysqli, "Venta", "Nombre", $nombre);
+        // ================== Filtro principal ==================
+        $statusReq = trim($statusFiltro);
+
+        if ($statusReq !== '') {
+          if ($statusReq === 'ATRASADO') {
+            // Caso especial: ATRASADO no está en Venta.Status, se deriva de la mora
+            $buscar = [];
+            $sqlAtr = "
+              SELECT *
+              FROM Venta
+              WHERE NumeroPagos > 1
+                AND Status IN ('ACTIVO','COBRANZA','PREVENTA','ACTIVACION')
+            ";
+            if ($resAtr = $mysqli->query($sqlAtr)) {
+              while ($r = $resAtr->fetch_assoc()) {
+                try {
+                  $infoEstado = $financieras->estado_mora_corriente((int)$r['Id']);
+                } catch (\Throwable $e) {
+                  $infoEstado = [];
+                }
+                $estadoCred = isset($infoEstado['estado']) ? strtoupper((string)$infoEstado['estado']) : '';
+                if ($estadoCred !== '' && $estadoCred !== 'AL CORRIENTE') {
+                  // Solo agregamos los que están en mora / atrasados
+                  $buscar[] = $r;
+                }
+              }
+              $resAtr->close();
+            }
+          } else {
+            // Resto de estados: se filtra directamente por Venta.Status
+            $buscar = $basicas->BLikes($mysqli, "Venta", "Status", $statusReq);
+          }
+        } elseif ($nombreFiltro !== '') {
+          $buscar = $basicas->BLikes($mysqli, "Venta", "Nombre", $nombreFiltro);
         } else {
           $buscar = [];
         }
 
         foreach ($buscar as $row):
+          // ===== Derivar estado visual ATRASADO según financiera =====
+          $estadoLinea = [];
+          try {
+            $estadoLinea = $financieras->estado_mora_corriente((int)$row['Id']);
+          } catch (\Throwable $e) {
+            $estadoLinea = [];
+          }
+
+          $estatusBD      = (string)$row['Status'];
+          $estatusVisual  = $estatusBD;
+          $estadoCredito  = isset($estadoLinea['estado']) ? (string)$estadoLinea['estado'] : '';
+
+          // Si la venta es de crédito (más de 1 pago) y el estado de crédito no está al corriente,
+          // mostramos el pseudo-estado "ATRASADO" para gestión de cobranza,
+          // pero sin tocar el Status real almacenado en BD.
+          $esCredito = ((int)($row['NumeroPagos'] ?? 1) > 1);
+          if ($esCredito
+              && in_array($estatusBD, ['ACTIVO','COBRANZA','PREVENTA','ACTIVACION'], true)
+              && $estadoCredito !== ''
+              && strtoupper($estadoCredito) !== 'AL CORRIENTE') {
+            $estatusVisual = 'ATRASADO';
+          }
+
+          $diaPago  = (int)($row['DiaPago'] ?? 0);
+          $rowClass = ($estatusVisual === 'ATRASADO') ? 'table-warning' : '';
         ?>
-          <tr>
+          <tr class="<?= h($rowClass) ?>">
             <td><?= h($row['Nombre']) ?></td>
             <td><?= h($row['Usuario']) ?></td>
-            <td><?= mesa_status_chip((string)$row['Status']) ?></td>
+            <td><?= mesa_status_chip($estatusVisual) ?></td>
+            <td><?= $diaPago > 0 ? h((string)$diaPago) : '-' ?></td>
             <td><?= h($row['Producto']) ?></td>
             <td class="mesa-actions" data-label="Acciones">
               <div class="mesa-actions-grid">
+
+                <?php
+                // ===== Botón "Pagar cuota" (Mercado Pago) =====
+                // Usa IdFIrma como ref= para /pago/crear_preferencia.php
+                $firmaFila = isset($row['IdFIrma']) ? trim((string)$row['IdFIrma']) : '';
+                if ($esCredito && $firmaFila !== ''): ?>
+                  <a
+                    href="/pago/crear_preferencia.php?ref=<?= urlencode($firmaFila) ?>"
+                    target="_blank"
+                    class="btn"
+                    title="Pagar cuota (Mercado Pago)"
+                    style="background:#3498DB;color:#F8F9F9;"
+                  >
+                    <i class="material-icons">credit_card</i>
+                  </a>
+                <?php endif; ?>
+
                 <!-- Estado de cuenta -->
                 <form method="POST" action="Mesa_Estado_Cuenta.php">
-                  <input type="hidden" name="nombre" value="<?= h($nombre) ?>">
+                  <input type="hidden" name="nombre" value="<?= h($nombreFiltro) ?>">
+                  <input type="hidden" name="Status" value="<?= h($statusFiltro) ?>">
                   <?php if (in_array($row['Status'], ["ACTIVO","COBRANZA","CANCELADO"], true)): ?>
                     <label for="EC<?= (int)$row['Id'] ?>" title="Ver estado de cuenta" class="btn" style="background:#F7DC6F;color:#F8F9F9;">
                       <i class="material-icons">contact_page</i>
@@ -509,9 +572,10 @@ $VerCache = time();
                   <?php endif; ?>
                 </form>
 
-                <!-- Acciones por status -->
+                <!-- Acciones por status (se siguen basando en Status real de BD) -->
                 <form method="POST" action="<?= h($_SERVER['PHP_SELF']) ?>">
-                  <input type="hidden" name="nombre" value="<?= h($nombre) ?>">
+                  <input type="hidden" name="nombre" value="<?= h($nombreFiltro) ?>">
+                  <input type="hidden" name="Status" value="<?= h($statusFiltro) ?>">
 
                   <?php if ($row['Status'] === "COBRANZA"): ?>
                     <label for="F<?= (int)$row['Id'] ?>" title="Generar Fichas" class="btn" style="background:#EB984E;color:#F8F9F9;">
@@ -590,9 +654,7 @@ $VerCache = time();
     <br><br><br><br>
   </main>
 
-  <!-- =================== JS ===================
-       Qué hace: Dependencias y scripts de interacción
-       Fecha: 05/11/2025 | Revisado por: JCCM -->
+  <!-- =================== JS =================== -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
   <script src="https://www.gstatic.com/charts/loader.js"></script>
@@ -600,9 +662,7 @@ $VerCache = time();
   <script src="Javascript/localize.js?v=3"></script>
   <script src="Javascript/Inyectar_gps_form.js"></script>
 
-  <!-- =================== Abrir modal si corresponde ===================
-       Qué hace: Abre el modal indicado por $Lanzar si viene del router
-       Fecha: 05/11/2025 | Revisado por: JCCM -->
+  <!-- =================== Abrir modal si corresponde =================== -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       <?php if (!empty($Lanzar)): ?>

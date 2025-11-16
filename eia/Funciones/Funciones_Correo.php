@@ -470,7 +470,7 @@ HTML;
         </tr>
 HTML;
 
-            case 'ENVÍO DE FICHAS DE PAGO':
+            case 'ENVIO DE FICHAS DE PAGO':
                 return <<<HTML
         <tr>
           <td align="center" style="padding:2px; font-size:25px; color:#153643; font-family:Arial, sans-serif;">

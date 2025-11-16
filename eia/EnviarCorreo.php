@@ -59,8 +59,14 @@ function mask_email(?string $e): string {
 /* ===== Inputs ===== */
 $EnCoti        = filter_input(INPUT_GET,  'EnCoti',         FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 $hash          = filter_input(INPUT_GET,  'hash',           FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+if ($hash === null || $hash === false || $hash === '') {
+  $hash = filter_input(INPUT_POST, 'hash', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+}
 $MxVta         = filter_input(INPUT_GET,  'MxVta',          FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-$EnFi          = filter_input(INPUT_GET,  'EnFi',           FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$EnFi          = filter_input(INPUT_POST, 'EnFi',           FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+if ($EnFi === null || $EnFi === false || $EnFi === '') {
+  $EnFi = filter_input(INPUT_GET, 'EnFi', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+}
 $ProReIn       = filter_input(INPUT_GET,  'ProReIn',        FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 $Servicio      = filter_input(INPUT_GET,  'Servicio',       FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 $HostGet       = filter_input(INPUT_GET,  'Host',           FILTER_UNSAFE_RAW);
@@ -77,6 +83,7 @@ $Cupon         = filter_input(INPUT_POST, 'Cupon',          FILTER_SANITIZE_FULL
 $FullNamePost  = filter_input(INPUT_POST, 'FullName',       FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 $HostPost      = filter_input(INPUT_POST, 'Host',           FILTER_UNSAFE_RAW);
 $NombrePost    = filter_input(INPUT_POST, 'nombre',         FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$StatusPost    = filter_input(INPUT_POST, 'Status',         FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
 $IdVenta       = $_POST['IdVenta']   ?? $_GET['IdVenta']   ?? null;
 $IdContactPost = $_POST['IdContact'] ?? $_GET['IdContact'] ?? null;
@@ -153,7 +160,7 @@ if (!empty($EnCoti)) { // Enviar cotización (seguro) Revisado y funcionado 7 No
 } elseif (!empty($EnviarFichas)) {  // Fichas de pago Revisado y funcionado 7 Nov 2025
   dbg('Ruta: EnviarFichas', ['IdVenta'=>$IdVenta, 'EmailPost'=>$EmailPost]);
   $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Envio_Fichas', $HostPost ?? $_SERVER['PHP_SELF']);
-  $Asunto   = "ENVÍO DE FICHAS DE PAGO";
+  $Asunto   = "ENVIO DE FICHAS DE PAGO";
   $Email    = $EmailPost;
   $FullName = $basicas->BuscarCampos($mysqli, "Nombre", "Venta", "Id", $IdVenta);
   $data = [
@@ -178,15 +185,65 @@ if (!empty($EnCoti)) { // Enviar cotización (seguro) Revisado y funcionado 7 No
   $Msg = "Se envió el estado de cuenta";
 
 } elseif (!empty($EnFi)) {  // Link de pago Mercado Pago
-  dbg('Ruta: EnFi', ['EnFi'=>$EnFi, 'hash'=>$hash]);
-  $Asunto   = "PAGO PENDIENTE";
-  $Email    = $basicas->BuscarCampos($mysqli, "Mail",   "Contacto", "id", $_SESSION["Cnc"] ?? 0);
-  $FullName = $basicas->BuscarCampos($mysqli, "Nombre", "Usuario",  "IdContact", $_SESSION["Cnc"] ?? 0);
-  $Id       = $_SESSION["Cnc"] ?? '';
-  if ((string)$EnFi === '1') { $DirUrl = "https://www.mercadopago.com.mx/checkout/v1/redirect?preference-id=" . $hash;
-  } else {                     $DirUrl = "https://www.mercadopago.com.mx/subscriptions/checkout?preapproval_plan_id=" . $hash; }
-  $data = ['Cte'=>$FullName, 'DirUrl'=>$DirUrl];
-  $stat = "3";
+  $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Envio_Liga_MP', $HostPost ?? $_SERVER['PHP_SELF']);
+  $ventaId = (int)($IdVenta ?? 0);
+  dbg('Ruta: EnFi', ['EnFi'=>$EnFi, 'IdVenta'=>$ventaId]);
+
+  if ($ventaId <= 0) {
+    http_response_code(400);
+    exit('Venta inválida para enviar liga de pago.');
+  }
+
+  $sqlLiga = "
+    SELECT
+      v.Id,
+      v.Nombre,
+      v.IdFIrma,
+      c.Mail          AS email,
+      vm.mp_init_point AS mp_init_point
+    FROM Venta v
+    LEFT JOIN Contacto c        ON c.id = v.IdContact
+    LEFT JOIN VentasMercadoPago vm ON vm.folio = v.IdFIrma
+    WHERE v.Id = ?
+    LIMIT 1
+  ";
+
+  $stmtLiga = $mysqli->prepare($sqlLiga);
+  $stmtLiga->bind_param('i', $ventaId);
+  $stmtLiga->execute();
+  $infoLiga = $stmtLiga->get_result()->fetch_assoc() ?: [];
+  $stmtLiga->close();
+
+  if (!$infoLiga) {
+    http_response_code(404);
+    exit('No se encontró la venta para enviar la liga de pago.');
+  }
+
+  $Email    = $EmailPost ?: (string)($infoLiga['email'] ?? '');
+  $FullName = (string)($infoLiga['Nombre'] ?? 'Cliente KASU');
+  $Id       = $ventaId;
+  $folio    = trim((string)($infoLiga['IdFIrma'] ?? ''));
+  $DirUrl   = trim((string)($infoLiga['mp_init_point'] ?? ''));
+
+  if ($DirUrl === '' && $folio !== '') {
+    $DirUrl = 'https://kasu.com.mx/pago/crear_preferencia.php?ref=' . rawurlencode($folio);
+  } elseif ($DirUrl === '' && $hash !== null && $hash !== false && $hash !== '') {
+    if ((string)$EnFi === '1') {
+      $DirUrl = "https://www.mercadopago.com.mx/checkout/v1/redirect?preference-id=" . $hash;
+    } else {
+      $DirUrl = "https://www.mercadopago.com.mx/subscriptions/checkout?preapproval_plan_id=" . $hash;
+    }
+  }
+
+  if ($DirUrl === '') {
+    http_response_code(500);
+    exit('No se encontró liga de pago para esta venta.');
+  }
+
+  $Asunto = "PAGO PENDIENTE";
+  $data   = ['Cte'=>$FullName, 'DirUrl'=>$DirUrl];
+  $Msg    = "Se envió la liga de pago al cliente";
+  $stat   = "3";
 
 } elseif (!empty($MxVta)) {  // Recordatorio de pago por venta
   dbg('Ruta: MxVta', ['MxVta'=>$MxVta]);
@@ -359,14 +416,15 @@ if ($destinatarioValido) {
      redirect_with_msg($Redireccion, (string)$Msg,);
 
  } elseif (!empty($HostPost)) {
-     header(
-         'Location: https://kasu.com.mx' . $HostPost
-         . '?Vt=1&Msg=' . urlencode($Msg ?? '')
-         . '&name=' . urlencode($NombrePost ?? '')
-         . '&busqueda=' . urlencode((string)($IdVenta ?? '')),
-         true,
-         303
-     );
+     $qs = http_build_query([
+         'Vt'       => 1,
+         'Msg'      => $Msg ?? '',
+         'name'     => $NombrePost ?? '',
+         'nombre'   => $NombrePost ?? '',
+         'Status'   => $StatusPost ?? '',
+         'busqueda' => (string)($IdVenta ?? ''),
+     ]);
+     header('Location: https://kasu.com.mx' . $HostPost . '?' . $qs, true, 303);
      exit;
 
  } else {

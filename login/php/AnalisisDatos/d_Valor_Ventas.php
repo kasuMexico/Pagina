@@ -27,6 +27,22 @@ try {
     }
     $mysqli->set_charset('utf8mb4');
 
+    $today = date('Y-m-d');
+    $minDefault = '2000-01-01';
+    $iniGet = filter_input(INPUT_GET, 'ini', FILTER_SANITIZE_FULL_SPECIAL_CHARS) ?: $minDefault;
+    $finGet = filter_input(INPUT_GET, 'fin', FILTER_SANITIZE_FULL_SPECIAL_CHARS) ?: $today;
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $iniGet)) { $iniGet = $minDefault; }
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $finGet)) { $finGet = $today; }
+    if ($iniGet > $finGet) { [$iniGet, $finGet] = [$finGet, $iniGet]; }
+    $iniFull = $iniGet . ' 00:00:00';
+    $finFull = $finGet . ' 23:59:59';
+
+    $stmtSum = $mysqli->prepare(
+        "SELECT COALESCE(SUM(CostoVenta),0) AS monto
+         FROM Venta
+         WHERE Producto = ? AND Status = 'ACTIVO' AND FechaRegistro BETWEEN ? AND ?"
+    );
+
     // Estructura base DataTable
     $data = [
         'cols' => [
@@ -41,15 +57,10 @@ try {
     foreach ($res as $row) {
         $producto = (string)$row['Producto'];
 
-        // Monto total de ventas ACTIVAS por producto
-        // Usa helper existente en tu clase Basicas: Sumar2cond($tabla,$campo,$c1,$v1,$c2,$v2)
-        $monto = (float)$basicas->Sumar2cond(
-            $mysqli,
-            'CostoVenta',
-            'Venta',
-            'Producto', $producto,
-            'Status',   'ACTIVO'
-        );
+        $stmtSum->bind_param('sss', $producto, $iniFull, $finFull);
+        $stmtSum->execute();
+        $resMonto = $stmtSum->get_result()->fetch_assoc();
+        $monto = (float)($resMonto['monto'] ?? 0.0);
 
         $data['rows'][] = [
             'c' => [
@@ -58,6 +69,8 @@ try {
             ],
         ];
     }
+
+    $stmtSum->close();
 
     echo json_encode($data, JSON_UNESCAPED_UNICODE);
 

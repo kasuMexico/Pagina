@@ -28,6 +28,18 @@ try {
     }
     $mysqli->set_charset('utf8mb4');
 
+    $today = date('Y-m-d');
+    $minDefault = '2000-01-01';
+    $iniGet = filter_input(INPUT_GET, 'ini', FILTER_SANITIZE_FULL_SPECIAL_CHARS) ?: $minDefault;
+    $finGet = filter_input(INPUT_GET, 'fin', FILTER_SANITIZE_FULL_SPECIAL_CHARS) ?: $today;
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $iniGet)) { $iniGet = $minDefault; }
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $finGet)) { $finGet = $today; }
+    if ($iniGet > $finGet) { [$iniGet, $finGet] = [$finGet, $iniGet]; }
+    $iniFull = $iniGet . ' 00:00:00';
+    $finFull = $finGet . ' 23:59:59';
+
+    $stmtCount = $mysqli->prepare("SELECT COUNT(*) AS total FROM Venta WHERE Producto = ? AND FechaRegistro BETWEEN ? AND ?");
+
     //create an array
     $data = [
         'cols' => [
@@ -45,9 +57,10 @@ try {
     //Si existe el registro se asocia en un fetch_assoc
     foreach ($res1 as $Reg1) {
         $producto = (string)$Reg1['Producto'];
-        //Se Suma las ventas de los Usuarios q tienen el Id del equipo
-        // Nota: ConUno cuenta registros en tabla 'Venta' con columna 'Producto' = $producto
-        $unidades_vendidas = (int)$basicas->ConUno($mysqli, 'Venta', 'Producto', $producto);
+        $stmtCount->bind_param('sss', $producto, $iniFull, $finFull);
+        $stmtCount->execute();
+        $resCount = $stmtCount->get_result()->fetch_assoc();
+        $unidades_vendidas = (int)($resCount['total'] ?? 0);
 
         //Insertamos el valor en el array
         $data['rows'][] = [
@@ -57,6 +70,8 @@ try {
             ],
         ];
     }
+
+    $stmtCount->close();
 
     echo json_encode($data, JSON_UNESCAPED_UNICODE);
 

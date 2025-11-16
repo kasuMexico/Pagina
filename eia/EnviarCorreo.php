@@ -184,7 +184,7 @@ if (!empty($EnCoti)) { // Enviar cotización (seguro) Revisado y funcionado 7 No
   $Id  = $IdVenta;
   $Msg = "Se envió el estado de cuenta";
 
-} elseif (!empty($EnFi)) {  // Link de pago Mercado Pago
+} elseif (!empty($EnFi)) {  // Link de pago Mercado Pago funcionado 15 Nov 2025
   $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Envio_Liga_MP', $HostPost ?? $_SERVER['PHP_SELF']);
   $ventaId = (int)($IdVenta ?? 0);
   dbg('Ruta: EnFi', ['EnFi'=>$EnFi, 'IdVenta'=>$ventaId]);
@@ -244,17 +244,6 @@ if (!empty($EnCoti)) { // Enviar cotización (seguro) Revisado y funcionado 7 No
   $data   = ['Cte'=>$FullName, 'DirUrl'=>$DirUrl];
   $Msg    = "Se envió la liga de pago al cliente";
   $stat   = "3";
-
-} elseif (!empty($MxVta)) {  // Recordatorio de pago por venta
-  dbg('Ruta: MxVta', ['MxVta'=>$MxVta]);
-  $FullName = $basicas->BuscarCampos($mysqli, "Nombre",    "Venta",    "Id", $MxVta);
-  $CnTo     = $basicas->BuscarCampos($mysqli, "IdContact", "Venta",    "Id", $MxVta);
-  $Email    = $basicas->BuscarCampos($mysqli, "Mail",      "Contacto", "id", $CnTo);
-  $DirUrl   = base64_encode((string)$MxVta);
-  $Asunto   = "PAGO PENDIENTE";
-  $data = ['Cte'=>$FullName, 'DirUrl'=>$DirUrl];
-  $Id   = $MxVta;
-  $stat = "2";
 
 } elseif (!empty($Vta_Liquidada)) {  // Bienvenida al cliente cuando ya esta pagado su servicio.
   dbg('Ruta: Poliza_Liquidada');

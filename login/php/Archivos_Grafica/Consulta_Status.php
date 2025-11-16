@@ -38,8 +38,27 @@ $NivelUsuario = (int)$basicas->BuscarCampos($mysqli, 'Nivel', 'Empleados', 'IdUs
 $lider = (int)$basicas->BuscarCampos($mysqli, 'Id', 'Empleados', 'IdUsuario', $_SESSION['Vendedor']);
 
 /* ========= 3) Consulta de Status y cómputo ========= */
+$today = date('Y-m-d');
+$minDefault = '2000-01-01';
+$iniGet = filter_input(INPUT_GET, 'ini', FILTER_SANITIZE_FULL_SPECIAL_CHARS) ?: $minDefault;
+$finGet = filter_input(INPUT_GET, 'fin', FILTER_SANITIZE_FULL_SPECIAL_CHARS) ?: $today;
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $iniGet)) { $iniGet = $minDefault; }
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $finGet)) { $finGet = $today; }
+if ($iniGet > $finGet) { [$iniGet, $finGet] = [$finGet, $iniGet]; }
+$iniFull = $iniGet . ' 00:00:00';
+$finFull = $finGet . ' 23:59:59';
+
 $sql = "SELECT * FROM Status";
 $result = $mysqli->query($sql);
+
+$stmtCount = $mysqli->prepare("SELECT COUNT(*) AS total FROM Venta WHERE Usuario = ? AND Status = ? AND FechaRegistro BETWEEN ? AND ?");
+$countStatus = function(string $usuario, string $status) use (&$stmtCount, $iniFull, $finFull): int {
+    $stmtCount->bind_param('ssss', $usuario, $status, $iniFull, $finFull);
+    $stmtCount->execute();
+    $res = $stmtCount->get_result()->fetch_assoc();
+    $stmtCount->free_result();
+    return (int)($res['total'] ?? 0);
+};
 
 /* Estructura DataTable: columnas fijas */
 $data = [
@@ -53,37 +72,33 @@ $data = [
 while ($row = $result->fetch_assoc()) {
     $statusNombre = (string)$row['Nombre'];
     $unidades_vendidas = 0;
+    $liderBase = $lider;
 
     if ($NivelUsuario >= 5) {
         // Ventas solo del usuario en sesión
-        $unidades_vendidas = (int)$basicas->ConUnCon(
-            $mysqli, 'Venta', 'Usuario', $_SESSION['Vendedor'], 'Status', $statusNombre
-        );
+        $unidades_vendidas = $countStatus((string)$_SESSION['Vendedor'], $statusNombre);
 
     } elseif ($NivelUsuario <= 4) {
         // Recorre jerarquía desde el nivel máximo hasta el nivel del usuario
         $nivelMax = (int)$basicas->Max1DifDat($mysqli, 'Nivel', 'Empleados', 'Nombre', 'Vacante');
         $a = $nivelMax;
+        $liderIter = $liderBase;
 
         while ($a >= $NivelUsuario) {
             // ¿Existen asignaciones a nivel $a con el “lider” actual?
-            $ExiReg = $basicas->ConDosCon($mysqli, 'Empleados', 'Equipo', $lider, 'Nivel', $a, 'Nombre', 'Vacante');
+            $ExiReg = $basicas->ConDosCon($mysqli, 'Empleados', 'Equipo', $liderIter, 'Nivel', $a, 'Nombre', 'Vacante');
 
             if ($a === $nivelMax || !empty($ExiReg)) {
                 $sql1 = "SELECT * FROM Empleados WHERE Nivel = {$a} AND Nombre <> 'Vacante'";
             } else {
-                $sql1 = "SELECT * FROM Empleados WHERE Nivel = {$a} AND Nombre <> 'Vacante' AND Id = {$lider}";
+                $sql1 = "SELECT * FROM Empleados WHERE Nivel = {$a} AND Nombre <> 'Vacante' AND Id = {$liderIter}";
             }
 
             if ($res1 = $mysqli->query($sql1)) {
                 foreach ($res1 as $Reg1) {
                     // Actualiza “lider” al equipo del registro actual para el siguiente descenso
-                    $lider = (int)$Reg1['Equipo'];
-
-                    // Suma ventas del usuario perteneciente a este registro, por Status
-                    $unidades_vendidas += (int)$basicas->ConUnCon(
-                        $mysqli, 'Venta', 'Usuario', $Reg1['IdUsuario'], 'Status', $statusNombre
-                    );
+                    $liderIter = (int)$Reg1['Equipo'];
+                    $unidades_vendidas += $countStatus((string)$Reg1['IdUsuario'], $statusNombre);
                 }
             }
             $a--;
@@ -100,3 +115,4 @@ while ($row = $result->fetch_assoc()) {
 
 /* ========= 4) Salida JSON ========= */
 echo json_encode($data, JSON_UNESCAPED_UNICODE);
+$stmtCount->close();

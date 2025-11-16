@@ -108,6 +108,26 @@ $MetaCob   = isset($MetaCob)   ? (float)$MetaCob    : 0.0;
 $CobHoy    = isset($CobHoy)    ? (float)$CobHoy     : 0.0;
 $MetaVta   = isset($MetaVta)   ? (float)$MetaVta    : 0.0;
 $AvVtas    = isset($AvVtas)    ? (float)$AvVtas     : 0.0;
+$VtasHoy   = isset($VtasHoy)   ? (float)$VtasHoy    : 0.0;
+$PolizasMes = isset($PolizasMes) ? (int)$PolizasMes : 0;
+$MetaPolizas = isset($MetaPolizas) ? (float)$MetaPolizas : 0.0;
+$CobranzaPlataforma = isset($CobranzaPlataforma) ? (float)$CobranzaPlataforma : 0.0;
+$CobranzaMpPendiente = isset($CobranzaMpPendiente) ? (float)$CobranzaMpPendiente : 0.0;
+$CobranzaSucursales = isset($CobranzaSucursales) ? (float)$CobranzaSucursales : (float)$CobHoy;
+
+if (!function_exists('kasu_fmt_moneda')) {
+    function kasu_fmt_moneda(float $value): string {
+        return '$' . number_format($value, 2, '.', ',');
+    }
+}
+if (!function_exists('kasu_progress_class')) {
+    function kasu_progress_class(float $pct): string {
+        if ($pct >= 100) return 'bg-success';
+        if ($pct >= 75)  return 'bg-info';
+        if ($pct >= 50)  return 'bg-warning';
+        return 'bg-danger';
+    }
+}
 
 // Cache-busting para CSS si $VerCache no está definido
 $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
@@ -115,6 +135,24 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
 date_default_timezone_set('America/Mexico_City');
 $ini = (new DateTime('first day of this month'))->format('d/m/Y');
 $fin = (new DateTime('last day of this month'))->format('d/m/Y');
+$mesActualIni = date('Y-m-01');
+$hoyStr       = date('Y-m-d');
+
+$cobranzaPct   = ($MetaCob > 0) ? min(100.0, round(($CobHoy / $MetaCob) * 100, 1)) : 0.0;
+$ventasPct     = ($MetaVta > 0) ? min(100.0, round(($VtasHoy / $MetaVta) * 100, 1)) : 0.0;
+
+$polizasPct  = ($MetaPolizas > 0)
+  ? min(100.0, round(($PolizasMes / max(1.0, $MetaPolizas)) * 100, 1))
+  : 0.0;
+
+$metaCobLabel   = $MetaCob   > 0 ? kasu_fmt_moneda($MetaCob)   : 'Sin meta';
+$metaVtaLabel   = $MetaVta   > 0 ? kasu_fmt_moneda($MetaVta)   : 'Sin meta';
+$metaPzaLabel   = $MetaPolizas > 0 ? number_format((int)$MetaPolizas) . ' pólizas' : 'Configura tu meta';
+$cobradoLabel   = kasu_fmt_moneda($CobHoy);
+$ventasLabel    = kasu_fmt_moneda($VtasHoy ?? 0.0);
+$pendCobranza   = $MetaCob > 0 ? max(0.0, $MetaCob - $CobHoy) : 0.0;
+$pendVentas     = $MetaVta > 0 ? max(0.0, $MetaVta - $VtasHoy) : 0.0;
+$pendPolizas    = $MetaPolizas > 0 ? max(0, (int)$MetaPolizas - $PolizasMes) : 0;
 
 ?>
 <!DOCTYPE html>
@@ -137,6 +175,12 @@ $fin = (new DateTime('last day of this month'))->format('d/m/Y');
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?= htmlspecialchars($VerCacheSafe, ENT_QUOTES) ?>">
   <link rel="stylesheet" href="assets/css/Grafica.css">
+  <style>
+    .imgPerfil .photo-hint{font-size:.8rem;color:#7b8a96;}
+    .kpi-card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:1rem;background:#fff;box-shadow:0 8px 18px rgba(0,0,0,.04);}
+    .kpi-card .progress{height:6px;}
+    .kpi-card h6{font-size:.85rem;letter-spacing:.08em;}
+  </style>
 
   <!-- JS externos -->
   <script src="https://www.gstatic.com/charts/loader.js"></script>
@@ -168,6 +212,9 @@ $fin = (new DateTime('last day of this month'))->format('d/m/Y');
           <input type="hidden" name="btnEnviar" value="1">
           <input class="d-none" type="file" id="subirImg" name="subirImg" accept="image/*">
         </form>
+        <div class="photo-hint">
+          <small id="fotoStatus">Pulsa la foto o el ícono para actualizarla (formatos JPG/PNG).</small>
+        </div>
       </div>
       <div class="Nombre">
         <p class="mb-1"><?= htmlspecialchars($SL1, ENT_QUOTES) ?></p>
@@ -189,50 +236,101 @@ $fin = (new DateTime('last day of this month'))->format('d/m/Y');
         <!-- Metas -->
         <div class="col-md-6">
           <?php if ($Niv === 7 || $Niv === 6): ?>
-            <div class="col-md-12">
-              <p>Comisiones Acumuladas</p>
-              <h3 style="color:<?= htmlspecialchars($spv, ENT_QUOTES) ?>;">
-                $<?= number_format($ComGenHoy, 2) ?>
-              </h3>
-            </div>
-          <?php else: ?>
-            <div class="col-md-12">
-              <a href="Pwa_Registro_Pagos.php">
-                <h3 style="color:<?= htmlspecialchars($spv, ENT_QUOTES) ?>;"><?= round($AvCob) ?> %</h3>
-              </a>
-              <p>Normalidad de cobranza mensual</p>
+            <div class="kpi-card">
+              <h6 class="text-muted">Comisiones acumuladas</h6>
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="h4 mb-0" style="color:<?= htmlspecialchars($spv, ENT_QUOTES) ?>;">
+                    <?= kasu_fmt_moneda($ComGenHoy) ?>
+                  </div>
+                  <small class="text-muted">Actualizado al <?= htmlspecialchars(date('d/m/Y'), ENT_QUOTES) ?></small>
+                </div>
+                <a href="Pwa_Registro_Pagos.php" class="btn btn-outline-success btn-sm">Ver detalles</a>
+              </div>
             </div>
           <?php endif; ?>
 
-          <div class="row">
-            <?php if ($Niv !== 7): ?>
-              <div class="col-md-6">
-                <hr>
-                <p><strong>Meta de Cobranza del <?= $ini ?> al <?= $fin ?></strong></p>
-                <h3>$<?= number_format($MetaCob, 2) ?></h3>
-                <p>Avance de Cobranza</p>
-                <a href="Pwa_Registro_Pagos.php">
-                  <h3 style="color:<?= htmlspecialchars($spv, ENT_QUOTES) ?>;">
-                    $<?= number_format($CobHoy, 2) ?>
-                  </h3>
-                </a>
+          <div class="kpi-card">
+            <h6 class="text-uppercase text-muted mb-1">Cobranza del mes</h6>
+            <div class="d-flex justify-content-between align-items-end">
+              <div>
+                <div class="h4 mb-0"><?= $cobradoLabel ?></div>
+                <small class="text-muted">Meta: <?= htmlspecialchars($metaCobLabel, ENT_QUOTES) ?></small>
               </div>
-            <?php endif; ?>
-
-            <?php if ($Niv !== 5): ?>
-              <div class="col-md-6">
-                <hr>
-                <p><strong>Meta de Venta del <?= $ini ?> al <?= $fin ?></strong></p>
-                <h3>$<?= number_format($MetaVta, 2) ?></h3>
-                <p>Avance de Venta</p>
-                <a href="Pwa_Clientes.php">
-                  <h3 style="color:<?= htmlspecialchars($bxo, ENT_QUOTES) ?>;">
-                    <?= round($AvVtas) ?> %
-                  </h3>
-                </a>
-              </div>
-            <?php endif; ?>
+              <span class="badge badge-light"><?= number_format($cobranzaPct, 1) ?>%</span>
+            </div>
+            <div class="progress mt-3">
+              <div class="progress-bar <?= kasu_progress_class($cobranzaPct) ?>" role="progressbar" style="width: <?= $cobranzaPct ?>%" aria-valuenow="<?= $cobranzaPct ?>" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-2">
+              <small class="text-muted">Restan <?= kasu_fmt_moneda($pendCobranza) ?></small>
+              <a href="Pwa_Registro_Pagos.php" class="small text-primary">Registrar cobro</a>
+            </div>
           </div>
+
+          <div class="kpi-card">
+            <h6 class="text-uppercase text-muted mb-1">Ventas del mes</h6>
+            <div class="d-flex justify-content-between align-items-end">
+              <div>
+                <div class="h4 mb-0"><?= $ventasLabel ?></div>
+                <small class="text-muted">Meta: <?= htmlspecialchars($metaVtaLabel, ENT_QUOTES) ?></small>
+              </div>
+              <span class="badge badge-light"><?= number_format($ventasPct, 1) ?>%</span>
+            </div>
+            <div class="progress mt-3">
+              <div class="progress-bar <?= kasu_progress_class($ventasPct) ?>" role="progressbar" style="width: <?= $ventasPct ?>%" aria-valuenow="<?= $ventasPct ?>" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-2">
+              <small class="text-muted">Restan <?= kasu_fmt_moneda($pendVentas) ?></small>
+              <a href="Pwa_Clientes.php" class="small text-primary">Ver cartera</a>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <h6 class="text-uppercase text-muted mb-1">Colocación de pólizas</h6>
+            <div class="d-flex justify-content-between align-items-end">
+              <div>
+                <div class="h4 mb-0"><?= number_format($PolizasMes) ?> pólizas</div>
+                <small class="text-muted">Meta: <?= htmlspecialchars($metaPzaLabel, ENT_QUOTES) ?></small>
+              </div>
+              <span class="badge badge-light"><?= number_format($polizasPct, 1) ?>%</span>
+            </div>
+            <div class="progress mt-3">
+              <div class="progress-bar <?= kasu_progress_class($polizasPct) ?>" role="progressbar" style="width: <?= $polizasPct ?>%" aria-valuenow="<?= $polizasPct ?>" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-2">
+              <?php if ($MetaPolizas > 0): ?>
+                <small class="text-muted">Restan <?= number_format(max(0, $pendPolizas)) ?> pól.</small>
+              <?php else: ?>
+                <small class="text-muted">Configura tu meta en Asignación.</small>
+              <?php endif; ?>
+              <a href="Pwa_Clientes.php" class="small text-primary">Ver clientes</a>
+            </div>
+          </div>
+
+          <?php if ($Niv === 1): ?>
+            <div class="kpi-card">
+              <h6 class="text-uppercase text-muted mb-1">Detalle cobranza (CEO)</h6>
+              <div class="row text-center">
+                <div class="col-6">
+                  <small class="text-muted d-block">Sucursales</small>
+                  <div class="h5 mb-0"><?= kasu_fmt_moneda($CobranzaSucursales) ?></div>
+                </div>
+                <div class="col-6">
+                  <small class="text-muted d-block">Plataforma</small>
+                  <div class="h5 mb-0"><?= kasu_fmt_moneda($CobranzaPlataforma) ?></div>
+                </div>
+              </div>
+              <hr>
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <small class="text-muted d-block">Pendiente Mercado Pago</small>
+                  <div class="h6 mb-0"><?= kasu_fmt_moneda($CobranzaMpPendiente) ?></div>
+                </div>
+                <span class="badge badge-light">Total: <?= kasu_fmt_moneda($CobHoy) ?></span>
+              </div>
+            </div>
+          <?php endif; ?>
         </div>
       </div>
     </div>

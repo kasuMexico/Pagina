@@ -396,6 +396,7 @@ main.page-content{
   position:absolute;
   inset:0;
   margin:0;
+  pointer-events:none;
 }
 .perfil-uploader input[type="file"]{display:none;}
 .btn-change-photo{

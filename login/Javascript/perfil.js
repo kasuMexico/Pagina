@@ -4,6 +4,8 @@
   var file = document.getElementById('subirImg');
   var img  = document.getElementById('FotoPerfil');
   var btn  = document.getElementById('btnFoto');
+  var statusLabel = document.getElementById('fotoStatus');
+  var defaultStatus = statusLabel ? statusLabel.textContent : '';
   var uploading = false;
 
   if (!form || !file || !img) {
@@ -29,6 +31,10 @@
       if (evt.target && evt.target.result) {
         img.src = evt.target.result;
         img.classList.add('updating');
+        if (statusLabel) {
+          statusLabel.textContent = 'Subiendo fotografía...';
+          statusLabel.classList.add('text-primary');
+        }
       }
     };
     reader.readAsDataURL(file.files[0]);

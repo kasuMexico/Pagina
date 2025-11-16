@@ -57,6 +57,9 @@ function money_mx(float $n, ?NumberFormatter $fmt): string {
 function div_safe(float $a, float $b, float $fallback=0.0): float {
   return ($b==0.0) ? $fallback : $a/$b;
 }
+function pct(float $value, int $dec = 1): string {
+  return number_format($value * 100, $dec, '.', ',') . '%';
+}
 
 /* =============================================================================
  * [2] PARÁMETROS DE FECHA BASE: inicio de mes actual y rango histórico
@@ -69,6 +72,15 @@ $startYear = (int)date('Y', strtotime($minDate ?: 'today'));
 $endYearDb = $maxDateDb ? (int)date('Y', strtotime($maxDateDb)) : (int)date('Y');
 $endYear   = max($startYear, $endYearDb, (int)date('Y'));
 $FeIniVtas = date('d-M-Y', strtotime($minDate ?: 'today'));
+$rangeDefaultIni = $minDate ? date('Y-m-d', strtotime($minDate)) : date('Y-01-01');
+$rangeDefaultFin = $hoy->format('Y-m-d');
+$chartIni = filter_input(INPUT_GET, 'chart_ini', FILTER_SANITIZE_FULL_SPECIAL_CHARS) ?: $rangeDefaultIni;
+$chartFin = filter_input(INPUT_GET, 'chart_fin', FILTER_SANITIZE_FULL_SPECIAL_CHARS) ?: $rangeDefaultFin;
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $chartIni)) { $chartIni = $rangeDefaultIni; }
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $chartFin)) { $chartFin = $rangeDefaultFin; }
+if ($chartIni > $chartFin) {
+  [$chartIni, $chartFin] = [$chartFin, $chartIni];
+}
 
 /* =============================================================================
  * [3] TABLAS DE TASAS POR PRODUCTO (fideicomiso y tasa anualizada para valor actual)
@@ -88,6 +100,9 @@ foreach ($resP as $p) {
 $vTtOT = $F0003 = $VaF0003 = $CarteCol = $SaldCre1 = 0.0;
 $PagEr = $PagEnMor = $PagEnMorMes = 0.0;
 $V=0; $prev=0; $efec=0; $TotCtesACT=0; $EdadAcum=0; $VtasCancelTot=0.0;
+$VentasActivasCount = 0;
+$VentasCanceladasCount = 0;
+$MRREstimado = 0.0;
 
 $tsHoy = (int)$hoy->format('U');
 $rVentas = $mysqli->query('SELECT * FROM Venta');
@@ -99,6 +114,7 @@ foreach ($rVentas as $v) {
   $idV    = (int)$v['Id'];
 
   if ($status === 'ACTIVO') {
+    $VentasActivasCount++;
     if (!isset($prodRates[$prod])) { continue; }
     $vTtOT += $costo;
 
@@ -114,6 +130,9 @@ foreach ($rVentas as $v) {
     $curp = (string)$basicas->BuscarCampos($mysqli,'ClaveCurp','Usuario','IdContact',(int)$v['IdContact']);
     $edad = (int)$basicas->ObtenerEdad($curp);
     if ($edad>0) $EdadAcum += $edad;
+    if ((int)($v['NumeroPagos'] ?? 1) > 1) {
+      $MRREstimado += (float)$financieras->Pago($mysqli, $idV);
+    }
 
   } elseif ($status === 'PREVENTA') {
     $prev++;
@@ -125,8 +144,12 @@ foreach ($rVentas as $v) {
     if ($NP>0) $PagEr += $pago*$NP;
     $CarteCol += $costo;
     $SaldCre1 += (float)$financieras->SaldoCredito($mysqli,$idV);
+    if ((int)($v['NumeroPagos'] ?? 1) > 1) {
+      $MRREstimado += (float)$financieras->Pago($mysqli, $idV);
+    }
 
   } elseif ($status === 'CANCELADO') {
+    $VentasCanceladasCount++;
     $VtasCancelTot += $costo;
     $NP   = (int)$financieras->PagosPend($mysqli,$idV);
     $pago = (float)$financieras->Pago($mysqli,$idV);
@@ -141,6 +164,8 @@ foreach ($rVentas as $v) {
 $EdadPromCte = $TotCtesACT>0 ? $EdadAcum/$TotCtesACT : 0.0;
 $edEfectivas = max(1, $V - $prev);
 $efectividad10 = ($V>0) ? ($edEfectivas/$V)*10.0 : 0.0;
+$TicketPromedio = $TasaCancelacion = $TasaPreventas = 0.0;
+$RetentionRate = $MorosidadRatio = $CarteraDictVsCap = $ARPU = 0.0;
 
 /* =============================================================================
  * [5] PROSPECCIÓN DEL MES ACTUAL
@@ -167,6 +192,13 @@ $ValREm        = div_safe(($prev/$V)*10*37.5, ($edEfectivas/$V)*10, 0.0);
 $CostCont      = div_safe(($prev/$V)*10*15.0,  ($edEfectivas/$V)*10, 0.0);
 $CAC           = div_safe(($ComPagadas + $Cpol), (float)$edEfectivas, 0.0) + $ValREm + $CostCont;
 $CIC           = div_safe($CobrosTotales, (float)$edEfectivas, 0.0);
+$TicketPromedio = div_safe($vTtOT, (float)max(1,$VentasActivasCount));
+$TasaCancelacion = ($V>0) ? ($VentasCanceladasCount / $V) : 0.0;
+$TasaPreventas  = ($V>0) ? ($prev / $V) : 0.0;
+$RetentionRate  = max(0.0, 1.0 - $TasaCancelacion);
+$MorosidadRatio = div_safe($PagEr, $SaldCre1, 0.0);
+$CarteraDictVsCap = div_safe($PagEnMor, $CarteCol, 0.0);
+$ARPU = div_safe($CobrosTotales, (float)max(1, $TotCtesACT), 0.0);
 
 /* =============================================================================
  * [7] FUNCIÓN: métricas por período (anual o rango a elección)
@@ -177,7 +209,9 @@ function metrics_period(mysqli $db, array $rates, string $ini, string $fin, Date
     'Efectividad10'=>0.0, 'ValFide'=>0.0, 'ValActFide'=>0.0,
     'ServPagados'=>0.0, 'ServOtorg'=>0, 'EdadProm'=>0.0,
     'ValCartera'=>0.0, 'CapColocado'=>0.0, 'CarCobranza'=>0.0, 'CarMora'=>0.0, 'CarDict'=>0.0,
-    'VentasTot'=>0, 'Preventas'=>0
+    'VentasTot'=>0, 'Preventas'=>0,
+    'VentasActivasCount'=>0, 'VentasCanceladasCount'=>0, 'MRR'=>0.0,
+    'TicketPromedio'=>0.0, 'CancelRate'=>0.0, 'RetentionRate'=>0.0, 'MoraRatio'=>0.0, 'ARPU'=>0.0
   ];
 
   $st = $db->prepare('SELECT COALESCE(SUM(Cantidad),0) s FROM Pagos WHERE FechaRegistro BETWEEN ? AND ?');
@@ -189,6 +223,9 @@ function metrics_period(mysqli $db, array $rates, string $ini, string $fin, Date
   $rs = $st->get_result();
   $tsHoy = (int)$hoy->format('U');
   $edadAc=0;
+  $activosCount = 0;
+  $cancelCount = 0;
+  $mrr = 0.0;
 
   while ($v = $rs->fetch_assoc()) {
     $out['VentasTot']++;
@@ -198,6 +235,7 @@ function metrics_period(mysqli $db, array $rates, string $ini, string $fin, Date
     $idV    = (int)$v['Id'];
 
     if ($status==='ACTIVO') {
+      $activosCount++;
       $out['VtasActivas'] += $costo; $out['CtesActivos']++;
       if (isset($rates[$prod])) {
         $dep = $costo * $rates[$prod]['fide']; $out['ValFide'] += $dep;
@@ -209,6 +247,9 @@ function metrics_period(mysqli $db, array $rates, string $ini, string $fin, Date
       $curp = (string)$basicas->BuscarCampos($db,'ClaveCurp','Usuario','IdContact',(int)$v['IdContact']);
       $e    = (int)$basicas->ObtenerEdad($curp);
       if ($e>0) $edadAc += $e;
+      if ((int)($v['NumeroPagos'] ?? 1) > 1) {
+        $mrr += (float)$financieras->Pago($db,$idV);
+      }
 
     } elseif ($status==='PREVENTA') {
       $out['Preventas']++;
@@ -219,8 +260,12 @@ function metrics_period(mysqli $db, array $rates, string $ini, string $fin, Date
       if ($np>0) $out['CarCobranza'] += $p*$np;
       $out['CapColocado'] += $costo;
       $out['ValCartera']  += (float)$financieras->SaldoCredito($db,$idV);
+      if ((int)($v['NumeroPagos'] ?? 1) > 1) {
+        $mrr += (float)$financieras->Pago($db,$idV);
+      }
 
     } elseif ($status==='CANCELADO') {
+      $cancelCount++;
       $out['VtasCancel'] += $costo;
       $np  = (int)$financieras->PagosPend($db,$idV);
       $p   = (float)$financieras->Pago($db,$idV);
@@ -238,6 +283,14 @@ function metrics_period(mysqli $db, array $rates, string $ini, string $fin, Date
   $out['EdadProm'] = $ctes>0 ? ($edadAc/$ctes) : 0.0;
   $efec = max(1,$out['VentasTot'] - $out['Preventas']);
   $out['Efectividad10'] = ($out['VentasTot']>0) ? ($efec/$out['VentasTot'])*10.0 : 0.0;
+  $out['VentasActivasCount'] = $activosCount;
+  $out['VentasCanceladasCount'] = $cancelCount;
+  $out['MRR'] = $mrr;
+  $out['TicketPromedio'] = $activosCount > 0 ? div_safe($out['VtasActivas'], (float)$activosCount, 0.0) : 0.0;
+  $out['CancelRate'] = ($out['VentasTot']>0) ? ($cancelCount / $out['VentasTot']) : 0.0;
+  $out['RetentionRate'] = max(0.0, 1.0 - $out['CancelRate']);
+  $out['MoraRatio'] = div_safe($out['CarCobranza'], $out['ValCartera'], 0.0);
+  $out['ARPU'] = div_safe($out['CobrosTotales'], (float)max(1, $out['CtesActivos']), 0.0);
 
   return $out;
 }
@@ -298,6 +351,9 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
   <script src="https://www.gstatic.com/charts/loader.js"></script>
   <script>
     google.charts.load('current', {'packages':['corechart']});
+    const chartIni = '<?php echo h($chartIni); ?>';
+    const chartFin = '<?php echo h($chartFin); ?>';
+    const chartRangeQuery = '?ini=' + encodeURIComponent(chartIni) + '&fin=' + encodeURIComponent(chartFin);
 
     function drawPieFrom(url, containerId, titleTxt) {
       $.ajax({ url: url, dataType: 'json', cache: false })
@@ -309,10 +365,119 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
         });
     }
 
+    function drawFinancialKpis() {
+      var container = document.getElementById('g_finanzas_kpi');
+      if (!container) { return; }
+      var data = google.visualization.arrayToDataTable([
+        ['KPI','Monto',{ role:'style' },{ role:'annotation' }],
+        ['Cobros',        <?php echo json_encode(round($CobrosTotales,2)); ?>, '#1abc9c', <?php echo json_encode(money_mx($CobrosTotales,$fmtMoney)); ?>],
+        ['Capital activo',<?php echo json_encode(round($vTtOT,2)); ?>, '#3498db', <?php echo json_encode(money_mx($vTtOT,$fmtMoney)); ?>],
+        ['MRR estimado',  <?php echo json_encode(round($MRREstimado,2)); ?>, '#9b59b6', <?php echo json_encode(money_mx($MRREstimado,$fmtMoney)); ?>],
+        ['CAC',           <?php echo json_encode(round($CAC,2)); ?>, '#e67e22', <?php echo json_encode(money_mx($CAC,$fmtMoney)); ?>],
+        ['CIC',           <?php echo json_encode(round($CIC,2)); ?>, '#34495e', <?php echo json_encode(money_mx($CIC,$fmtMoney)); ?>]
+      ]);
+      var options = {
+        legend: { position: 'none' },
+        height: 320,
+        bar: { groupWidth: '65%' },
+        vAxis: { format: 'currency' },
+        chartArea: { width: '85%', height: '70%' },
+        colors: ['#1abc9c','#3498db','#9b59b6','#e67e22','#34495e']
+      };
+      var chart = new google.visualization.ColumnChart(container);
+      chart.draw(data, options);
+    }
+
+    function drawConversionKpis() {
+      var container = document.getElementById('g_conversion_kpi');
+      if (!container) { return; }
+      var data = google.visualization.arrayToDataTable([
+        ['Indicador','Porcentaje',{ role:'style' },{ role:'annotation' }],
+        ['Retención',   <?php echo json_encode(round($RetentionRate*100,2)); ?>, '#2ecc71', <?php echo json_encode(pct($RetentionRate,1)); ?>],
+        ['Cancelación', <?php echo json_encode(round($TasaCancelacion*100,2)); ?>, '#e74c3c', <?php echo json_encode(pct($TasaCancelacion,1)); ?>],
+        ['Preventas',   <?php echo json_encode(round($TasaPreventas*100,2)); ?>, '#f1c40f', <?php echo json_encode(pct($TasaPreventas,1)); ?>],
+        ['Morosidad',   <?php echo json_encode(round($MorosidadRatio*100,2)); ?>, '#9b59b6', <?php echo json_encode(pct($MorosidadRatio,1)); ?>]
+      ]);
+      var options = {
+        legend: { position: 'none' },
+        height: 320,
+        bar: { groupWidth: '65%' },
+        vAxis: { format: '#\'%\'' },
+        chartArea: { width: '85%', height: '70%' }
+      };
+      var chart = new google.visualization.ColumnChart(container);
+      chart.draw(data, options);
+    }
+
+    function drawActiveValueTotal() {
+      var container = document.getElementById('g_activas_total');
+      if (!container) { return; }
+      $.ajax({ url: 'php/AnalisisDatos/valor_total_activas.php' + chartRangeQuery, dataType: 'json', cache: false })
+        .done(function(tbl){
+          var data = new google.visualization.DataTable(tbl);
+          var options = {
+            title: 'Valor total de ventas activas por producto',
+            legend: { position: 'right' },
+            height: 300,
+            pieSliceText: 'percentage'
+          };
+          var chart = new google.visualization.PieChart(container);
+          chart.draw(data, options);
+        });
+    }
+
+    function drawFinancialKpisAnnual() {
+      var container = document.getElementById('g_finanzas_kpi_anual');
+      if (!container) { return; }
+      var data = google.visualization.arrayToDataTable([
+        ['KPI','Monto',{ role:'style' },{ role:'annotation' }],
+        ['Cobros',        <?php echo json_encode(round($ANUAL['CobrosTotales'] ?? 0,2)); ?>, '#1abc9c', <?php echo json_encode(money_mx($ANUAL['CobrosTotales'] ?? 0,$fmtMoney)); ?>],
+        ['Capital activo',<?php echo json_encode(round($ANUAL['VtasActivas'] ?? 0,2)); ?>, '#3498db', <?php echo json_encode(money_mx($ANUAL['VtasActivas'] ?? 0,$fmtMoney)); ?>],
+        ['MRR estimado',  <?php echo json_encode(round($ANUAL['MRR'] ?? 0,2)); ?>, '#9b59b6', <?php echo json_encode(money_mx($ANUAL['MRR'] ?? 0,$fmtMoney)); ?>],
+        ['Cartera cobranza',<?php echo json_encode(round($ANUAL['CarCobranza'] ?? 0,2)); ?>, '#e67e22', <?php echo json_encode(money_mx($ANUAL['CarCobranza'] ?? 0,$fmtMoney)); ?>],
+        ['Cartera dictaminada',<?php echo json_encode(round($ANUAL['CarDict'] ?? 0,2)); ?>, '#34495e', <?php echo json_encode(money_mx($ANUAL['CarDict'] ?? 0,$fmtMoney)); ?>]
+      ]);
+      var options = {
+        legend: { position: 'none' },
+        height: 320,
+        bar: { groupWidth: '65%' },
+        vAxis: { format: 'currency' },
+        chartArea: { width: '85%', height: '70%' },
+        colors: ['#1abc9c','#3498db','#9b59b6','#e67e22','#34495e']
+      };
+      var chart = new google.visualization.ColumnChart(container);
+      chart.draw(data, options);
+    }
+
+    function drawConversionKpisAnnual() {
+      var container = document.getElementById('g_conversion_kpi_anual');
+      if (!container) { return; }
+      var data = google.visualization.arrayToDataTable([
+        ['Indicador','Porcentaje',{ role:'style' },{ role:'annotation' }],
+        ['Retención',   <?php echo json_encode(round(($ANUAL['RetentionRate'] ?? 0)*100,2)); ?>, '#2ecc71', <?php echo json_encode(pct($ANUAL['RetentionRate'] ?? 0,1)); ?>],
+        ['Cancelación', <?php echo json_encode(round(($ANUAL['CancelRate'] ?? 0)*100,2)); ?>, '#e74c3c', <?php echo json_encode(pct($ANUAL['CancelRate'] ?? 0,1)); ?>],
+        ['Mora cartera',<?php echo json_encode(round(($ANUAL['MoraRatio'] ?? 0)*100,2)); ?>, '#9b59b6', <?php echo json_encode(pct($ANUAL['MoraRatio'] ?? 0,1)); ?>]
+      ]);
+      var options = {
+        legend: { position: 'none' },
+        height: 320,
+        bar: { groupWidth: '65%' },
+        vAxis: { format: '#\'%\'' },
+        chartArea: { width: '85%', height: '70%' }
+      };
+      var chart = new google.visualization.ColumnChart(container);
+      chart.draw(data, options);
+    }
+
     function drawAll() {
-      drawPieFrom('php/AnalisisDatos/c_Ventas_Totales.php',    'g_totales', 'Ventas totales por producto');
-      drawPieFrom('php/AnalisisDatos/d_Valor_Ventas.php',      'g_activas', 'Valor de ventas ACTIVAS por producto');
-      drawPieFrom('php/Archivos_Grafica/Consulta_Status.php',  'g_status',  'Ventas por estatus');
+      drawPieFrom('php/AnalisisDatos/c_Ventas_Totales.php' + chartRangeQuery,    'g_totales', 'Ventas totales por producto');
+      drawPieFrom('php/AnalisisDatos/d_Valor_Ventas.php' + chartRangeQuery,      'g_activas', 'Valor de ventas ACTIVAS por producto');
+      drawPieFrom('php/Archivos_Grafica/Consulta_Status.php' + chartRangeQuery,  'g_status',  'Ventas por estatus');
+      drawFinancialKpis();
+      drawConversionKpis();
+      drawFinancialKpisAnnual();
+      drawConversionKpisAnnual();
+      drawActiveValueTotal();
       <?php /* Curva histórica la generamos abajo */ ?>
     }
     google.charts.setOnLoadCallback(drawAll);
@@ -425,6 +590,61 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
         </div>
       </div>
 
+      <h5 class="mt-4 mb-3">KPIs estratégicos</h5>
+      <div class="row">
+        <div class="col-lg-4">
+          <div class="card"><div class="card-header bg-info text-light">Ingresos y valor</div>
+            <div class="card-body">
+              Ticket promedio: <strong><?= h(money_mx($TicketPromedio, $fmtMoney)); ?></strong><br>
+              ARPU (ingreso por cliente): <strong><?= h(money_mx($ARPU, $fmtMoney)); ?></strong><br>
+              CAC efectivo: <strong><?= h(money_mx($CAC, $fmtMoney)); ?></strong><br>
+              CIC (cobro por cliente): <strong><?= h(money_mx($CIC, $fmtMoney)); ?></strong>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card"><div class="card-header bg-info text-light">Conversión y retención</div>
+            <div class="card-body">
+              Tasa de cancelación: <strong><?= h(pct($TasaCancelacion)); ?></strong><br>
+              Tasa en preventa: <strong><?= h(pct($TasaPreventas)); ?></strong><br>
+              Retención efectiva: <strong><?= h(pct($RetentionRate)); ?></strong><br>
+              Edad promedio cliente: <strong><?= $fmtInt ? $fmtInt->format((int)round($EdadPromCte)) : (string)round($EdadPromCte); ?></strong>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card"><div class="card-header bg-info text-light">Cobranza y liquidez</div>
+            <div class="card-body">
+              MRR estimado: <strong><?= h(money_mx($MRREstimado, $fmtMoney)); ?></strong><br>
+              Cartera en Cobranza: <strong><?= h(money_mx($PagEr, $fmtMoney)); ?> (<?= h(pct($MorosidadRatio)); ?>)</strong><br>
+              Cartera dictaminada / capital: <strong><?= h(pct($CarteraDictVsCap)); ?></strong><br>
+              Capital colocado: <strong><?= h(money_mx($CarteCol, $fmtMoney)); ?></strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row mt-4">
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-header bg-secondary text-light">KPIs financieros (visual)</div>
+            <div class="card-body">
+              <div id="g_finanzas_kpi" style="height:320px;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-header bg-secondary text-light">Conversión y riesgo</div>
+            <div class="card-body">
+              <div id="g_conversion_kpi" style="height:320px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr>
+      
       <!-- ===================================================================
            [B] INDICADORES ANUALES (año en curso) — 3 tarjetas
            =================================================================== -->
@@ -499,10 +719,53 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
           </div>
         </div>
       </div>
+      <div class="row mt-3">
+        <div class="col-lg-4">
+          <div class="card"><div class="card-header bg-info text-light">KPIs comerciales (año)</div>
+            <div class="card-body">
+              Ticket promedio: <strong><?= h(money_mx($ANUAL['TicketPromedio'], $fmtMoney)); ?></strong><br>
+              ARPU: <strong><?= h(money_mx($ANUAL['ARPU'], $fmtMoney)); ?></strong><br>
+              MRR estimado: <strong><?= h(money_mx($ANUAL['MRR'], $fmtMoney)); ?></strong><br>
+              Tasa de cancelación: <strong><?= h(pct($ANUAL['CancelRate'])); ?></strong>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card"><div class="card-header bg-info text-light">Retención y cartera (año)</div>
+            <div class="card-body">
+              Retención efectiva: <strong><?= h(pct($ANUAL['RetentionRate'])); ?></strong><br>
+              Morosidad cartera: <strong><?= h(pct($ANUAL['MoraRatio'])); ?></strong><br>
+              Cartera en Cobranza: <strong><?= h(money_mx($ANUAL['CarCobranza'], $fmtMoney)); ?></strong><br>
+              Cartera dictaminada: <strong><?= h(money_mx($ANUAL['CarDict'], $fmtMoney)); ?></strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row mt-3">
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-header bg-secondary text-light">KPIs financieros anuales</div>
+            <div class="card-body">
+              <div id="g_finanzas_kpi_anual" style="height:320px;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-header bg-secondary text-light">Retención & mora anual</div>
+            <div class="card-body">
+              <div id="g_conversion_kpi_anual" style="height:320px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr>
 
       <!-- ===================================================================
            [C] RESUMEN POR PERÍODO: selector de rango y 3 tarjetas
-           =================================================================== -->
+      =================================================================== -->
       <div class="row mt-4">
         <div class="col-lg-12">
           <form method="POST" action="<?php echo h($_SERVER['PHP_SELF']); ?>" class="mb-3">
@@ -563,13 +826,56 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
           </div>
         </div>
       </div>
+      <div class="row mt-3">
+        <div class="col-lg-4">
+          <div class="card"><div class="card-header bg-info text-light">KPIs comerciales (período)</div>
+            <div class="card-body">
+              Ticket promedio: <strong><?= h(money_mx($PERIODO['TicketPromedio'], $fmtMoney)); ?></strong><br>
+              ARPU: <strong><?= h(money_mx($PERIODO['ARPU'], $fmtMoney)); ?></strong><br>
+              MRR estimado: <strong><?= h(money_mx($PERIODO['MRR'], $fmtMoney)); ?></strong><br>
+              Tasa de cancelación: <strong><?= h(pct($PERIODO['CancelRate'])); ?></strong>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card"><div class="card-header bg-info text-light">Retención y cartera (período)</div>
+            <div class="card-body">
+              Retención efectiva: <strong><?= h(pct($PERIODO['RetentionRate'])); ?></strong><br>
+              Morosidad cartera: <strong><?= h(pct($PERIODO['MoraRatio'])); ?></strong><br>
+              Cartera en Cobranza: <strong><?= h(money_mx($PERIODO['CarCobranza'], $fmtMoney)); ?></strong><br>
+              Cartera dictaminada: <strong><?= h(money_mx($PERIODO['CarDict'], $fmtMoney)); ?></strong>
+            </div>
+          </div>
+        </div>
+      </div>
       <?php endif; ?>
-
+      <hr>
       <!-- ===================================================================
            [D] GRÁFICAS: 3 superiores + curva histórica
            =================================================================== -->
-      <div class="center-heading mt-4"><p>Histórico desde <strong><?php echo h($FeIniVtas); ?></strong></p></div>
+      <div class="card mt-4">
+        <div class="card-body">
+          <form class="form-row align-items-end" method="GET" action="<?php echo h($_SERVER['PHP_SELF']); ?>#graficas-producto">
+            <div class="form-group col-md-4">
+              <label>Fecha inicio (gráficas)</label>
+              <input type="date" class="form-control" name="chart_ini" value="<?php echo h($chartIni); ?>" required>
+            </div>
+            <div class="form-group col-md-4">
+              <label>Fecha fin (gráficas)</label>
+              <input type="date" class="form-control" name="chart_fin" value="<?php echo h($chartFin); ?>" required>
+            </div>
+            <div class="form-group col-md-4">
+              <button type="submit" class="btn btn-primary btn-block">Actualizar gráficas</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="graficas-producto" class="center-heading mt-4">
+        <p>Gráficas por producto (<?php echo h($chartIni); ?> a <?php echo h($chartFin); ?>)</p>
+      </div>
       <div class="row">
+        <div class="col-lg-4"><div id="g_activas_total" style="height:300px;"></div></div>
         <div class="col-lg-4"><div id="g_totales"></div></div>
         <div class="col-lg-4"><div id="g_activas"></div></div>
         <div class="col-lg-4"><div id="g_status"></div></div>

@@ -94,6 +94,8 @@ foreach ($pagosPendientes as $p) {
 }
 
 // =================== QUERY: Operaciones Mercado Pago ===================
+// Usamos COALESCE(date_created, created_at, updated_at) para asegurarnos de
+// incluir filas aunque todavía no exista date_created (por ejemplo, antes del webhook).
 $sqlMP = "
   SELECT
     id,
@@ -106,10 +108,13 @@ $sqlMP = "
     amount,
     payer_email,
     date_created,
-    date_approved
+    date_approved,
+    updated_at,
+    COALESCE(date_created, created_at, updated_at) AS fecha_ref
   FROM VentasMercadoPago
-  WHERE date_created BETWEEN ? AND DATE_ADD(?, INTERVAL 1 DAY)
-  ORDER BY date_created DESC
+  WHERE COALESCE(date_created, created_at, updated_at)
+        BETWEEN ? AND DATE_ADD(?, INTERVAL 1 DAY)
+  ORDER BY fecha_ref DESC
   LIMIT 300
 ";
 $mpOps = [];
@@ -122,11 +127,12 @@ while ($r = $res->fetch_assoc()) {
 }
 $st->close();
 
-// Total MP
+// Total MP pendiente (solo sumamos los que siguen pendientes)
 $totalMPPendiente = 0.0;
 foreach ($mpOps as $mp) {
-  if (strtoupper((string)$mp['estatus_pago']) === 'PENDIENTE' ||
-      strtoupper((string)$mp['mp_payment_status']) !== 'APPROVED') {
+  $pago   = strtoupper((string)($mp['estatus_pago'] ?? ''));
+  $status = strtoupper((string)($mp['mp_payment_status'] ?? ''));
+  if ($pago === 'PENDIENTE' || $status === '' || $status === 'PENDING') {
     $totalMPPendiente += (float)$mp['amount'];
   }
 }
@@ -303,21 +309,25 @@ foreach ($mpOps as $mp) {
             <th>Status MP</th>
             <th>Cliente / correo</th>
             <th>Fechas</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
         <?php if (!$mpOps): ?>
           <tr>
-            <td colspan="7" class="text-center text-muted">Sin operaciones en el periodo.</td>
+            <td colspan="8" class="text-center text-muted">Sin operaciones en el periodo.</td>
           </tr>
         <?php else: ?>
           <?php foreach ($mpOps as $mp): ?>
             <?php
               $chipVenta  = mesa_status_chip((string)$mp['estatus']);
               $chipPago   = mesa_status_chip((string)$mp['estatus_pago']);
-              $chipMP     = mesa_status_chip((string)$mp['mp_payment_status'] ?: 'PENDIENTE');
-              $fechaCrea  = $mp['date_created']  ? date('Y-m-d H:i', strtotime((string)$mp['date_created']))  : '';
-              $fechaApr   = $mp['date_approved'] ? date('Y-m-d H:i', strtotime((string)$mp['date_approved'])) : '';
+              $chipMP     = mesa_status_chip((string)($mp['mp_payment_status'] ?: 'PENDIENTE'));
+
+              // Usamos date_created si existe, si no, fecha_ref (created_at/updated_at)
+              $rawCreado = $mp['date_created'] ?: $mp['fecha_ref'];
+              $fechaCrea = $rawCreado ? date('Y-m-d H:i', strtotime((string)$rawCreado)) : '';
+              $fechaApr  = $mp['date_approved'] ? date('Y-m-d H:i', strtotime((string)$mp['date_approved'])) : '';
             ?>
             <tr>
               <td data-label="Folio"><?= h($mp['folio']) ?></td>
@@ -328,7 +338,26 @@ foreach ($mpOps as $mp) {
               <td data-label="Cliente / correo"><?= h($mp['payer_email'] ?? '') ?></td>
               <td data-label="Fechas">
                 <div><small>Creado: <?= h($fechaCrea) ?></small></div>
-                <div><small>Aprobado: <?= h($fechaApr) ?></small></div>
+                <div><small>Aprobado: <?= h($fechaApr ?: 'N/A') ?></small></div>
+              </td>
+              <td class="mesa-actions" data-label="Acciones">
+                <div class="mesa-actions-grid">
+                  <!-- Enviar liga de pago por correo -->
+                  <form method="POST" action="/login/php/Funcionalidad_Cobros.php">
+                    <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+                    <input type="hidden" name="accion" value="mp_enviar_liga_correo">
+                    <input type="hidden" name="Host" value="<?= h($_SERVER['PHP_SELF']) ?>">
+                    <input type="hidden" name="folio" value="<?= h($mp['folio']) ?>">
+                    <button
+                      type="submit"
+                      class="btn"
+                      style="background:#5DADE2;color:#F8F9F9;"
+                      title="Enviar liga de pago por correo"
+                    >
+                      <i class="material-icons">email</i>
+                    </button>
+                  </form>
+                </div>
               </td>
             </tr>
           <?php endforeach; ?>

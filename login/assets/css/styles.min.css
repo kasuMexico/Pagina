@@ -152,7 +152,10 @@ tbody{border-color:#808B96;}
 .mesa-table-wrapper{margin-bottom:30px;}
 .mesa-table td{vertical-align:middle;}
 .mesa-actions-grid{display:flex;flex-wrap:wrap;gap:.4rem;}
-.mesa-actions-grid form{margin:0;}
+.mesa-actions-grid form{
+  margin:0;
+  display:inline-flex;
+}
 .status-chip{
   display:inline-flex;
   align-items:center;
@@ -266,6 +269,7 @@ tbody{border-color:#808B96;}
     margin-bottom:6px;
   }
   .mesa-actions-grid{flex-direction:column;}
+  .mesa-actions-grid form{width:100%;}
   .mesa-actions-grid .btn{width:100%;}
 }
 
@@ -413,4 +417,22 @@ main.page-content{
 .btn-change-photo:focus-visible{
   outline:2px solid #fff;
   outline-offset:2px;
+}
+
+/* Iconos de acciones (solo escritorio) */
+@media (min-width: 992px){
+  .mesa-actions-grid .btn{
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mesa-actions-grid .btn i.material-icons{
+    font-size: 22px;
+    line-height: 1;
+  }
 }

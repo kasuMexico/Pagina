@@ -30,21 +30,22 @@ if (!function_exists('h')) {
 }
 
 // =================== Variables base ===================
-$Reg      = [];
-$Recg     = [];
-$Recg1    = [];
-$Pago     = 0.0;
-$Pago1    = 0.0;
-$PagoPend = 0.0;
-$Saldo    = 0.0;
-$Status   = '';
-$Ventana  = null;
-$Lanzar   = null;
+$Reg              = [];
+$Recg             = [];
+$Recg1            = [];
+$Pago             = 0.0;
+$Pago1            = 0.0;
+$PagoPend         = 0.0;
+$Saldo            = 0.0;
+$Status           = '';
+$Ventana          = null;
+$Lanzar           = null;
+$RegEnviarLigaPago = false;
 
 // Filtros persistentes
 $nombreFiltro = isset($_POST['nombre'])
   ? (string)$_POST['nombre']
-  : (string)($_GET['nombre'] ?? '');
+  : (string)($_GET['nombre'] ?? ($_GET['name'] ?? ''));
 
 $statusFiltro = isset($_POST['Status'])
   ? (string)$_POST['Status']
@@ -100,6 +101,9 @@ if (!empty($_POST['IdCliente'])) {
         $Recg = $st->get_result()->fetch_assoc() ?: [];
         $st->close();
       }
+
+      $usuarioVentaSel = strtoupper(trim((string)($Reg['Usuario'] ?? '')));
+      $RegEnviarLigaPago = ($usuarioVentaSel === 'PLATAFORMA');
     }
   }
 
@@ -315,41 +319,94 @@ $VerCache = time();
       </div></div>
     </div>
 
-    <!-- Ventana7: Generar fichas -->
+    <!-- Ventana7: Enviar fichas / liga de pago -->
     <div class="modal fade" id="Ventana7" tabindex="-1" role="dialog" aria-labelledby="modalV7" aria-hidden="true">
       <div class="modal-dialog" role="document"><div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="modalV7"><?= h($Reg['Nombre'] ?? '') ?></h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
         </div>
+        <?php
+          $emailDestino    = trim((string)($Recg['Mail'] ?? ''));
+          $telefonoDestino = trim((string)($Recg['Celular'] ?? ($Recg['Telefono'] ?? '')));
+          $textoEnvioCorreo = $RegEnviarLigaPago
+            ? 'la liga de pago de Mercado Pago'
+            : 'las fichas de pago en PDF';
+          $textoEnvioSms = $RegEnviarLigaPago
+            ? 'la misma liga de Mercado Pago'
+            : 'el acceso a las fichas de pago';
+        ?>
         <div class="modal-body">
-          <input type="hidden" name="IdVenta" value="<?= (int)($Reg['Id'] ?? 0) ?>">
-          <input type="hidden" name="nombre"  value="<?= h($nombreFiltro) ?>">
-          <input type="hidden" name="Status"  value="<?= h($statusFiltro) ?>">
-          <p><strong>Elige una opción para entregar las fichas al cliente</strong></p>
-          <?php if (empty($Recg['Mail'])): ?>
-            <h5 class="alert alert-danger">Este cliente no cuenta con un Email Registrado</h5>
-          <?php endif; ?>
-          <br>
+          <p class="mb-3 font-weight-bold">
+            <?= $RegEnviarLigaPago
+              ? 'Enviar la liga de Mercado Pago al correo electrónico del cliente o preparar el SMS.'
+              : 'Enviar las fichas de pago al correo electrónico del cliente o preparar el SMS.' ?>
+          </p>
+
+          <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+              <h6 class="text-muted text-uppercase mb-2">Correo electrónico</h6>
+              <p class="mb-3">
+                <?php if ($emailDestino !== ''): ?>
+                  Se enviará <?= h($textoEnvioCorreo) ?> a <strong><?= h($emailDestino) ?></strong>.
+                <?php else: ?>
+                  Este cliente no cuenta con un email registrado.
+                <?php endif; ?>
+              </p>
+              <?php if ($emailDestino !== ''): ?>
+                <form action="../eia/EnviarCorreo.php" method="post" class="d-inline">
+                  <div id="Gps"></div>
+                  <div data-fingerprint-slot></div>
+                  <input type="hidden" name="nombre"     value="<?= h($nombreFiltro) ?>">
+                  <input type="hidden" name="Status"     value="<?= h($statusFiltro) ?>">
+                  <input type="hidden" name="Host"       value="<?= h($_SERVER['PHP_SELF']) ?>">
+                  <input type="hidden" name="IdVenta"    value="<?= (int)($Reg['Id'] ?? 0) ?>">
+                  <input type="hidden" name="IdContact"  value="<?= (int)($Recg['id'] ?? 0) ?>">
+                  <input type="hidden" name="IdUsuario"  value="<?= (int)($Recg1['id'] ?? 0) ?>">
+                  <input type="hidden" name="Producto"   value="<?= h($Reg['Producto'] ?? '') ?>">
+                  <input type="hidden" name="Email"      value="<?= h($emailDestino) ?>">
+                  <input type="hidden" name="mail_token" value="<?= h($_SESSION['mail_token']) ?>">
+                  <?php if ($RegEnviarLigaPago): ?>
+                    <input type="hidden" name="EnFi" value="1">
+                    <button type="submit" class="btn btn-primary">
+                      Enviar liga de Mercado Pago
+                    </button>
+                  <?php else: ?>
+                    <button type="submit" name="EnviarFichas" class="btn btn-primary">
+                      Enviar fichas por correo
+                    </button>
+                  <?php endif; ?>
+                </form>
+              <?php else: ?>
+                <div class="alert alert-danger mb-0">Registra un correo en el contacto para poder enviarlo.</div>
+              <?php endif; ?>
+            </div>
+          </div>
+
+          <div class="card bg-light shadow-sm">
+            <div class="card-body">
+              <h6 class="text-muted text-uppercase mb-2">SMS</h6>
+              <p class="mb-3">
+                <?php if ($telefonoDestino !== ''): ?>
+                  Mensajes SMS se enviarán al número <strong><?= h($telefonoDestino) ?></strong> con <?= h($textoEnvioSms) ?>.
+                <?php else: ?>
+                  Este cliente no cuenta con teléfono móvil registrado.
+                <?php endif; ?>
+              </p>
+              <button type="button" class="btn btn-outline-secondary" disabled>
+                Envío por SMS disponible próximamente
+              </button>
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
-          <form action="../eia/EnviarCorreo.php" method="post" style="padding-right:5px;">
-            <div id="Gps"></div>
-            <div data-fingerprint-slot></div>
-            <input type="hidden" name="nombre"     value="<?= h($nombreFiltro) ?>">
-            <input type="hidden" name="Status"     value="<?= h($statusFiltro) ?>">
-            <input type="hidden" name="Host"       value="<?= h($_SERVER['PHP_SELF']) ?>">
-            <input type="hidden" name="IdVenta"    value="<?= (int)($Reg['Id'] ?? 0) ?>">
-            <input type="hidden" name="IdContact"  value="<?= (int)($Recg['id'] ?? 0) ?>">
-            <input type="hidden" name="IdUsuario"  value="<?= (int)($Recg1['id'] ?? 0) ?>">
-            <input type="hidden" name="Producto"   value="<?= h($Reg['Producto'] ?? '') ?>">
-            <input type="hidden" name="Email"      value="<?= h($Recg['Mail'] ?? '') ?>">
-            <input type="hidden" name="mail_token" value="<?= h($_SESSION['mail_token']) ?>">
-            <?php if (!empty($Recg['Mail'])): ?>
-              <input type="submit" name="EnviarFichas" class="btn btn-secondary" value="Enviar por Email">
-            <?php endif; ?>
-          </form>
-          <a href="https://kasu.com.mx/login/Generar_PDF/Fichas_Pago_pdf.php?Cte=<?= h(base64_encode((string)($Reg['Id'] ?? 0))) ?>" class="btn btn-success" download>Descargar</a>
+          <a
+            href="https://kasu.com.mx/login/Generar_PDF/Fichas_Pago_pdf.php?Cte=<?= h(base64_encode((string)($Reg['Id'] ?? 0))) ?>"
+            class="btn btn-success"
+            download
+          >
+            Descargar fichas (PDF)
+          </a>
         </div>
       </div></div>
     </div>
@@ -543,20 +600,29 @@ $VerCache = time();
             <td class="mesa-actions" data-label="Acciones">
               <div class="mesa-actions-grid">
 
-                <?php
-                // ===== Botón "Pagar cuota" (Mercado Pago) =====
-                // Usa IdFIrma como ref= para /pago/crear_preferencia.php
-                $firmaFila = isset($row['IdFIrma']) ? trim((string)$row['IdFIrma']) : '';
-                if ($esCredito && $firmaFila !== ''): ?>
-                  <a
-                    href="/pago/crear_preferencia.php?ref=<?= urlencode($firmaFila) ?>"
-                    target="_blank"
-                    class="btn"
-                    title="Pagar cuota (Mercado Pago)"
-                    style="background:#3498DB;color:#F8F9F9;"
-                  >
-                    <i class="material-icons">credit_card</i>
-                  </a>
+                <?php if ($esCredito): ?>
+                  <?php
+                    $usuarioVentaRow   = strtoupper(trim((string)($row['Usuario'] ?? '')));
+                    $enviarLigaPagoRow = ($usuarioVentaRow === 'PLATAFORMA');
+                    $btnTitlePago      = $enviarLigaPagoRow
+                      ? 'Enviar liga de pago (Mercado Pago)'
+                      : 'Enviar fichas de pago';
+                    $btnIconPago       = $enviarLigaPagoRow ? 'credit_card' : 'email';
+                    $btnColorPago      = $enviarLigaPagoRow ? '#1ABC9C' : '#3498DB';
+                  ?>
+                  <form method="POST" action="<?= h($_SERVER['PHP_SELF']) ?>" class="d-inline">
+                    <input type="hidden" name="nombre" value="<?= h($nombreFiltro) ?>">
+                    <input type="hidden" name="Status" value="<?= h($statusFiltro) ?>">
+                    <label
+                      for="PF<?= (int)$row['Id'] ?>"
+                      title="<?= h($btnTitlePago) ?>"
+                      class="btn"
+                      style="background:<?= h($btnColorPago) ?>;color:#F8F9F9;"
+                    >
+                      <i class="material-icons"><?= h($btnIconPago) ?></i>
+                    </label>
+                    <input id="PF<?= (int)$row['Id'] ?>" type="submit" name="IdCliente" value="7<?= (int)$row['Id'] ?>" hidden>
+                  </form>
                 <?php endif; ?>
 
                 <!-- Estado de cuenta -->

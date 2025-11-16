@@ -3,47 +3,50 @@
  * Qué hace:
  *   Controlador de acciones de cobros/finanzas.
  *
- *   Acciones soportadas (via POST['accion_cobro']):
- *   - registrar_deposito :
- *       Registra un depósito bancario y lo asocia a un pago (Pagos) o a un cobro de MP
- *       (VentasMercadoPago). Marca el pago como conciliado (campo status) si aplica.
- *   - recordatorio_correo :
- *       Registra un recordatorio de pago por correo y, opcionalmente, dispara el envío.
- *   - recordatorio_sms :
- *       Registra un recordatorio de pago por SMS (queda listo para que un job lo envíe).
+ *   Acciones soportadas (via POST['accion'] o POST['accion_cobro']):
  *
- * Tablas involucradas (existentes):
+ *   - registrar_deposito
+ *       Usado desde Mesa_Finanzas (modal de conciliación).
+ *       Espera:
+ *         IdPago           (int)  -> Id en tabla Pagos (origen)
+ *         IdVenta          (int)  -> Id en tabla Venta
+ *         MontoDeposito    (decimal)
+ *         FechaDeposito    (Y-m-d)
+ *         HoraDeposito     (HH:MM, opcional)
+ *         Banco            (string)
+ *         ReferenciaDeposito (string, opcional)
+ *         Host             (para auditoría / regreso)
+ *
+ *   - recordatorio_correo
+ *       Usado desde Mesa_Finanzas (tabla Pagos).
+ *       Espera:
+ *         IdVenta
+ *         Host
+ *       Obtiene correo y liga de pago desde la BD y arma el mensaje.
+ *
+ *   - recordatorio_sms
+ *       Usado desde Mesa_Finanzas (tabla Pagos).
+ *       Espera:
+ *         IdVenta
+ *         Host
+ *       Registra un SMS con la liga de pago (otro proceso lo enviará).
+ *
+ *   - mp_enviar_liga_correo
+ *       Usado desde Mesa_Finanzas (tabla Operaciones MP).
+ *       Espera:
+ *         folio (Venta.IdFIrma / VentasMercadoPago.folio)
+ *         Host
+ *
+ * Tablas involucradas:
  *   - Pagos
+ *   - Venta
+ *   - Contacto
  *   - VentasMercadoPago
  *   - Eventos
+ *   - DepositosBancarios       (sugerida, ver definición)
+ *   - RecordatoriosCobro       (sugerida, ver definición)
  *
- * Tablas sugeridas NUEVAS:
- *   - DepositosBancarios
- *       Id INT AI PK
- *       IdOrigen INT NOT NULL        -- Id del pago o de la venta MP
- *       TipoOrigen ENUM('PAGO','MP') NOT NULL
- *       IdVenta INT DEFAULT NULL
- *       Monto DECIMAL(12,2) NOT NULL
- *       FechaDeposito DATE NOT NULL
- *       HoraDeposito TIME DEFAULT NULL
- *       Banco VARCHAR(80) NOT NULL
- *       Referencia VARCHAR(80) DEFAULT NULL
- *       UsuarioConciliacion VARCHAR(30) NOT NULL  -- IdUsuario del que concilia
- *       FechaRegistro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
- *       Notas TEXT NULL
- *
- *   - RecordatoriosCobro
- *       Id INT AI PK
- *       IdVenta INT NOT NULL
- *       Medio ENUM('EMAIL','SMS') NOT NULL
- *       Destino VARCHAR(150) NOT NULL
- *       Mensaje TEXT NOT NULL
- *       Usuario VARCHAR(30) NOT NULL      -- quien lo programó
- *       FechaProgramado DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
- *       Enviado TINYINT(1) NOT NULL DEFAULT 0
- *       FechaEnvio DATETIME NULL
- *
- * Fecha: 14/11/2025
+ * Fecha: 15/11/2025
  * Revisado por: JCCM
  ********************************************************************************************/
 
@@ -64,7 +67,7 @@ if (!function_exists('h')) {
 }
 
 /**
- * Pequeño helper para redirigir de vuelta a Mesa_Finanzas con mensaje.
+ * Helper para redirigir de vuelta a Mesa_Finanzas con mensaje.
  */
 function cobros_redirect(string $msg = '', array $extra = []): void {
     $params = [];
@@ -81,7 +84,6 @@ function cobros_redirect(string $msg = '', array $extra = []): void {
 
 /**
  * Registra un evento en la tabla Eventos.
- * Se usa para auditar todas las acciones desde Mesa_Finanzas.
  */
 function cobros_registrar_evento(mysqli $mysqli, string $evento, array $ctx = []): void {
     $IdFinger = $ctx['IdFinger'] ?? null;
@@ -126,7 +128,6 @@ function cobros_registrar_evento(mysqli $mysqli, string $evento, array $ctx = []
 
 /**
  * Valida token CSRF específico de cobros.
- * Debes generar $_SESSION['csrf_cobros'] en Mesa_Finanzas.php y mandarlo en los formularios.
  */
 function cobros_check_csrf(): void {
     $tokenSession = $_SESSION['csrf_cobros'] ?? '';
@@ -138,31 +139,83 @@ function cobros_check_csrf(): void {
 }
 
 /**
+ * Obtiene datos básicos de una venta + contacto.
+ */
+function cobros_obtener_venta(mysqli $mysqli, int $IdVenta): ?array {
+    $sql = "
+        SELECT
+            v.Id,
+            v.Nombre,
+            v.Producto,
+            v.IdContact,
+            v.IdFIrma,
+            v.Status,
+            c.Mail     AS email,
+            c.Telefono AS telefono
+        FROM Venta v
+        LEFT JOIN Contacto c ON c.id = v.IdContact
+        WHERE v.Id = ?
+        LIMIT 1
+    ";
+    $st = $mysqli->prepare($sql);
+    $st->bind_param('i', $IdVenta);
+    $st->execute();
+    $row = $st->get_result()->fetch_assoc() ?: null;
+    $st->close();
+    return $row ?: null;
+}
+
+/**
+ * Obtiene la liga de pago (init_point) para un folio.
+ * Si no existe preferencia, devuelve la URL para crearla.
+ */
+function cobros_obtener_liga_pago(mysqli $mysqli, string $folio): string {
+    $folio = trim($folio);
+    if ($folio === '') return '';
+
+    $sql = "SELECT mp_init_point FROM VentasMercadoPago WHERE folio = ? LIMIT 1";
+    $st = $mysqli->prepare($sql);
+    $st->bind_param('s', $folio);
+    $st->execute();
+    $row = $st->get_result()->fetch_assoc() ?: null;
+    $st->close();
+
+    if ($row && !empty($row['mp_init_point'])) {
+        return (string)$row['mp_init_point'];
+    }
+
+    // Fallback: recrear preferencia
+    return 'https://kasu.com.mx/pago/crear_preferencia.php?ref=' . urlencode($folio);
+}
+
+/**
  * Acción: registrar_deposito
- *
- * Espera por POST:
- *   - IdOrigen    : int (Id del pago o de la venta MercadoPago)
- *   - TipoOrigen  : 'PAGO' | 'MP'
- *   - IdVenta     : int (Id de la venta en tabla Venta)
- *   - Monto       : decimal
- *   - FechaDeposito (Y-m-d)
- *   - HoraDeposito  (HH:MM) opcional
- *   - Banco         string
- *   - Referencia    string opcional
- *   - Notas         string opcional
+ * Compatible tanto con el esquema nuevo (IdPago/MontoDeposito/ReferenciaDeposito)
+ * como con el original (IdOrigen/TipoOrigen/Monto/Referencia).
  */
 function cobros_registrar_deposito(mysqli $mysqli): void {
     cobros_check_csrf();
 
-    $IdOrigen   = (int)($_POST['IdOrigen']   ?? 0);
-    $TipoOrigen = strtoupper(trim((string)($_POST['TipoOrigen'] ?? '')));
-    $IdVenta    = (int)($_POST['IdVenta']    ?? 0);
-    $Monto      = (float)($_POST['Monto']    ?? 0);
-    $FDep       = trim((string)($_POST['FechaDeposito'] ?? ''));
-    $HDep       = trim((string)($_POST['HoraDeposito']  ?? ''));
-    $Banco      = trim((string)($_POST['Banco']         ?? ''));
-    $Ref        = trim((string)($_POST['Referencia']    ?? ''));
-    $Notas      = trim((string)($_POST['Notas']         ?? ''));
+    // Compatibilidad: nuevo formulario usa IdPago; el anterior IdOrigen + TipoOrigen.
+    $IdPagoForm = (int)($_POST['IdPago'] ?? 0);
+    $IdOrigen   = (int)($_POST['IdOrigen'] ?? $IdPagoForm);
+    $TipoOrigen = strtoupper((string)($_POST['TipoOrigen'] ?? 'PAGO'));
+
+    $IdVenta = (int)($_POST['IdVenta'] ?? 0);
+
+    // Monto
+    if (isset($_POST['Monto'])) {
+        $Monto = (float)$_POST['Monto'];
+    } else {
+        $Monto = (float)($_POST['MontoDeposito'] ?? 0);
+    }
+
+    $FDep = trim((string)($_POST['FechaDeposito'] ?? ''));
+    $HDep = trim((string)($_POST['HoraDeposito'] ?? ''));
+    $Banco = trim((string)($_POST['Banco'] ?? ''));
+    // Compatibilidad de nombres
+    $Ref   = trim((string)($_POST['ReferenciaDeposito'] ?? ($_POST['Referencia'] ?? '')));
+    $Notas = trim((string)($_POST['Notas'] ?? ''));
 
     if ($IdOrigen <= 0 || $IdVenta <= 0 || $Monto <= 0 || $FDep === '' || $Banco === '' || !in_array($TipoOrigen, ['PAGO','MP'], true)) {
         cobros_redirect('Datos incompletos para registrar depósito.');
@@ -183,6 +236,7 @@ function cobros_registrar_deposito(mysqli $mysqli): void {
     }
 
     $Usuario = (string)($_SESSION['Vendedor'] ?? '');
+    $Host    = $_POST['Host'] ?? ($_SERVER['PHP_SELF'] ?? '');
 
     $mysqli->begin_transaction();
     try {
@@ -208,13 +262,12 @@ function cobros_registrar_deposito(mysqli $mysqli): void {
         $stmt->execute();
         $stmt->close();
 
-        // 2) Marcar como conciliado el origen si existe un campo status adecuado
+        // 2) Marcar como conciliado el origen
         if ($TipoOrigen === 'PAGO') {
-            // Ejemplo: actualizar Pagos.status = 'CONCILIADO'
             $sqlUp = "UPDATE Pagos SET status = 'CONCILIADO' WHERE Id = ? LIMIT 1";
         } else {
-            // Mercado Pago: actualizar VentasMercadoPago.c_status_admin (campo sugerido)
-            $sqlUp = "UPDATE VentasMercadoPago SET c_status_admin = 'CONCILIADO' WHERE id = ? LIMIT 1";
+            // Para MP puedes ajustar según tu modelo de negocio
+            $sqlUp = "UPDATE VentasMercadoPago SET estatus = 'APLICADO' WHERE id = ? LIMIT 1";
         }
         $st2 = $mysqli->prepare($sqlUp);
         $st2->bind_param('i', $IdOrigen);
@@ -223,7 +276,7 @@ function cobros_registrar_deposito(mysqli $mysqli): void {
 
         // 3) Evento
         cobros_registrar_evento($mysqli, 'Registrar_Deposito', [
-            'Host'    => $_POST['Host'] ?? ($_SERVER['PHP_SELF'] ?? ''),
+            'Host'    => $Host,
             'IdVenta' => $IdVenta,
             'IdUsr'   => $Usuario,
         ]);
@@ -240,84 +293,118 @@ function cobros_registrar_deposito(mysqli $mysqli): void {
 
 /**
  * Acción: recordatorio_correo
- *
- * Espera por POST:
- *   - IdVenta
- *   - Destino (correo)
- *   - Mensaje
+ *   - Usa IdVenta para obtener correo, folio y liga de pago.
  */
 function cobros_recordatorio_correo(mysqli $mysqli): void {
     cobros_check_csrf();
 
     $IdVenta = (int)($_POST['IdVenta'] ?? 0);
-    $destino = trim((string)($_POST['Destino'] ?? ''));
-    $mensaje = trim((string)($_POST['Mensaje'] ?? ''));
+    $Host    = $_POST['Host'] ?? ($_SERVER['PHP_SELF'] ?? '');
 
-    if ($IdVenta <= 0 || $destino === '' || $mensaje === '') {
-        cobros_redirect('Datos incompletos para recordatorio por correo.');
+    if ($IdVenta <= 0) {
+        cobros_redirect('Venta inválida para recordatorio por correo.');
     }
+
+    $venta = cobros_obtener_venta($mysqli, $IdVenta);
+    if (!$venta) {
+        cobros_redirect('No se encontró la venta para recordatorio por correo.');
+    }
+
+    $email = filter_var((string)($venta['email'] ?? ''), FILTER_VALIDATE_EMAIL);
+    if (!$email) {
+        cobros_redirect('La venta no tiene correo válido para recordatorio.');
+    }
+
+    $folio   = (string)($venta['IdFIrma'] ?? '');
+    $nombre  = trim((string)($venta['Nombre'] ?? 'Cliente KASU'));
+    $producto= trim((string)($venta['Producto'] ?? 'Servicio KASU'));
+
+    $ligaPago = cobros_obtener_liga_pago($mysqli, $folio);
+
+    $mensaje = "Hola {$nombre}:\n\n"
+             . "Te recordamos el pago de tu servicio {$producto} en KASU.\n\n"
+             . "Puedes completar tu pago en el siguiente enlace seguro:\n{$ligaPago}\n\n"
+             . "Referencia de tu contratación: {$folio}\n\n"
+             . "Si ya realizaste tu pago, por favor ignora este mensaje.\n\n"
+             . "KASU - Protege a quien amas.";
 
     $Usuario = (string)($_SESSION['Vendedor'] ?? '');
 
     $mysqli->begin_transaction();
     try {
         // 1) Registrar en RecordatoriosCobro
-        $sql = "INSERT INTO RecordatoriosCobro
+        $sql = "INSERT INTO RecorditariosCobro
                     (IdVenta, Medio, Destino, Mensaje, Usuario)
                 VALUES (?, 'EMAIL', ?, ?, ?)";
+        // OJO: si tu tabla se llama exactamente RecordatoriosCobro, corrige el nombre:
+        // $sql = "INSERT INTO RecordatoriosCobro ...";
+        $sql = str_replace('RecorditariosCobro', 'RecordatoriosCobro', $sql);
+
         $stmt = $mysqli->prepare($sql);
-        $stmt->bind_param('isss', $IdVenta, $destino, $mensaje, $Usuario);
+        $stmt->bind_param('isss', $IdVenta, $email, $mensaje, $Usuario);
         $stmt->execute();
         $stmt->close();
 
         // 2) Evento
         cobros_registrar_evento($mysqli, 'Recordatorio_Correo', [
-            'Host'    => $_POST['Host'] ?? ($_SERVER['PHP_SELF'] ?? ''),
+            'Host'    => $Host,
             'IdVenta' => $IdVenta,
             'IdUsr'   => $Usuario,
         ]);
 
         $mysqli->commit();
 
-        // 3) Opcional: envío inmediato vía mail() o integrando EnviarCorreo.php
-        //    Aquí queda sólo como ejemplo simple. Puedes sustituirlo por tu propio sistema.
+        // 3) Envío inmediato (sencillo). Puedes sustituir por tu propio sistema.
         @mail(
-            $destino,
+            $email,
             'Recordatorio de pago KASU',
             $mensaje,
             "From: notificaciones@kasu.com.mx\r\nContent-Type: text/plain; charset=UTF-8"
         );
 
-        cobros_redirect('Recordatorio enviado/registrado correctamente.');
+        cobros_redirect('Recordatorio de pago enviado correctamente.');
 
     } catch (\Throwable $e) {
         $mysqli->rollback();
         error_log('[KASU][Cobros] Error recordatorio_correo: '.$e->getMessage());
-        cobros_redirect('Error al registrar el recordatorio de correo.');
+        cobros_redirect('Error al registrar/enviar el recordatorio de correo.');
     }
 }
 
 /**
  * Acción: recordatorio_sms
- *
- * Espera por POST:
- *   - IdVenta
- *   - Destino (teléfono)
- *   - Mensaje
- *
- * Aquí sólo se registra en RecordatoriosCobro.
- * Un proceso externo (cron) debería leer estos registros y enviar el SMS con tu proveedor.
+ *   - Usa IdVenta para obtener teléfono, folio y liga de pago.
+ *   - Sólo registra en RecordatoriosCobro (otro proceso envía el SMS).
  */
 function cobros_recordatorio_sms(mysqli $mysqli): void {
     cobros_check_csrf();
 
     $IdVenta = (int)($_POST['IdVenta'] ?? 0);
-    $destino = trim((string)($_POST['Destino'] ?? ''));
-    $mensaje = trim((string)($_POST['Mensaje'] ?? ''));
+    $Host    = $_POST['Host'] ?? ($_SERVER['PHP_SELF'] ?? '');
 
-    if ($IdVenta <= 0 || $destino === '' || $mensaje === '') {
-        cobros_redirect('Datos incompletos para recordatorio por SMS.');
+    if ($IdVenta <= 0) {
+        cobros_redirect('Venta inválida para recordatorio SMS.');
     }
+
+    $venta = cobros_obtener_venta($mysqli, $IdVenta);
+    if (!$venta) {
+        cobros_redirect('No se encontró la venta para recordatorio SMS.');
+    }
+
+    $tel = preg_replace('/\D+/', '', (string)($venta['telefono'] ?? ''));
+    if (strlen($tel) === 10) {
+        $tel = '52' . $tel;
+    }
+    if ($tel === '') {
+        cobros_redirect('La venta no tiene teléfono válido para SMS.');
+    }
+
+    $folio    = (string)($venta['IdFIrma'] ?? '');
+    $producto = trim((string)($venta['Producto'] ?? 'Servicio KASU'));
+    $ligaPago = cobros_obtener_liga_pago($mysqli, $folio);
+
+    $mensaje = "KASU: para completar tu contratación de {$producto}, "
+             . "puedes pagar en {$ligaPago} Ref: {$folio}";
 
     $Usuario = (string)($_SESSION['Vendedor'] ?? '');
 
@@ -327,12 +414,12 @@ function cobros_recordatorio_sms(mysqli $mysqli): void {
                     (IdVenta, Medio, Destino, Mensaje, Usuario)
                 VALUES (?, 'SMS', ?, ?, ?)";
         $stmt = $mysqli->prepare($sql);
-        $stmt->bind_param('isss', $IdVenta, $destino, $mensaje, $Usuario);
+        $stmt->bind_param('isss', $IdVenta, $tel, $mensaje, $Usuario);
         $stmt->execute();
         $stmt->close();
 
         cobros_registrar_evento($mysqli, 'Recordatorio_SMS', [
-            'Host'    => $_POST['Host'] ?? ($_SERVER['PHP_SELF'] ?? ''),
+            'Host'    => $Host,
             'IdVenta' => $IdVenta,
             'IdUsr'   => $Usuario,
         ]);
@@ -347,11 +434,111 @@ function cobros_recordatorio_sms(mysqli $mysqli): void {
     }
 }
 
+/**
+ * Acción: mp_enviar_liga_correo
+ *   - Usa folio (IdFIrma / VentasMercadoPago.folio) para obtener Venta + correo.
+ */
+function cobros_mp_enviar_liga_correo(mysqli $mysqli): void {
+    cobros_check_csrf();
+
+    $folio = trim((string)($_POST['folio'] ?? ''));
+    $Host  = $_POST['Host'] ?? ($_SERVER['PHP_SELF'] ?? '');
+
+    if ($folio === '') {
+        cobros_redirect('Folio inválido para enviar liga de pago.');
+    }
+
+    // Buscar MP + Venta + Contacto
+    $sql = "
+        SELECT
+            mp.folio,
+            mp.amount,
+            v.Id          AS IdVenta,
+            v.Nombre      AS Nombre,
+            v.Producto    AS Producto,
+            v.IdFIrma     AS IdFIrma,
+            c.Mail        AS email
+        FROM VentasMercadoPago mp
+        LEFT JOIN Venta v      ON v.IdFIrma = mp.folio
+        LEFT JOIN Contacto c   ON c.id = v.IdContact
+        WHERE mp.folio = ?
+        LIMIT 1
+    ";
+    $st = $mysqli->prepare($sql);
+    $st->bind_param('s', $folio);
+    $st->execute();
+    $row = $st->get_result()->fetch_assoc() ?: null;
+    $st->close();
+
+    if (!$row) {
+        cobros_redirect('No se encontró la operación de Mercado Pago para ese folio.');
+    }
+
+    $IdVenta = (int)($row['IdVenta'] ?? 0);
+    if ($IdVenta <= 0) {
+        cobros_redirect('El folio no está asociado a una venta válida.');
+    }
+
+    $email = filter_var((string)($row['email'] ?? ''), FILTER_VALIDATE_EMAIL);
+    if (!$email) {
+        cobros_redirect('La operación no tiene correo válido para enviar la liga.');
+    }
+
+    $producto = trim((string)($row['Producto'] ?? 'Servicio KASU'));
+    $nombre   = trim((string)($row['Nombre'] ?? 'Cliente KASU'));
+
+    $ligaPago = cobros_obtener_liga_pago($mysqli, $folio);
+
+    $mensaje = "Hola {$nombre}:\n\n"
+             . "Te compartimos nuevamente la liga para completar el pago de tu servicio {$producto} en KASU.\n\n"
+             . "Liga de pago: {$ligaPago}\n\n"
+             . "Referencia de tu compra: {$folio}\n\n"
+             . "Si ya realizaste tu pago, por favor ignora este mensaje.\n\n"
+             . "KASU - Protege a quien amas.";
+
+    $Usuario = (string)($_SESSION['Vendedor'] ?? '');
+
+    $mysqli->begin_transaction();
+    try {
+        // Registrar en RecordatoriosCobro
+        $sqlIns = "INSERT INTO RecordatoriosCobro
+                      (IdVenta, Medio, Destino, Mensaje, Usuario)
+                   VALUES (?, 'EMAIL', ?, ?, ?)";
+        $stmt = $mysqli->prepare($sqlIns);
+        $stmt->bind_param('isss', $IdVenta, $email, $mensaje, $Usuario);
+        $stmt->execute();
+        $stmt->close();
+
+        cobros_registrar_evento($mysqli, 'MP_Enviar_Liga_Correo', [
+            'Host'    => $Host,
+            'IdVenta' => $IdVenta,
+            'IdUsr'   => $Usuario,
+        ]);
+
+        $mysqli->commit();
+
+        @mail(
+            $email,
+            'Liga de pago KASU',
+            $mensaje,
+            "From: notificaciones@kasu.com.mx\r\nContent-Type: text/plain; charset=UTF-8"
+        );
+
+        cobros_redirect('Liga de pago enviada correctamente.');
+
+    } catch (\Throwable $e) {
+        $mysqli->rollback();
+        error_log('[KASU][Cobros] Error mp_enviar_liga_correo: '.$e->getMessage());
+        cobros_redirect('Error al enviar la liga de pago.');
+    }
+}
+
 /* ============================================================================
  * ROUTER PRINCIPAL
  * ========================================================================== */
 
-$accion = $_POST['accion_cobro'] ?? '';
+// Acepta tanto 'accion' como 'accion_cobro'
+$accion = $_POST['accion'] ?? ($_POST['accion_cobro'] ?? '');
 
 switch ($accion) {
     case 'registrar_deposito':
@@ -364,6 +551,10 @@ switch ($accion) {
 
     case 'recordatorio_sms':
         cobros_recordatorio_sms($mysqli);
+        break;
+
+    case 'mp_enviar_liga_correo':
+        cobros_mp_enviar_liga_correo($mysqli);
         break;
 
     default:

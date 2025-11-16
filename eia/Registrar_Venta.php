@@ -1,6 +1,8 @@
 <?php
 /********************************************************************************************************************************************
- ********** ESTE ARCHIVO REALIZA LOS REGISTROS DE VENTA - 2 de noviembre 2025 - Jose Carlos Cabrera Monroy **************
+ * ESTE ARCHIVO REALIZA LOS REGISTROS DE VENTA - 
+ * 15 de noviembre 2025 - 
+ * Jose Carlos Cabrera Monroy 
  ********************************************************************************************************************************************/
 
 session_start();
@@ -417,21 +419,24 @@ if (strcasecmp($categoria, (string)$Producto) === 0 && empty($ClaveCurpBen)) {
         // Guarda/actualiza la orden para Mercado Pago en la tabla VentasMercadoPago
         // folio = FirmaUnica; estados de negocio y de pago se inician como PREVENTA/PENDIENTE
         $sql = "
-        INSERT INTO VentasMercadoPago
-            (folio, plan, plazo_meses, dia_pago, precio_base, amount, estatus, estatus_pago, created_at, updated_at)
-        VALUES
-            (?, ?, ?, ?, ?, 'PREVENTA', 'PENDIENTE', NOW(), NOW())
-        ON DUPLICATE KEY UPDATE
-            plan        = VALUES(plan),
-            plazo_meses = VALUES(plazo_meses),
-            dia_pago    = VALUES(dia_pago),
-            precio_base = VALUES(precio_base),
-            amount      = VALUES(amount),
-            updated_at  = NOW()
+            INSERT INTO VentasMercadoPago
+                (folio, plan, plazo_meses, dia_pago, precio_base, amount, estatus, estatus_pago, created_at, updated_at)
+            VALUES
+                (?, ?, ?, ?, ?, ?, 'PREVENTA', 'PENDIENTE', NOW(), NOW())
+            ON DUPLICATE KEY UPDATE
+                plan        = VALUES(plan),
+                plazo_meses = VALUES(plazo_meses),
+                dia_pago    = VALUES(dia_pago),
+                precio_base = VALUES(precio_base),
+                amount      = VALUES(amount),
+                updated_at  = NOW()
         ";
+
         if ($stmt = $mysqli->prepare($sql)) {
             $plazoMeses = (int)$plazoInt;
-            $diaPagoDb  = ($plan === 'MENSUAL') ? $DiaPago : null; // null para contado
+            // Si tu columna dia_pago NO acepta NULL, usa 0 en lugar de null
+            $diaPagoDb  = ($plan === 'MENSUAL') ? (int)$DiaPago : 0;
+
             // s = folio, s = plan, i = plazo_meses, i = dia_pago, d = precio_base, d = amount
             $stmt->bind_param('ssiidd', $FirmaUnica, $plan, $plazoMeses, $diaPagoDb, $precioBase, $amount);
             $stmt->execute();

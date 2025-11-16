@@ -22,7 +22,7 @@ require_once __DIR__ . '/eia/librerias.php';
   <meta name="robots" content="index,follow,max-image-preview:large">
   <meta name="author" content="KASU Servicios a Futuro">
   <meta name="keywords" content="KASU, términos y condiciones, aviso de privacidad, protección de datos, políticas">
-  <meta name="theme-color" content="#911F66">
+  <meta name="theme-color" content="#F1F1FC">
 
   <!-- Canonical -->
   <link rel="canonical" href="https://kasu.com.mx/terminos-y-condiciones.php">

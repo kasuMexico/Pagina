@@ -140,7 +140,7 @@ if($Reg['Producto'] === 'Policias') {
   <meta name="author" content="KASU Servicios a Futuro">
   <meta name="robots" content="index,follow,max-image-preview:large">
   <meta name="keywords" content="KASU, Servicio funerario, Servicio universitario, Servicio retiro, Protección familiar, <?= $prodCat ?>">
-  <meta name="theme-color" content="#911F66">
+  <meta name="theme-color" content="#F1F1FC">
 
   <!-- Canonical limpia -->
   <link rel="canonical" href="<?= htmlspecialchars($canonical, ENT_QUOTES, 'UTF-8') ?>">

@@ -74,7 +74,7 @@ if ($qsMsg !== null) {
     <meta name="twitter:image" content="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
 
     <!-- PWA/Branding menor -->
-    <meta name="theme-color" content="#7b1fa2">
+    <meta name="theme-color" content="#F1F1FC">
 
     <!-- Conexiones rápidas -->
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
@@ -89,7 +89,7 @@ if ($qsMsg !== null) {
     <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css">
     <link rel="stylesheet" href="/assets/css/templatemo-softy-pinko.css?v=3">
-    <link rel="stylesheet" href="/assets/css/EstilosIndex.css?v=27">
+    <link rel="stylesheet" href="/assets/css/EstilosIndex.css?v=28">
 
     <!-- JS propio -->
     <script src="/eia/javascript/Registro.js" defer></script>

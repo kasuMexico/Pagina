@@ -232,7 +232,7 @@ if (isset($_GET['Msg'])) {
           <!-- Contexto oculto (compatibilidad con backend actual) -->
           <input type="hidden" name="nombre"    value="<?= $nombreSafe ?>">
           <input type="hidden" name="Host"      value="<?= $selfSafe ?>">
-          <input type="hidden" name="IdVenta"   value="0">
+          <input type="hidden" name="IdVenta"   value="PLATAFORMA">
           <input type="hidden" name="IdContact" value="0">
           <input type="hidden" name="IdUsuario" value="0">
           <input type="hidden" name="Producto"  value="<?= $productoSafe ?>">

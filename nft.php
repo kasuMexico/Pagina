@@ -80,7 +80,7 @@ function some_function3($VAr) {
   <meta name="robots" content="index,follow,max-image-preview:large">
   <meta name="author" content="KASU Servicios a Futuro">
   <meta name="keywords" content="KASU, NFT, aseguradora, recompensas, blockchain">
-  <meta name="theme-color" content="#911F66">
+  <meta name="theme-color" content="#F1F1FC">
 
   <!-- Canonical -->
   <link rel="canonical" href="https://kasu.com.mx/nft.php<?= isset($_GET['Lg']) ? '?Lg='.urlencode($lg) : '' ?>">

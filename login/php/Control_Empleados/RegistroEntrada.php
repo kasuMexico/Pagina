@@ -11,7 +11,8 @@
 
 declare(strict_types=1);
 
-session_start();
+require_once dirname(__DIR__, 3) . '/eia/session.php';
+kasu_session_start();
 date_default_timezone_set('America/Mexico_City');
 
 require_once __DIR__ . '/../../eia/librerias.php'; // Debe exponer $mysqli, $basicas, clase Correo, etc.

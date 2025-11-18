@@ -9,12 +9,13 @@
 
 declare(strict_types=1);
 
-session_start();
+require_once dirname(__DIR__) . '/eia/session.php';
+kasu_session_start();
 
 /* =============================================================================
  * [1] INICIALIZACIÓN: conexión, zona horaria, helpers
  * ========================================================================== */
-require_once '../eia/librerias.php';          // Debe exponer $mysqli, $basicas, $financieras
+require_once __DIR__ . '/../eia/librerias.php';          // Debe exponer $mysqli, $basicas, $financieras
 require_once 'php/Analisis_Metas.php';        // Calcula metas del mes, sueldos y comisiones
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);

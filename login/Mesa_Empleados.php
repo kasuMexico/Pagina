@@ -12,8 +12,9 @@ declare(strict_types=1);
 // =================== Sesión y dependencias ===================
 // Qué hace: Inicia sesión, carga librerías, activa excepciones de mysqli
 // Fecha: 05/11/2025 | Revisado por: JCCM
-session_start();
-require_once '../eia/librerias.php';
+require_once dirname(__DIR__) . '/eia/session.php';
+kasu_session_start();
+require_once __DIR__ . '/../eia/librerias.php';
 require_once __DIR__ . '/php/mesa_helpers.php';
 date_default_timezone_set('America/Mexico_City');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -243,9 +244,55 @@ $VerCache = $VerCache ?? time();
               <label class="mt-2">Email</label>
               <input class="form-control" type="email" name="Email" required>
 
-              <label class="mt-2">Dirección</label>
-              <input class="form-control" type="text" name="Direccion" required>
-
+              <label>Ingresa la dirección</label>
+              <div class="mb-2">
+                <input class="form-control mb-2" type="number" name="Codigo_Postal" placeholder="Código Postal" inputmode="numeric" pattern="^\d{5}$">
+                <div class="row mb-2">
+                  <div class="col-6"><input class="form-control" type="text" name="Calle" placeholder="Nombre de la Calle"></div>
+                  <div class="col-6"><input class="form-control" type="number" name="Numero" placeholder="Número"></div>
+                </div>
+                <input class="form-control mb-2" type="text" name="Colonia" placeholder="Colonia / Localidad">
+                <div class="row mb-2">
+                  <div class="col-6"><input class="form-control" type="text" name="Municipio" placeholder="Municipio"></div>
+                  <div class="col-6">
+                    <select class="form-control" name="Estado" id="estado" required>
+                      <option value="">Selecciona un estado</option>
+                      <option value="Aguascalientes">Aguascalientes</option>
+                      <option value="Baja California">Baja California</option>
+                      <option value="Baja California Sur">Baja California Sur</option>
+                      <option value="Campeche">Campeche</option>
+                      <option value="Coahuila">Coahuila</option>
+                      <option value="Colima">Colima</option>
+                      <option value="Chiapas">Chiapas</option>
+                      <option value="Chihuahua">Chihuahua</option>
+                      <option value="Ciudad de México">Ciudad de México</option>
+                      <option value="Durango">Durango</option>
+                      <option value="Guanajuato">Guanajuato</option>
+                      <option value="Guerrero">Guerrero</option>
+                      <option value="Hidalgo">Hidalgo</option>
+                      <option value="Jalisco">Jalisco</option>
+                      <option value="Estado de México">Estado de México</option>
+                      <option value="Michoacán">Michoacán</option>
+                      <option value="Morelos">Morelos</option>
+                      <option value="Nayarit">Nayarit</option>
+                      <option value="Nuevo León">Nuevo León</option>
+                      <option value="Oaxaca">Oaxaca</option>
+                      <option value="Puebla">Puebla</option>
+                      <option value="Querétaro">Querétaro</option>
+                      <option value="Quintana Roo">Quintana Roo</option>
+                      <option value="San Luis Potosí">San Luis Potosí</option>
+                      <option value="Sinaloa">Sinaloa</option>
+                      <option value="Sonora">Sonora</option>
+                      <option value="Tabasco">Tabasco</option>
+                      <option value="Tamaulipas">Tamaulipas</option>
+                      <option value="Tlaxcala">Tlaxcala</option>
+                      <option value="Veracruz">Veracruz</option>
+                      <option value="Yucatán">Yucatán</option>
+                      <option value="Zacatecas">Zacatecas</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
               <label class="mt-2">Cuenta Bancaria</label>
               <input class="form-control" type="number" name="Cuenta" required>
 

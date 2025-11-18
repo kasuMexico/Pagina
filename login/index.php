@@ -8,53 +8,15 @@
 
 declare(strict_types=1);
 
-if (!function_exists('str_ends_with')) {
-    function str_ends_with(string $haystack, string $needle): bool
-    {
-        if ($needle === '') {
-            return true;
-        }
-        return substr($haystack, -strlen($needle)) === $needle;
-    }
-}
+require_once dirname(__DIR__) . '/eia/session.php';
 
-/* ==========================================================================================
- * BLOQUE: Cookies seguras de sesión
- * Qué hace: Configura parámetros de cookie para la sesión (HTTPS, HttpOnly, SameSite=Lax)
- * Fecha: 05/11/2025 — Revisado por: JCCM
- * ========================================================================================== */
-$httpHost     = $_SERVER['HTTP_HOST'] ?? '';
-$httpsOn      = (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off')
-    || (isset($_SERVER['SERVER_PORT']) && (string)$_SERVER['SERVER_PORT'] === '443');
-$rootDomain   = 'kasu.com.mx';
-$hostMatches  = false;
-
-if ($httpHost !== '') {
-    $normalizedHost = strtolower(preg_replace('/:\d+$/', '', $httpHost));
-    $hostMatches = $normalizedHost === $rootDomain
-        || str_ends_with($normalizedHost, '.' . $rootDomain);
-}
-
-$cookieParams = [
-    'lifetime' => 0,
-    'path'     => '/',
-    'secure'   => $httpsOn,
-    'httponly' => true,
-    'samesite' => 'Lax',
-];
-
-if ($hostMatches) {
-    $cookieParams['domain'] = $rootDomain;
-}
-
-session_set_cookie_params($cookieParams);
+kasu_session_start();
 
 /* ==========================================================================================
  * BLOQUE: Inicio de sesión y dependencias
  * Qué hace: Inicia la sesión y carga librerías del proyecto
  * Fecha: 05/11/2025 — Revisado por: JCCM
  * ========================================================================================== */
-session_start();
 require_once __DIR__ . '/../eia/librerias.php';
 
 /* ==========================================================================================

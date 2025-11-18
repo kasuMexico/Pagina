@@ -9,8 +9,9 @@
 // =================== Sesión y dependencias ===================
 // Qué hace: Inicia sesión, carga librerías y activa excepciones de mysqli para PHP 8.2
 // Fecha: 05/11/2025 | Revisado por: JCCM
-session_start();
-require_once '../eia/librerias.php';
+require_once dirname(__DIR__) . '/eia/session.php';
+kasu_session_start();
+require_once __DIR__ . '/../eia/librerias.php';
 require_once __DIR__ . '/php/mesa_helpers.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 

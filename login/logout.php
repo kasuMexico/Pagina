@@ -15,7 +15,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
     exit;
 }
 
-session_start();
+require_once dirname(__DIR__) . '/eia/session.php';
+kasu_session_start();
 
 /* ========================== Verificación CSRF ========================== */
 $csrf_form  = $_POST['csrf']            ?? '';

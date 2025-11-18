@@ -21,7 +21,8 @@ ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
 
 // =================== Sesión y dependencias ===================
-session_start();
+require_once dirname(__DIR__, 2) . '/eia/session.php';
+kasu_session_start();
 
 if (!isset($_SESSION["Vendedor"])) {
     header('Location: https://kasu.com.mx/login/', true, 303);

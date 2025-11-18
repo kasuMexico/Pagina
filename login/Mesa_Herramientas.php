@@ -12,8 +12,9 @@ declare(strict_types=1);
 // =================== Sesión y dependencias ===================
 // Qué hace: Inicia sesión, fija zona horaria, carga librerías y activa excepciones mysqli
 // Fecha: 05/11/2025 | Revisado por: JCCM
-session_start();
-require_once '../eia/librerias.php';
+require_once dirname(__DIR__) . '/eia/session.php';
+kasu_session_start();
+require_once __DIR__ . '/../eia/librerias.php';
 date_default_timezone_set('America/Mexico_City');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 header_remove('X-Powered-By');
@@ -84,8 +85,8 @@ if (isset($_GET['Msg'])) {
 // Qué hace: Define qué modal abrir en el render actual
 // Fecha: 05/11/2025 | Revisado por: JCCM
 $Ventana = null;
-if (!empty($_POST['RepDat'])) { $Ventana = "Ventana1"; }
-elseif (!empty($_POST['ActDatos'])) { $Ventana = "Ventana2"; }
+if (isset($_POST['RepDat'])) { $Ventana = "Ventana1"; }
+elseif (isset($_POST['ActDatos'])) { $Ventana = "Ventana2"; }
 
 // =================== Catálogo de meses ===================
 // Qué hace: Arreglo para mostrar nombre del mes en metas
@@ -146,40 +147,31 @@ $VerCache = time();
   <!-- Modal Actualizar Datos -->
   <div class="modal fade" id="Ventana2" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog" role="document"><div class="modal-content">
-      <form method="POST" action="php/Funcionalidad_Empleados.php">
-        <div class="modal-header">
-          <h5 class="modal-title">Actualizar mis Datos</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
-        </div>
-        <div class="modal-body">
-          <input type="number" name="IdContact" value="<?php echo (int)($RegCt['id'] ?? 0); ?>" hidden>
-          <input type="text"   name="Host" value="<?php echo h($_SERVER['PHP_SELF']); ?>" hidden>
-          <input type="text"   name="nombre" value="<?php echo h($Reg['Nombre'] ?? ''); ?>" hidden>
-
-          <label>Nombre</label>
-          <input class="form-control" disabled type="text" value="<?php echo h($Reg['Nombre'] ?? ''); ?>">
-
-          <label class="mt-2">Puesto</label>
-          <input class="form-control" disabled type="text" value="<?php
-            echo h($basicas->BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$Reg['Nivel'] ?? 0));
-          ?>">
-
-          <label class="mt-2">Clabe Bancaria</label>
-          <input class="form-control" disabled type="text" value="<?php echo h($Reg['Cuenta'] ?? ''); ?>">
-
-          <label class="mt-2">Dirección</label>
-          <input class="form-control" type="text" name="Direccion" value="<?php echo h($RegCt['Direccion'] ?? ''); ?>">
-
-          <label class="mt-2">Teléfono</label>
-          <input class="form-control" type="text" name="Telefono" value="<?php echo h($RegCt['Telefono'] ?? ''); ?>">
-
-          <label class="mt-2">Email</label>
-          <input class="form-control" type="text" name="Mail" value="<?php echo h($RegCt['Mail'] ?? ''); ?>">
-        </div>
-        <div class="modal-footer">
-          <input type="submit" name="CamDat" class="btn btn-primary" value="Modificar Datos">
-        </div>
-      </form>
+      <?php
+        $nombre = $Reg['Nombre'] ?? '';
+        $Reg_backup   = $Reg;
+        $Recg_backup  = $Recg ?? null;
+        $Recg1_backup = $Recg1 ?? null;
+        $Reg = [
+          'Id'       => (int)($RegCt['id'] ?? 0),
+          'Nombre'   => $Reg_backup['Nombre'] ?? '',
+          'Producto' => 'Empleado',
+          'Sucursal' => $basicas->BuscarCampos($mysqli,'nombreSucursal','Sucursal','Id',$Reg_backup['Sucursal'] ?? 0)
+        ];
+        $Recg = [
+          'id'       => (int)($RegCt['id'] ?? 0),
+          'calle'    => $RegCt['Direccion'] ?? ($RegCt['calle'] ?? ''),
+          'Telefono' => $RegCt['Telefono'] ?? '',
+          'Mail'     => $RegCt['Mail'] ?? ''
+        ];
+        $Recg1 = [
+          'id' => (int)($Reg_backup['IdUsuario'] ?? 0)
+        ];
+        require __DIR__ . '/html/ActualizarDatos.php';
+        $Reg  = $Reg_backup;
+        $Recg = $Recg_backup;
+        $Recg1 = $Recg1_backup;
+      ?>
     </div></div>
   </div>
 
@@ -211,116 +203,125 @@ $VerCache = time();
      Fecha: 05/11/2025 | Revisado por: JCCM -->
 <main class="page-content">
   <div class="container" style="width:99%;">
-    <div class="mw-100">
-      <?php if ((int)$Vende <= 2): ?>
-        <label>Buscar colaborador por nombre</label>
-        <form method="POST" action="Mesa_Empleados.php">
-          <div class="input-group mb-3">
-            <input type="text" class="form-control" name="nombre" placeholder="Nombre del colaborador">
-            <div class="input-group-append">
-              <button class="btn btn-outline-secondary" type="submit" name="action" value="buscar">Buscar</button>
-            </div>
-          </div>
-        </form>
+    <div class="tool-sections">
 
-        <label>Gestionar clientes para cobranza</label>
-        <form method="POST" action="Mesa_Clientes.php">
-          <div class="input-group mb-3">
-            <select class="form-control" name="Status">
-              <option value="0">Buscar cliente por status cobranza</option>
+      <?php if ($Reg): ?>
+      <section class="tool-section">
+        <header>
+          <strong>Mi información</strong>
+          <small><?php echo h($basicas->BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$Reg['Nivel'] ?? 0)); ?></small>
+        </header>
+        <div class="tool-section-body small">
+          <p class="mb-1"><strong>Nombre:</strong> <?php echo h($Reg['Nombre'] ?? ''); ?></p>
+          <p class="mb-1"><strong>Usuario:</strong> <?php echo h($_SESSION['Vendedor']); ?></p>
+          <p class="mb-1"><strong>Sucursal:</strong> <?php echo h($basicas->BuscarCampos($mysqli,'nombreSucursal','Sucursal','Id',$Reg['Sucursal'] ?? 0)); ?></p>
+          <p class="mb-1"><strong>Teléfono:</strong> <?php echo h($RegCt['Telefono'] ?? 'Sin registro'); ?></p>
+          <p class="mb-0"><strong>Correo:</strong> <?php echo h($RegCt['Mail'] ?? 'Sin registro'); ?></p>
+        </div>
+      </section>
+      <?php endif; ?>
+
+      <?php if ((int)$Vende <= 3): ?>
+      <section class="tool-section">
+        <header><strong>Buscadores rápidos</strong></header>
+        <div class="tool-section-body">
+          <?php if ((int)$Vende <= 2): ?>
+          <form method="POST" action="Mesa_Empleados.php" class="integrated-search mb-2">
+            <input type="text" name="nombre" placeholder="Nombre del colaborador">
+            <button type="submit">Buscar</button>
+          </form>
+          <?php endif; ?>
+
+          <form method="POST" action="Mesa_Clientes.php" class="integrated-search mb-2">
+            <input type="text" name="nombre" placeholder="Cliente por nombre">
+            <button type="submit">Buscar</button>
+          </form>
+
+          <form method="POST" action="Mesa_Clientes.php" class="integrated-search mb-2">
+            <select name="Status">
+              <option value="">Status de cobranza</option>
               <option value="COBRANZA">COBRANZA</option>
               <option value="ATRASADO">ATRASADO</option>
               <option value="PREVENTA">PREVENTA</option>
             </select>
-            <div class="input-group-append">
-              <button class="btn btn-outline-secondary" type="submit" name="action" value="buscar">Buscar</button>
-            </div>
-          </div>
-        </form>
-      <?php endif; ?>
+            <button type="submit">Filtrar</button>
+          </form>
 
-      <?php if ((int)$Vende <= 2): ?>
-        <label>Buscar clientes por nombre</label>
-        <form method="POST" action="Mesa_Clientes.php">
-          <div class="input-group mb-3">
-            <input type="text" name="nombre" class="form-control" placeholder="Buscar cliente por nombre">
-            <div class="input-group-append">
-              <button class="btn btn-outline-secondary" type="submit" name="action" value="buscar">Buscar</button>
-            </div>
-          </div>
-        </form>
+          <?php if ((int)$Vende <= 3): ?>
+          <form method="POST" action="Mesa_Prospectos.php" class="integrated-search mb-0">
+            <input type="text" name="nombre" placeholder="Prospecto por nombre">
+            <button type="submit">Buscar</button>
+          </form>
+          <?php endif; ?>
+        </div>
+      </section>
       <?php endif; ?>
 
       <?php if ((int)$Vende <= 3): ?>
-        <label>Buscar prospecto por nombre</label>
-        <form method="POST" action="Mesa_Prospectos.php">
-          <div class="input-group mb-3">
-            <input type="text" name="nombre" class="form-control" placeholder="Buscar prospecto por nombre">
-            <div class="input-group-append">
-              <button class="btn btn-outline-secondary" type="submit" name="action" value="buscar">Buscar</button>
+      <section class="tool-section">
+        <header><strong>Carga masiva de clientes</strong></header>
+        <div class="tool-section-body">
+          <form method="POST" action="Lote_Clientes.php" enctype="multipart/form-data">
+            <div class="file-input mb-2">
+              <input type="file" id="archivoCsv" name="archivo_csv" accept=".csv,text/csv">
+              <label for="archivoCsv">
+                <span>Selecciona archivo CSV</span>
+                <em>Browse</em>
+              </label>
             </div>
-          </div>
-        </form>
-        <hr>
-
-        <label>Carga masiva de clientes</label>
-        <small class="form-text text-muted">Descarga la plantilla, llénala y súbela.</small>
-        <form method="POST" action="Lote_Clientes.php" enctype="multipart/form-data">
-          <div class="input-group mb-3">
-            <input type="file" name="archivo_csv" class="form-control" accept=".csv,text/csv">
-            <div class="input-group-append">
-              <button class="btn btn-outline-secondary" type="submit" name="action" value="buscar">Subir</button>
-              <a class="btn btn-outline-secondary" href="https://kasu.com.mx/login/assets/Plantilla_Ctes_Masivos_KASU.csv" download>Descargar</a>
+            <div class="d-flex flex-wrap gap-2">
+              <button class="btn btn-secondary btn-sm mr-2" type="submit">Subir archivo</button>
+              <a class="btn btn-outline-secondary btn-sm" href="https://kasu.com.mx/login/assets/Plantilla_Ctes_Masivos_KASU.csv" download>Descargar plantilla</a>
             </div>
-          </div>
-        </form>
-        <hr>
+          </form>
+        </div>
+      </section>
       <?php endif; ?>
 
-      <form method="POST" action="php/Funcionalidad_Pwa.php">
-      <!-- Insertamos los datos ocultos -->
-        <input type="hidden" name="Host" value="<?php echo h($_SERVER['PHP_SELF']); ?>">
-        <input type="hidden" name="Evento" value="LogOut">
-        <input type="hidden" name="csrf" value="<?php echo h($_SESSION['csrf_logout']); ?>">
-        <div id="Gps" style="display:none;"></div>
-        <div data-fingerprint-slot></div>
-
-        <?php if ((int)$Vende <= 2): ?>
-          <label>Metas de ventas por ejecutivo</label>
-          <div class="form-group">
-            <input class="form-control form-control-sm" type="number" name="MetaMes" placeholder="Meta de colocación del mes de <?php echo h($meses[(int)date('n')]); ?>">
-            <small class="form-text text-muted">No agregues símbolos ni decimales.</small>
-            <br>
-          <label>Normalidad de Cobranza</label>
-            <input class="form-control form-control-sm mt-2" type="number" name="Normalidad" placeholder="% de normalidad del mes de <?php echo h($meses[(int)date('n')]); ?>">
-            <small class="form-text text-muted">No agregues símbolos ni decimales.</small>
-          </div>
-          <input class="btn btn-secondary btn-sm btn-block" type="submit" name="Asignar" value="Asignar Metas de Venta">
-          <hr>
-        <?php endif; ?>
-      </form>
-
-      <form method="POST" action="<?php echo h($_SERVER['PHP_SELF']); ?>">
-        <div class="form-group">
-          <input class="btn btn-secondary btn-sm btn-block" name="RepDat" type="submit" value="Reportar un problema">
-          <input class="btn btn-secondary btn-sm btn-block" name="ActDatos" type="submit" value="Actualizar mis Datos">
+      <?php if ((int)$Vende <= 2): ?>
+      <section class="tool-section">
+        <header><strong>Metas y normalidad</strong></header>
+        <div class="tool-section-body">
+          <form method="POST" action="php/Funcionalidad_Pwa.php">
+            <input type="hidden" name="Host" value="<?php echo h($_SERVER['PHP_SELF']); ?>">
+            <input type="hidden" name="Evento" value="LogOut">
+            <input type="hidden" name="csrf" value="<?php echo h($_SESSION['csrf_logout']); ?>">
+            <div id="Gps" style="display:none;"></div>
+            <div data-fingerprint-slot></div>
+            <div class="form-group">
+              <label class="small">Meta de colocación (<?php echo h($meses[(int)date('n')]); ?>)</label>
+              <input class="form-control form-control-sm" type="number" name="MetaMes" placeholder="Ej. 120000">
+            </div>
+            <div class="form-group">
+              <label class="small">% Normalidad de Cobranza</label>
+              <input class="form-control form-control-sm" type="number" name="Normalidad" placeholder="Ej. 92">
+            </div>
+            <button class="btn btn-secondary btn-sm btn-block" type="submit" name="Asignar" value="1">Guardar metas</button>
+          </form>
         </div>
-      </form>
+      </section>
+      <?php endif; ?>
 
-      <!-- =================== Salir ===================
-           Qué hace: Cierra sesión con token CSRF y marca de tiempo
-           Fecha: 05/11/2025 | Revisado por: JCCM -->
-      <form method="POST" action="/login/logout.php">
-        <input type="hidden" name="Host" value="<?php echo h($_SERVER['PHP_SELF']); ?>">
-        <input type="hidden" name="Evento" value="LogOut">
-        <input type="hidden" name="checkdia" value="<?php echo h(date('Y-m-d')); ?>">
-        <input type="hidden" name="csrf" value="<?php echo h($_SESSION['csrf_logout']); ?>">
-        <div class="Botones">
-          <button class="btn btn-success btn-sm btn-block" type="submit" name="Salir" value="1">Salir</button>
+      <section class="tool-section">
+        <header><strong>Acciones rápidas</strong></header>
+        <div class="tool-section-body tool-actions-body">
+          <form method="POST" action="<?php echo h($_SERVER['PHP_SELF']); ?>" class="mb-2">
+            <div class="action-buttons">
+              <button class="btn btn-outline-primary btn-sm w-100" name="ActDatos" type="submit">Actualizar mis datos</button>
+              <button class="btn btn-outline-warning btn-sm w-100" name="RepDat" type="submit">Reportar un problema</button>
+            </div>
+          </form>
+          <form method="POST" action="/login/logout.php">
+            <input type="hidden" name="Host" value="<?php echo h($_SERVER['PHP_SELF']); ?>">
+            <input type="hidden" name="Evento" value="LogOut">
+            <input type="hidden" name="checkdia" value="<?php echo h(date('Y-m-d')); ?>">
+            <input type="hidden" name="csrf" value="<?php echo h($_SESSION['csrf_logout']); ?>">
+            <button class="btn btn-success btn-sm w-100" type="submit" name="Salir" value="1">Cerrar sesión</button>
+          </form>
         </div>
-      </form>
+      </section>
+
     </div>
-
     <br><br><br>
   </div>
 </main>

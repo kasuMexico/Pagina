@@ -17,9 +17,12 @@ if (!function_exists('str_starts_with')) {
  */
 function autenticarVendedor(mysqli $mysqli): bool
 {
-    // Log de errores a archivo dentro de /login (hermano de /eia)
+    $logFile = defined('KASU_ERROR_LOG_FILE')
+        ? KASU_ERROR_LOG_FILE
+        : dirname(__DIR__) . '/error.log';
+
     ini_set('log_errors', '1');
-    ini_set('error_log', __DIR__ . '/../../login/debug_login.log');
+    ini_set('error_log', $logFile);
 
     // Entradas saneadas
     $userInput = trim((string)($_POST['Usuario'] ?? ''));

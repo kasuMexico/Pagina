@@ -41,7 +41,10 @@ $HoraActual = date('H:i:s');
 /* Qué hace: Autentica al usuario contra Empleados.Pass (sha256) y registra auditoría */
 if (!empty($_POST['Login'])) {
     ini_set('log_errors', '1');
-    ini_set('error_log', __DIR__ . '/../debug_login.log');
+    $logFile = defined('KASU_ERROR_LOG_FILE')
+        ? KASU_ERROR_LOG_FILE
+        : dirname(__DIR__, 2) . '/eia/error.log';
+    ini_set('error_log', $logFile);
     // CSRF (obligatorio si viene en el formulario)
     if (isset($_POST['csrf']) && !hash_equals($_SESSION['csrf_auth'] ?? '', (string)$_POST['csrf'])) {
         error_log('[KASU][Login] CSRF inválido');

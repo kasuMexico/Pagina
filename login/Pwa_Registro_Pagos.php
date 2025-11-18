@@ -251,14 +251,34 @@ if (isset($_GET['Msg'])) {
       <div class="form-group">
         <div class="table-responsive">
 
-          <h5 class="mt-4 mb-2">Vencidas y hoy (no pagadas)</h5>
-          <?php render_bucket($bucket_vencidas); ?>
+          <?php 
+          if(!empty($bucket_vencidas)){
+            echo '
+              <h5 class="mt-4 mb-2">Vencidas y hoy (no pagadas)</h5>
+            ';
+          }else{
+            echo '
+              <h2>No existen Pagos pendientes en esta semana</h2>
+            ';
+          }
+          render_bucket($bucket_vencidas); 
 
-          <h5 class="mt-4 mb-2">Semana <?= htmlspecialchars(semana_es($W1_I, $W1_F), ENT_QUOTES) ?></h5>
-          <?php render_bucket($bucket_sem1); ?>
+          if(!empty($bucket_sem1)){
+            echo '
+            <h5 class="mt-4 mb-2">Semana '.htmlspecialchars(semana_es($W1_I, $W1_F), ENT_QUOTES).'</h5>
+            ';
+          }
 
-          <h5 class="mt-4 mb-2">Semana <?= htmlspecialchars(semana_es($W2_I, $W2_F), ENT_QUOTES) ?></h5>
-          <?php render_bucket($bucket_sem2); ?>
+          render_bucket($bucket_sem1);
+
+          if(!empty($bucket_sem2)){
+            echo '
+            <h5 class="mt-4 mb-2">Semana '.htmlspecialchars(semana_es($W2_I, $W2_F), ENT_QUOTES).'</h5>
+            ';
+          }
+          render_bucket($bucket_sem2);
+
+          ?>
 
         </div>
       </div>

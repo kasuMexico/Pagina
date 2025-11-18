@@ -246,16 +246,16 @@ $VerCache = $VerCache ?? time();
 
               <label>Ingresa la dirección</label>
               <div class="mb-2">
-                <input class="form-control mb-2" type="number" name="Codigo_Postal" placeholder="Código Postal" inputmode="numeric" pattern="^\d{5}$">
+                <input class="form-control mb-2" type="number" name="codigo_postal" placeholder="Código Postal" inputmode="numeric" pattern="^\d{5}$">
                 <div class="row mb-2">
-                  <div class="col-6"><input class="form-control" type="text" name="Calle" placeholder="Nombre de la Calle"></div>
-                  <div class="col-6"><input class="form-control" type="number" name="Numero" placeholder="Número"></div>
+                  <div class="col-6"><input class="form-control" type="text" name="calle" placeholder="Nombre de la Calle"></div>
+                  <div class="col-6"><input class="form-control" type="number" name="numero" placeholder="Número"></div>
                 </div>
-                <input class="form-control mb-2" type="text" name="Colonia" placeholder="Colonia / Localidad">
+                <input class="form-control mb-2" type="text" name="colonia" placeholder="Colonia / Localidad">
                 <div class="row mb-2">
-                  <div class="col-6"><input class="form-control" type="text" name="Municipio" placeholder="Municipio"></div>
+                  <div class="col-6"><input class="form-control" type="text" name="municipio" placeholder="Municipio"></div>
                   <div class="col-6">
-                    <select class="form-control" name="Estado" id="estado" required>
+                    <select class="form-control" name="estado" id="estado" required>
                       <option value="">Selecciona un estado</option>
                       <option value="Aguascalientes">Aguascalientes</option>
                       <option value="Baja California">Baja California</option>
@@ -295,6 +295,9 @@ $VerCache = $VerCache ?? time();
               </div>
               <label class="mt-2">Cuenta Bancaria</label>
               <input class="form-control" type="number" name="Cuenta" required>
+
+              <label class="mt-2">Nómina Quincenal</label>
+              <input class="form-control" type="number" name="Nomina" required>
 
               <label class="mt-2">Sucursal</label>
               <select class="form-control" name="Sucursal" required>
@@ -532,20 +535,27 @@ $VerCache = $VerCache ?? time();
               <td class="mesa-actions" data-label="Acciones">
                 <div class="mesa-actions-grid">
                   <form method="POST" action="<?= h($_SERVER['PHP_SELF']) ?>">
-                    <!-- Botón de Pagar Comisiones -->
-                    <input type="hidden" name="nombre" value="<?= h($name) ?>">
-                    <input type="hidden" name="Saldo" value="<?= h((string)$NvoSal) ?>">
-                    <label for="P1<?= $btnId ?>" class="btn" title="Pagar comisiones" style="background:#58D68D;color:#F8F9F9;">
-                      <i class="material-icons">attach_money</i>
-                    </label>
                     <?php
-                    if ((int)$row['Nivel'] > 3){
+                    if ((int)$Nivel < 3){
                       echo '
-                      <!-- Botón de Reasignar superior -->
-                      <input id="P1'.$btnId.'" type="submit" name="IdEmpleado" value="1'.$btnId.'" hidden>
-                      <label for="R3'.$btnId.'" class="btn" title="Reasignar superior" style="background:#AF7AC5;color:#F8F9F9;">
-                        <i class="material-icons">people_alt</i>
-                      </label>
+                        <!-- Botón de Pagar Comisiones -->
+                        <input type="hidden" name="nombre" value="'.h($name).'">
+                        <input type="hidden" name="Saldo" value="'.h((string)$NvoSal).'">
+                        <label for="P1'.$btnId.'" class="btn" title="Pagar comisiones" style="background:#58D68D;color:#F8F9F9;">
+                          <i class="material-icons">attach_money</i>
+                        </label>
+
+                        <!-- Botón de Reasignar superior -->
+                        <input id="P1'.$btnId.'" type="submit" name="IdEmpleado" value="1'.$btnId.'" hidden>
+                        <label for="R3'.$btnId.'" class="btn" title="Reasignar superior" style="background:#AF7AC5;color:#F8F9F9;">
+                          <i class="material-icons">people_alt</i>
+                        </label>
+
+                        <!-- Botón de Cambiar de puesto -->
+                        <input id="B6'.$btnId.'" type="submit" name="IdEmpleado" value="6'.$btnId.'" hidden>
+                        <label for="N7'.$btnId.'" class="btn" title="Cambiar puesto" style="background:#C0392B;color:#F8F9F9;">
+                          <i class="material-icons">swap_vert</i>
+                        </label>
                       ';
                     }
                     ?>
@@ -558,11 +568,6 @@ $VerCache = $VerCache ?? time();
                     <input id="C5<?= $btnId ?>" type="submit" name="IdEmpleado" value="5<?= $btnId ?>" hidden>
                     <label for="B6<?= $btnId ?>" class="btn" title="Dar de baja" style="background:#E74C3C;color:#F8F9F9;">
                       <i class="material-icons">cancel</i>
-                    </label>
-                    <!-- Botón de Cambiar de puesto -->
-                    <input id="B6<?= $btnId ?>" type="submit" name="IdEmpleado" value="6<?= $btnId ?>" hidden>
-                    <label for="N7<?= $btnId ?>" class="btn" title="Cambiar puesto" style="background:#C0392B;color:#F8F9F9;">
-                      <i class="material-icons">swap_vert</i>
                     </label>
                     <input id="N7<?= $btnId ?>" type="submit" name="IdEmpleado" value="7<?= $btnId ?>" hidden>
                   </form>

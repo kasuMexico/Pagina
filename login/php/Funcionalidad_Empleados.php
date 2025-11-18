@@ -58,6 +58,41 @@ if (!function_exists('kasu_contact_address_field')) {
     }
 }
 
+if (!function_exists('kasu_generate_usuario')) {
+    /**
+     * Genera un IdUsuario único basado en el nombre.
+     */
+    function kasu_generate_usuario(mysqli $mysqli, string $base): string
+    {
+        $clean = strtoupper(preg_replace('/[^A-Z]/', '', $base));
+        if ($clean === '') {
+            $clean = 'USR';
+        }
+        $clean = substr($clean, 0, 10);
+        $randomSuffix = str_pad((string)random_int(1, 99), 2, '0', STR_PAD_LEFT);
+        $candidate = $clean . $randomSuffix;
+        $suffix = 1;
+        do {
+            $stmt = $mysqli->prepare("SELECT 1 FROM Empleados WHERE IdUsuario = ? LIMIT 1");
+            $stmt->bind_param('s', $candidate);
+            $stmt->execute();
+            $stmt->store_result();
+            $exists = $stmt->num_rows > 0;
+            $stmt->close();
+            if ($exists) {
+                $candidate = substr($clean, 0, max(1, 10 - strlen((string)$suffix))) . $suffix . $randomSuffix;
+                $suffix++;
+                if ($suffix > 999) {
+                    $randomSuffix = str_pad((string)random_int(1, 99), 2, '0', STR_PAD_LEFT);
+                    $candidate = substr($clean, 0, 10) . $randomSuffix;
+                    $suffix = 1;
+                }
+            }
+        } while ($exists);
+
+        return $candidate;
+    }
+}
 if (!function_exists('kasu_contact_columns')) {
     function kasu_contact_columns(mysqli $mysqli): array
     {
@@ -311,7 +346,7 @@ if (isset($_POST['BajaEmp'])) {
     exit;
 }
 
-/**************************** BLOQUE: CREAR EMPLEADO  Revisado 05/11/2025 JCCM *******************************************/
+/**************************** BLOQUE: CREAR EMPLEADO  Revisado 18/11/2025 JCCM *******************************************/
 /* Qué hace: Alta de empleado. Si proviene de Pwa_Prospectos, toma datos del prospecto y libera plaza */
 if (isset($_POST['CreaEmpl'])) {
     // CSRF opcional
@@ -342,7 +377,13 @@ if (isset($_POST['CreaEmpl'])) {
     $Sucursal    = $mysqli->real_escape_string((string)($_POST['Sucursal']   ?? ''));
     $Lider       = $mysqli->real_escape_string((string)($_POST['Lider']      ?? ''));
     $Cuenta      = $mysqli->real_escape_string((string)($_POST['Cuenta']     ?? ''));
+    $Nomina      = $mysqli->real_escape_string((string)($_POST['Nomina']     ?? ''));
     $IdProspecto = $mysqli->real_escape_string((string)($_POST['IdProspecto']?? ''));
+    $contra = null;
+
+    $NominaInt = (int)$Nomina;
+    $LiderInt  = ($Lider !== '') ? (int)$Lider : null;
+    $CuentaVal = $Cuenta !== '' ? $Cuenta : null;
 
     if ($Host === "/login/Pwa_Prospectos.php") {
         // Datos del prospecto
@@ -356,10 +397,7 @@ if (isset($_POST['CreaEmpl'])) {
         }
 
         // Usuario sugerido por nombre
-        $Sg1t  = substr($Reg['FullName'] ?? '', 0, 3);
-        $Sg2t  = substr($Reg['FullName'] ?? '', -3);
-        $Dil   = $Sg1t . $Sg2t;
-        $DirUrl = strtoupper($Dil);
+        $DirUrl = kasu_generate_usuario($mysqli, $Reg['FullName']);
         $dRc    = mt_rand();
 
         // Actualiza prospecto
@@ -402,39 +440,30 @@ if (isset($_POST['CreaEmpl'])) {
             $basicas->ActCampo($mysqli, "Usuario", "IdContact", $IdContacto, $IdUsuario);
         }
 
-        // Plaza disponible para nivel 7
-        $EspEMp = $basicas->Buscar2Campos($mysqli, "Id", "Empleados", "Sucursal", 0, "Nivel", 7);
-        if (!empty($EspEMp)) {
-            // Auditoría
-            $seguridad->auditoria_registrar(
-                $mysqli,
-                $basicas,
-                $_POST,
-                'Autorizacion_Distibuidor',
-                $_POST['Host'] ?? $_SERVER['PHP_SELF']
-            );
+        // Sucursal del autorizador
+        $SucursalAut = (int)$basicas->BuscarCampos($mysqli, "Sucursal", "Empleados", "IdUsuario", $_SESSION["Vendedor"] ?? '');
 
-            // Sucursal del autorizador
-            $SucursalAut = $basicas->BuscarCampos($mysqli, "Sucursal", "Empleados", "IdUsuario", $_SESSION["Vendedor"] ?? '');
-
-            // Alta en plaza
-            $basicas->ActCampo($mysqli, "Empleados", "Nombre",     $Reg['FullName'] ?? '', $EspEMp);
-            $basicas->ActCampo($mysqli, "Empleados", "IdUsuario",  $DirUrl,               $EspEMp);
-            $basicas->ActCampo($mysqli, "Empleados", "IdContacto", $IdContacto,           $EspEMp);
-            $basicas->ActCampo($mysqli, "Empleados", "FechaAlta",  $hoy,                  $EspEMp);
-            $basicas->ActCampo($mysqli, "Empleados", "Sucursal",   $SucursalAut,          $EspEMp);
-            $basicas->ActCampo($mysqli, "Empleados", "Telefono",   $Telefono,             $EspEMp);
-        }
+        $empleadoData = array_filter([
+            "Nombre"    => $Reg['FullName'] ?? '',
+            "IdUsuario" => $DirUrl,
+            "IdContacto"=> $IdContacto,
+            "Pass"      => $dRc,
+            "Nivel"     => 7,
+            "Equipo"    => $LiderInt,
+            "Sucursal"  => $SucursalAut ?: null,
+            "FechaAlta" => $hoy,
+            "Cuenta"    => $CuentaVal,
+            "Nomina"    => $NominaInt,
+        ], static fn($v) => $v !== null && $v !== '');
+        $nuevoId = $basicas->InsertCampo($mysqli, "Empleados", $empleadoData);
+        $contra  = '&Add=' . $IdContacto;
 
         $alert = "El distribuidor se registró correctamente. Asigna sucursal y coordinador con mesa de control. Luego podrá ingresar al sistema.";
         header('Location: https://kasu.com.mx' . $Host . '?&name=' . $name . '&Msg=' . $alert);
         exit;
     } else {
         // Usuario sugerido
-        $Sg1t   = substr($Nombre, 0, 3);
-        $Sg2t   = substr($Nombre, -3);
-        $Dil    = $Sg1t . $Sg2t;
-        $DirUrl = strtoupper($Dil);
+        $DirUrl = kasu_generate_usuario($mysqli, $Nombre);
         $dRc    = mt_rand();
 
         // Contacto para empleado directo
@@ -455,29 +484,27 @@ if (isset($_POST['CreaEmpl'])) {
         ]);
         $uSR = $basicas->InsertCampo($mysqli, "Contacto", $DatContac);
 
-        // Plaza disponible por nivel
-        $RegIdPlaza = $basicas->Buscar2Campos($mysqli, "Id", "Empleados", "Sucursal", 0, "Nivel", $Nivel);
-        if (!empty($RegIdPlaza)) {
-            $basicas->ActCampo($mysqli, "Empleados", "Nombre",     $Nombre,  $RegIdPlaza);
-            $basicas->ActCampo($mysqli, "Empleados", "IdContacto", $uSR,     $RegIdPlaza);
-            $basicas->ActCampo($mysqli, "Empleados", "IdUsuario",  $DirUrl,  $RegIdPlaza);
-            $basicas->ActCampo($mysqli, "Empleados", "Pass",       $dRc,     $RegIdPlaza);
-            $basicas->ActCampo($mysqli, "Empleados", "Equipo",     $Lider,   $RegIdPlaza);
-            $basicas->ActCampo($mysqli, "Empleados", "Sucursal",   $Sucursal,$RegIdPlaza);
-            $basicas->ActCampo($mysqli, "Empleados", "FechaAlta",  $hoy,     $RegIdPlaza);
-            $basicas->ActCampo($mysqli, "Empleados", "Cuenta",     $Cuenta,  $RegIdPlaza);
-        }
+        $empleadoData = array_filter([
+            "Nombre"    => $Nombre,
+            "IdUsuario" => $DirUrl,
+            "IdContacto"=> $uSR,
+            "Pass"      => $dRc,
+            "Nivel"     => (int)$Nivel,
+            "Equipo"    => $LiderInt,
+            "Sucursal"  => $Sucursal !== '' ? (int)$Sucursal : null,
+            "FechaAlta" => $hoy,
+            "Cuenta"    => $CuentaVal,
+            "Nomina"    => $NominaInt
+        ], static fn($v) => $v !== null && $v !== '');
+        $basicas->InsertCampo($mysqli, "Empleados", $empleadoData);
 
-        if ((string)$Nivel === '7') {
+        if ((int)$Nivel === 7 && !empty($IdProspecto)) {
+            $basicas->ActCampo($pros, "prospectos", "Cancelacion", 1, $IdProspecto);
             $contra = '&Add=' . $uSR;
-            if (!empty($IdProspecto)) {
-                $basicas->ActCampo($pros, "prospectos", "Cancelacion", 1, $IdProspecto);
-            }
         }
 
-        // Si necesitas redirigir, descomenta:
-         header('Location: https://kasu.com.mx' . $Host . '?Ml=1&name=' . $name . ($contra ?? ''));
-         exit;
+        header('Location: https://kasu.com.mx' . $Host . '?Ml=1&name=' . $name . ($contra ?? ''));
+        exit;
     }
 }
 

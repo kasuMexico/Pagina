@@ -10,8 +10,9 @@
  * Revisado por: JCCM
  ********************************************************************************************/
 
-session_start();
-require_once '../eia/librerias.php';
+require_once dirname(__DIR__) . '/eia/session.php';
+kasu_session_start();
+require_once __DIR__ . '/../eia/librerias.php';
 date_default_timezone_set('America/Mexico_City');
 
 /* ===== Bloque utilidades (escape HTML) — 05/11/2025, JCCM ===== */

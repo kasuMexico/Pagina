@@ -14,8 +14,9 @@
 
 declare(strict_types=1);
 
-session_start();
-require_once '../eia/librerias.php'; // Debe inicializar $mysqli, $basicas, $seguridad
+require_once dirname(__DIR__) . '/eia/session.php';
+kasu_session_start();
+require_once __DIR__ . '/../eia/librerias.php'; // Debe inicializar $mysqli, $basicas, $seguridad
 date_default_timezone_set('America/Mexico_City');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 header_remove('X-Powered-By');

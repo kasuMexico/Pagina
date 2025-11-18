@@ -11,8 +11,9 @@
 declare(strict_types=1);
 
 // =================== Sesión y dependencias ===================
-session_start();
-require_once '../eia/librerias.php';
+require_once dirname(__DIR__) . '/eia/session.php';
+kasu_session_start();
+require_once __DIR__ . '/../eia/librerias.php';
 require_once __DIR__ . '/php/mesa_helpers.php';
 date_default_timezone_set('America/Mexico_City');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);

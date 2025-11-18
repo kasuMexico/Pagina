@@ -24,7 +24,8 @@ ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
 
-session_start();
+require_once dirname(__DIR__, 2) . '/eia/session.php';
+kasu_session_start();
 
 /* ==========================================================================================
  * BLOQUE: Dependencias y configuración
@@ -36,6 +37,63 @@ date_default_timezone_set('America/Mexico_City');
 
 $hoy        = date('Y-m-d');
 $HoraActual = date('H:i:s');
+
+if (!function_exists('kasu_contact_address_field')) {
+    function kasu_contact_address_field(mysqli $mysqli): string
+    {
+        static $cached = null;
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $field = 'Direccion';
+
+        if ($result = $mysqli->query("SHOW COLUMNS FROM Contacto LIKE 'Direccion'")) {
+            if ($result->num_rows === 0) {
+                if ($result2 = $mysqli->query("SHOW COLUMNS FROM Contacto LIKE 'calle'")) {
+                    $field = $result2->num_rows > 0 ? 'calle' : 'Direccion';
+                    $result2->close();
+                } else {
+                    $field = 'calle';
+                }
+            }
+            $result->close();
+        } else {
+            $field = 'Direccion';
+        }
+
+        return $cached = $field;
+    }
+}
+
+if (!function_exists('kasu_contact_columns')) {
+    function kasu_contact_columns(mysqli $mysqli): array
+    {
+        static $cache = null;
+        if ($cache !== null) {
+            return $cache;
+        }
+        $cols = [];
+        if ($result = $mysqli->query("SHOW COLUMNS FROM Contacto")) {
+            while ($row = $result->fetch_assoc()) {
+                $cols[$row['Field']] = true;
+            }
+            $result->close();
+        }
+        return $cache = $cols;
+    }
+}
+
+if (!function_exists('kasu_filter_contact_data')) {
+    function kasu_filter_contact_data(mysqli $mysqli, array $data): array
+    {
+        $cols = kasu_contact_columns($mysqli);
+        if (!$cols) {
+            return $data;
+        }
+        return array_intersect_key($data, $cols);
+    }
+}
 
 /**************************************** BLOQUE: LOGIN Revisado 05/11/2025 JCCM ****************************************/
 /* Qué hace: Autentica al usuario contra Empleados.Pass (sha256) y registra auditoría */
@@ -273,8 +331,19 @@ if (isset($_POST['CreaEmpl'])) {
     $Nombre      = $mysqli->real_escape_string((string)($_POST['Nombre']     ?? ''));
     $Email       = $mysqli->real_escape_string((string)($_POST['Email']      ?? ''));
     $Telefono    = $mysqli->real_escape_string((string)($_POST['Telefono']   ?? ''));
-    $Direccion   = $mysqli->real_escape_string((string)($_POST['Direccion']  ?? ''));
-    $calle       = $mysqli->real_escape_string((string)($_POST['calle']      ?? '')); // Prospectos
+    $calle       = $mysqli->real_escape_string((string)($_POST['calle']      ?? ''));
+    $numero      = $mysqli->real_escape_string((string)($_POST['numero']     ?? ''));
+    $colonia     = $mysqli->real_escape_string((string)($_POST['colonia']    ?? ''));
+    $municipio   = $mysqli->real_escape_string((string)($_POST['municipio']  ?? ''));
+    $codigoPostal = $mysqli->real_escape_string((string)($_POST['codigo_postal'] ?? ''));
+    $estado      = $mysqli->real_escape_string((string)($_POST['estado']     ?? ''));
+    $Direccion   = trim(implode(', ', array_filter([
+        trim($calle . ($numero !== '' ? ' #' . $numero : '')),
+        $colonia,
+        $municipio,
+        $codigoPostal !== '' ? 'CP ' . $codigoPostal : '',
+        $estado
+    ])));
     $Host        = $mysqli->real_escape_string((string)($_POST['Host']       ?? ''));
     $name        = $mysqli->real_escape_string((string)($_POST['name']       ?? ''));
     $Nivel       = $mysqli->real_escape_string((string)($_POST['Nivel']      ?? ''));
@@ -304,18 +373,24 @@ if (isset($_POST['CreaEmpl'])) {
         // Actualiza prospecto
         $basicas->ActCampo($pros, "prospectos", "NoTel",      $Telefono,    $IdProspecto);
         $basicas->ActCampo($pros, "prospectos", "Email",      $Email,       $IdProspecto);
-        $basicas->ActCampo($pros, "prospectos", "Direccion",  $calle,       $IdProspecto);
+        $basicas->ActCampo($pros, "prospectos", "Direccion",  ($Direccion !== '' ? $Direccion : $calle), $IdProspecto);
         $basicas->ActCampo($pros, "prospectos", "Cancelacion", 1,           $IdProspecto);
 
         // Contacto
-        $ArrayContacto = [
+        $ArrayContacto = kasu_filter_contact_data($mysqli, [
             "Usuario"  => $_SESSION["Vendedor"] ?? '',
             "Host"     => $Host,
             "Mail"     => $Email,
             "Telefono" => $Telefono,
-            "calle"    => $calle,
+            "Direccion"=> $Direccion,
+            "calle"    => $calle !== '' ? $calle : ($Reg['Direccion'] ?? ''),
+            "numero"   => $numero,
+            "colonia"  => $colonia,
+            "municipio"=> $municipio,
+            "codigo_postal" => $codigoPostal,
+            "estado"   => $estado,
             "Producto" => "Distribuidor"
-        ];
+        ]);
         $IdContacto = $basicas->InsertCampo($mysqli, "Contacto", $ArrayContacto);
 
         // Usuario
@@ -371,14 +446,21 @@ if (isset($_POST['CreaEmpl'])) {
         $dRc    = mt_rand();
 
         // Contacto para empleado directo
-        $DatContac = [
+        $contactAddressColumn = kasu_contact_address_field($mysqli);
+        $DatContac = kasu_filter_contact_data($mysqli, [
             "Usuario"   => $_SESSION["Vendedor"] ?? '',
             "Host"      => $Host,
             "Mail"      => $Email,
             "Telefono"  => $Telefono,
             "Direccion" => $Direccion,
+            "calle"     => $calle,
+            "numero"    => $numero,
+            "colonia"   => $colonia,
+            "municipio" => $municipio,
+            "codigo_postal" => $codigoPostal,
+            "estado"    => $estado,
             "Producto"  => "Empleado"
-        ];
+        ]);
         $uSR = $basicas->InsertCampo($mysqli, "Contacto", $DatContac);
 
         // Plaza disponible por nivel
@@ -402,8 +484,8 @@ if (isset($_POST['CreaEmpl'])) {
         }
 
         // Si necesitas redirigir, descomenta:
-        // header('Location: https://kasu.com.mx' . $Host . '?Ml=1&name=' . $name . ($contra ?? ''));
-        // exit;
+         header('Location: https://kasu.com.mx' . $Host . '?Ml=1&name=' . $name . ($contra ?? ''));
+         exit;
     }
 }
 
@@ -542,8 +624,9 @@ if (isset($_POST['CamDat'])) {
     $recs = mysqli_query($mysqli, $sql);
 
     $val  = 0;
+    $contactAddressColumn = kasu_contact_address_field($mysqli);
     if ($recs && ($Recg = mysqli_fetch_assoc($recs))) {
-        if (($Recg['Direccion'] ?? '') !== $Direccion) { $val++; }
+        if (($Recg[$contactAddressColumn] ?? '') !== $Direccion) { $val++; }
         if (($Recg['Telefono']  ?? '') !== $Telefono)  { $val++; }
         if (($Recg['Mail']      ?? '') !== $Mail)      { $val++; }
     }
@@ -557,7 +640,7 @@ if (isset($_POST['CamDat'])) {
             "Host"      => $mysqli->real_escape_string((string)($_POST['Host'] ?? '')),
             "Mail"      => $Mail,
             "Telefono"  => $Telefono,
-            "Direccion" => $Direccion,
+            $contactAddressColumn => $Direccion,
             "Producto"  => $SDTM
         ];
         $NvoCnc = $basicas->InsertCampo($mysqli, "Contacto", $Pripg);

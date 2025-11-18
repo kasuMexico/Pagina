@@ -13,7 +13,8 @@ declare(strict_types=1);
  * Qué hace: Inicia sesión, carga librerías y módulo de análisis de metas. Fija TZ MX.
  * Fecha: 05/11/2025 — Revisado por: JCCM
  * ========================================================================================== */
-session_start();
+require_once dirname(__DIR__) . '/eia/session.php';
+kasu_session_start();
 require_once __DIR__ . '/../eia/librerias.php';
 require_once __DIR__ . '/php/Analisis_Metas.php';
 date_default_timezone_set('America/Mexico_City');

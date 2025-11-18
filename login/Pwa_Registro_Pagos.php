@@ -9,7 +9,8 @@
 declare(strict_types=1);
 
 /* ==== Sesión y librerías ==== */
-session_start();
+require_once dirname(__DIR__) . '/eia/session.php';
+kasu_session_start();
 date_default_timezone_set('America/Mexico_City');
 setlocale(LC_ALL,'es_ES.UTF-8');
 require_once __DIR__ . '/../eia/librerias.php';

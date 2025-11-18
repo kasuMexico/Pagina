@@ -108,4 +108,4 @@ $financieras = new Financieras();
 $Correo      = new Correo();
 
 //Temporal para actualizar cache de PWA
-$VerCache = 61;
+$VerCache = 67;

@@ -17,8 +17,9 @@
  **************************************************************************************************/
 
 /* ========= 1) Sesión y dependencias ========= */
-session_start();
-require_once '../../eia/librerias.php';
+require_once dirname(__DIR__, 3) . '/eia/session.php';
+kasu_session_start();
+require_once __DIR__ . '/../../eia/librerias.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 header('Content-Type: application/json; charset=utf-8');

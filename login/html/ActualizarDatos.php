@@ -69,6 +69,25 @@ if ($selfPathRaw === '/login/Pwa_Prospectos.php') {
     'vlBtn'       => 'ActDatosPROS',
     'dirhttps'    => 'php/Funcionalidad_Pwa.php'
   ];
+} elseif ($selfPathRaw === '/login/Mesa_Herramientas.php') {
+  $ctx = [
+    'encabezado'  => 'Actualizar mis datos',
+    'TipServicio' => 'Colaborador',
+    'IdProspecto' => '',
+    'IdVenta'     => '',
+    'IdContact'   => (int)($Recg['id'] ?? 0),
+    'IdUsuario'   => (int)($Recg1['id'] ?? 0),
+    'Producto'    => 'Empleado',
+    'nombre'      => $nombre ?? '',
+    'nombreClie'  => $Reg['Nombre'] ?? '',
+    'ServCont'    => $Reg['Sucursal'] ?? '',
+    'direccion'   => $Recg['calle'] ?? '',
+    'telefono'    => $Recg['Telefono'] ?? '',
+    'email'       => $Recg['Mail'] ?? '',
+    'btn'         => 'Actualizar mis datos',
+    'vlBtn'       => 'CamDat',
+    'dirhttps'    => 'php/Funcionalidad_Empleados.php'
+  ];
 } else {
   // Cliente → Actualizar datos de cliente
   $ctx = [

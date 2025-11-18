@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once dirname(__DIR__, 2) . '/eia/session.php';
+
 /**
  * Autentica al vendedor contra Empleados.
  * Soporta password_hash(...) moderno, SHA-256 heredado y base64 heredado.
@@ -48,10 +50,7 @@ function autenticarVendedor(mysqli $mysqli): bool
         return false;
     }
 
-    // Sesión
-    if (session_status() !== PHP_SESSION_ACTIVE) {
-        session_start();
-    }
+    kasu_session_start();
     session_regenerate_id(true); // antifijación
     $_SESSION['Vendedor'] = $user;
 

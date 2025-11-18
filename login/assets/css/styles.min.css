@@ -151,7 +151,7 @@ tbody{border-color:#808B96;}
 #resultado.ok{background:green;}
 .mesa-table-wrapper{margin-bottom:30px;}
 .mesa-table td{vertical-align:middle;}
-.mesa-actions-grid{display:flex;flex-wrap:wrap;gap:.4rem;}
+.mesa-actions-grid{display:flex;flex-wrap:wrap;gap:1rem;padding:3px 0;}
 .mesa-actions-grid form{
   margin:0;
   display:inline-flex;
@@ -174,6 +174,7 @@ tbody{border-color:#808B96;}
 .status-info{background:#e3f2fd;color:#0d47a1;}
 .status-default{background:#eceff1;color:#37474f;}
 .mesa-actions .btn{display:inline-flex;align-items:center;justify-content:center;}
+.mesa-actions-grid .btn{margin:0 .35rem .35rem 0;}
 .mesa-cards{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
@@ -188,6 +189,57 @@ tbody{border-color:#808B96;}
   flex-direction:column;
   gap:12px;
 }
+.tool-sections{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:1rem;}
+.tool-section{
+  border-left:4px solid #c5cae9;
+  padding:14px 16px;
+  background:#fdfdfd;
+  min-height:150px;
+  box-shadow:0 8px 20px rgba(0,0,0,.04);
+}
+.tool-section header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:.95rem;
+  margin-bottom:8px;
+}
+.tool-section-body{font-size:.9rem;}
+.tool-section-body .gap-2{gap:8px;}
+.tool-section-body .btn{margin-bottom:6px;}
+.integrated-search{
+  display:flex;
+  border:1px solid #dcdfe3;
+  border-radius:10px;
+  overflow:hidden;
+  background:#fff;
+}
+.integrated-search input,
+.integrated-search select{
+  flex:1;
+  border:none;
+  padding:8px 10px;
+  font-size:.9rem;
+}
+.integrated-search button{
+  border:none;
+  background:#e9edf2;
+  padding:8px 16px;
+  font-weight:600;
+  font-size:.9rem;
+}
+.integrated-search input:focus,
+.integrated-search select:focus{
+  outline:none;
+  box-shadow:none;
+}
+.file-input{position:relative;border:1px solid #dcdfe3;border-radius:8px;overflow:hidden;background:#fff;width:100%;}
+.file-input input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;}
+.file-input label{display:flex;justify-content:space-between;align-items:center;margin:0;padding:8px 12px;font-size:.9rem;width:100%;}
+.file-input label span{color:#6b7785;}
+.file-input label em{font-style:normal;background:#e9edf2;border-radius:6px;padding:4px 12px;font-weight:600;color:#4a5568;}
+.tool-actions-body .action-buttons{display:flex;flex-direction:column;gap:8px;}
+.tool-section-body a.btn{width:100%;}
 .mesa-card-header{
   display:flex;
   justify-content:space-between;

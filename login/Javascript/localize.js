@@ -1,6 +1,6 @@
 "use strict";
 
-const GPS_SELECTOR = "#Gps";
+const GPS_SELECTOR = "[data-gps-slot], #Gps";
 const GEO_OPTIONS = {
     enableHighAccuracy: true,
     timeout: 10000,
@@ -8,9 +8,9 @@ const GEO_OPTIONS = {
 };
 
 /**
- * Verifica si existe al menos un contenedor #Gps en la página y, en caso afirmativo,
- * solicita la geolocalización para inyectar los datos. Evita pedir permisos si la
- * vista no utiliza geolocalización.
+ * Verifica si existe al menos un contenedor GPS (data-gps-slot o #Gps) en la página y,
+ * en caso afirmativo, solicita la geolocalización para inyectar los datos. Evita pedir
+ * permisos si la vista no utiliza geolocalización.
  */
 function localize() {
     if (!document.querySelector(GPS_SELECTOR)) {
@@ -26,7 +26,7 @@ function localize() {
 }
 
 /**
- * Actualiza todos los contenedores #Gps visibles con los datos obtenidos.
+ * Actualiza todos los contenedores GPS visibles con los datos obtenidos.
  * @param {GeolocationPosition} position
  */
 function handlePosition(position) {

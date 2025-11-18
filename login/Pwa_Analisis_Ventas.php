@@ -532,7 +532,7 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
   </script>
 </head>
 
-<body>
+<body onload="localize()">
   <!-- TOP BAR -->
   <div class="topbar"><h4 class="title">Análisis de Ventas</h4></div>
 

@@ -81,7 +81,7 @@ if (!$venta) {
       <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
       <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" crossorigin="anonymous">
     </head>
-    <body class="p-3">
+    <body class="p-3" onload="localize()">
       <div class="alert alert-warning">No se encontró la venta solicitada.</div>
       <a class="btn btn-secondary" href="Mesa_Clientes.php">Regresar</a>
     </body>

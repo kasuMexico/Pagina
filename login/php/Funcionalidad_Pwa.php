@@ -15,11 +15,6 @@
 
 declare(strict_types=1);
 
-// =================== Diagnóstico (ajústalo en prod) ===================
-ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
-
 // =================== Sesión y dependencias ===================
 require_once dirname(__DIR__, 2) . '/eia/session.php';
 kasu_session_start();
@@ -30,6 +25,7 @@ if (!isset($_SESSION["Vendedor"])) {
 }
 
 require_once '../../eia/librerias.php';
+kasu_apply_error_settings(); // 2025-11-18: Centraliza errores en /eia/error.log accesible vía HTTPS
 
 date_default_timezone_set('America/Mexico_City');
 $hoy        = date('Y-m-d');

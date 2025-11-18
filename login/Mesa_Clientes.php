@@ -30,6 +30,87 @@ if (!function_exists('h')) {
   function h($v){ return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 }
 
+if (!function_exists('kasu_load_empleados_tree')) {
+  function kasu_load_empleados_tree(mysqli $mysqli): array {
+    $byId = [];
+    $children = [];
+    if ($res = $mysqli->query("SELECT Id, IdUsuario, Equipo, Nivel FROM Empleados")) {
+      while ($row = $res->fetch_assoc()) {
+        $id = (int)$row['Id'];
+        $byId[$id] = [
+          'IdUsuario' => (string)($row['IdUsuario'] ?? ''),
+          'Equipo'    => (int)($row['Equipo'] ?? 0),
+          'Nivel'     => (int)($row['Nivel'] ?? 0),
+        ];
+        $parent = (int)($row['Equipo'] ?? 0);
+        if (!isset($children[$parent])) {
+          $children[$parent] = [];
+        }
+        $children[$parent][] = $id;
+      }
+      $res->close();
+    }
+    return [$byId, $children];
+  }
+
+  function kasu_collect_descendants(int $rootId, array $byId, array $children): array {
+    $scope = [];
+    if ($rootId <= 0) {
+      return [];
+    }
+    $stack = [$rootId];
+    while ($stack) {
+      $current = array_pop($stack);
+      if (!isset($byId[$current])) {
+        continue;
+      }
+      $usr = strtoupper(trim((string)$byId[$current]['IdUsuario']));
+      if ($usr !== '') {
+        $scope[$usr] = true;
+      }
+      foreach ($children[$current] ?? [] as $childId) {
+        $stack[] = $childId;
+      }
+    }
+    return array_keys($scope);
+  }
+
+  function kasu_find_ancestor_level(int $startId, array $byId, int $targetLevel): ?int {
+    $current = $startId;
+    while ($current > 0 && isset($byId[$current])) {
+      if ((int)($byId[$current]['Nivel'] ?? 0) === $targetLevel) {
+        return $current;
+      }
+      $parent = (int)($byId[$current]['Equipo'] ?? 0);
+      if ($parent === 0 || $parent === $current) {
+        break;
+      }
+      $current = $parent;
+    }
+    return null;
+  }
+
+  function kasu_scope_user_ids(int $nivel, int $empleadoId, array $byId, array $children): ?array {
+    if ($nivel <= 0 || $empleadoId <= 0) {
+      return null;
+    }
+    if ($nivel <= 2) {
+      return null;
+    }
+
+    $rootId = $empleadoId;
+    if ($nivel === 5) {
+      $gerente = kasu_find_ancestor_level($empleadoId, $byId, 3);
+      if ($gerente !== null) {
+        $rootId = $gerente;
+      }
+    }
+
+    $ids = kasu_collect_descendants($rootId, $byId, $children);
+    return $ids ?: null;
+  }
+}
+
 // =================== Variables base ===================
 $Reg              = [];
 $Recg             = [];
@@ -56,6 +137,19 @@ $statusFiltro = isset($_POST['Status'])
 $nombre = $nombreFiltro;
 
 $Vende = $basicas->BuscarCampos($mysqli, "Nivel", "Empleados", "IdUsuario", $_SESSION["Vendedor"]);
+$IdEmpleadoSesion = (int)$basicas->BuscarCampos($mysqli, "Id", "Empleados", "IdUsuario", $_SESSION["Vendedor"]);
+[$kasuEmpleadosMap, $kasuEmpleadosChildren] = kasu_load_empleados_tree($mysqli);
+$kasuScopeUsers = kasu_scope_user_ids((int)$Vende, $IdEmpleadoSesion, $kasuEmpleadosMap, $kasuEmpleadosChildren);
+$kasuScopeSet = null;
+if (is_array($kasuScopeUsers)) {
+  $kasuScopeSet = [];
+  foreach ($kasuScopeUsers as $usr) {
+    $usrUp = strtoupper(trim((string)$usr));
+    if ($usrUp !== '') {
+      $kasuScopeSet[$usrUp] = true;
+    }
+  }
+}
 
 // =================== Router por POST IdCliente ===================
 if (!empty($_POST['IdCliente'])) {
@@ -566,6 +660,10 @@ $VerCache = time();
         }
 
         foreach ($buscar as $row):
+          $usuarioFila = strtoupper(trim((string)($row['Usuario'] ?? '')));
+          if ($kasuScopeSet !== null && !isset($kasuScopeSet[$usuarioFila])) {
+            continue;
+          }
           // ===== Derivar estado visual ATRASADO según financiera =====
           $estadoLinea = [];
           try {

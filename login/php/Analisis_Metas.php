@@ -26,6 +26,9 @@
 // session_start();
 // require_once '../../eia/librerias.php';
 // date_default_timezone_set('America/Mexico_City');
+if (function_exists('kasu_apply_error_settings')) {
+    kasu_apply_error_settings(); // 2025-11-18: errores hacia /eia/error.log
+}
 
 // Guardia mínima si alguien incluye este archivo sin $mysqli o sin $_SESSION:
 if (!isset($mysqli) || !($mysqli instanceof mysqli)) {

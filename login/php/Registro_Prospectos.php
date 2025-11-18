@@ -10,6 +10,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__, 2) . '/eia/session.php';
 kasu_session_start();
 require_once __DIR__ . '/../../eia/librerias.php';
+kasu_apply_error_settings(); // 2025-11-18: Log centralizado para Registro de Prospectos
 date_default_timezone_set('America/Mexico_City');
 
 // Conexiones esperadas: $mysqli (principal), $pros (prospectos), helpers $basicas, $seguridad

@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 
+if (function_exists('kasu_apply_error_settings')) {
+    kasu_apply_error_settings(); // 2025-11-18: helpers reportan errores a /eia/error.log
+}
+
 if (!function_exists('mesa_status_chip')) {
     function mesa_status_chip(string $status): string
     {

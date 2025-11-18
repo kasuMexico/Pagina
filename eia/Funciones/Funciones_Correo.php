@@ -25,27 +25,38 @@ class Correo {
     private function mailHeader() {
         return <<<HTML
 <!DOCTYPE html>
-<html lang="ES">
+<html lang="es">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>KASU</title>
-  <style type="text/css">
+  <style>
+    body { margin:0; padding:0; background:#f2f4f6; }
+    table { border-collapse:collapse; }
+    .wrapper { width:100%; background:#f2f4f6; padding:30px 0; }
+    .container { width:600px; background:#ffffff; border-radius:20px; overflow:hidden; box-shadow:0 25px 65px rgba(15,23,42,.18); }
+    .hero { background:#1a2d4f; color:#fff; text-align:center; padding:30px 20px; background-image:linear-gradient(120deg,#0d1b3f,#1e4174); }
+    .hero img { max-width:160px; margin-bottom:15px; }
+    .hero h1 { font-family:'Segoe UI',sans-serif; font-size:22px; margin:0; letter-spacing:.5px; }
+    .hero p { font-family:'Segoe UI',sans-serif; margin:10px 0 0; font-size:15px; opacity:.85; }
     @media only screen and (max-width:600px){
-      ul li, ol li, p { font-size:18px !important; line-height:150% !important; text-align:justify !important; }
-      h1 { font-size:20px !important; text-align:justify; line-height:120% !important; }
-      *[class="gmail-fix"] { display:none !important; }
-      a.es-button { font-size:35px !important; color:whitesmoke !important; display:block !important; text-decoration:none; text-align:center !important; }
-      table.es-table-not-adapt, .esd-block-html table { width:auto !important; }
+      .container{width:90% !important;}
+      .hero{padding:25px 15px;}
+      .hero h1{font-size:19px;}
+      .hero p{font-size:14px;}
     }
-    #outlook a { padding:0; }
-    a[x-apple-data-detectors] { color:inherit !important; text-decoration:none !important; font-size:inherit !important; font-family:inherit !important; font-weight:inherit !important; line-height:inherit !important; }
   </style>
 </head>
-<body style="margin:0; padding:0;">
-  <table align="center" width="600" style="border:1px solid #cccccc; background-image:url(https://kasu.com.mx/assets/images/Correo/fondo.jpg); background-position:center top;">
-    <tr>
-      <td>
+<body>
+  <table class="wrapper" align="center">
+    <tr><td align="center">
+      <table class="container" align="center">
+        <tr>
+          <td class="hero">
+            <h1>KASU | Protege lo importante</h1>
+            <p>Respaldamos cada paso con soluciones financieras confiables</p>
+          </td>
+        </tr>
 HTML;
     }
 
@@ -56,47 +67,34 @@ HTML;
         $Id = (string)$Id;
         return <<<HTML
         <tr>
-          <td style="padding:15px 30px;">
-            <table align="center" width="100%">
+          <td style="padding:25px;">
+            <table width="100%" style="border-top:1px solid #e4e9f2;">
               <tr>
-                <td align="center">
-                  <table border="0" cellpadding="0" cellspacing="0">
-                    <tr>
-                      <td>
-                        <a href="https://www.facebook.com/KasuMexico">
-                          <img src="https://xpnux.stripocdn.email/content/assets/img/social-icons/circle-colored/facebook-circle-colored.png" alt="Fb" width="32" height="32" style="display:block; border:0;" />
-                        </a>
-                      </td>
-                      <td style="width:20px;">&nbsp;</td>
-                      <td>
-                        <a href="https://twitter.com/KASSU_11">
-                          <img src="https://xpnux.stripocdn.email/content/assets/img/social-icons/circle-colored/twitter-circle-colored.png" alt="Tw" width="32" height="32" style="display:block; border:0;" />
-                        </a>
-                      </td>
-                      <td style="width:20px;">&nbsp;</td>
-                      <td>
-                        <a href="https://www.instagram.com/kasumexico">
-                          <img src="https://xpnux.stripocdn.email/content/assets/img/social-icons/circle-colored/instagram-circle-colored.png" alt="Ig" width="32" height="32" style="display:block; border:0;" />
-                        </a>
-                      </td>
-                    </tr>
-                  </table>
+                <td align="center" style="padding:10px 0 15px;">
+                  <a href="https://www.facebook.com/KasuMexico" style="margin:0 8px;">
+                    <img src="https://xpnux.stripocdn.email/content/assets/img/social-icons/circle-colored/facebook-circle-colored.png" alt="Facebook" width="32" height="32" style="border:0;">
+                  </a>
+                  <a href="https://twitter.com/KASSU_11" style="margin:0 8px;">
+                    <img src="https://xpnux.stripocdn.email/content/assets/img/social-icons/circle-colored/twitter-circle-colored.png" alt="Twitter" width="32" height="32" style="border:0;">
+                  </a>
+                  <a href="https://www.instagram.com/kasumexico" style="margin:0 8px;">
+                    <img src="https://xpnux.stripocdn.email/content/assets/img/social-icons/circle-colored/instagram-circle-colored.png" alt="Instagram" width="32" height="32" style="border:0;">
+                  </a>
                 </td>
               </tr>
               <tr>
-                <td align="center" style="font-family:Arial, sans-serif; font-size:14px; padding:0 10px;">
-                  <p style="text-align:center; color:aliceblue;">
-                    <font>© 2021 | Kasu Servicios a futuro<br>KASU desarrolla productos financieros para solventar momentos importantes en tu vida y la de los tuyos.</font>
-                    <a href="https://kasu.com.mx/index.php?Ml=4&Id={$Id}" style="color:#153643;"><font>Ya no quiero recibir este correo</font></a>
-                  </p>
+                <td align="center" style="font-family:'Segoe UI',sans-serif; font-size:13px; color:#6b7785;">
+                  © 2021 Kasu Servicios a Futuro · Creamos soluciones financieras para tus momentos clave.<br>
+                  <a href="https://kasu.com.mx/index.php?Ml=4&Id={$Id}" style="color:#1e4fa3;">Cancelar suscripción</a>
                 </td>
               </tr>
             </table>
           </td>
         </tr>
-      </td>
-    </tr>
-  </table>
+      </table>
+    </td>
+  </tr>
+</table>
 </body>
 </html>
 HTML;
@@ -191,31 +189,18 @@ HTML;
             case 'PAGO REALIZADO':
                 return <<<HTML
       <tr>
-        <td align="center" style="padding:2px; font-size:25px; color:#153643; font-family:Arial, sans-serif;">
-          <a href="https://kasu.com.mx" style="text-decoration:none; color:whitesmoke;">
-            <img src="https://kasu.com.mx/assets/images/Correo/florredonda.png" alt="" width="100" height="100" style="display:block;" />
-          </a>
-        </td>
-      </tr>
-      <tr>
-        <td bgcolor="#ffffff" align="justify" style="padding:20px 15px 5px 25px; font-family:Arial, sans-serif; font-size:16px; color:#153643;">
-          <b>{$cte}</b>
-        </td>
-      </tr>
-      <tr>
-        <td align="left" bgcolor="#ffffff" style="padding:10px 30px 5px 30px;">
-          <p style="font-size:16px; font-family:arial, sans-serif; line-height:24px; color:#666666;">¡Pago recibido con éxito!</p>
-          <p style="font-size:16px; font-family:arial, sans-serif; line-height:24px; color:#666666;">
-            Pronto te haremos llegar tu factura y tendrás acceso a todos los beneficios de KASU.
+        <td style="padding:30px 30px 10px 30px; font-family:'Segoe UI',sans-serif; color:#0f172a;">
+          <p style="margin:0;font-size:16px;color:#475569;">Hola <strong>{$cte}</strong>,</p>
+          <h2 style="margin:12px 0;font-size:22px;color:#0f172a;">¡Tu pago fue exitoso!</h2>
+          <p style="margin:0;font-size:16px;color:#475569;line-height:1.6;">
+            Pronto recibirás tu factura digital y podrás disfrutar todos los beneficios KASU. Gracias por seguir protegiendo a los tuyos con nosotros.
           </p>
         </td>
       </tr>
       <tr>
-        <td bgcolor="#ffffff" align="justify" style="padding:5px 25px 30px 25px; font-family:Arial, sans-serif; font-size:16px; line-height:20px; color:#153643;">
-          <p>Gracias por tu preferencia.</p>
-          <p style="font-size:12px; font-family:Arial, sans-serif; line-height:24px; color:#666666;">
-            Saludos<br>Equipo KASU
-          </p>
+        <td style="padding:15px 30px 35px;font-family:'Segoe UI',sans-serif;color:#475569;font-size:14px;">
+          Saludos cordiales,<br>
+          <strong>Equipo KASU</strong>
         </td>
       </tr>
 HTML;
@@ -223,38 +208,16 @@ HTML;
             case 'ERROR DE PAGO':
                 return <<<HTML
       <tr>
-        <td align="center" style="padding:2px; font-size:25px; color:#153643; font-family:Arial, sans-serif;">
-          <a href="https://kasu.com.mx" style="text-decoration:none; color:white;">
-            <img src="https://kasu.com.mx/assets/images/Correo/florredonda.png" alt="" width="100" height="100" style="display:block;" />
-          </a>
-        </td>
-      </tr>
-      <tr>
-        <td bgcolor="#ffffff" align="justify" style="padding:20px 15px 5px 25px; font-family:Arial, sans-serif; font-size:16px; color:#153643;">
-          <b>{$cte}</b>
-        </td>
-      </tr>
-      <tr>
-        <td align="left" bgcolor="#ffffff" style="padding:10px 30px 5px 30px;">
-          <p style="font-size:16px; font-family:arial, sans-serif; line-height:24px; color:#666666;">
-            Hubo un error en tu pago.<br>
-            Te pedimos intentarlo de nuevo o comunicarte a nuestro centro de atencion: <b>55 8950 8098</b>
+        <td style="padding:30px 30px 20px;font-family:'Segoe UI',sans-serif;color:#0f172a;">
+          <h2 style="margin:0 0 12px;font-size:22px;">{$cte}, necesitamos tu ayuda</h2>
+          <p style="margin:0;font-size:16px;color:#475569;line-height:1.6;">
+            El pago no pudo completarse. Te sugerimos intentarlo nuevamente o llamarnos al <strong>55 8950 8098</strong> para ayudarte de inmediato.
           </p>
         </td>
       </tr>
       <tr>
-        <td bgcolor="#ffffff" align="center" style="padding:30px;">
-          <span style="border:solid #ee3a87; background:#ee3a87; border-width:20px; display:inline-block; border-radius:5px;">
-            <a href="{$dirUrl}" class="es-button" target="_blank" style="text-decoration:none; font-family:Arial, sans-serif; font-size:35px; color:#FFFFFF; background:#ee3a87; border-radius:5px; line-height:40px;">Reintentar pago</a>
-          </span>
-        </td>
-      </tr>
-      <tr>
-        <td bgcolor="#ffffff" align="justify" style="padding:5px 25px 30px 25px; font-family:Arial, sans-serif; font-size:16px; line-height:20px;">
-          <p>Gracias por tu preferencia.</p>
-          <p style="font-size:12px; font-family:Arial, sans-serif; line-height:24px; color:#666666;">
-            Saludos<br>Equipo KASU
-          </p>
+        <td align="center" style="padding:0 30px 35px;">
+          <a href="{$dirUrl}" target="_blank" style="display:inline-block;padding:14px 28px;background:#ff5e8e;border-radius:999px;font-family:'Segoe UI',sans-serif;font-size:17px;color:#fff;text-decoration:none;">Reintentar pago</a>
         </td>
       </tr>
 HTML;
@@ -262,31 +225,14 @@ HTML;
             case 'CAMBIO DE CONTRASEÑA':
                 return <<<HTML
       <tr>
-        <td align="center" style="padding:2px; font-size:25px; color:#153643; font-family:Arial, sans-serif;">
-          <a href="https://kasu.com.mx" style="text-decoration:none; color:white;">
-            <img src="https://kasu.com.mx/assets/images/Correo/florredonda.png" alt="" width="100" height="100" style="display:block;" />
-          </a>
+        <td style="padding:30px 30px 20px;font-family:'Segoe UI',sans-serif;color:#0f172a;">
+          <h2 style="margin:0 0 10px;font-size:22px;">Contraseña actualizada</h2>
+          <p style="margin:0;font-size:16px;color:#475569;line-height:1.6;">{$cte}, tu contraseña se modificó correctamente. Si no fuiste tú, contáctanos de inmediato al <strong>55 8950 8098</strong>.</p>
         </td>
       </tr>
       <tr>
-        <td bgcolor="#ffffff" align="justify" style="padding:20px 15px 5px 25px; font-family:Arial, sans-serif; font-size:16px; color:#153643;">
-          <b>{$cte}</b>
-        </td>
-      </tr>
-      <tr>
-        <td align="left" bgcolor="#ffffff" style="padding:10px 30px 5px 30px;">
-          <p style="font-size:16px; font-family:arial, sans-serif; line-height:24px; color:#666666;">
-            Tu contraseña ha sido actualizada exitosamente.<br>
-            Si no reconoces este cambio, comunicate con nosotros a la brevedad: <b>55 8950 8098</b>
-          </p>
-        </td>
-      </tr>
-      <tr>
-        <td bgcolor="#ffffff" align="justify" style="padding:5px 25px 30px 25px; font-family:Arial, sans-serif; font-size:16px; line-height:20px; color:#153643;">
-          <p>Gracias por tu preferencia.</p>
-          <p style="font-size:12px; font-family:Arial, sans-serif; line-height:24px; color:#666666;">
-            Saludos<br>Equipo KASU
-          </p>
+        <td style="padding:5px 30px 35px;font-family:'Segoe UI',sans-serif;color:#475569;font-size:14px;">
+          Saludos,<br>Equipo KASU
         </td>
       </tr>
 HTML;
@@ -294,38 +240,16 @@ HTML;
             case 'RESTABLECIMIENTO DE CONTRASEÑA':
                 return <<<HTML
       <tr>
-        <td align="center" style="padding:2px; font-size:25px; color:#153643; font-family:Arial, sans-serif;">
-          <a href="https://kasu.com.mx" style="text-decoration:none; color:white;">
-            <img src="https://kasu.com.mx/assets/images/Correo/florredonda.png" alt="" width="100" height="100" style="display:block;" />
-          </a>
-        </td>
-      </tr>
-      <tr>
-        <td bgcolor="#ffffff" align="justify" style="padding:20px 15px 5px 25px; font-family:Arial, sans-serif; font-size:16px; color:#153643;">
-          <b>{$cte}</b>
-        </td>
-      </tr>
-      <tr>
-        <td align="left" bgcolor="#ffffff" style="padding:10px 30px 5px 30px;">
-          <p style="font-size:16px; font-family:arial, sans-serif; line-height:24px; color:#666666;">
-            Se ha solicitado el restablecimiento de tu contraseña.<br>
-            Da clic en el siguiente boton para cambiar tu contraseña:
+        <td style="padding:30px 30px 20px;font-family:'Segoe UI',sans-serif;color:#0f172a;">
+          <h2 style="margin:0 0 12px;font-size:22px;">Solicitud para restablecer contraseña</h2>
+          <p style="margin:0;font-size:16px;color:#475569;line-height:1.6;">
+            {$cte}, haz clic en el botón para crear una nueva contraseña. Este enlace expira en 30 minutos.
           </p>
         </td>
       </tr>
       <tr>
-        <td bgcolor="#ffffff" align="center" style="padding:30px;">
-          <span style="border:solid #ee3a87; background:#ee3a87; border-width:20px; display:inline-block; border-radius:5px;">
-            <a href="{$dirUrl}" class="es-button" target="_blank" style="text-decoration:none; font-family:Arial, sans-serif; font-size:35px; color:#FFFFFF; background:#ee3a87; border-radius:5px; line-height:40px;">Cambiar contraseña</a>
-          </span>
-        </td>
-      </tr>
-      <tr>
-        <td bgcolor="#ffffff" align="justify" style="padding:5px 25px 30px 25px; font-family:Arial, sans-serif; font-size:16px; line-height:20px; color:#153643;">
-          <p>Si no solicitaste este cambio, comunicate con nosotros: <b>55 8950 8098</b></p>
-          <p style="font-size:12px; font-family:Arial, sans-serif; line-height:24px; color:#666666;">
-            Saludos<br>Equipo KASU
-          </p>
+        <td align="center" style="padding:0 30px 35px;">
+          <a href="{$dirUrl}" target="_blank" style="display:inline-block;padding:14px 30px;background:#1e4fa3;border-radius:999px;font-family:'Segoe UI',sans-serif;font-size:17px;color:#fff;text-decoration:none;">Cambiar contraseña</a>
         </td>
       </tr>
 HTML;
@@ -333,31 +257,16 @@ HTML;
             case 'ENVÍO DE FACTURA':
                 return <<<HTML
       <tr>
-        <td align="center" style="padding:2px; font-size:25px; color:#153643; font-family:Arial, sans-serif;">
-          <a href="https://kasu.com.mx" style="text-decoration:none; color:white;">
-            <img src="https://kasu.com.mx/assets/images/Correo/florredonda.png" alt="" width="100" height="100" style="display:block;" />
-          </a>
-        </td>
-      </tr>
-      <tr>
-        <td bgcolor="#ffffff" align="justify" style="padding:20px 15px 5px 25px; font-family:Arial, sans-serif; font-size:16px; color:#153643;">
-          <b>{$cte}</b>
-        </td>
-      </tr>
-      <tr>
-        <td align="left" bgcolor="#ffffff" style="padding:10px 30px 5px 30px;">
-          <p style="font-size:16px; font-family:arial, sans-serif; line-height:24px; color:#666666;">
-            Adjuntamos tu factura correspondiente a tu pago.<br>
-            Gracias por confiar en KASU.
+        <td style="padding:30px 30px 20px;font-family:'Segoe UI',sans-serif;color:#0f172a;">
+          <h2 style="margin:0 0 10px;font-size:22px;">Tu factura está lista</h2>
+          <p style="margin:0;font-size:16px;color:#475569;line-height:1.6;">
+            {$cte}, adjuntamos la factura correspondiente a tu pago. Gracias por confiar en KASU.
           </p>
         </td>
       </tr>
       <tr>
-        <td bgcolor="#ffffff" align="justify" style="padding:5px 25px 30px 25px; font-family:Arial, sans-serif; font-size:16px; line-height:20px;">
-          <p>Si necesitas algo más, comunicate a nuestro centro de atencion: <b>55 8950 8098</b></p>
-          <p style="font-size:12px; font-family:Arial, sans-serif; line-height:24px; color:#666666;">
-            Saludos<br>Equipo KASU
-          </p>
+        <td style="padding:5px 30px 35px;font-family:'Segoe UI',sans-serif;color:#475569;font-size:14px;">
+          Saludos,<br>Equipo KASU
         </td>
       </tr>
 HTML;

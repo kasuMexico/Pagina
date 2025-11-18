@@ -2,6 +2,9 @@
 declare(strict_types=1);
 
 require_once dirname(__DIR__, 2) . '/eia/session.php';
+if (function_exists('kasu_apply_error_settings')) {
+    kasu_apply_error_settings(); // 2025-11-18: seguimiento de errores de login
+}
 
 /**
  * Autentica al vendedor contra Empleados.

@@ -257,7 +257,7 @@ $VerCache = time();
       </section>
       <?php endif; ?>
 
-      <?php if ((int)$Vende <= 3): ?>
+      <?php if ((int)$Vende <= 2): ?>
       <section class="tool-section">
         <header><strong>Carga masiva de clientes</strong></header>
         <div class="tool-section-body">

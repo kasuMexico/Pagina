@@ -15,15 +15,6 @@
 
 declare(strict_types=1);
 
-/* ==========================================================================================
- * BLOQUE: Depuración y sesión
- * Qué hace: Activa errores en entorno de desarrollo e inicia la sesión
- * Fecha: 05/11/2025 — Revisado por: JCCM
- * ========================================================================================== */
-ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
-
 require_once dirname(__DIR__, 2) . '/eia/session.php';
 kasu_session_start();
 
@@ -33,6 +24,7 @@ kasu_session_start();
  * Fecha: 05/11/2025 — Revisado por: JCCM
  * ========================================================================================== */
 require_once '../../eia/librerias.php';
+kasu_apply_error_settings(); // 2025-11-18: Registro centralizado en https://kasu.com.mx/eia/error.log
 date_default_timezone_set('America/Mexico_City');
 
 $hoy        = date('Y-m-d');

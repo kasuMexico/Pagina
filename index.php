@@ -82,8 +82,8 @@ if ($qsMsg !== null) {
     <link rel="dns-prefetch" href="//kasu.com.mx">
 
     <!-- Iconos -->
-    <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
-    <link rel="apple-touch-icon" sizes="180x180" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
+    <link rel="icon" href="https://kasu.com.mx/login/assets/img/FlorKasu.png">
+    <link rel="apple-touch-icon" sizes="128x128" href="https://kasu.com.mx/login/assets/img/icon-128x128.jpeg">
 
     <!-- CSS -->
     <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css">

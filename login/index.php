@@ -110,7 +110,7 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
                 <input class="form-control" type="password" name="PassWord2" placeholder="Confirmar contraseña" required autocomplete="new-password">
             </div>
             <div class="form-group">
-                <button class="btn btn-primary btn-block" name="GenCont" value="1" type="submit">Guardar contraseña</button>
+                <button class="btn btn-primary btn-block" name="GenCont" value="1" type="submit">Guardar contraseña form 1</button>
             </div>
             <div class="text-center"><a href="/login/index.php">Volver a iniciar sesión</a></div>
         </form>
@@ -134,7 +134,7 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
                 <input class="form-control" type="password" name="PassWord2" placeholder="Confirmar contraseña" required autocomplete="new-password">
             </div>
             <div class="form-group">
-                <button class="btn btn-primary btn-block" name="GenCont" value="1" type="submit">Guardar contraseña</button>
+                <button class="btn btn-primary btn-block" name="GenCont" value="1" type="submit">Guardar contraseña form 2</button>
             </div>
             <div class="text-center"><a href="/login/index.php">Volver a iniciar sesión</a></div>
         </form>
@@ -162,7 +162,7 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
                 <input class="form-control" type="password" name="PassWord2" placeholder="Confirmar nueva contraseña" required autocomplete="new-password">
             </div>
             <div class="form-group">
-                <button class="btn btn-primary btn-block" name="CambiarPass" value="1" type="submit">Cambiar contraseña</button>
+                <button class="btn btn-primary btn-block" name="CambiarPass" value="1" type="submit">Cambiar contraseña form 3</button>
             </div>
             <div class="text-center"><a href="/login">Volver a iniciar sesión</a></div>
         </form>

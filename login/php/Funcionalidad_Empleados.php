@@ -30,6 +30,14 @@ date_default_timezone_set('America/Mexico_City');
 $hoy        = date('Y-m-d');
 $HoraActual = date('H:i:s');
 
+// Log general de todas las peticiones POST a este controlador
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    ini_set('log_errors', '1');
+    ini_set('error_log', dirname(__DIR__, 2) . '/eia/error.log');
+    error_log('[KASU][AUTH][POST] ' . json_encode($_POST, JSON_UNESCAPED_UNICODE));
+}
+
+
 if (!function_exists('kasu_contact_address_field')) {
     function kasu_contact_address_field(mysqli $mysqli): string
     {
@@ -122,14 +130,15 @@ if (!function_exists('kasu_filter_contact_data')) {
     }
 }
 
-/**************************************** BLOQUE: LOGIN Revisado 05/11/2025 JCCM ****************************************/
-/* Qué hace: Autentica al usuario contra Empleados.Pass (sha256) y registra auditoría */
+/**************************************** BLOQUE: LOGIN Revisado 18/11/2025 JCCM ****************************************/
+/* Qué hace: Autentica al usuario contra Empleados.Pass (sha256) y registra auditoría + debug */
 if (!empty($_POST['Login'])) {
     ini_set('log_errors', '1');
     $logFile = defined('KASU_ERROR_LOG_FILE')
         ? KASU_ERROR_LOG_FILE
         : dirname(__DIR__, 2) . '/eia/error.log';
     ini_set('error_log', $logFile);
+
     // CSRF (obligatorio si viene en el formulario)
     if (isset($_POST['csrf']) && !hash_equals($_SESSION['csrf_auth'] ?? '', (string)$_POST['csrf'])) {
         error_log('[KASU][Login] CSRF inválido');
@@ -149,10 +158,72 @@ if (!empty($_POST['Login'])) {
     }
 
     error_log("[KASU][Login] Intento de acceso para {$Usuario}");
-    if (autenticarVendedor($mysqli)) {
-        $usuarioSesion = (string)($_SESSION['Vendedor'] ?? $Usuario);
-        $idEmp = (int)$basicas->BuscarCampos($mysqli, "Id", "Empleados", "IdUsuario", $usuarioSesion);
-        $_SESSION['IdEmpleado'] = $idEmp;
+
+    // ===================== DEBUG PREVIO: qué hay en Empleados para este usuario =====================
+    $row           = null;
+    $rowFound      = false;
+    $hashDb        = '';
+    $statusDb      = null;
+    $idDb          = null;
+    $shaCandidate  = hash('sha256', $Pass);
+    $passMatchSha  = false;
+
+    if ($stmt = $mysqli->prepare("SELECT Id, IdUsuario, Pass, Status, Nivel, Sucursal FROM Empleados WHERE IdUsuario = ? LIMIT 1")) {
+        $stmt->bind_param('s', $Usuario);
+        if ($stmt->execute() && ($res = $stmt->get_result())) {
+            $row = $res->fetch_assoc();
+        }
+        $stmt->close();
+    }
+
+    if (is_array($row)) {
+        $rowFound = true;
+        $idDb     = (int)($row['Id'] ?? 0);
+        $hashDb   = (string)($row['Pass'] ?? '');
+        $statusDb = $row['Status'] ?? null;
+        if ($hashDb !== '' && hash_equals($hashDb, $shaCandidate)) {
+            $passMatchSha = true;
+        }
+    }
+
+    $preAuth = [
+        'usuario_input'      => $Usuario,
+        'row_found'          => $rowFound,
+        'id_empleado_db'     => $idDb,
+        'status_db'          => $statusDb,
+        'hash_db_len'        => strlen($hashDb),
+        'hash_db_prefix'     => $hashDb !== '' ? substr($hashDb, 0, 16) : null,
+        'pass_sha_len'       => strlen($shaCandidate),
+        'pass_sha_prefix'    => substr($shaCandidate, 0, 16),
+        'pass_matches_sha'   => $passMatchSha,
+        'session_id_before'  => session_id(),
+        'cookie_session_raw' => $_COOKIE[session_name()] ?? 'NO_COOKIE',
+        'user_agent'         => $_SERVER['HTTP_USER_AGENT'] ?? '',
+        'remote_addr'        => $_SERVER['REMOTE_ADDR'] ?? '',
+    ];
+    error_log('[KASU][Login][DEBUG_PRE] ' . json_encode($preAuth, JSON_UNESCAPED_UNICODE));
+
+    // ===================== AUTENTICACIÓN REAL =====================
+    $authOk = autenticarVendedor($mysqli);
+
+    // Forzar cálculo de IdEmpleado según la lógica actual si autenticó
+    $usuarioSesion = (string)($_SESSION['Vendedor'] ?? $Usuario);
+    $idEmpSesion   = (int)$basicas->BuscarCampos($mysqli, "Id", "Empleados", "IdUsuario", $usuarioSesion);
+
+    $postAuth = [
+        'usuario_input'        => $Usuario,
+        'auth_ok'              => $authOk,
+        'session_id_after'     => session_id(),
+        'session_vendedor'     => $_SESSION['Vendedor'] ?? null,
+        'session_idempleado'   => $_SESSION['IdEmpleado'] ?? null,
+        'calculated_idempleado'=> $idEmpSesion,
+        'cookie_session_after' => $_COOKIE[session_name()] ?? 'NO_COOKIE',
+    ];
+    error_log('[KASU][Login][DEBUG_POST] ' . json_encode($postAuth, JSON_UNESCAPED_UNICODE));
+
+    if ($authOk) {
+        // Seteamos IdEmpleado / IdVendedor con base en la sesión o en el usuario
+        $_SESSION['IdEmpleado'] = $idEmpSesion;
         $_SESSION['IdVendedor'] = $usuarioSesion;
         if (empty($_SESSION['csrf_logout'])) {
             $_SESSION['csrf_logout'] = bin2hex(random_bytes(32));
@@ -181,6 +252,7 @@ if (!empty($_POST['Login'])) {
         $_POST['Host'] ?? $_SERVER['PHP_SELF']
     );
 
+    error_log("[KASU][Login] Acceso rechazado para {$Usuario}");
     header('Location: https://kasu.com.mx/login/index.php?data=4');
     exit;
 }
@@ -508,40 +580,31 @@ if (isset($_POST['CreaEmpl'])) {
     }
 }
 
-/********************************* BLOQUE: REENVÍO DE CONTRASEÑA *********************************/
-/* Qué hace: Genera token temporal en Empleados.Pass y envía enlace de registro de contraseña */
-if (isset($_POST['ReenCOntra'])) {
-    // CSRF opcional
-    if (isset($_POST['csrf']) && !hash_equals($_SESSION['csrf_auth'] ?? '', (string)$_POST['csrf'])) {
-        error_log('[KASU][ReenCOntra] CSRF inválido');
-        http_response_code(403);
-        exit;
-    }
-
-    $Id        = $mysqli->real_escape_string((string)($_POST['Id']        ?? ''));
-    $Nombre    = $mysqli->real_escape_string((string)($_POST['Nombre']    ?? ''));
-    $Email     = $mysqli->real_escape_string((string)($_POST['Email']     ?? ''));
-    $IdUsuario = $mysqli->real_escape_string((string)($_POST['IdUsuario'] ?? ''));
-    $Host      = $mysqli->real_escape_string((string)($_POST['Host']      ?? ''));
-    $name      = $mysqli->real_escape_string((string)($_POST['name']      ?? ''));
-
-    $dRc     = mt_rand();
-    $dirUrl1 = base64_encode((string)$dRc);
-    $DirUrl  = "https://kasu.com.mx/login/index.php?data=" . $dirUrl1 . "&Usr=" . rawurlencode($IdUsuario !== '' ? $IdUsuario : (string)$Id);
-
-    $basicas->ActCampo($mysqli, "Empleados", "Pass", $dRc, $Id);
-    error_log("[KASU][ReenCOntra] Token generado para {$IdUsuario}");
-
-    $Mensaje = $Correo->Mensaje('RESTABLECIMIENTO DE CONTRASEÑA', $Nombre, $DirUrl, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '');
-    $Correo->EnviarCorreo($Nombre, $Email, 'RESTABLECIMIENTO DE CONTRASEÑA', $Mensaje);
-
-    header('Location: https://kasu.com.mx' . $Host . '?Ml=1&name=' . $name);
-    exit;
-}
-
 /********************************* BLOQUE: GENERAR CONTRASEÑA (Registro de Contraseña) *********************************/
-/* Qué hace: Toma el token base64(data) guardado en Empleados.Pass, fija nuevo Pass sha256 e inserta evento+GPS+FP */
-if (!empty($_POST['GenCont'])) {
+/* Qué hace:
+ *  - Maneja el enlace del correo: /login/index.php?data=TOKEN&Usr=XXX
+ *  - El formulario manda: PassWord1, PassWord2, data (TOKEN base64), Host, fingerprint + GPS opcionales.
+ *  - No depende de $_POST['GenCont']; se detecta por la combinación de campos.
+ */
+if (
+    $_SERVER['REQUEST_METHOD'] === 'POST'
+    && isset($_POST['PassWord1'], $_POST['PassWord2'], $_POST['data'])
+    && !isset($_POST['Login'])
+    && !isset($_POST['CambiarPass'])
+    && !isset($_POST['PagoCom'])
+    && !isset($_POST['CreaEmpl'])
+    && !isset($_POST['CamDat'])
+    && !isset($_POST['Reporte'])
+    && !isset($_POST['BajaEmp'])
+    && !isset($_POST['CambiVend'])
+    && !isset($_POST['accion'])
+) {
+    // Forzamos log a /eia/error.log
+    ini_set('log_errors', '1');
+    ini_set('error_log', dirname(__DIR__, 2) . '/eia/error.log');
+
+    error_log('[KASU][GenCont][IN] ' . json_encode($_POST, JSON_UNESCAPED_UNICODE));
+
     // CSRF opcional
     if (isset($_POST['csrf']) && !hash_equals($_SESSION['csrf_auth'] ?? '', (string)$_POST['csrf'])) {
         error_log('[KASU][GenCont] CSRF inválido');
@@ -553,73 +616,107 @@ if (!empty($_POST['GenCont'])) {
     $PassWord2   = (string)($_POST['PassWord2'] ?? '');
     $tokenRaw    = (string)($_POST['data']      ?? '');
     $fingerprint = (string)($_POST['fingerprint'] ?? '');
-    $Host        = $mysqli->real_escape_string((string)($_POST['Host'] ?? '/login/index.php'));
+    $Host        = (string)($_POST['Host'] ?? '/login/index.php');
 
-    if ($PassWord1 === $PassWord2) {
-        $decodedPass  = base64_decode($tokenRaw, true);
-        $PassRecordId = $decodedPass !== false ? $basicas->BuscarCampos($mysqli, "Id", "Empleados", "Pass", $decodedPass) : '';
+    // Valor por defecto (error genérico)
+    $dta = 1;
 
-        if (!empty($PassRecordId)) {
-            error_log("[KASU][GenCont] Token válido para empleado {$PassRecordId}");
-            // GPS
-            $gpsLogin = $basicas->InsertCampo($mysqli, "gps", [
-                "latitud"  => $mysqli->real_escape_string((string)($_POST['latitud']  ?? '')),
-                "longitud" => $mysqli->real_escape_string((string)($_POST['longitud'] ?? '')),
-                "accuracy" => $mysqli->real_escape_string((string)($_POST['accuracy'] ?? ''))
-            ]);
-
-            // Fingerprint
-            if (empty($basicas->BuscarCampos($mysqli, "id", "FingerPrint", "fingerprint", $fingerprint))) {
-                $DatFinger = [
-                    "fingerprint"   => $fingerprint,
-                    "browser"       => (string)($_POST['browser']      ?? ''),
-                    "flash"         => (string)($_POST['flash']        ?? ''),
-                    "canvas"        => (string)($_POST['canvas']       ?? ''),
-                    "connection"    => (string)($_POST['connection']   ?? ''),
-                    "cookie"        => (string)($_POST['cookie']       ?? ''),
-                    "display"       => (string)($_POST['display']      ?? ''),
-                    "fontsmoothing" => (string)($_POST['fontsmoothing']?? ''),
-                    "fonts"         => (string)($_POST['fonts']        ?? ''),
-                    "formfields"    => (string)($_POST['formfields']   ?? ''),
-                    "java"          => (string)($_POST['java']         ?? ''),
-                    "language"      => (string)($_POST['language']     ?? ''),
-                    "silverlight"   => (string)($_POST['silverlight']  ?? ''),
-                    "os"            => (string)($_POST['os']           ?? ''),
-                    "timezone"      => (string)($_POST['timezone']     ?? ''),
-                    "touch"         => (string)($_POST['touch']        ?? ''),
-                    "truebrowser"   => (string)($_POST['truebrowser']  ?? ''),
-                    "plugins"       => (string)($_POST['plugins']      ?? ''),
-                    "useragent"     => (string)($_POST['useragent']    ?? '')
-                ];
-                $basicas->InsertCampo($mysqli, "FingerPrint", $DatFinger);
-            }
-
-            // Evento
-            $DatEventos = [
-                "IdFInger"      => $fingerprint,
-                "Idgps"         => $gpsLogin,
-                "Host"          => $Host,
-                "Evento"        => (string)($_POST['Evento']  ?? "AltaPass"),
-                "Usuario"       => (string)($_POST['Usuario'] ?? ''),
-                "FechaRegistro" => $hoy . " " . $HoraActual
-            ];
-            $basicas->InsertCampo($mysqli, "Eventos", $DatEventos);
-
-            // Actualiza pass
-            $PassSHa = hash('sha256', $PassWord1);
-            $basicas->ActCampo($mysqli, "Empleados", "Pass", $PassSHa, $PassRecordId);
-
-            $dta = 3; // Exitoso
+    try {
+        // 1) Validar que coincidan las contraseñas
+        if ($PassWord1 !== $PassWord2) {
+            error_log('[KASU][GenCont] Contraseñas no coinciden');
+            $dta = 2;
         } else {
-            error_log('[KASU][GenCont] Token inválido o ya utilizado');
-            $dta = 1; // Token ya usado/no válido
+            // 2) Decodificar token base64 enviado en el enlace
+            $decodedPass = base64_decode($tokenRaw, true);
+            if ($decodedPass === false || $decodedPass === '') {
+                error_log('[KASU][GenCont] Token base64 inválido: ' . $tokenRaw);
+                $dta = 1;
+            } else {
+                // 3) Buscar empleado por Empleados.Pass = token decodificado
+                $PassRecordId = (int)$basicas->BuscarCampos(
+                    $mysqli,
+                    "Id",
+                    "Empleados",
+                    "Pass",
+                    $decodedPass
+                );
+
+                error_log('[KASU][GenCont] decodedPass=' . $decodedPass . ' IdEmpleado=' . $PassRecordId);
+
+                if ($PassRecordId > 0) {
+                    // 4) Registrar GPS (si llega)
+                    $gpsLogin = $basicas->InsertCampo($mysqli, "gps", [
+                        "latitud"  => $mysqli->real_escape_string((string)($_POST['latitud']  ?? '')),
+                        "longitud" => $mysqli->real_escape_string((string)($_POST['longitud'] ?? '')),
+                        "accuracy" => $mysqli->real_escape_string((string)($_POST['accuracy'] ?? ''))
+                    ]);
+
+                    // 5) Registrar FingerPrint (si no existe)
+                    if (
+                        $fingerprint !== '' &&
+                        empty($basicas->BuscarCampos($mysqli, "id", "FingerPrint", "fingerprint", $fingerprint))
+                    ) {
+                        $DatFinger = [
+                            "fingerprint"   => $fingerprint,
+                            "browser"       => (string)($_POST['browser']      ?? ''),
+                            "flash"         => (string)($_POST['flash']        ?? ''),
+                            "canvas"        => (string)($_POST['canvas']       ?? ''),
+                            "connection"    => (string)($_POST['connection']   ?? ''),
+                            "cookie"        => (string)($_POST['cookie']       ?? ''),
+                            "display"       => (string)($_POST['display']      ?? ''),
+                            "fontsmoothing" => (string)($_POST['fontsmoothing']?? ''),
+                            "fonts"         => (string)($_POST['fonts']        ?? ''),
+                            "formfields"    => (string)($_POST['formfields']   ?? ''),
+                            "java"          => (string)($_POST['java']         ?? ''),
+                            "language"      => (string)($_POST['language']     ?? ''),
+                            "silverlight"   => (string)($_POST['silverlight']  ?? ''),
+                            "os"            => (string)($_POST['os']           ?? ''),
+                            "timezone"      => (string)($_POST['timezone']     ?? ''),
+                            "touch"         => (string)($_POST['touch']        ?? ''),
+                            "truebrowser"   => (string)($_POST['truebrowser']  ?? ''),
+                            "plugins"       => (string)($_POST['plugins']      ?? ''),
+                            "useragent"     => (string)($_POST['useragent']    ?? '')
+                        ];
+                        $basicas->InsertCampo($mysqli, "FingerPrint", $DatFinger);
+                    }
+
+                    // 6) Evento
+                    $DatEventos = [
+                        "IdFInger"      => $fingerprint,
+                        "Idgps"         => $gpsLogin ?? null,
+                        "Host"          => $mysqli->real_escape_string($Host),
+                        "Evento"        => (string)($_POST['Evento']  ?? "AltaPass"),
+                        "Usuario"       => (string)($_POST['Usuario'] ?? ''),
+                        "FechaRegistro" => $hoy . " " . $HoraActual
+                    ];
+                    $basicas->InsertCampo($mysqli, "Eventos", $DatEventos);
+
+                    // 7) Actualizar password a sha256
+                    $PassSHa = hash('sha256', $PassWord1);
+                    $basicas->ActCampo($mysqli, "Empleados", "Pass", $PassSHa, $PassRecordId);
+
+                    error_log('[KASU][GenCont] Contraseña actualizada correctamente para Id=' . $PassRecordId);
+                    $dta = 3; // éxito
+                } else {
+                    error_log('[KASU][GenCont] Token no encontrado en Empleados.Pass');
+                    $dta = 1;
+                }
+            }
         }
-    } else {
-        error_log('[KASU][GenCont] Contraseñas no coinciden');
-        $dta = 2; // No coinciden
+    } catch (Throwable $e) {
+        error_log('[KASU][GenCont][EXCEPTION] ' . $e->getMessage());
+        if ($dta === 0) {
+            $dta = 1;
+        }
     }
 
-    header('Location: https://kasu.com.mx' . $Host . '?Vt=1&Data=' . (int)$dta);
+    if ($Host === '') {
+        $Host = '/login/index.php';
+    }
+
+    // Importante: "data" en minúsculas para que index.php lea el mensaje
+    header('Location: https://kasu.com.mx' . $Host . '?Vt=1&data=' . (int)$dta);
     exit;
 }
 

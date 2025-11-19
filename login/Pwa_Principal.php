@@ -186,7 +186,6 @@ $pendPolizas    = $MetaPolizas > 0 ? max(0, (int)$MetaPolizas - $PolizasMes) : 0
   <!-- JS externos -->
   <script src="https://www.gstatic.com/charts/loader.js"></script>
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-  <script src="Javascript/GenGrafica.js"></script>
 </head>
 <body onload="localize()">
   <!-- TOP BAR -->

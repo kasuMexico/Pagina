@@ -108,6 +108,9 @@ if(isset($_GET['Msg'])){
     echo "<script>alert('".h($_GET['Msg'])."');</script>";
 }
 
+// =================== Token anti-duplicado correo ===================
+$_SESSION['mail_token'] = bin2hex(random_bytes(16));
+
 // =================== Cache bust ===================
 // Qué hace: Versión de recursos estáticos
 // Fecha: 05/11/2025 | Revisado por: JCCM
@@ -349,12 +352,13 @@ $VerCache = $VerCache ?? time();
     <div class="modal fade" id="Ventana5" tabindex="-1" role="dialog" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
-          <form method="POST" action="php/Funcionalidad_Empleados.php">
+          <form method="POST" action="../eia/EnviarCorreo.php">
             <div class="modal-header">
               <h5 class="modal-title">Reenviar contraseña</h5>
               <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
             </div>
             <div class="modal-body">
+              <input type="hidden" name="mail_token" value="<?= h($_SESSION['mail_token']) ?>">
               <input type="hidden" name="Host" value="<?= h($_SERVER['PHP_SELF']) ?>">
               <input type="hidden" name="name" value="<?= h($name) ?>">
               <input type="hidden" name="IdUsuario" value="<?= h($Reg['IdUsuario'] ?? '') ?>">

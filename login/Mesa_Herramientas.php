@@ -206,6 +206,7 @@ $VerCache = time();
     <div class="tool-sections">
 
       <?php if ($Reg): ?>
+      <!-- SECCION: Mi información-->
       <section class="tool-section">
         <header>
           <strong>Mi información</strong>
@@ -221,7 +222,75 @@ $VerCache = time();
       </section>
       <?php endif; ?>
 
+      <?php if ((int)$Vende <= 2): ?>
+      <!-- SECCION: Asignacion de Metas-->
+      <section class="tool-section">
+        <header><strong>Metas y normalidad</strong></header>
+        <div class="tool-section-body">
+          <form method="POST" action="php/Funcionalidad_Pwa.php">
+            <input type="hidden" name="Host" value="<?php echo h($_SERVER['PHP_SELF']); ?>">
+            <input type="hidden" name="Evento" value="LogOut">
+            <input type="hidden" name="csrf" value="<?php echo h($_SESSION['csrf_logout']); ?>">
+            <div id="Gps" style="display:none;"></div>
+            <div data-fingerprint-slot></div>
+            <div class="form-group">
+              <label class="small">Meta de colocación (<?php echo h($meses[(int)date('n')]); ?>)</label>
+              <input class="form-control form-control-sm" type="number" name="MetaMes" placeholder="Ej. 120000">
+            </div>
+            <div class="form-group">
+              <label class="small">% Normalidad de Cobranza</label>
+              <input class="form-control form-control-sm" type="number" name="Normalidad" placeholder="Ej. 92">
+            </div>
+            <button class="btn btn-secondary btn-sm btn-block" type="submit" name="Asignar" value="1">Guardar metas</button>
+          </form>
+        </div>
+      </section>
+      <?php endif; ?>
+
+            <?php if ((int)$Vende <= 2): ?>
+      <!-- SECCION: Carga masiva de clientes -->
+      <section class="tool-section">
+        <header><strong>Carga masiva de clientes</strong></header>
+        <div class="tool-section-body">
+          <form method="POST" action="Lote_Clientes.php" enctype="multipart/form-data">
+            <div class="file-input mb-2">
+              <input type="file" id="archivoCsv" name="archivo_csv" accept=".csv,text/csv">
+              <label for="archivoCsv">
+                <span>Selecciona archivo CSV</span>
+                <em>Browse</em>
+              </label>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <button class="btn btn-secondary btn-sm mr-2" type="submit">Subir archivo</button>
+              <a class="btn btn-outline-secondary btn-sm" href="https://kasu.com.mx/login/assets/Plantilla_Ctes_Masivos_KASU.csv" download>Descargar plantilla</a>
+            </div>
+          </form>
+        </div>
+      </section>
+      <?php endif; ?>
+
+      <!-- SECCION: Acciones sobre la cuenta-->
+      <section class="tool-section">
+        <header><strong>Acciones rápidas</strong></header>
+        <div class="tool-section-body tool-actions-body">
+          <form method="POST" action="<?php echo h($_SERVER['PHP_SELF']); ?>" class="mb-2">
+            <div class="action-buttons">
+              <button class="btn btn-outline-primary btn-sm w-100" name="ActDatos" type="submit">Actualizar mis datos</button>
+              <button class="btn btn-outline-warning btn-sm w-100" name="RepDat" type="submit">Reportar un problema</button>
+            </div>
+          </form>
+          <form method="POST" action="/login/logout.php">
+            <input type="hidden" name="Host" value="<?php echo h($_SERVER['PHP_SELF']); ?>">
+            <input type="hidden" name="Evento" value="LogOut">
+            <input type="hidden" name="checkdia" value="<?php echo h(date('Y-m-d')); ?>">
+            <input type="hidden" name="csrf" value="<?php echo h($_SESSION['csrf_logout']); ?>">
+            <button class="btn btn-success btn-sm w-100" type="submit" name="Salir" value="1">Cerrar sesión</button>
+          </form>
+        </div>
+      </section>
+
       <?php if ((int)$Vende <= 3): ?>
+      <!-- SECCION: INGRESO A SUB SECCIONES-->
       <section class="tool-section">
         <header><strong>Buscadores rápidos</strong></header>
         <div class="tool-section-body">
@@ -256,70 +325,6 @@ $VerCache = time();
         </div>
       </section>
       <?php endif; ?>
-
-      <?php if ((int)$Vende <= 2): ?>
-      <section class="tool-section">
-        <header><strong>Carga masiva de clientes</strong></header>
-        <div class="tool-section-body">
-          <form method="POST" action="Lote_Clientes.php" enctype="multipart/form-data">
-            <div class="file-input mb-2">
-              <input type="file" id="archivoCsv" name="archivo_csv" accept=".csv,text/csv">
-              <label for="archivoCsv">
-                <span>Selecciona archivo CSV</span>
-                <em>Browse</em>
-              </label>
-            </div>
-            <div class="d-flex flex-wrap gap-2">
-              <button class="btn btn-secondary btn-sm mr-2" type="submit">Subir archivo</button>
-              <a class="btn btn-outline-secondary btn-sm" href="https://kasu.com.mx/login/assets/Plantilla_Ctes_Masivos_KASU.csv" download>Descargar plantilla</a>
-            </div>
-          </form>
-        </div>
-      </section>
-      <?php endif; ?>
-
-      <?php if ((int)$Vende <= 2): ?>
-      <section class="tool-section">
-        <header><strong>Metas y normalidad</strong></header>
-        <div class="tool-section-body">
-          <form method="POST" action="php/Funcionalidad_Pwa.php">
-            <input type="hidden" name="Host" value="<?php echo h($_SERVER['PHP_SELF']); ?>">
-            <input type="hidden" name="Evento" value="LogOut">
-            <input type="hidden" name="csrf" value="<?php echo h($_SESSION['csrf_logout']); ?>">
-            <div id="Gps" style="display:none;"></div>
-            <div data-fingerprint-slot></div>
-            <div class="form-group">
-              <label class="small">Meta de colocación (<?php echo h($meses[(int)date('n')]); ?>)</label>
-              <input class="form-control form-control-sm" type="number" name="MetaMes" placeholder="Ej. 120000">
-            </div>
-            <div class="form-group">
-              <label class="small">% Normalidad de Cobranza</label>
-              <input class="form-control form-control-sm" type="number" name="Normalidad" placeholder="Ej. 92">
-            </div>
-            <button class="btn btn-secondary btn-sm btn-block" type="submit" name="Asignar" value="1">Guardar metas</button>
-          </form>
-        </div>
-      </section>
-      <?php endif; ?>
-
-      <section class="tool-section">
-        <header><strong>Acciones rápidas</strong></header>
-        <div class="tool-section-body tool-actions-body">
-          <form method="POST" action="<?php echo h($_SERVER['PHP_SELF']); ?>" class="mb-2">
-            <div class="action-buttons">
-              <button class="btn btn-outline-primary btn-sm w-100" name="ActDatos" type="submit">Actualizar mis datos</button>
-              <button class="btn btn-outline-warning btn-sm w-100" name="RepDat" type="submit">Reportar un problema</button>
-            </div>
-          </form>
-          <form method="POST" action="/login/logout.php">
-            <input type="hidden" name="Host" value="<?php echo h($_SERVER['PHP_SELF']); ?>">
-            <input type="hidden" name="Evento" value="LogOut">
-            <input type="hidden" name="checkdia" value="<?php echo h(date('Y-m-d')); ?>">
-            <input type="hidden" name="csrf" value="<?php echo h($_SESSION['csrf_logout']); ?>">
-            <button class="btn btn-success btn-sm w-100" type="submit" name="Salir" value="1">Cerrar sesión</button>
-          </form>
-        </div>
-      </section>
 
     </div>
     <br><br><br>

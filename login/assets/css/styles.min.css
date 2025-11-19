@@ -189,7 +189,16 @@ tbody{border-color:#808B96;}
   flex-direction:column;
   gap:12px;
 }
-.tool-sections{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:1rem;}
+.tool-sections{
+  display:grid;
+  grid-template-columns:repeat(
+    auto-fit,
+    minmax(260px,1fr)
+  );
+  gap:16px;
+  margin-top:1rem;
+  }
+  
 .tool-section{
   border-left:4px solid #c5cae9;
   padding:14px 16px;

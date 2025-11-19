@@ -75,6 +75,7 @@ $NombreGet     = filter_input(INPUT_POST, 'name',           FILTER_SANITIZE_FULL
 $EnviarPoliza  = filter_input(INPUT_POST, 'EnviarPoliza',   FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 $EnviarFichas  = filter_input(INPUT_POST, 'EnviarFichas',   FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 $EnviarEdoCta  = filter_input(INPUT_POST, 'EnviarEdoCta',   FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$ReenCOntra    = filter_input(INPUT_POST, 'ReenCOntra',     FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
 $Descripcion   = filter_input(INPUT_POST, 'Descripcion',    FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 $Usuario       = filter_input(INPUT_POST, 'Usuario',        FILTER_SANITIZE_FULL_SPECIAL_CHARS);
@@ -102,7 +103,7 @@ $stat = ""; $Asunto = ""; $Email = ""; $FullName = ""; $Id = ""; $Msg = ""; $dat
 dbg('Inicio selección de acción');
 
 /* ===== Selección de acción ===== */
-if (!empty($EnCoti)) { // Enviar cotización (seguro) Revisado y funcionado 7 Nov 2025
+if (!empty($EnCoti)) {              // Enviar cotización (seguro) Revisado y funcionado 7 Nov 2025
   //Auditoria de registro de evento
   $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Registro_Prospecto', $HostPost ?? $_SERVER['PHP_SELF']);
   
@@ -184,7 +185,7 @@ if (!empty($EnCoti)) { // Enviar cotización (seguro) Revisado y funcionado 7 No
   $Id  = $IdVenta;
   $Msg = "Se envió el estado de cuenta";
 
-} elseif (!empty($EnFi)) {  // Link de pago Mercado Pago funcionado 15 Nov 2025
+} elseif (!empty($EnFi)) {          // Link de pago Mercado Pago funcionado 15 Nov 2025
   $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Envio_Liga_MP', $HostPost ?? $_SERVER['PHP_SELF']);
   $ventaId = (int)($IdVenta ?? 0);
   dbg('Ruta: EnFi', ['EnFi'=>$EnFi, 'IdVenta'=>$ventaId]);
@@ -245,7 +246,7 @@ if (!empty($EnCoti)) { // Enviar cotización (seguro) Revisado y funcionado 7 No
   $Msg    = "Se envió la liga de pago al cliente";
   $stat   = "3";
 
-} elseif (!empty($Vta_Liquidada)) {  // Bienvenida al cliente cuando ya esta pagado su servicio.
+} elseif (!empty($Vta_Liquidada)) { // Bienvenida al cliente cuando ya esta pagado su servicio.
   dbg('Ruta: Poliza_Liquidada');
   $Asunto    = "¡BIENVENIDO A KASU!";
   $FullName  = $basicas->BuscarCampos($mysqli, "Nombre", "Venta", "Id", $Vta_Liquidada);
@@ -253,7 +254,7 @@ if (!empty($EnCoti)) { // Enviar cotización (seguro) Revisado y funcionado 7 No
   $Email     = $basicas->BuscarCampos($mysqli, "Email", "Usuario", "IdContact", $IdContact);
   $data      = ['Cte'=>$FullName, 'DirUrl'=>base64_encode((string)$IdContact)];
   $Id        = $Vta_Liquidada;
-} elseif (!empty($ProReIn)) {  // Bienvenida al cliente cuando se registra como prospecto.
+} elseif (!empty($ProReIn)) {       // Bienvenida al cliente cuando se registra como prospecto.
   dbg('Ruta: ProReIn', ['ProReIn'=>$ProReIn, 'Servicio'=>$Servicio]);
   $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Envio_Bienvenida', $HostPost ?? $_SERVER['PHP_SELF']);
   $FullName = $basicas->BuscarCampos($pros, "FullName", "prospectos", "Id", $ProReIn);
@@ -267,6 +268,53 @@ if (!empty($EnCoti)) { // Enviar cotización (seguro) Revisado y funcionado 7 No
   } else {                             $DirUrl = "https://kasu.com.mx/productos.php?Art=1"; }
   $data = ['Cte'=>$FullName, 'DirUrl'=>$DirUrl];
   $stat = "3";
+} elseif (!empty($ReenCOntra)) {    // Reenvía la contraseña a un empleado ya registrado
+    dbg('Ruta: ReenCOntra', $_POST);
+
+    // Auditoría
+    $seguridad->auditoria_registrar(
+        $mysqli,
+        $basicas,
+        $_POST,
+        'Reenvio_Contrasena_Empleado',
+        $HostPost ?? $_SERVER['PHP_SELF']
+    );
+
+    // Datos base recibidos del formulario
+    $Id        = (string)$mysqli->real_escape_string((string)($_POST['Id']        ?? ''));
+    $IdUsuario = (string)$mysqli->real_escape_string((string)($_POST['IdUsuario'] ?? ''));
+    $FullName  = (string)$mysqli->real_escape_string((string)($_POST['Nombre']    ?? ''));
+    $Email     = (string)$mysqli->real_escape_string((string)($_POST['Email']     ?? ''));
+    $Host      = (string)$mysqli->real_escape_string((string)($_POST['Host']      ?? ''));
+    $name      = (string)$mysqli->real_escape_string((string)($_POST['name']      ?? ''));
+
+    $Asunto    = 'RESTABLECIMIENTO DE CONTRASEÑA';
+
+    // Contraseña temporal aleatoria
+    $dRc     = (string)random_int(100000, 999999999);
+    $dirUrl1 = base64_encode($dRc);
+
+    // Liga para cambiar la contraseña / iniciar sesión
+    $DirUrl  = "https://kasu.com.mx/login/index.php?data=" . $dirUrl1
+             . "&Usr=" . rawurlencode($IdUsuario !== '' ? $IdUsuario : $Id);
+
+    // Actualiza el Pass en la tabla Empleados
+    if ($Id !== '') {
+        $basicas->ActCampo($mysqli, "Empleados", "Pass", $dRc, $Id);
+    }
+    error_log("[KASU][ReenCOntra] Token generado para {$IdUsuario} (Id={$Id})");
+
+    // Datos para la plantilla HTML (modo nuevo de Correo::Mensaje)
+    $data = [
+        'Cte'    => $FullName,
+        'DirUrl' => $DirUrl,
+    ];
+
+    // Mensaje para la UI
+    $Msg = "Se envió el enlace para restablecer la contraseña.";
+
+    // Redirección específica de este flujo
+    $Redireccion = 'https://kasu.com.mx' . $Host . '?Ml=1&name=' . urlencode($name);
 
 } else { // Genérico
   dbg('Ruta: Generic');
@@ -328,7 +376,8 @@ $accion = !empty($EnCoti)        ? 'EnCoti'
         : (!empty($EnviarEdoCta) ? 'EnviarEdoCta'
         : (!empty($EnFi)         ? 'EnFi'
         : (!empty($MxVta)        ? 'MxVta'
-        : (!empty($ProReIn)      ? 'ProReIn' : 'Generic'))))));
+        : (!empty($ProReIn)      ? 'ProReIn'
+        : (!empty($ReenCOntra)   ? 'ReenCOntra' : 'Generic')))))));
 
 $destinatarioValido = (bool)filter_var($Email, FILTER_VALIDATE_EMAIL);
 dbg('Validación destinatario', ['email'=>mask_email($Email), 'valido'=>$destinatarioValido]);

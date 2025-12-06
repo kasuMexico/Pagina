@@ -90,7 +90,7 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
   <meta charset="utf-8">
   <title>Post Sociales</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#F2F2F2">
+  <meta name="theme-color" content="#F1F7FC">
   <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
 
   <!-- CSS -->
@@ -99,10 +99,94 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
   <link rel="stylesheet" href="/login/assets/css/cupones.css">
 
   <style>
-    .topbar{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid #e5e7eb;padding:.75rem 1rem}
-    .title{font-weight:600}
-    .share-row{display:flex;gap:.5rem;align-items:center;margin:.5rem 0}
+    body{
+      margin:0;
+      font-family:"Inter","SF Pro Display","Segoe UI",system-ui,-apple-system,sans-serif;
+      background:#F1F7FC;
+      color:#0f172a;
+    }
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:10;
+      background:#F1F7FC;
+      border-bottom:1px solid rgba(15,23,42,.06);
+      padding:calc(8px + var(--safe-t)) 16px 12px;
+      backdrop-filter:blur(12px);
+    }
+    .title{font-weight:700; margin:0; font-size:1rem; letter-spacing:.02em;}
+    main.page-content{
+      padding-top: calc(var(--topbar-h) + var(--safe-t) + 0px);
+      padding-bottom: calc(
+        max(var(--bottombar-h), calc(var(--icon) + 2*var(--pad-v)))
+        + max(var(--safe-b), 8px) + 6px
+      );
+    }
+    .dashboard-shell{
+      max-width:1100px;
+      margin:0 auto;
+      padding:10px 16px 0;
+    }
+    .page-heading{
+      margin:4px 0 4px;
+    }
+    .page-heading h1{
+      font-size:1.5rem;
+      font-weight:800;
+      margin:0 0 4px;
+    }
+    .page-heading p{
+      margin:0;
+      color:#6b7280;
+      font-size:.95rem;
+    }
+    .card-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+      gap:14px;
+    }
+    .card-social{
+      border-radius:20px;
+      padding:16px;
+      background:rgba(255,255,255,.94);
+      backdrop-filter:blur(16px);
+      box-shadow:0 20px 45px rgba(15,23,42,.12);
+      border:1px solid rgba(226,232,240,.9);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .card-social img.media{
+      width:100%;
+      height:auto;
+      border-radius:16px;
+      object-fit:cover;
+      box-shadow:0 10px 30px rgba(15,23,42,.12);
+    }
+    .share-row{display:flex;gap:.5rem;align-items:center;margin:.25rem 0 .5rem;}
     .ico-social{width:36px;height:36px;object-fit:contain;vertical-align:middle}
+    .social-meta h3{margin:0;font-size:1rem;font-weight:800;color:#0f172a;}
+    .social-meta p{margin:4px 0 0;color:#4b5563;font-size:.95rem;}
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:#f4f7fb;
+      color:#1f2a37;
+      font-weight:600;
+      font-size:.82rem;
+      border:1px solid #e5e9f0;
+      white-space:nowrap;
+    }
+    .cta-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      gap:10px;
+    }
   </style>
 </head>
 <body onload="localize()">
@@ -120,57 +204,57 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
 
   <!-- Contenido -->
   <main class="page-content">
-    <div class="container">
-      <div class="row">
+    <div class="dashboard-shell">
+      <div class="page-heading">
+        <h1>Post Sociales</h1>
+        <p>Comparte cupones y artículos activos. El tracking usa tu Id de vendedor en sesión.</p>
+      </div>
+
+      <div class="card-grid">
 
         <?php
         /* ======= Cupones activos aleatorios (6) ======= */
         $cupones = getActivePosts($mysqli, 'Vta', 6);
         if (!$cupones) {
-          echo '<div class="col-12"><p class="text-muted">No hay cupones activos.</p></div>';
+          echo '<div class="card-social"><p class="text-muted mb-0">No hay cupones activos.</p></div>';
         }
         foreach ($cupones as $Reg) {
           $share = buildShareEmpleado($Reg, $Vendedor);
           $Comis = comisionPorProducto($mysqli, (string)$Reg['Producto'], $PorCom);
           ?>
-          <div class="col-12 col-md-6 mb-4">
-            <div class="card h-100">
-              <div class="card-body">
-                <!-- Imagen principal: NO es link; el share solo con íconos -->
-                <img class="img-fluid w-100"
-                     src="https://kasu.com.mx/assets/images/cupones/<?= htmlspecialchars((string)$Reg['Img'], ENT_QUOTES) ?>"
-                     alt="Cupón">
+          <article class="card-social">
+            <img class="media"
+                 src="https://kasu.com.mx/assets/images/cupones/<?= htmlspecialchars((string)$Reg['Img'], ENT_QUOTES) ?>"
+                 alt="Cupón">
 
-                <!-- Íconos de share -->
-                <a href="<?= htmlspecialchars($share['fb'], ENT_QUOTES) ?>"
-                  target="_blank" rel="external noopener noreferrer" aria-label="Compartir en Facebook">
-                  <img class="ico-social" src="/login/assets/img/sociales/facebook.png" alt="Facebook">
-                </a>
-                <a href="<?= htmlspecialchars($share['x'], ENT_QUOTES) ?>"
-                  target="_blank" rel="external noopener noreferrer" aria-label="Compartir en X">
-                  <img class="ico-social" src="/login/assets/img/sociales/x.png" alt="X">
-                </a>
-                <a href="<?= htmlspecialchars($share['li'], ENT_QUOTES) ?>"
-                  target="_blank" rel="external noopener noreferrer" aria-label="Compartir en LinkedIn">
-                  <img class="ico-social" src="/login/assets/img/sociales/LinkedIn.png" alt="LinkedIn">
-                </a>
-                <hr>
-                <br>
-                <div class="ContCupon">
-                  <h2 class="h5"><Strong>Comision por compra</strong></h2>
-                  <h3 class="h6 mb-2"><?= htmlspecialchars((string)$Reg['TitA'], ENT_QUOTES) ?></h3>
-                  <p class="mb-0"><?= htmlspecialchars((string)$Reg['DesA'], ENT_QUOTES) ?></p>
-                </div>
-              </div>
+            <div class="share-row">
+              <a href="<?= htmlspecialchars($share['fb'], ENT_QUOTES) ?>"
+                target="_blank" rel="external noopener noreferrer" aria-label="Compartir en Facebook">
+                <img class="ico-social" src="/login/assets/img/sociales/facebook.png" alt="Facebook">
+              </a>
+              <a href="<?= htmlspecialchars($share['x'], ENT_QUOTES) ?>"
+                target="_blank" rel="external noopener noreferrer" aria-label="Compartir en X">
+                <img class="ico-social" src="/login/assets/img/sociales/x.png" alt="X">
+              </a>
+              <a href="<?= htmlspecialchars($share['li'], ENT_QUOTES) ?>"
+                target="_blank" rel="external noopener noreferrer" aria-label="Compartir en LinkedIn">
+                <img class="ico-social" src="/login/assets/img/sociales/LinkedIn.png" alt="LinkedIn">
+              </a>
             </div>
-          </div>
+
+            <div class="social-meta">
+              <div class="pill">Comisión por compra · $<?= number_format($Comis, 2) ?></div>
+              <h3><?= htmlspecialchars((string)$Reg['TitA'], ENT_QUOTES) ?></h3>
+              <p class="mb-1"><?= htmlspecialchars((string)$Reg['DesA'], ENT_QUOTES) ?></p>
+            </div>
+          </article>
           <?php
         }
 
         /* ======= Artículos activos aleatorios (4) ======= */
         $articulos = getActivePosts($mysqli, 'Art', 4);
         if (!$articulos) {
-          echo '<div class="col-12"><p class="text-muted">No hay artículos activos.</p></div>';
+          echo '<div class="card-social"><p class="text-muted mb-0">No hay artículos activos.</p></div>';
         }
         foreach ($articulos as $Reg) {
           $share = buildShareEmpleado($Reg, $Vendedor);
@@ -185,43 +269,37 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
             $Comis /= 100;
           }
           ?>
-          <div class="col-12 col-md-6 mb-4">
-            <div class="card h-100">
-              <div class="card-body">
-                <img class="img-fluid w-100"
-                     src="<?= htmlspecialchars((string)$Reg['Img'], ENT_QUOTES) ?>" alt="Artículo">
+          <article class="card-social">
+            <img class="media"
+                 src="<?= htmlspecialchars((string)$Reg['Img'], ENT_QUOTES) ?>" alt="Artículo">
 
-                <div class="share-row">
-                  <a href="<?= htmlspecialchars($share['fb'], ENT_QUOTES) ?>" target="_blank" rel="noopener" aria-label="Compartir en Facebook">
-                    <img class="ico-social" src="/login/assets/img/sociales/facebook.png" alt="Facebook">
-                  </a>
-                  <a href="<?= htmlspecialchars($share['x'], ENT_QUOTES) ?>" target="_blank" rel="noopener" aria-label="Compartir en X">
-                    <img class="ico-social" src="/login/assets/img/sociales/x.png" alt="X">
-                  </a>
-                  <a href="<?= htmlspecialchars($share['li'], ENT_QUOTES) ?>" target="_blank" rel="noopener" aria-label="Compartir en LinkedIn">
-                    <img class="ico-social" src="/login/assets/img/sociales/LinkedIn.png" alt="LinkedIn">
-                  </a>
-                  <a href="#" onclick="shareInstagram('<?= htmlspecialchars($share['dest'], ENT_QUOTES) ?>');return false;" aria-label="Compartir en Instagram">
-                    <img class="ico-social" src="/login/assets/img/sociales/instagram.png" alt="Instagram">
-                  </a>
-                </div>
-
-                <hr>
-                <div class="ContCupon">
-                  <h2 class="h5">Lectura $<?= number_format($Comis, 2) ?></h2>
-                  <h3 class="h6 mb-2"><?= htmlspecialchars((string)$Reg['TitA'], ENT_QUOTES) ?></h3>
-                  <p class="mb-1"><?= htmlspecialchars((string)$Reg['DesA'], ENT_QUOTES) ?></p>
-                  <small class="text-muted">*Comisión por usuario único, por día de lectura</small>
-                </div>
-              </div>
+            <div class="share-row">
+              <a href="<?= htmlspecialchars($share['fb'], ENT_QUOTES) ?>" target="_blank" rel="noopener" aria-label="Compartir en Facebook">
+                <img class="ico-social" src="/login/assets/img/sociales/facebook.png" alt="Facebook">
+              </a>
+              <a href="<?= htmlspecialchars($share['x'], ENT_QUOTES) ?>" target="_blank" rel="noopener" aria-label="Compartir en X">
+                <img class="ico-social" src="/login/assets/img/sociales/x.png" alt="X">
+              </a>
+              <a href="<?= htmlspecialchars($share['li'], ENT_QUOTES) ?>" target="_blank" rel="noopener" aria-label="Compartir en LinkedIn">
+                <img class="ico-social" src="/login/assets/img/sociales/LinkedIn.png" alt="LinkedIn">
+              </a>
+              <a href="#" onclick="shareInstagram('<?= htmlspecialchars($share['dest'], ENT_QUOTES) ?>');return false;" aria-label="Compartir en Instagram">
+                <img class="ico-social" src="/login/assets/img/sociales/instagram.png" alt="Instagram">
+              </a>
             </div>
-          </div>
+
+            <div class="social-meta">
+              <div class="pill">Lectura $<?= number_format($Comis, 2) ?></div>
+              <h3><?= htmlspecialchars((string)$Reg['TitA'], ENT_QUOTES) ?></h3>
+              <p class="mb-1"><?= htmlspecialchars((string)$Reg['DesA'], ENT_QUOTES) ?></p>
+              <small class="text-muted">*Comisión por usuario único, por día de lectura</small>
+            </div>
+          </article>
           <?php
         }
         ?>
-      </div><!-- /.row -->
-      <br><br><br><br>
-    </div><!-- /.container -->
+      </div><!-- /.card-grid -->
+    </div><!-- /.dashboard-shell -->
   </main>
 
   <!-- JS -->

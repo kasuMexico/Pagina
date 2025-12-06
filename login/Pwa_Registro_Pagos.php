@@ -126,15 +126,19 @@ function render_bucket(array $bucket): void {
     $cls = trim((string)$r['StatusVenta']);
     $nom = $r['NombreCliente'] !== '' ? (string)$r['NombreCliente'] : ('Venta #' . (int)$r['IdVenta']);
     $suc = $r['SucursalUI'] ? ' - ' . htmlspecialchars((string)$r['SucursalUI'], ENT_QUOTES) : '';
+    $detalle = trim(($r['FechaPromesa'] ?? '') . ' ' . $suc);
 
     printf(
-      '<form method="POST" action="%s" class="mb-2">
+      '<form method="POST" action="%s" class="bucket-card">
         <input type="hidden" name="IdVenta"    value="%d">
         <input type="hidden" name="Referencia" value="%d">
         <input type="hidden" name="Promesa"    value="%s">
         <input type="hidden" name="StatusVta"  value="%s">
-        <span class="new badge blue %s" style="position:relative;padding:0;width:100px;top:20px;">%s</span>
-        <input type="submit" name="SelCte" class="%s" value="%s%s">
+        <span class="badge-status badge %s">%s</span>
+        <button type="submit" name="SelCte" value="1" class="cta %s">
+          <span>%s</span>
+          <strong>%s</strong>
+        </button>
       </form>',
       htmlspecialchars((string)($_SERVER['PHP_SELF'] ?? ''), ENT_QUOTES),
       (int)$r['IdVenta'],
@@ -143,7 +147,8 @@ function render_bucket(array $bucket): void {
       htmlspecialchars($cls, ENT_QUOTES),
       htmlspecialchars($cls, ENT_QUOTES), htmlspecialchars($cls, ENT_QUOTES),
       htmlspecialchars($cls !== '' ? $cls : 'btn btn-primary', ENT_QUOTES),
-      htmlspecialchars($nom, ENT_QUOTES), $suc
+      htmlspecialchars($detalle !== '' ? $detalle : 'Promesa pendiente', ENT_QUOTES),
+      htmlspecialchars($nom, ENT_QUOTES)
     );
   }
 }
@@ -206,7 +211,7 @@ if (isset($_GET['Msg'])) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#F2F2F2">
+  <meta name="theme-color" content="#F1F7FC">
   <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
   <title>Pagos y Promesas de Pago</title>
 
@@ -214,13 +219,131 @@ if (isset($_GET['Msg'])) {
   <link rel="manifest" href="/login/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
   <!-- CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons">
   <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?= htmlspecialchars((string)$VerCache, ENT_QUOTES) ?>">
+  <style>
+    body{
+      margin:0;
+      font-family:"Inter","SF Pro Display","Segoe UI",system-ui,-apple-system,sans-serif;
+      background:#F1F7FC;
+      color:#0f172a;
+    }
+    .topbar{
+      backdrop-filter: blur(12px);
+      background:#F1F7FC !important;
+      border-bottom:1px solid rgba(15,23,42,.06);
+      color:#0f172a !important;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: calc(8px + var(--safe-t)) 16px 10px;
+      height: calc(var(--topbar-h) + var(--safe-t));
+    }
+    .topbar .title{
+      margin:0;
+      font-weight:700;
+      font-size:1rem;
+      letter-spacing:.02em;
+    }
+    main.page-content{
+      padding-top: calc(var(--topbar-h) + var(--safe-t) + 6px);
+      padding-bottom: calc(
+        max(var(--bottombar-h), calc(var(--icon) + 2*var(--pad-v)))
+        + max(var(--safe-b), 8px) + 16px
+      );
+    }
+    .dashboard-shell{
+      max-width:1100px;
+      margin:0 auto;
+      padding: 8px 16px 0;
+    }
+    .page-heading{
+      margin:12px 0 14px;
+    }
+    .page-heading h1{
+      font-size:1.5rem;
+      font-weight:800;
+      margin:0 0 4px;
+    }
+    .page-heading p{
+      margin:0;
+      color:#6b7280;
+      font-size:.95rem;
+    }
+    .list-card{
+      border-radius:20px;
+      padding:16px;
+      background:rgba(255,255,255,.94);
+      backdrop-filter:blur(16px);
+      box-shadow:0 20px 45px rgba(15,23,42,.12);
+      border:1px solid rgba(226,232,240,.9);
+      margin-bottom:16px;
+    }
+    .list-card header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:12px;
+    }
+    .bucket-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:12px;
+    }
+    .bucket-card{
+      position:relative;
+      padding:14px 14px 12px;
+      border-radius:16px;
+      background:#f9fbff;
+      border:1px solid #e5e9f0;
+      box-shadow:0 10px 26px rgba(15,23,42,.08);
+    }
+    .badge-status{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:4px 10px;
+      border-radius:999px;
+      font-weight:700;
+      font-size:.8rem;
+      background:#e8edf7;
+      color:#1f2a37;
+      margin-bottom:8px;
+    }
+    .bucket-card .cta{
+      width:100%;
+      border:none;
+      border-radius:12px;
+      background:#0f6ef0;
+      color:#fff;
+      font-weight:700;
+      padding:10px 12px;
+      box-shadow:0 14px 28px -20px rgba(15,110,240,.65);
+      text-align:left;
+    }
+    .bucket-card .cta span{
+      display:block;
+      font-size:.78rem;
+      color:#e8f0ff;
+      font-weight:500;
+    }
+    .bucket-card .cta strong{
+      display:block;
+      font-size:.98rem;
+      color:#fff;
+    }
+    .badge.ACTIVO{background:#e0f7ec;color:#0f5132;}
+    .badge.PREVENTA{background:#fff4e5;color:#8c6d1f;}
+    .badge.COBRANZA{background:#e8f2ff;color:#0f3c91;}
+    .badge.CANCELADO{background:#fdecea;color:#7f1d1d;}
+    .badge.ACTIVACION{background:#e0f2fe;color:#0b4f71;}
+  </style>
 </head>
 <body onload="localize()">
 
@@ -247,43 +370,66 @@ if (isset($_GET['Msg'])) {
 
   <!-- Contenido -->
   <main class="page-content">
-    <section class="container" style="width:99%;">
-      <div class="form-group">
-        <div class="table-responsive">
-
-          <?php 
-          if(!empty($bucket_vencidas)){
-            echo '
-              <h5 class="mt-4 mb-2">Vencidas y hoy (no pagadas)</h5>
-            ';
-          }else{
-            echo '
-              <h2>No existen Pagos pendientes en esta semana</h2>
-            ';
-          }
-          render_bucket($bucket_vencidas); 
-
-          if(!empty($bucket_sem1)){
-            echo '
-            <h5 class="mt-4 mb-2">Semana '.htmlspecialchars(semana_es($W1_I, $W1_F), ENT_QUOTES).'</h5>
-            ';
-          }
-
-          render_bucket($bucket_sem1);
-
-          if(!empty($bucket_sem2)){
-            echo '
-            <h5 class="mt-4 mb-2">Semana '.htmlspecialchars(semana_es($W2_I, $W2_F), ENT_QUOTES).'</h5>
-            ';
-          }
-          render_bucket($bucket_sem2);
-
-          ?>
-
-        </div>
+    <div class="dashboard-shell">
+      <div class="page-heading">
+        <h1>Pagos y promesas</h1>
+        <p>Revisa promesas vencidas y próximas, registra pagos desde cada tarjeta.</p>
       </div>
-      <br><br><br><br>
-    </section>
+
+      <div class="list-card">
+        <header>
+          <div>
+            <p class="chart-subtitle mb-1">Estado de cobros</p>
+            <h4 class="chart-title">Vencidas y hoy</h4>
+          </div>
+        </header>
+        <?php
+          if(empty($bucket_vencidas)){
+            echo '<p class="chart-subtitle mb-0">No existen pagos pendientes hoy.</p>';
+          } else {
+            echo '<div class="bucket-grid">';
+            render_bucket($bucket_vencidas);
+            echo '</div>';
+          }
+        ?>
+      </div>
+
+      <div class="list-card">
+        <header>
+          <div>
+            <p class="chart-subtitle mb-1">Próxima semana</p>
+            <h4 class="chart-title">Semana <?= htmlspecialchars(semana_es($W1_I, $W1_F), ENT_QUOTES) ?></h4>
+          </div>
+        </header>
+        <?php
+          if(empty($bucket_sem1)){
+            echo '<p class="chart-subtitle mb-0">Sin promesas en este rango.</p>';
+          } else {
+            echo '<div class="bucket-grid">';
+            render_bucket($bucket_sem1);
+            echo '</div>';
+          }
+        ?>
+      </div>
+
+      <div class="list-card">
+        <header>
+          <div>
+            <p class="chart-subtitle mb-1">Semana siguiente</p>
+            <h4 class="chart-title">Semana <?= htmlspecialchars(semana_es($W2_I, $W2_F), ENT_QUOTES) ?></h4>
+          </div>
+        </header>
+        <?php
+          if(empty($bucket_sem2)){
+            echo '<p class="chart-subtitle mb-0">Sin promesas en este rango.</p>';
+          } else {
+            echo '<div class="bucket-grid">';
+            render_bucket($bucket_sem2);
+            echo '</div>';
+          }
+        ?>
+      </div>
+    </div>
   </main>
 
   <!-- JS -->

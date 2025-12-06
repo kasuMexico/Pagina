@@ -1,17 +1,255 @@
 /* ===== Base ===== */
 :root{
-  --kasu-bg:#f1f7fc;
+  --kasu-bg:#F1F7FC;
   --kasu-surface:#fff;
-  --kasu-primary:#01579b;
-  --kasu-text:#505e6c;
-  --kasu-shadow:0 20px 60px rgba(1,46,91,.12);
+  --kasu-primary:#3267ff;
+  --kasu-text:#1c2540;
+  --kasu-shadow:0 16px 40px rgba(50,103,255,.18);
   --kasu-radius:18px;
+
+  /* Safe areas y medidas únicas */
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+
+  --topbar-h: 56px;      /* alto base barra superior */
+
+  /* Menú inferior */
+  --icon: 40px;          /* tamaño real de tus íconos */
+  --pad-v: 6px;          /* relleno vertical dentro del menú */
+  --bottombar-h: 48px;   /* alto objetivo mínimo de la barra */
 }
 
-body{
+html,body{
   background:var(--kasu-bg);
   color:var(--kasu-text);
 }
+
+/* ===== LOGIN PWA — Look tipo app móvil ===== */
+/* Se usa con:
+   <body class="auth-body">
+   <main class="login-clean auth-shell">
+   <section class="login-card auth-card">
+*/
+
+.auth-body{
+  margin:0;
+  min-height:100vh;
+  font-family:"Inter","Segoe UI",system-ui,-apple-system,sans-serif;
+  background:radial-gradient(circle at 14% 16%,#f3f6ff 0,#f7f9ff 26%,#ffffff 70%);
+  color:var(--kasu-text);
+}
+
+/* Contenedor principal tipo app */
+.auth-shell.login-clean{
+  min-height:100vh;
+  padding:64px 18px 64px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.auth-card.login-card{
+  width:min(440px,100%);
+  background:transparent;
+  border-radius:0;
+  box-shadow:none;
+  padding:0;
+  border:none;
+}
+
+@media (min-width:576px){
+  .auth-card.login-card{
+    padding:0;
+  }
+}
+
+/* Header: logo + título */
+.auth-header{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+  margin-bottom:16px;
+  text-align:center;
+}
+
+.auth-logo img{
+  max-width:96px;
+  border-radius:0;
+  box-shadow:none;
+}
+
+.auth-header-text{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.auth-title{
+  font-size:1.55rem;
+  font-weight:800;
+  letter-spacing:.01em;
+  color:#1f2f62;
+  margin:0;
+}
+
+.auth-subtitle{
+  font-size:.9rem;
+  color:#6b7280;
+  margin:0;
+}
+
+/* Tabs superiores para modo de acceso */
+.auth-tabs{
+  display:inline-flex;
+  gap:10px;
+  background:#fff;
+  border-radius:14px;
+  padding:6px;
+  margin:4px 0 18px;
+  border:1px solid #e3ebf5;
+  box-shadow:0 14px 38px -38px rgba(0,0,0,.3);
+}
+
+.auth-tab{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:10px 14px;
+  border-radius:10px;
+  font-size:.88rem;
+  font-weight:600;
+  text-decoration:none;
+  color:#1c2540;
+  transition:all .18s ease-out;
+  white-space:nowrap;
+}
+
+.auth-tab.is-active{
+  background:linear-gradient(135deg,#3267ff,#5283ff);
+  color:#fff;
+  box-shadow:0 14px 30px -20px rgba(50,103,255,.8);
+}
+
+/* Formulario */
+.auth-form{
+  margin:0;
+  padding:0;
+  display:grid;
+  row-gap:18px;
+}
+
+.auth-label{
+  display:block;
+  font-size:.9rem;
+  color:#1c2540;
+  margin-bottom:6px;
+  font-weight:700;
+}
+
+.auth-control.form-control{
+  min-height:48px;
+  font-size:.95rem;
+  border-radius:12px;
+  border:1px solid #e3ebf5;
+  background:#f5f7fb;
+  color:#1c2540;
+  padding:12px 14px;
+  box-shadow:0 0 0 1px transparent;
+}
+
+.auth-control.form-control::placeholder{
+  color:#7a8495;
+}
+
+.auth-control.form-control:focus{
+  border-color:rgba(50,103,255,.9);
+  box-shadow:0 0 0 3px rgba(50,103,255,.16);
+  background:#fff;
+}
+
+/* Botón principal */
+.auth-btn.btn-primary{
+  margin-top:6px;
+  border:none;
+  border-radius:12px;
+  padding:13px 14px;
+  font-weight:700;
+  font-size:.95rem;
+  background:linear-gradient(135deg,#3267ff,#3f7bff);
+  box-shadow:0 18px 30px -18px rgba(50,103,255,.8);
+  text-shadow:none;
+}
+
+.auth-btn.btn-primary:hover,
+.auth-btn.btn-primary:focus{
+  background:#2d5fde;
+}
+
+/* Link secundario */
+.auth-link{
+  width:100%;
+  margin-top:4px;
+  padding-top:4px;
+  color:#3267ff;
+  text-align:center;
+  text-decoration:none;
+  font-weight:600;
+}
+
+.auth-link:hover{
+  color:#2d5fde;
+  text-decoration:none;
+}
+
+/* Mensaje tipo toast */
+.auth-toast{
+  margin-top:14px;
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:12px;
+  background:#f0f8ff;
+  border:1px solid #cfe4ff;
+}
+
+.auth-toast-dot{
+  width:7px;
+  height:7px;
+  border-radius:999px;
+  margin-top:5px;
+  background:linear-gradient(135deg,#0f6ef0,#6aa5ff);
+  box-shadow:0 0 0 5px rgba(15,110,240,.18);
+}
+
+.auth-toast-text{
+  margin:0;
+  font-size:.9rem;
+  color:#0f172a;
+}
+
+/* Footer pequeño */
+.auth-footer{
+  margin-top:24px;
+  text-align:center;
+  font-size:.8rem;
+  color:#6b7280;
+  opacity:.95;
+}
+
+/* Ajustes responsive pequeños */
+@media (max-width:360px){
+  .auth-card.login-card{
+    padding:0 2px;
+  }
+  .auth-title{font-size:1.4rem;}
+  .auth-subtitle{font-size:.85rem;}
+  .auth-tabs{font-size:.82rem;}
+}
+
+/* ===== Resto de estilos de la PWA (sin tocar) ===== */
 
 #cartera_form{width:100%;margin:0 auto;background:#F2F3F4;padding:10px;border-radius:4px;color:#505e6c;}
 #cartera .illus{text-align:center;padding:0 0 10px;color:#01579b;}
@@ -20,62 +258,6 @@ body{
 .td{text-align:right}
 .status{text-align:end;}
 
-.login-clean{
-  background:var(--kasu-bg);
-  min-height:100vh;
-  padding:32px 16px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.login-card{
-  width:100%;
-  max-width:400px;
-  background:var(--kasu-surface);
-  border-radius:var(--kasu-radius);
-  box-shadow:var(--kasu-shadow);
-  padding:32px 28px;
-}
-@media (min-width:576px){
-  .login-card{padding:40px;}
-}
-.login-clean .illustration{
-  text-align:center;
-  padding:0 0 12px;
-}
-.login-clean .illustration img{
-  max-width:160px;
-}
-.login-clean form{
-  width:100%;
-  margin:0;
-  background:transparent;
-  padding:0;
-  border:0;
-  box-shadow:none;
-  color:var(--kasu-text);
-}
-.form-group .form-control{width:100%;}
-.login-clean form .form-control{
-  min-height:46px;
-}
-.login-clean form .btn-primary{
-  background:var(--kasu-primary);
-  border:none;
-  border-radius:var(--kasu-radius);
-  padding:12px;
-  box-shadow:0 12px 30px rgba(1,87,155,.28);
-  margin-top:18px;
-  text-shadow:none;
-  outline:0!important;
-}
-.login-clean form .btn-primary:hover,.login-clean form .btn-primary:focus{
-  background:#0b6fcc;
-}
-.login-clean form .btn-primary:active{transform:translateY(1px);}
-.login-card .alert{margin-top:18px;}
-.login-clean form .forgot{display:block;text-align:center;font-size:12px;color:#6f7a85;opacity:.9;text-decoration:none;}
-.login-clean form .forgot:hover,.login-clean form .forgot:active{opacity:1;text-decoration:none;}
 #entrar{background:#62adbe;}
 #cabecera_nuevo_cliente{width:100%;height:20px;}
 .alta-cliente{margin-top:8px;}
@@ -204,7 +386,7 @@ tbody{border-color:#808B96;}
   padding:14px 16px;
   background:#fdfdfd;
   min-height:150px;
-  box-shadow:0 8px 20px rgba(0,0,0,.04);
+  box-shadow:0 8px 20px rgba(255, 255, 255, 0.04);
 }
 .tool-section header{
   display:flex;
@@ -294,7 +476,7 @@ tbody{border-color:#808B96;}
 }
 .mesa-card-stats .stat strong{
   font-size:1.2rem;
-  color:#0f172a;
+  color:#f1f5f9;
 }
 .mesa-card-actions{margin-top:auto;}
 .mesa-card-media img{border-radius:12px;width:100%;height:auto;display:block;}
@@ -334,27 +516,25 @@ tbody{border-color:#808B96;}
   .mesa-actions-grid .btn{width:100%;}
 }
 
-/* ====== Safe areas y medidas (únicas) ====== */
-:root{
-  --safe-t: env(safe-area-inset-top, 0px);
-  --safe-b: env(safe-area-inset-bottom, 0px);
-
-  --topbar-h: 56px;      /* alto base barra superior */
-
-  /* Menú inferior */
-  --icon: 40px;          /* tamaño real de tus íconos */
-  --pad-v: 6px;          /* relleno vertical dentro del menú */
-  --bottombar-h: 48px;   /* alto objetivo mínimo de la barra */
-}
-
 /* ====== Barra superior fija ====== */
 .topbar{
   position: fixed; top:0; left:0; right:0; z-index:1200;
   height: calc(var(--topbar-h) + var(--safe-t));
   padding: calc(8px + var(--safe-t)) 12px 8px;
-  background:#F2F2F2;
-  border-bottom:1px solid rgba(0,0,0,.08);
+  background:#F1F7FC;
+  border-bottom:1px solid rgba(0,0,0,.05);
   display:flex; align-items:center; gap:8px;
+}
+
+/* Cubre el área segura superior en modo standalone iOS */
+body::before{
+  content:"";
+  position:fixed;
+  top:0; left:0; right:0;
+  height:env(safe-area-inset-top,0px);
+  background:#F1F7FC;
+  z-index:1300;
+  pointer-events:none;
 }
 .topbar .title{ margin:0; text-align:center; width:100%; }
 

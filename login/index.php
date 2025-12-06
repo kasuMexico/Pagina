@@ -12,12 +12,12 @@ require_once dirname(__DIR__) . '/eia/session.php';
 kasu_session_start();
 
 /* ==========================================================================================
- * BLOQUE: Dependencias
+ * Dependencias
  * ========================================================================================== */
 require_once __DIR__ . '/../eia/librerias.php';
 
 /* ==========================================================================================
- * BLOQUE: Acceso directo si ya hay sesión
+ * Acceso directo si ya hay sesión
  * ========================================================================================== */
 if (!empty($_SESSION['Vendedor'])) {
     header('Location: https://kasu.com.mx/login/Pwa_Principal.php');
@@ -25,14 +25,14 @@ if (!empty($_SESSION['Vendedor'])) {
 }
 
 /* ==========================================================================================
- * BLOQUE: Token CSRF
+ * Token CSRF
  * ========================================================================================== */
 if (empty($_SESSION['csrf_auth'])) {
     $_SESSION['csrf_auth'] = bin2hex(random_bytes(32));
 }
 
 /* ==========================================================================================
- * BLOQUE: Selector de vista
+ * Selector de vista
  * - action: '' = login, 'cp' = cambiar contraseña
  * - data:   int opcional; si es 8, mostrar registro de contraseña por enlace
  * - Usr:    usuario pasado por enlace
@@ -43,12 +43,12 @@ $data     = filter_input(INPUT_GET, 'data', FILTER_VALIDATE_INT);
 $usr      = filter_input(INPUT_GET, 'Usr', FILTER_SANITIZE_SPECIAL_CHARS);
 
 /* ==========================================================================================
- * BLOQUE: Detección de modo "registro de contraseña por token"
+ * Detección de modo "registro de contraseña por token"
  * ========================================================================================== */
 $isTokenReset = ($dataRaw !== null && !ctype_digit((string)$dataRaw) && !empty($usr));
 
 /* ==========================================================================================
- * BLOQUE: Mensajes de estado
+ * Mensajes de estado
  * ========================================================================================== */
 $messages = [
     1 => "Este correo ya registró contraseña. Solicita otro enlace a tu supervisor.",
@@ -60,10 +60,10 @@ $messages = [
 ];
 
 /* ==========================================================================================
- * BLOQUE: Título y subtítulo según vista (para UI tipo app)
+ * Título y subtítulo según vista (para UI tipo app)
  * ========================================================================================== */
-$viewTitle    = 'Plataforma Colaboradores';
-$viewSubtitle = 'Inicia sesión para continuar.';
+$viewTitle    = 'Acceso';
+$viewSubtitle = 'Ingresa con tu usuario y contraseña.';
 
 if ($isTokenReset || (!empty($data) && $data === 8)) {
     $viewTitle    = 'Crear contraseña';
@@ -82,14 +82,19 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Acceso seguro a KASU Ventas">
-<meta name="theme-color" content="#01579b">
+<meta name="theme-color" content="#F1F7FC">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>KASU | Ventas</title>
+
 <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
 <link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png">
 <link rel="manifest" href="/login/manifest.webmanifest">
+
+<!-- Bootstrap (para .btn, .form-control, grid) -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+
+<!-- Hoja de estilos principal de la PWA (incluye los estilos auth-* que pegaste) -->
 <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?= htmlspecialchars($VerCacheSafe, ENT_QUOTES) ?>">
 </head>
 <body class="auth-body">
@@ -97,7 +102,11 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
     <section class="login-card auth-card" aria-label="Acceso a KASU Ventas">
       <header class="auth-header">
         <div class="auth-logo">
-          <img alt="KASU" src="assets/img/logoKasu.png" loading="lazy" decoding="async">
+          <img
+            alt="KASU"
+            src="assets/img/logoKasu.png"
+            loading="lazy"
+            decoding="async">
         </div>
         <div class="auth-header-text">
           <h1 class="auth-title"><?= htmlspecialchars($viewTitle, ENT_QUOTES) ?></h1>
@@ -105,7 +114,8 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
         </div>
       </header>
 
-      <div class="auth-tabs" role="tablist" aria-label="Modo de acceso">
+      <!-- Tabs modo de acceso (login / cambiar contraseña) -->
+      <nav class="auth-tabs" role="tablist" aria-label="Modo de acceso">
         <a
           href="/login/index.php"
           class="auth-tab<?= ($action === '' && !$isTokenReset && ($data !== 8)) ? ' is-active' : '' ?>"
@@ -123,12 +133,12 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
         >
           Cambiar contraseña
         </a>
-      </div>
+      </nav>
 
       <?php if ($isTokenReset): ?>
-        <!-- ==================================================================================
+        <!-- ==========================================================================
              FORMULARIO: ACTIVAR/REGISTRAR CONTRASEÑA vía enlace con token (data no numérico)
-             ================================================================================== -->
+             ========================================================================== -->
         <form class="auth-form" method="POST" action="php/Funcionalidad_Empleados.php" autocomplete="off">
           <input type="hidden" name="csrf" value="<?= $_SESSION['csrf_auth'] ?>">
           <input type="hidden" name="Host" value="<?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES) ?>">
@@ -163,15 +173,18 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
             Guardar contraseña
           </button>
 
-          <button type="button" class="btn btn-link btn-sm auth-link" onclick="window.location.href='/login/index.php'">
+          <button
+            type="button"
+            class="btn btn-link btn-sm auth-link"
+            onclick="window.location.href='/login/index.php'">
             Volver a iniciar sesión
           </button>
         </form>
 
       <?php elseif (!empty($data) && $data === 8): ?>
-        <!-- ==================================================================================
+        <!-- ==========================================================================
              FORMULARIO: ACTIVAR/REGISTRAR CONTRASEÑA vía enlace (data = 8)
-             ================================================================================== -->
+             ========================================================================== -->
         <form class="auth-form" method="POST" action="php/Funcionalidad_Empleados.php" autocomplete="off">
           <input type="hidden" name="csrf" value="<?= $_SESSION['csrf_auth'] ?>">
           <input type="hidden" name="Host" value="<?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES) ?>">
@@ -206,15 +219,18 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
             Guardar contraseña
           </button>
 
-          <button type="button" class="btn btn-link btn-sm auth-link" onclick="window.location.href='/login/index.php'">
+          <button
+            type="button"
+            class="btn btn-link btn-sm auth-link"
+            onclick="window.location.href='/login/index.php'">
             Volver a iniciar sesión
           </button>
         </form>
 
       <?php elseif ($action === 'cp'): ?>
-        <!-- ==================================================================================
+        <!-- ==========================================================================
              FORMULARIO: CAMBIAR CONTRASEÑA
-             ================================================================================== -->
+             ========================================================================== -->
         <form class="auth-form" method="POST" action="php/Funcionalidad_Empleados.php" autocomplete="off">
           <input type="hidden" name="csrf" value="<?= $_SESSION['csrf_auth'] ?>">
           <input type="hidden" name="Host" value="<?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES) ?>">
@@ -271,15 +287,18 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
             Cambiar contraseña
           </button>
 
-          <button type="button" class="btn btn-link btn-sm auth-link" onclick="window.location.href='/login/index.php'">
+          <button
+            type="button"
+            class="btn btn-link btn-sm auth-link"
+            onclick="window.location.href='/login/index.php'">
             Volver a iniciar sesión
           </button>
         </form>
 
       <?php else: ?>
-        <!-- ==================================================================================
+        <!-- ==========================================================================
              FORMULARIO: LOGIN
-             ================================================================================== -->
+             ========================================================================== -->
         <form class="auth-form" method="POST" action="php/Funcionalidad_Empleados.php" autocomplete="on">
           <input type="hidden" name="csrf" value="<?= $_SESSION['csrf_auth'] ?>">
           <input type="hidden" name="Host" value="<?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES) ?>">

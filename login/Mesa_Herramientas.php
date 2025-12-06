@@ -104,7 +104,7 @@ $VerCache = time();
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#F2F2F2">
+<meta name="theme-color" content="#F1F7FC">
 <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
 <title>Mesa Herramientas</title>
 
@@ -113,7 +113,7 @@ $VerCache = time();
      Fecha: 05/11/2025 | Revisado por: JCCM -->
 <link rel="manifest" href="/login/manifest.webmanifest?v=<?php echo (int)$VerCache; ?>">
 <link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 
 <!-- =================== CSS ===================
      Qué hace: Estilos base del sitio
@@ -122,6 +122,127 @@ $VerCache = time();
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?php echo (int)$VerCache; ?>">
+<style>
+  body{
+    margin:0;
+    font-family:"Inter","SF Pro Display","Segoe UI",system-ui,-apple-system,sans-serif;
+    background:#F1F7FC;
+    color:#0f172a;
+  }
+  .topbar{
+    backdrop-filter: blur(12px);
+    background:#F1F7FC !important;
+    border-bottom:1px solid rgba(15,23,42,.06);
+    color:#0f172a !important;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding: calc(8px + var(--safe-t)) 16px 10px;
+    height: calc(var(--topbar-h) + var(--safe-t));
+  }
+  .topbar .title{
+    margin:0;
+    font-weight:800;
+    font-size:1.05rem;
+    letter-spacing:.02em;
+  }
+  main.page-content{
+    padding-top: calc(var(--topbar-h) + var(--safe-t) + 6px);
+    padding-bottom: calc(
+      max(var(--bottombar-h), calc(var(--icon) + 2*var(--pad-v)))
+      + max(var(--safe-b), 8px) + 16px
+    );
+  }
+  .dashboard-shell{
+    max-width:1100px;
+    margin:0 auto;
+    padding:8px 16px 0;
+  }
+  .page-heading{
+    margin:10px 0 14px;
+  }
+  .page-heading h1{
+    font-size:1.5rem;
+    font-weight:800;
+    margin:0 0 4px;
+  }
+  .page-heading p{
+    margin:0;
+    color:#6b7280;
+    font-size:.95rem;
+  }
+  .list-card{
+    border-radius:20px;
+    padding:16px;
+    background:rgba(255,255,255,.94);
+    backdrop-filter:blur(16px);
+    box-shadow:0 20px 45px rgba(15,23,42,.12);
+    border:1px solid rgba(226,232,240,.9);
+  }
+  .tool-sections{
+    display:grid;
+    grid-template-columns:repeat(1,minmax(0,1fr));
+    gap:14px;
+  }
+  @media (min-width:768px){
+    .tool-sections{grid-template-columns:repeat(4,minmax(0,1fr));}
+  }
+  @media (min-width:1200px){
+    .tool-sections{grid-template-columns:repeat(4,minmax(0,1fr));}
+  }
+  .tool-span-1{grid-column:span 1;}
+  .tool-span-2{grid-column:span 2;}
+  .tool-span-3{grid-column:span 3;}
+  .tool-span-4{grid-column:span 4;}
+  @media (max-width:767px){
+    .tool-span-1,.tool-span-2,.tool-span-3,.tool-span-4{grid-column:span 1;}
+  }
+  .tool-section{
+    border-radius:16px;
+    background:#fff;
+    border:1px solid rgba(226,232,240,.9);
+    box-shadow:0 14px 32px rgba(15,23,42,.08);
+    padding:14px 16px;
+  }
+  .tool-section header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .tool-section strong{
+    font-weight:800;
+    color:#0f172a;
+  }
+  .tool-section small{
+    color:#6b7280;
+    font-weight:600;
+  }
+  .tool-section-body .form-group label{
+    font-weight:700;
+    color:#1c2540;
+    font-size:.9rem;
+  }
+  .tool-section-body .form-control{
+    border-radius:12px;
+    border:1px solid #e3ebf5;
+    background:#f5f7fb;
+    color:#1c2540;
+    padding:11px 12px;
+    box-shadow:none;
+  }
+  .tool-section-body .btn{
+    border-radius:12px;
+    font-weight:700;
+    padding:10px 12px;
+  }
+  .tool-section-body .action-buttons{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+</style>
 
 </head>
 <body onload="localize()">
@@ -130,6 +251,7 @@ $VerCache = time();
      Fecha: 05/11/2025 | Revisado por: JCCM -->
 <div class="topbar">
   <h4 class="title mb-0">Herramientas</h4>
+  <p class="mb-0 ml-2 text-muted" style="font-size:.9rem;">Utilidades rápidas y datos de tu cuenta</p>
 </div>
 
 <!-- =================== Menú inferior ===================
@@ -202,12 +324,16 @@ $VerCache = time();
      Qué hace: Formularios y utilidades según nivel del empleado
      Fecha: 05/11/2025 | Revisado por: JCCM -->
 <main class="page-content">
-  <div class="container" style="width:99%;">
+  <div class="dashboard-shell">
+    <div class="page-heading">
+      <h1>Mesa de herramientas</h1>
+      <p>Acceso rápido a metas, cargas masivas, búsquedas y soporte.</p>
+    </div>
     <div class="tool-sections">
 
       <?php if ($Reg): ?>
       <!-- SECCION: Mi información-->
-      <section class="tool-section">
+      <section class="tool-section tool-span-4">
         <header>
           <strong>Mi información</strong>
           <small><?php echo h($basicas->BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$Reg['Nivel'] ?? 0)); ?></small>
@@ -224,7 +350,7 @@ $VerCache = time();
 
       <?php if ((int)$Vende <= 2): ?>
       <!-- SECCION: Asignacion de Metas-->
-      <section class="tool-section">
+      <section class="tool-section tool-span-2">
         <header><strong>Metas y normalidad</strong></header>
         <div class="tool-section-body">
           <form method="POST" action="php/Funcionalidad_Pwa.php">
@@ -235,13 +361,13 @@ $VerCache = time();
             <div data-fingerprint-slot></div>
             <div class="form-group">
               <label class="small">Meta de colocación (<?php echo h($meses[(int)date('n')]); ?>)</label>
-              <input class="form-control form-control-sm" type="number" name="MetaMes" placeholder="Ej. 120000">
+              <input class="form-control" type="number" name="MetaMes" placeholder="Ej. 120000">
             </div>
             <div class="form-group">
               <label class="small">% Normalidad de Cobranza</label>
-              <input class="form-control form-control-sm" type="number" name="Normalidad" placeholder="Ej. 92">
+              <input class="form-control" type="number" name="Normalidad" placeholder="Ej. 92">
             </div>
-            <button class="btn btn-secondary btn-sm btn-block" type="submit" name="Asignar" value="1">Guardar metas</button>
+            <button class="btn btn-secondary btn-block" type="submit" name="Asignar" value="1">Guardar metas</button>
           </form>
         </div>
       </section>
@@ -249,7 +375,7 @@ $VerCache = time();
 
             <?php if ((int)$Vende <= 2): ?>
       <!-- SECCION: Carga masiva de clientes -->
-      <section class="tool-section">
+      <section class="tool-section tool-span-2">
         <header><strong>Carga masiva de clientes</strong></header>
         <div class="tool-section-body">
           <form method="POST" action="Lote_Clientes.php" enctype="multipart/form-data">
@@ -261,8 +387,8 @@ $VerCache = time();
               </label>
             </div>
             <div class="d-flex flex-wrap gap-2">
-              <button class="btn btn-secondary btn-sm mr-2" type="submit">Subir archivo</button>
-              <a class="btn btn-outline-secondary btn-sm" href="https://kasu.com.mx/login/assets/Plantilla_Ctes_Masivos_KASU.csv" download>Descargar plantilla</a>
+              <button class="btn btn-secondary" type="submit">Subir archivo</button>
+              <a class="btn btn-outline-secondary" href="https://kasu.com.mx/login/assets/Plantilla_Ctes_Masivos_KASU.csv" download>Descargar plantilla</a>
             </div>
           </form>
         </div>
@@ -270,13 +396,13 @@ $VerCache = time();
       <?php endif; ?>
 
       <!-- SECCION: Acciones sobre la cuenta-->
-      <section class="tool-section">
+      <section class="tool-section tool-span-1">
         <header><strong>Acciones rápidas</strong></header>
         <div class="tool-section-body tool-actions-body">
           <form method="POST" action="<?php echo h($_SERVER['PHP_SELF']); ?>" class="mb-2">
             <div class="action-buttons">
-              <button class="btn btn-outline-primary btn-sm w-100" name="ActDatos" type="submit">Actualizar mis datos</button>
-              <button class="btn btn-outline-warning btn-sm w-100" name="RepDat" type="submit">Reportar un problema</button>
+              <button class="btn btn-outline-primary w-100" name="ActDatos" type="submit">Actualizar mis datos</button>
+              <button class="btn btn-outline-warning w-100" name="RepDat" type="submit">Reportar un problema</button>
             </div>
           </form>
           <form method="POST" action="/login/logout.php">
@@ -284,14 +410,14 @@ $VerCache = time();
             <input type="hidden" name="Evento" value="LogOut">
             <input type="hidden" name="checkdia" value="<?php echo h(date('Y-m-d')); ?>">
             <input type="hidden" name="csrf" value="<?php echo h($_SESSION['csrf_logout']); ?>">
-            <button class="btn btn-success btn-sm w-100" type="submit" name="Salir" value="1">Cerrar sesión</button>
+            <button class="btn btn-success w-100" type="submit" name="Salir" value="1">Cerrar sesión</button>
           </form>
         </div>
       </section>
 
       <?php if ((int)$Vende <= 3): ?>
       <!-- SECCION: INGRESO A SUB SECCIONES-->
-      <section class="tool-section">
+      <section class="tool-section tool-span-3">
         <header><strong>Buscadores rápidos</strong></header>
         <div class="tool-section-body">
           <?php if ((int)$Vende <= 2): ?>
@@ -327,7 +453,6 @@ $VerCache = time();
       <?php endif; ?>
 
     </div>
-    <br><br><br>
   </div>
 </main>
 

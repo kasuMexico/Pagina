@@ -30,11 +30,25 @@ date_default_timezone_set('America/Mexico_City');
 $hoy        = date('Y-m-d');
 $HoraActual = date('H:i:s');
 
-// Log general de todas las peticiones POST a este controlador
+// Log general de todas las peticiones POST a este controlador (sin contraseñas)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ini_set('log_errors', '1');
     ini_set('error_log', dirname(__DIR__, 2) . '/eia/error.log');
-    error_log('[KASU][AUTH][POST] ' . json_encode($_POST, JSON_UNESCAPED_UNICODE));
+
+    $logSafe = $_POST;
+
+    // Nunca registrar contraseñas ni tokens sensibles en el log
+    $sensibles = [
+        'PassWord', 'PassWord1', 'PassWord2', 'PassAct',
+        'csrf', 'csrf_auth', 'csrf_logout',
+    ];
+    foreach ($sensibles as $key) {
+        if (array_key_exists($key, $logSafe)) {
+            $logSafe[$key] = '***';
+        }
+    }
+
+    error_log('[KASU][AUTH][POST] ' . json_encode($logSafe, JSON_UNESCAPED_UNICODE));
 }
 
 
@@ -130,13 +144,30 @@ if (!function_exists('kasu_filter_contact_data')) {
     }
 }
 
-/**************************************** BLOQUE: LOGIN Revisado 18/11/2025 JCCM ****************************************/
-/* Qué hace: Autentica al usuario contra Empleados.Pass (sha256) y registra auditoría + debug */
-if (!empty($_POST['Login'])) {
-    ini_set('log_errors', '1');
+/**************************************** BLOQUE: LOGIN Revisado 06/12/2025 JCCM ****************************************/
+/* Qué hace: Autentica al usuario contra Empleados.Pass (sha256) vía autenticarVendedor()
+ *           y registra auditoría + logs de debug sin exponer credenciales.
+ */
+if (
+    $_SERVER['REQUEST_METHOD'] === 'POST'
+    && isset($_POST['Usuario'], $_POST['PassWord'])
+    && !isset(
+        $_POST['CambiarPass'],
+        $_POST['PagoCom'],
+        $_POST['CreaEmpl'],
+        $_POST['CamDat'],
+        $_POST['Reporte'],
+        $_POST['BajaEmp'],
+        $_POST['CambiVend'],
+        $_POST['accion']
+    )
+) {
+
+    // Asegurar log central
     $logFile = defined('KASU_ERROR_LOG_FILE')
         ? KASU_ERROR_LOG_FILE
         : dirname(__DIR__, 2) . '/eia/error.log';
+    ini_set('log_errors', '1');
     ini_set('error_log', $logFile);
 
     // CSRF (obligatorio si viene en el formulario)
@@ -157,16 +188,16 @@ if (!empty($_POST['Login'])) {
         exit;
     }
 
-    error_log("[KASU][Login] Intento de acceso para {$Usuario}");
+    error_log('[KASU][Login] Intento de acceso para usuario=' . $Usuario);
 
     // ===================== DEBUG PREVIO: qué hay en Empleados para este usuario =====================
-    $row           = null;
-    $rowFound      = false;
-    $hashDb        = '';
-    $statusDb      = null;
-    $idDb          = null;
-    $shaCandidate  = hash('sha256', $Pass);
-    $passMatchSha  = false;
+    $row          = null;
+    $rowFound     = false;
+    $hashDb       = '';
+    $statusDb     = null;
+    $idDb         = null;
+    $shaCandidate = hash('sha256', $Pass);
+    $passMatchSha = false;
 
     if ($stmt = $mysqli->prepare("SELECT Id, IdUsuario, Pass, Status, Nivel, Sucursal FROM Empleados WHERE IdUsuario = ? LIMIT 1")) {
         $stmt->bind_param('s', $Usuario);
@@ -192,12 +223,10 @@ if (!empty($_POST['Login'])) {
         'id_empleado_db'     => $idDb,
         'status_db'          => $statusDb,
         'hash_db_len'        => strlen($hashDb),
-        'hash_db_prefix'     => $hashDb !== '' ? substr($hashDb, 0, 16) : null,
-        'pass_sha_len'       => strlen($shaCandidate),
-        'pass_sha_prefix'    => substr($shaCandidate, 0, 16),
-        'pass_matches_sha'   => $passMatchSha,
+        // No exponemos hash completo, solo un prefijo para revisar formato
+        'hash_db_prefix'     => $hashDb !== '' ? substr($hashDb, 0, 8) : null,
+        'pass_sha_prefix'    => substr($shaCandidate, 0, 8),
         'session_id_before'  => session_id(),
-        'cookie_session_raw' => $_COOKIE[session_name()] ?? 'NO_COOKIE',
         'user_agent'         => $_SERVER['HTTP_USER_AGENT'] ?? '',
         'remote_addr'        => $_SERVER['REMOTE_ADDR'] ?? '',
     ];
@@ -217,7 +246,6 @@ if (!empty($_POST['Login'])) {
         'session_vendedor'     => $_SESSION['Vendedor'] ?? null,
         'session_idempleado'   => $_SESSION['IdEmpleado'] ?? null,
         'calculated_idempleado'=> $idEmpSesion,
-        'cookie_session_after' => $_COOKIE[session_name()] ?? 'NO_COOKIE',
     ];
     error_log('[KASU][Login][DEBUG_POST] ' . json_encode($postAuth, JSON_UNESCAPED_UNICODE));
 
@@ -233,7 +261,7 @@ if (!empty($_POST['Login'])) {
         $seguridad->auditoria_registrar(
             $mysqli,
             $basicas,
-            $_POST,
+            ['Usuario' => $usuarioSesion],
             'LoginOK',
             $_POST['Host'] ?? $_SERVER['PHP_SELF']
         );
@@ -247,7 +275,7 @@ if (!empty($_POST['Login'])) {
     $seguridad->auditoria_registrar(
         $mysqli,
         $basicas,
-        $_POST,
+        ['Usuario' => $Usuario],
         'LoginFAIL',
         $_POST['Host'] ?? $_SERVER['PHP_SELF']
     );
@@ -1026,85 +1054,5 @@ if (isset($_POST['accion'])) {
     $go('Acción no reconocida');
 }
 
-
-/* ==================== BOTONES: Activar | Desactivar | Borrar | Actualizar vigencia ==================== */
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
-  // --- utilidades locales ---
-  $redir = function(string $msg) {
-    $ref = $_SERVER['HTTP_REFERER'] ?? '/login/Mesa_Marketing.php';
-    // aseguremos ruta interna
-    $url = (strpos($ref, 'http') === 0) ? $ref : ('https://kasu.com.mx' . $ref);
-    $glue = (strpos($url, '?') !== false) ? '&' : '?';
-    header('Location: ' . $url . $glue . 'Msg=' . urlencode($msg));
-    exit;
-  };
-  $assert_csrf = function() {
-    if (isset($_POST['csrf']) && !hash_equals($_SESSION['csrf_auth'] ?? '', (string)$_POST['csrf'])) {
-      http_response_code(403); exit;
-    }
-  };
-
-  try {
-    $assert_csrf();
-
-    $accion = (string)$_POST['accion'];
-    $id     = (int)($_POST['Id'] ?? 0);
-    $host   = $_POST['Host'] ?? ($_SERVER['PHP_SELF'] ?? '/php/Funcionalidad_Empleados.php');
-
-    if ($id <= 0) { $redir('ID inválido'); }
-
-    switch ($accion) {
-      case 'activar_tarjeta':
-        // Status = 1
-        $basicas->ActCampo($mysqli, 'PostSociales', 'Status', 1, $id);
-        // Auditoría
-        $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Tarjeta_Activar', $host);
-        $redir('Tarjeta activada');
-        break;
-
-      case 'desactivar_tarjeta':
-        // Status = 0
-        $basicas->ActCampo($mysqli, 'PostSociales', 'Status', 0, $id);
-        $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Tarjeta_Desactivar', $host);
-        $redir('Tarjeta desactivada');
-        break;
-
-      case 'borrar_tarjeta':
-        // Borrado lógico: Status = 9 (evita perder histórico y conteos)
-        $basicas->ActCampo($mysqli, 'PostSociales', 'Status', 9, $id);
-        $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Tarjeta_Borrar', $host);
-        $redir('Tarjeta eliminada');
-        break;
-
-      case 'actualizar_vigencia':
-        // Validez_Fin desde <input type="date"> → Y-m-d 23:59:59
-        $val = trim((string)($_POST['Validez_Fin'] ?? ''));
-        if ($val === '') { $redir('Fecha vacía'); }
-        $dt = DateTime::createFromFormat('Y-m-d', $val);
-        if ($dt === false) { $redir('Fecha inválida'); }
-        $dt->setTime(23, 59, 59);
-        $fecha = $dt->format('Y-m-d H:i:s');
-
-        $stmt = $mysqli->prepare('UPDATE PostSociales SET Validez_Fin=? WHERE Id=? LIMIT 1');
-        $stmt->bind_param('si', $fecha, $id);
-        $stmt->execute();
-        $stmt->close();
-
-        $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Tarjeta_Vigencia', $host);
-        $redir('Vigencia actualizada');
-        break;
-
-      default:
-        $redir('Acción no reconocida');
-    }
-  } catch (Throwable $e) {
-    $msg = 'Error: ' . substr($e->getMessage(), 0, 120);
-    if (isset($seguridad)) {
-      $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Tarjeta_Error', $_POST['Host'] ?? ($_SERVER['PHP_SELF'] ?? ''));
-    }
-    // Evita filtrar stack completo al usuario
-    $redir($msg);
-  }
-}
 
 ?>

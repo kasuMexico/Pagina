@@ -1,13 +1,14 @@
 <?php
 /********************************************************************************************
  * Qué hace: Renderiza el menú inferior de la PWA con iconos activos/inactivos por página.
- * Fecha: 05/11/2025
+ * Fecha: 06/12/2025
  * Revisado por: JCCM
  * Cambios:
  *  - Si la página actual inicia con "Mesa_": solo mostrar "Pwa_Principal.php" y opciones Mesa_*.
  *  - Agregar Mesa_Marketing.php y Mesa_Finanzas.php con iconos color/B&N.
  *  - Ocultar Marketing y Finanzas cuando la página actual inicia con "Pwa_".
  *  - Marketing y Finanzas visibles solo para niveles 1 y 2.
+ *  - Modernizado a estilo iOS (bottom nav tipo dock, labels bajo icono, blur suave).
  ********************************************************************************************/
 
 declare(strict_types=1);
@@ -22,7 +23,7 @@ $CoMn = basename((string)($_SERVER['PHP_SELF'] ?? ''));
 $anchorDisabled = 'style="pointer-events:none;cursor:default" aria-current="page" tabindex="-1"';
 
 /* ==========================================================================================
- * FUNCIÓN: btnIcon
+ * FUNCIÓN: btnIcon — versión con layout iOS (icono + label)
  * ========================================================================================== */
 function btnIcon(
   string $href,
@@ -32,16 +33,27 @@ function btnIcon(
   string $anchorDisabled,
   string $alt = ''
 ): void {
-  $img = $isActive ? $imgColor : $imgBW;
+  $img     = $isActive ? $imgColor : $imgBW;
   $altSafe = htmlspecialchars($alt, ENT_QUOTES, 'UTF-8');
   $imgSafe = htmlspecialchars($img, ENT_QUOTES, 'UTF-8');
 
+  $classes = 'BtnMenu kasu-nav-item';
   if ($isActive) {
-    echo '<a class="BtnMenu" ' . $anchorDisabled . '><img src="' . $imgSafe . '" alt="' . $altSafe . '"></a>';
+    $classes .= ' is-active';
+  }
+
+  if ($isActive) {
+    echo '<a class="' . $classes . '" ' . $anchorDisabled . '>';
   } else {
     $hrefSafe = htmlspecialchars($href, ENT_QUOTES, 'UTF-8');
-    echo '<a class="BtnMenu" href="' . $hrefSafe . '"><img src="' . $imgSafe . '" alt="' . $altSafe . '"></a>';
+    echo '<a class="' . $classes . '" href="' . $hrefSafe . '">';
   }
+
+  echo    '<span class="kasu-nav-icon">'
+        .   '<img src="' . $imgSafe . '" alt="' . $altSafe . '">'
+        . '</span>'
+        . '<span class="kasu-nav-label">' . $altSafe . '</span>'
+        . '</a>';
 }
 
 /* ==========================================================================================
@@ -65,7 +77,7 @@ $isPwaGroup  = (strncmp($CoMn, 'Pwa_', 4) === 0);
 /* Visibilidad por nivel para Marketing/Finanzas */
 $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
 ?>
-<div class="MenuPrincipal">
+<nav class="MenuPrincipal kasu-bottom-nav" role="navigation" aria-label="Navegación principal">
   <?php
     /* ======================================================================================
      * MODO "Mesa_*": Solo mostrar Principal y las páginas del grupo Mesa_
@@ -79,7 +91,6 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
         'assets/img/kasu_logo.jpeg',
         $isPpal,
         $anchorDisabled,
-        'Inicio'
       );
 
       // Mesa_Marketing (solo niveles 1 y 2)
@@ -90,7 +101,6 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
           'assets/img/Iconos_menu/marketing.png',
           $isMesaMarketing,
           $anchorDisabled,
-          'Marketing'
         );
       }
 
@@ -102,7 +112,6 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
           'assets/img/Iconos_menu/Finanzas.png',
           $isMesaFinanzas,
           $anchorDisabled,
-          'Finanzas'
         );
       }
 
@@ -113,7 +122,6 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
         'assets/img/Iconos_menu/ajustes.png',
         $isTools,
         $anchorDisabled,
-        'Herramientas'
       );
     } else {
       /* ================================================================================
@@ -129,7 +137,6 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
         'assets/img/kasu_logo.jpeg',
         $isPpal,
         $anchorDisabled,
-        'Inicio'
       );
 
       // Análisis (solo Nivel 1)
@@ -140,7 +147,6 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
           'assets/img/Iconos_menu/analisis.png',
           $isAnalis,
           $anchorDisabled,
-          'Análisis'
         );
       }
 
@@ -152,7 +158,6 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
           'assets/img/Iconos_menu/usuario.png',
           $isCltes,
           $anchorDisabled,
-          'Clientes'
         );
       }
 
@@ -164,7 +169,6 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
           'assets/img/Iconos_menu/prospectos.png',
           $isPros,
           $anchorDisabled,
-          'Prospectos'
         );
       }
 
@@ -176,7 +180,6 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
           'assets/img/Iconos_menu/cobranza.png',
           $isCob,
           $anchorDisabled,
-          'Cobranza'
         );
       }
 
@@ -188,7 +191,6 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
           'assets/img/sociales/facebook.png',
           $isSocial,
           $anchorDisabled,
-          'Social'
         );
       }
 
@@ -201,7 +203,6 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
           'assets/img/Iconos_menu/marketing.png',
           $isMesaMarketing,
           $anchorDisabled,
-          'Marketing'
         );
 
         // Mesa_Finanzas
@@ -211,9 +212,9 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
           'assets/img/Iconos_menu/Finanzas.png',
           $isMesaFinanzas,
           $anchorDisabled,
-          'Finanzas'
         );
       }
+
       // Herramientas (siempre)
       btnIcon(
         'Mesa_Herramientas.php',
@@ -221,11 +222,101 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
         'assets/img/Iconos_menu/ajustes.png',
         $isTools,
         $anchorDisabled,
-        'Herramientas'
       );
     }
   ?>
-</div>
+</nav>
+<style>
+  /* Barra inferior estilo iOS / dock */
+  #Menu .kasu-bottom-nav{
+    display:flex;
+    justify-content:space-around;
+    /* levantamos los iconos respecto al home indicator */
+    align-items:flex-start;
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+    background:rgba(248,250,252,.94);
+    border-top:1px solid rgba(148,163,184,.45);
+    box-shadow:0 -12px 35px rgba(15,23,42,.18);
+
+    /* un poco más de padding arriba y dejamos el espacio de la safe-area abajo */
+    padding-top:8px;
+    padding-bottom:calc(4px + max(var(--safe-b, 0px), 8px));
+  }
+
+  #Menu .kasu-bottom-nav .kasu-nav-item{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    gap:4px;
+    padding:2px 0 0;
+    text-decoration:none;
+    color:#6b7280;
+    font-size:.72rem;
+  }
+
+  #Menu .kasu-bottom-nav .kasu-nav-item .kasu-nav-icon{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    /* icon container un poco más grande */
+    width:56px;
+    height:40px;
+    border-radius:999px;
+    transition:background .16s ease-out, box-shadow .16s ease-out, transform .1s ease-out;
+  }
+
+  #Menu .kasu-bottom-nav .kasu-nav-item img{
+    /* iconos un poco más grandes */
+    width:var(--icon);
+    height:var(--icon);
+    max-width:32px;
+    max-height:32px;
+    border-radius:12px;
+    display:block;
+  }
+
+  #Menu .kasu-bottom-nav .kasu-nav-item .kasu-nav-label{
+    line-height:1.1;
+    max-width:72px;
+    text-align:center;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  /* Estado activo tipo iOS */
+  #Menu .kasu-bottom-nav .kasu-nav-item.is-active{
+    color:#0f6ef0;
+    font-weight:600;
+  }
+
+  #Menu .kasu-bottom-nav .kasu-nav-item.is-active .kasu-nav-icon{
+    background:rgba(15,111,240,.12);
+    box-shadow:0 8px 18px rgba(15,111,240,.45);
+    transform:translateY(-1px);
+  }
+
+  /* Hover suave en escritorio (no afecta móvil) */
+  @media (hover:hover){
+    #Menu .kasu-bottom-nav .kasu-nav-item:not(.is-active):hover .kasu-nav-icon{
+      background:rgba(148,163,184,.12);
+    }
+  }
+
+  @media (max-width:360px){
+    #Menu .kasu-bottom-nav .kasu-nav-item img{
+      max-width:28px;
+      max-height:28px;
+    }
+    #Menu .kasu-bottom-nav .kasu-nav-item .kasu-nav-label{
+      max-width:64px;
+    }
+  }
+</style>
+
 <?php
 if (!defined('KASU_PWA_INSTALL_LOADED')) {
   define('KASU_PWA_INSTALL_LOADED', true);

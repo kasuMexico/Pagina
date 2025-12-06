@@ -51,6 +51,10 @@ $fmtMoney = class_exists('NumberFormatter')
 $fmtInt = class_exists('NumberFormatter')
   ? (function(){ $n = new NumberFormatter('es_MX', NumberFormatter::DECIMAL); $n->setAttribute(NumberFormatter::FRACTION_DIGITS,0); return $n; })()
   : null;
+$fmtOut = function (int $n) use ($fmtInt): string {
+  return $fmtInt ? $fmtInt->format($n) : (string)$n;
+};
+$prosTierra = $prosDigital = $regGenerados = $regDigitales = $cteGenerados = 0;
 
 function money_mx(float $n, ?NumberFormatter $fmt): string {
   return $fmt ? $fmt->formatCurrency($n,'MXN') : ('$'.number_format($n,2,'.',','));
@@ -330,7 +334,7 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#F2F2F2">
+  <meta name="theme-color" content="#F1F7FC">
   <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
   <title>Análisis Ventas</title>
 
@@ -338,13 +342,153 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
   <link rel="manifest" href="/login/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
   <!-- CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?php echo h($ver); ?>">
   <link rel="stylesheet" href="assets/css/Grafica.css">
+
+  <style>
+    body{
+      margin:0;
+      font-family:"Inter","SF Pro Display","Segoe UI",system-ui,-apple-system,sans-serif;
+      background:#F1F7FC;
+      color:#0f172a;
+    }
+    .topbar{
+      backdrop-filter: blur(12px);
+      background:#F1F7FC !important;
+      border-bottom:1px solid rgba(15,23,42,.06);
+      color:#0f172a !important;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding-left:16px;
+    }
+    .topbar h4{
+      margin:0;
+      font-weight:700;
+      font-size:1rem;
+      letter-spacing:.02em;
+    }
+    main.page-content{
+      padding-top: calc(var(--topbar-h) + var(--safe-t) + 8px);
+      padding-bottom: calc(
+        max(var(--bottombar-h), calc(var(--icon) + 2*var(--pad-v)))
+        + max(var(--safe-b), 8px) + 16px
+      );
+    }
+    .dashboard-shell{
+      max-width:1100px;
+      margin:0 auto;
+      padding: 6px 16px 0;
+    }
+    .page-heading{
+      margin:10px 0 14px;
+    }
+    .page-heading h1{
+      font-size:1.5rem;
+      font-weight:800;
+      margin:0 0 4px;
+    }
+    .page-heading p{
+      margin:0;
+      color:#6b7280;
+      font-size:.95rem;
+    }
+    .card-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+      gap:14px;
+      margin-bottom:18px;
+    }
+    .kpi-card,
+    .chart-card{
+      border-radius:20px;
+      padding:16px 16px 14px;
+      background:rgba(255,255,255,.94);
+      backdrop-filter:blur(18px);
+      box-shadow:0 20px 45px rgba(15,23,42,.12);
+      border:1px solid rgba(226,232,240,.9);
+    }
+    .chart-card header,
+    .kpi-card header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .chart-title{
+      margin:0;
+      font-weight:700;
+      font-size:1rem;
+    }
+    .chart-subtitle{
+      margin:0;
+      color:#6b7280;
+      font-size:.85rem;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:#f4f7fb;
+      color:#1f2a37;
+      font-weight:600;
+      font-size:.82rem;
+      border:1px solid #e5e9f0;
+      white-space:nowrap;
+    }
+    .kpi-card .item{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:6px;
+      gap:12px;
+      color:#4b5563;
+      font-size:.92rem;
+    }
+    .kpi-card .item strong{
+      color:#0f172a;
+      font-weight:700;
+    }
+    .form-card{
+      border-radius:20px;
+      padding:16px 16px 12px;
+      background:rgba(255,255,255,.94);
+      border:1px solid rgba(226,232,240,.9);
+      box-shadow:0 20px 45px rgba(15,23,42,.12);
+      margin-bottom:16px;
+    }
+    .form-card .form-group label{
+      font-weight:700;
+      color:#1c2540;
+    }
+    .form-card .form-control{
+      border-radius:12px;
+      border:1px solid #e3ebf5;
+      background:#f5f7fb;
+      color:#1c2540;
+      padding:11px 12px;
+    }
+    .form-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:flex-end;
+      margin-top:8px;
+    }
+    hr.section-divider{
+      border:0;
+      border-top:1px solid rgba(15,23,42,.08);
+      margin:18px 0;
+    }
+  </style>
 
   <!-- JS base + Charts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
@@ -544,350 +688,282 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
 
   <!-- CONTENIDO -->
   <main class="page-content">
-    <div class="container">
+    <div class="dashboard-shell">
+
+      <div class="page-heading">
+        <h1>Análisis de ventas</h1>
+        <p>Indicadores financieros y de conversión · Rango <?= h($chartIni); ?> a <?= h($chartFin); ?></p>
+      </div>
 
       <!-- ===================================================================
-           [A] INDICADORES TOTALES (3 tarjetas)
+           [A] INDICADORES TOTALES (tarjetas)
            =================================================================== -->
-      <h5 class="mb-3">Indicadores financieros totales</h5>
-      <div class="row">
+      <div class="card-grid">
         <!-- Generales KASU -->
-        <div class="col-lg-4">
-          <div class="card"><div class="card-header bg-secondary text-light">Generales KASU</div>
-            <div class="card-body">
-              Cobros Totales: <strong><?php echo h(money_mx($CobrosTotales,$fmtMoney)); ?></strong><br>
-              Vtas Totales ACTIVAS: <strong><?php echo h(money_mx($vTtOT,$fmtMoney)); ?></strong><br>
-              Vtas Totales CANCELADAS: <strong><?php echo h(money_mx($VtasCancelTot,$fmtMoney)); ?></strong><br>
-              Clientes Totales ACTIVOS: <strong><?php echo $fmtInt? $fmtInt->format($TotCtesACT): (string)$TotCtesACT; ?></strong><br>
-              Ventas Concretadas: <strong><?php echo (int)round($efectividad10); ?> de 10</strong>
-            </div>
-          </div>
-        </div>
+        <article class="kpi-card">
+          <header><div>
+            <p class="chart-subtitle mb-1">Totales</p>
+            <h2 class="chart-title">Generales KASU</h2>
+          </div><span class="pill">Cobranza</span></header>
+          <div class="item"><span>Cobros Totales</span><strong><?php echo h(money_mx($CobrosTotales,$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Vtas ACTIVAS</span><strong><?php echo h(money_mx($vTtOT,$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Vtas CANCELADAS</span><strong><?php echo h(money_mx($VtasCancelTot,$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Clientes ACTIVOS</span><strong><?php echo $fmtInt? $fmtInt->format($TotCtesACT): (string)$TotCtesACT; ?></strong></div>
+          <div class="item"><span>Efectividad</span><strong><?php echo (int)round($efectividad10); ?> / 10</strong></div>
+        </article>
 
         <!-- Datos Fideicomiso -->
-        <div class="col-lg-4">
-          <div class="card"><div class="card-header bg-secondary text-light">Datos Fideicomiso</div>
-            <div class="card-body">
-              Valor del fideicomiso: <strong><?php echo h(money_mx($F0003,$fmtMoney)); ?></strong><br>
-              Valor Actual F/0003: <strong><?php echo h(money_mx($VaF0003,$fmtMoney)); ?></strong><br>
-              Servicios Pagados: <strong><?php echo h(money_mx((float)$basicas->Sumar($mysqli,'Costo','EntregaServicio'),$fmtMoney)); ?></strong><br>
-              Servicios Funerarios Otorgados: <strong><?php echo $fmtInt? $fmtInt->format((int)$basicas->ContarTabla($mysqli,'EntregaServicio')): ''; ?></strong><br>
-              Edad promedio Cliente: <strong><?php echo $fmtInt? $fmtInt->format((int)round($EdadPromCte)) : (string)round($EdadPromCte); ?></strong>
-            </div>
-          </div>
-        </div>
+        <article class="kpi-card">
+          <header><div>
+            <p class="chart-subtitle mb-1">Fondos</p>
+            <h2 class="chart-title">Datos Fideicomiso</h2>
+          </div><span class="pill">F/0003</span></header>
+          <div class="item"><span>Valor fideicomiso</span><strong><?php echo h(money_mx($F0003,$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Valor actual F/0003</span><strong><?php echo h(money_mx($VaF0003,$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Servicios pagados</span><strong><?php echo h(money_mx((float)$basicas->Sumar($mysqli,'Costo','EntregaServicio'),$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Servicios otorgados</span><strong><?php echo $fmtInt? $fmtInt->format((int)$basicas->ContarTabla($mysqli,'EntregaServicio')): ''; ?></strong></div>
+          <div class="item"><span>Edad promedio cliente</span><strong><?php echo $fmtInt? $fmtInt->format((int)round($EdadPromCte)) : (string)round($EdadPromCte); ?></strong></div>
+        </article>
 
         <!-- Datos Crediticios -->
-        <div class="col-lg-4">
-          <div class="card"><div class="card-header bg-secondary text-light">Datos Crediticios</div>
-            <div class="card-body">
-              Valor Cartera: <strong><?php echo h(money_mx($SaldCre1,$fmtMoney)); ?></strong><br>
-              Capital colocado: <strong><?php echo h(money_mx($CarteCol,$fmtMoney)); ?></strong><br>
-              Cartera en Cobranza: <strong><?php echo h(money_mx($PagEr,$fmtMoney)); ?></strong><br>
-              Cartera en Mora: <strong><?php echo h(money_mx(0,$fmtMoney)); ?></strong><br>
-              Cartera dictaminada: <strong><?php echo h(money_mx($PagEnMor,$fmtMoney)); ?></strong>
-            </div>
-          </div>
-        </div>
+        <article class="kpi-card">
+          <header><div>
+            <p class="chart-subtitle mb-1">Cartera</p>
+            <h2 class="chart-title">Datos Crediticios</h2>
+          </div><span class="pill">Crédito</span></header>
+          <div class="item"><span>Valor Cartera</span><strong><?php echo h(money_mx($SaldCre1,$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Capital colocado</span><strong><?php echo h(money_mx($CarteCol,$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Cartera en Cobranza</span><strong><?php echo h(money_mx($PagEr,$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Cartera en Mora</span><strong><?php echo h(money_mx(0,$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Cartera dictaminada</span><strong><?php echo h(money_mx($PagEnMor,$fmtMoney)); ?></strong></div>
+        </article>
       </div>
 
-      <h5 class="mt-4 mb-3">KPIs estratégicos</h5>
-      <div class="row">
-        <div class="col-lg-4">
-          <div class="card"><div class="card-header bg-info text-light">Ingresos y valor</div>
-            <div class="card-body">
-              Ticket promedio: <strong><?= h(money_mx($TicketPromedio, $fmtMoney)); ?></strong><br>
-              ARPU (ingreso por cliente): <strong><?= h(money_mx($ARPU, $fmtMoney)); ?></strong><br>
-              CAC efectivo: <strong><?= h(money_mx($CAC, $fmtMoney)); ?></strong><br>
-              CIC (cobro por cliente): <strong><?= h(money_mx($CIC, $fmtMoney)); ?></strong>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-4">
-          <div class="card"><div class="card-header bg-info text-light">Conversión y retención</div>
-            <div class="card-body">
-              Tasa de cancelación: <strong><?= h(pct($TasaCancelacion)); ?></strong><br>
-              Tasa en preventa: <strong><?= h(pct($TasaPreventas)); ?></strong><br>
-              Retención efectiva: <strong><?= h(pct($RetentionRate)); ?></strong><br>
-              Edad promedio cliente: <strong><?= $fmtInt ? $fmtInt->format((int)round($EdadPromCte)) : (string)round($EdadPromCte); ?></strong>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-4">
-          <div class="card"><div class="card-header bg-info text-light">Cobranza y liquidez</div>
-            <div class="card-body">
-              MRR estimado: <strong><?= h(money_mx($MRREstimado, $fmtMoney)); ?></strong><br>
-              Cartera en Cobranza: <strong><?= h(money_mx($PagEr, $fmtMoney)); ?> (<?= h(pct($MorosidadRatio)); ?>)</strong><br>
-              Cartera dictaminada / capital: <strong><?= h(pct($CarteraDictVsCap)); ?></strong><br>
-              Capital colocado: <strong><?= h(money_mx($CarteCol, $fmtMoney)); ?></strong>
-            </div>
-          </div>
-        </div>
+      <h5 class="mt-3 mb-2">KPIs estratégicos</h5>
+      <div class="card-grid">
+        <article class="kpi-card">
+          <header><div><p class="chart-subtitle mb-1">Ingresos y valor</p><h2 class="chart-title">Monetización</h2></div></header>
+          <div class="item"><span>Ticket promedio</span><strong><?= h(money_mx($TicketPromedio, $fmtMoney)); ?></strong></div>
+          <div class="item"><span>ARPU (por cliente)</span><strong><?= h(money_mx($ARPU, $fmtMoney)); ?></strong></div>
+          <div class="item"><span>CAC efectivo</span><strong><?= h(money_mx($CAC, $fmtMoney)); ?></strong></div>
+          <div class="item"><span>CIC (cobro por cliente)</span><strong><?= h(money_mx($CIC, $fmtMoney)); ?></strong></div>
+        </article>
+
+        <article class="kpi-card">
+          <header><div><p class="chart-subtitle mb-1">Conversión y retención</p><h2 class="chart-title">Salud comercial</h2></div></header>
+          <div class="item"><span>Tasa de cancelación</span><strong><?= h(pct($TasaCancelacion)); ?></strong></div>
+          <div class="item"><span>Tasa en preventa</span><strong><?= h(pct($TasaPreventas)); ?></strong></div>
+          <div class="item"><span>Retención efectiva</span><strong><?= h(pct($RetentionRate)); ?></strong></div>
+          <div class="item"><span>Edad promedio cliente</span><strong><?= $fmtInt ? $fmtInt->format((int)round($EdadPromCte)) : (string)round($EdadPromCte); ?></strong></div>
+        </article>
+
+        <article class="kpi-card">
+          <header><div><p class="chart-subtitle mb-1">Cobranza y liquidez</p><h2 class="chart-title">Liquidez</h2></div></header>
+          <div class="item"><span>MRR estimado</span><strong><?= h(money_mx($MRREstimado, $fmtMoney)); ?></strong></div>
+          <div class="item"><span>Cartera en Cobranza</span><strong><?= h(money_mx($PagEr, $fmtMoney)); ?> (<?= h(pct($MorosidadRatio)); ?>)</strong></div>
+          <div class="item"><span>Cartera dictaminada / capital</span><strong><?= h(pct($CarteraDictVsCap)); ?></strong></div>
+          <div class="item"><span>Capital colocado</span><strong><?= h(money_mx($CarteCol, $fmtMoney)); ?></strong></div>
+        </article>
       </div>
 
-      <div class="row mt-4">
-        <div class="col-lg-6">
-          <div class="card">
-            <div class="card-header bg-secondary text-light">KPIs financieros (visual)</div>
-            <div class="card-body">
-              <div id="g_finanzas_kpi" style="height:320px;"></div>
+      <div class="card-grid">
+        <article class="chart-card">
+          <header>
+            <div>
+              <p class="chart-subtitle mb-1">KPIs financieros</p>
+              <h2 class="chart-title">Cobros vs capital</h2>
             </div>
-          </div>
-        </div>
-        <div class="col-lg-6">
-          <div class="card">
-            <div class="card-header bg-secondary text-light">Conversión y riesgo</div>
-            <div class="card-body">
-              <div id="g_conversion_kpi" style="height:320px;"></div>
+          </header>
+          <div id="g_finanzas_kpi" style="height:320px;"></div>
+        </article>
+        <article class="chart-card">
+          <header>
+            <div>
+              <p class="chart-subtitle mb-1">Conversión y riesgo</p>
+              <h2 class="chart-title">Conversión & mora</h2>
             </div>
-          </div>
-        </div>
+          </header>
+          <div id="g_conversion_kpi" style="height:320px;"></div>
+        </article>
       </div>
 
-      <hr>
+      <hr class="section-divider">
       
       <!-- ===================================================================
-           [B] INDICADORES ANUALES (año en curso) — 3 tarjetas
+           [B] INDICADORES ANUALES (año en curso)
            =================================================================== -->
-      <h5 class="mt-4 mb-3">Indicadores financieros anuales (<?php echo date('Y'); ?>)</h5>
-      <div class="row">
-        <!-- Generales KASU (anual) -->
-        <div class="col-lg-4">
-          <div class="card"><div class="card-header bg-secondary text-light">Generales KASU</div>
-            <div class="card-body">
-              Cobros Anuales: <strong><?php echo h(money_mx($ANUAL['CobrosTotales'],$fmtMoney)); ?></strong><br>
-              Vtas Anuales ACTIVAS: <strong><?php echo h(money_mx($ANUAL['VtasActivas'],$fmtMoney)); ?></strong><br>
-              Vtas Anuales CANCELADAS: <strong><?php echo h(money_mx($ANUAL['VtasCancel'],$fmtMoney)); ?></strong><br>
-              Clientes Anuales ACTIVOS: <strong><?php echo $fmtInt? $fmtInt->format($ANUAL['CtesActivos']): (string)$ANUAL['CtesActivos']; ?></strong><br>
-              Efectividad de Ventas: <strong><?php echo (int)round($ANUAL['Efectividad10']); ?> de 10</strong>
-            </div>
-          </div>
-        </div>
+      <h5 class="mt-2 mb-2">Indicadores financieros anuales (<?php echo date('Y'); ?>)</h5>
+      <div class="card-grid">
+        <article class="kpi-card">
+          <header><div><p class="chart-subtitle mb-1">Totales año</p><h2 class="chart-title">Generales KASU</h2></div></header>
+          <div class="item"><span>Cobros anuales</span><strong><?php echo h(money_mx($ANUAL['CobrosTotales'],$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Vtas ACTIVAS</span><strong><?php echo h(money_mx($ANUAL['VtasActivas'],$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Vtas CANCELADAS</span><strong><?php echo h(money_mx($ANUAL['VtasCancel'],$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Clientes ACTIVOS</span><strong><?php echo $fmtInt? $fmtInt->format($ANUAL['CtesActivos']): (string)$ANUAL['CtesActivos']; ?></strong></div>
+          <div class="item"><span>Efectividad</span><strong><?php echo (int)round($ANUAL['Efectividad10']); ?> / 10</strong></div>
+        </article>
 
-        <!-- Generales de Prospección (anual) -->
-        <div class="col-lg-4">
-          <div class="card">
-            <div class="card-header bg-secondary text-light">Generales de Prospección</div>
-            <div class="card-body">
-              <?php
-              // Rango anual seguro. Si no existen $iniYear / $finYear, calcúlalos.
-              if (!isset($iniYear, $finYear)) {
-                $y        = (int)date('Y');
-                $iniYear  = date('Y-m-d', strtotime("$y-01-01"));
-                $finYear  = date('Y-m-d', strtotime("$y-12-31"));
-              }
+        <article class="kpi-card">
+          <header><div><p class="chart-subtitle mb-1">Prospección</p><h2 class="chart-title">Generales de Prospección</h2></div></header>
+          <div class="item"><span>Prospectos Tierra (año)</span><strong><?= $fmtOut($prosTierra) ?></strong></div>
+          <div class="item"><span>Prospectos Digitales</span><strong><?= $fmtOut($prosDigital) ?></strong></div>
+          <div class="item"><span>Registros Generados</span><strong><?= $fmtOut($regGenerados) ?></strong></div>
+          <div class="item"><span>Registros Digitales</span><strong><?= $fmtOut($regDigitales) ?></strong></div>
+          <div class="item"><span>Clientes Generados</span><strong><?= $fmtOut($cteGenerados) ?></strong></div>
+        </article>
 
-              // Formateador entero
-              $fmtI = $fmtInt ?? null;
-              $fmtOut = function (int $n) use ($fmtI) { return $fmtI ? $fmtI->format($n) : (string)$n; };
-
-              // CuentaFechas exige 10 argumentos. Usamos un NE siempre verdadero: Id != '__NONE__'
-              $NE_COL = 'Id';
-              $NE_VAL = '__NONE__';
-
-              $prosTierra     = (int)$basicas->CuentaFechas(
-                $mysqli, 'Contacto', 'Usuario', 'VTA', 'FechaRegistro', $finYear, 'FechaRegistro', $iniYear, $NE_COL, $NE_VAL
-              );
-              $prosDigital    = (int)$basicas->CuentaFechas(
-                $mysqli, 'Contacto', 'Usuario', 'PLATAFORMA', 'FechaRegistro', $finYear, 'FechaRegistro', $iniYear, $NE_COL, $NE_VAL
-              );
-              $regGenerados   = (int)$basicas->CuentaFechas0(
-                $mysqli, 'Contacto', 'FechaRegistro', $finYear, 'FechaRegistro', $iniYear
-              );
-              $regDigitales   = $prosDigital; // mismo filtro que $prosDigital
-              $cteGenerados   = (int)$basicas->CuentaFechas0(
-                $mysqli, 'Venta', 'FechaRegistro', $finYear, 'FechaRegistro', $iniYear
-              );
-              ?>
-              Prospectos Tierra (año): <strong><?= $fmtOut($prosTierra) ?></strong><br>
-              Prospectos Digitales (año): <strong><?= $fmtOut($prosDigital) ?></strong><br>
-              Registros Generados (año): <strong><?= $fmtOut($regGenerados) ?></strong><br>
-              Registros Digitales: <strong><?= $fmtOut($regDigitales) ?></strong><br>
-              Clientes Generados (año): <strong><?= $fmtOut($cteGenerados) ?></strong>
-            </div>
-          </div>
-        </div>
-
-        <!-- Gasto corriente anual (servicios y fideicomiso del año) -->
-        <div class="col-lg-4">
-          <div class="card"><div class="card-header bg-secondary text-light">Fideicomiso / Servicios (año)</div>
-            <div class="card-body">
-              Val. Fideicomitido: <strong><?php echo h(money_mx($ANUAL['ValFide'],$fmtMoney)); ?></strong><br>
-              Val. Actual Fideicomiso: <strong><?php echo h(money_mx($ANUAL['ValActFide'],$fmtMoney)); ?></strong><br>
-              Servicios Pagados: <strong><?php echo h(money_mx($ANUAL['ServPagados'],$fmtMoney)); ?></strong><br>
-              Servicios Otorgados: <strong><?php echo $fmtInt? $fmtInt->format($ANUAL['ServOtorg']): (string)$ANUAL['ServOtorg']; ?></strong>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="row mt-3">
-        <div class="col-lg-4">
-          <div class="card"><div class="card-header bg-info text-light">KPIs comerciales (año)</div>
-            <div class="card-body">
-              Ticket promedio: <strong><?= h(money_mx($ANUAL['TicketPromedio'], $fmtMoney)); ?></strong><br>
-              ARPU: <strong><?= h(money_mx($ANUAL['ARPU'], $fmtMoney)); ?></strong><br>
-              MRR estimado: <strong><?= h(money_mx($ANUAL['MRR'], $fmtMoney)); ?></strong><br>
-              Tasa de cancelación: <strong><?= h(pct($ANUAL['CancelRate'])); ?></strong>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-4">
-          <div class="card"><div class="card-header bg-info text-light">Retención y cartera (año)</div>
-            <div class="card-body">
-              Retención efectiva: <strong><?= h(pct($ANUAL['RetentionRate'])); ?></strong><br>
-              Morosidad cartera: <strong><?= h(pct($ANUAL['MoraRatio'])); ?></strong><br>
-              Cartera en Cobranza: <strong><?= h(money_mx($ANUAL['CarCobranza'], $fmtMoney)); ?></strong><br>
-              Cartera dictaminada: <strong><?= h(money_mx($ANUAL['CarDict'], $fmtMoney)); ?></strong>
-            </div>
-          </div>
-        </div>
+        <article class="kpi-card">
+          <header><div><p class="chart-subtitle mb-1">Fideicomiso / Servicios</p><h2 class="chart-title">Servicios y fondos</h2></div></header>
+          <div class="item"><span>Val. Fideicomitido</span><strong><?php echo h(money_mx($ANUAL['ValFide'],$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Val. Actual Fideicomiso</span><strong><?php echo h(money_mx($ANUAL['ValActFide'],$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Servicios Pagados</span><strong><?php echo h(money_mx($ANUAL['ServPagados'],$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Servicios Otorgados</span><strong><?php echo $fmtInt? $fmtInt->format($ANUAL['ServOtorg']): (string)$ANUAL['ServOtorg']; ?></strong></div>
+        </article>
       </div>
 
-      <div class="row mt-3">
-        <div class="col-lg-6">
-          <div class="card">
-            <div class="card-header bg-secondary text-light">KPIs financieros anuales</div>
-            <div class="card-body">
-              <div id="g_finanzas_kpi_anual" style="height:320px;"></div>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-6">
-          <div class="card">
-            <div class="card-header bg-secondary text-light">Retención & mora anual</div>
-            <div class="card-body">
-              <div id="g_conversion_kpi_anual" style="height:320px;"></div>
-            </div>
-          </div>
-        </div>
+      <div class="card-grid">
+        <article class="kpi-card">
+          <header><div><p class="chart-subtitle mb-1">Comercial (año)</p><h2 class="chart-title">KPIs comerciales</h2></div></header>
+          <div class="item"><span>Ticket promedio</span><strong><?= h(money_mx($ANUAL['TicketPromedio'], $fmtMoney)); ?></strong></div>
+          <div class="item"><span>ARPU</span><strong><?= h(money_mx($ANUAL['ARPU'], $fmtMoney)); ?></strong></div>
+          <div class="item"><span>MRR estimado</span><strong><?= h(money_mx($ANUAL['MRR'], $fmtMoney)); ?></strong></div>
+          <div class="item"><span>Tasa de cancelación</span><strong><?= h(pct($ANUAL['CancelRate'])); ?></strong></div>
+        </article>
+
+        <article class="kpi-card">
+          <header><div><p class="chart-subtitle mb-1">Retención y cartera</p><h2 class="chart-title">Retención & mora</h2></div></header>
+          <div class="item"><span>Retención efectiva</span><strong><?= h(pct($ANUAL['RetentionRate'])); ?></strong></div>
+          <div class="item"><span>Morosidad cartera</span><strong><?= h(pct($ANUAL['MoraRatio'])); ?></strong></div>
+          <div class="item"><span>Cartera en Cobranza</span><strong><?= h(money_mx($ANUAL['CarCobranza'], $fmtMoney)); ?></strong></div>
+          <div class="item"><span>Cartera dictaminada</span><strong><?= h(money_mx($ANUAL['CarDict'], $fmtMoney)); ?></strong></div>
+        </article>
       </div>
 
-      <hr>
+      <div class="card-grid">
+        <article class="chart-card">
+          <header><div><p class="chart-subtitle mb-1">Finanzas anuales</p><h2 class="chart-title">KPIs financieros anuales</h2></div></header>
+          <div id="g_finanzas_kpi_anual" style="height:320px;"></div>
+        </article>
+        <article class="chart-card">
+          <header><div><p class="chart-subtitle mb-1">Retención anual</p><h2 class="chart-title">Retención & mora anual</h2></div></header>
+          <div id="g_conversion_kpi_anual" style="height:320px;"></div>
+        </article>
+      </div>
+
+      <hr class="section-divider">
 
       <!-- ===================================================================
-           [C] RESUMEN POR PERÍODO: selector de rango y 3 tarjetas
+           [C] RESUMEN POR PERÍODO: selector de rango
       =================================================================== -->
-      <div class="row mt-4">
-        <div class="col-lg-12">
-          <form method="POST" action="<?php echo h($_SERVER['PHP_SELF']); ?>" class="mb-3">
-            <div class="form-row">
-              <div class="col-sm-4">
-                <label>Fecha inicio</label>
-                <input type="date" class="form-control" name="ini" required>
-              </div>
-              <div class="col-sm-4">
-                <label>Fecha fin</label>
-                <input type="date" class="form-control" name="fin" required>
-              </div>
-              <div class="col-sm-4 d-flex align-items-end">
+      <section class="form-card">
+        <form method="POST" action="<?php echo h($_SERVER['PHP_SELF']); ?>" class="mb-1">
+          <div class="form-row">
+            <div class="form-group col-sm-4">
+              <label>Fecha inicio</label>
+              <input type="date" class="form-control" name="ini" required>
+            </div>
+            <div class="form-group col-sm-4">
+              <label>Fecha fin</label>
+              <input type="date" class="form-control" name="fin" required>
+            </div>
+            <div class="form-group col-sm-4 d-flex align-items-end">
+              <div class="form-actions w-100">
                 <button type="submit" class="btn btn-primary btn-block">Consultar período</button>
               </div>
             </div>
-          </form>
-        </div>
-      </div>
+          </div>
+        </form>
+      </section>
 
       <?php if ($showPeriodo && is_array($PERIODO)): ?>
-      <div class="row">
+      <div class="card-grid">
         <!-- Generales KASU (período) -->
-        <div class="col-lg-4">
-          <div class="card"><div class="card-header bg-secondary text-light">Generales KASU (período)</div>
-            <div class="card-body">
-              Cobros: <strong><?php echo h(money_mx($PERIODO['CobrosTotales'],$fmtMoney)); ?></strong><br>
-              Vtas ACTIVAS: <strong><?php echo h(money_mx($PERIODO['VtasActivas'],$fmtMoney)); ?></strong><br>
-              Vtas CANCELADAS: <strong><?php echo h(money_mx($PERIODO['VtasCancel'],$fmtMoney)); ?></strong><br>
-              Clientes ACTIVOS: <strong><?php echo $fmtInt? $fmtInt->format($PERIODO['CtesActivos']) : (string)$PERIODO['CtesActivos']; ?></strong><br>
-              Efectividad: <strong><?php echo (int)round($PERIODO['Efectividad10']); ?> de 10</strong>
-            </div>
-          </div>
-        </div>
+        <article class="kpi-card">
+          <header><div><p class="chart-subtitle mb-1">Período</p><h2 class="chart-title">Generales KASU</h2></div></header>
+          <div class="item"><span>Cobros</span><strong><?php echo h(money_mx($PERIODO['CobrosTotales'],$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Vtas ACTIVAS</span><strong><?php echo h(money_mx($PERIODO['VtasActivas'],$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Vtas CANCELADAS</span><strong><?php echo h(money_mx($PERIODO['VtasCancel'],$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Clientes ACTIVOS</span><strong><?php echo $fmtInt? $fmtInt->format($PERIODO['CtesActivos']) : (string)$PERIODO['CtesActivos']; ?></strong></div>
+          <div class="item"><span>Efectividad</span><strong><?php echo (int)round($PERIODO['Efectividad10']); ?> / 10</strong></div>
+        </article>
 
         <!-- Prospección (proxy por ventas/servicios en período) -->
-        <div class="col-lg-4">
-          <div class="card"><div class="card-header bg-secondary text-light">Fideicomiso / Servicios (período)</div>
-            <div class="card-body">
-              Val. Fideicomitido: <strong><?php echo h(money_mx($PERIODO['ValFide'],$fmtMoney)); ?></strong><br>
-              Val. Actual Fideicomiso: <strong><?php echo h(money_mx($PERIODO['ValActFide'],$fmtMoney)); ?></strong><br>
-              Servicios Pagados: <strong><?php echo h(money_mx($PERIODO['ServPagados'],$fmtMoney)); ?></strong><br>
-              Servicios Otorgados: <strong><?php echo $fmtInt? $fmtInt->format($PERIODO['ServOtorg']) : (string)$PERIODO['ServOtorg']; ?></strong>
-            </div>
-          </div>
-        </div>
+        <article class="kpi-card">
+          <header><div><p class="chart-subtitle mb-1">Servicios</p><h2 class="chart-title">Fideicomiso / Servicios</h2></div></header>
+          <div class="item"><span>Val. Fideicomitido</span><strong><?php echo h(money_mx($PERIODO['ValFide'],$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Val. Actual Fideicomiso</span><strong><?php echo h(money_mx($PERIODO['ValActFide'],$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Servicios Pagados</span><strong><?php echo h(money_mx($PERIODO['ServPagados'],$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Servicios Otorgados</span><strong><?php echo $fmtInt? $fmtInt->format($PERIODO['ServOtorg']) : (string)$PERIODO['ServOtorg']; ?></strong></div>
+        </article>
 
         <!-- Crediticios (período) -->
-        <div class="col-lg-4">
-          <div class="card"><div class="card-header bg-secondary text-light">Datos Crediticios (período)</div>
-            <div class="card-body">
-              Valor Cartera: <strong><?php echo h(money_mx($PERIODO['ValCartera'],$fmtMoney)); ?></strong><br>
-              Capital colocado: <strong><?php echo h(money_mx($PERIODO['CapColocado'],$fmtMoney)); ?></strong><br>
-              Cartera en Cobranza: <strong><?php echo h(money_mx($PERIODO['CarCobranza'],$fmtMoney)); ?></strong><br>
-              Cartera dictaminada: <strong><?php echo h(money_mx($PERIODO['CarDict'],$fmtMoney)); ?></strong><br>
-              Edad promedio Cliente: <strong><?php echo $fmtInt? $fmtInt->format((int)round($PERIODO['EdadProm'])) : (string)round($PERIODO['EdadProm']); ?></strong>
-            </div>
-          </div>
-        </div>
+        <article class="kpi-card">
+          <header><div><p class="chart-subtitle mb-1">Cartera</p><h2 class="chart-title">Datos Crediticios</h2></div></header>
+          <div class="item"><span>Valor Cartera</span><strong><?php echo h(money_mx($PERIODO['ValCartera'],$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Capital colocado</span><strong><?php echo h(money_mx($PERIODO['CapColocado'],$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Cartera en Cobranza</span><strong><?php echo h(money_mx($PERIODO['CarCobranza'],$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Cartera dictaminada</span><strong><?php echo h(money_mx($PERIODO['CarDict'],$fmtMoney)); ?></strong></div>
+          <div class="item"><span>Edad promedio Cliente</span><strong><?php echo $fmtInt? $fmtInt->format((int)round($PERIODO['EdadProm'])) : (string)round($PERIODO['EdadProm']); ?></strong></div>
+        </article>
       </div>
-      <div class="row mt-3">
-        <div class="col-lg-4">
-          <div class="card"><div class="card-header bg-info text-light">KPIs comerciales (período)</div>
-            <div class="card-body">
-              Ticket promedio: <strong><?= h(money_mx($PERIODO['TicketPromedio'], $fmtMoney)); ?></strong><br>
-              ARPU: <strong><?= h(money_mx($PERIODO['ARPU'], $fmtMoney)); ?></strong><br>
-              MRR estimado: <strong><?= h(money_mx($PERIODO['MRR'], $fmtMoney)); ?></strong><br>
-              Tasa de cancelación: <strong><?= h(pct($PERIODO['CancelRate'])); ?></strong>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-4">
-          <div class="card"><div class="card-header bg-info text-light">Retención y cartera (período)</div>
-            <div class="card-body">
-              Retención efectiva: <strong><?= h(pct($PERIODO['RetentionRate'])); ?></strong><br>
-              Morosidad cartera: <strong><?= h(pct($PERIODO['MoraRatio'])); ?></strong><br>
-              Cartera en Cobranza: <strong><?= h(money_mx($PERIODO['CarCobranza'], $fmtMoney)); ?></strong><br>
-              Cartera dictaminada: <strong><?= h(money_mx($PERIODO['CarDict'], $fmtMoney)); ?></strong>
-            </div>
-          </div>
-        </div>
+      <div class="card-grid">
+        <article class="kpi-card">
+          <header><div><p class="chart-subtitle mb-1">Comercial</p><h2 class="chart-title">KPIs comerciales (período)</h2></div></header>
+          <div class="item"><span>Ticket promedio</span><strong><?= h(money_mx($PERIODO['TicketPromedio'], $fmtMoney)); ?></strong></div>
+          <div class="item"><span>ARPU</span><strong><?= h(money_mx($PERIODO['ARPU'], $fmtMoney)); ?></strong></div>
+          <div class="item"><span>MRR estimado</span><strong><?= h(money_mx($PERIODO['MRR'], $fmtMoney)); ?></strong></div>
+          <div class="item"><span>Tasa de cancelación</span><strong><?= h(pct($PERIODO['CancelRate'])); ?></strong></div>
+        </article>
+        <article class="kpi-card">
+          <header><div><p class="chart-subtitle mb-1">Retención y cartera</p><h2 class="chart-title">Retención & cartera (período)</h2></div></header>
+          <div class="item"><span>Retención efectiva</span><strong><?= h(pct($PERIODO['RetentionRate'])); ?></strong></div>
+          <div class="item"><span>Morosidad cartera</span><strong><?= h(pct($PERIODO['MoraRatio'])); ?></strong></div>
+          <div class="item"><span>Cartera en Cobranza</span><strong><?= h(money_mx($PERIODO['CarCobranza'], $fmtMoney)); ?></strong></div>
+          <div class="item"><span>Cartera dictaminada</span><strong><?= h(money_mx($PERIODO['CarDict'], $fmtMoney)); ?></strong></div>
+        </article>
       </div>
       <?php endif; ?>
-      <hr>
+
+      <hr class="section-divider">
       <!-- ===================================================================
-           [D] GRÁFICAS: 3 superiores + curva histórica
+           [D] GRÁFICAS: selector + gráficas
            =================================================================== -->
-      <div class="card mt-4">
-        <div class="card-body">
-          <form class="form-row align-items-end" method="GET" action="<?php echo h($_SERVER['PHP_SELF']); ?>#graficas-producto">
-            <div class="form-group col-md-4">
-              <label>Fecha inicio (gráficas)</label>
-              <input type="date" class="form-control" name="chart_ini" value="<?php echo h($chartIni); ?>" required>
-            </div>
-            <div class="form-group col-md-4">
-              <label>Fecha fin (gráficas)</label>
-              <input type="date" class="form-control" name="chart_fin" value="<?php echo h($chartFin); ?>" required>
-            </div>
-            <div class="form-group col-md-4">
+      <section class="form-card">
+        <form class="form-row align-items-end" method="GET" action="<?php echo h($_SERVER['PHP_SELF']); ?>#graficas-producto">
+          <div class="form-group col-md-4">
+            <label>Fecha inicio (gráficas)</label>
+            <input type="date" class="form-control" name="chart_ini" value="<?php echo h($chartIni); ?>" required>
+          </div>
+          <div class="form-group col-md-4">
+            <label>Fecha fin (gráficas)</label>
+            <input type="date" class="form-control" name="chart_fin" value="<?php echo h($chartFin); ?>" required>
+          </div>
+          <div class="form-group col-md-4">
+            <div class="form-actions w-100">
               <button type="submit" class="btn btn-primary btn-block">Actualizar gráficas</button>
             </div>
-          </form>
-        </div>
+          </div>
+        </form>
+      </section>
+
+      <div id="graficas-producto" class="page-heading" style="margin-top:6px;">
+        <p class="chart-subtitle mb-1">Gráficas por producto</p>
+        <h2 class="chart-title">Rango: <?php echo h($chartIni); ?> a <?php echo h($chartFin); ?></h2>
       </div>
 
-      <div id="graficas-producto" class="center-heading mt-4">
-        <p>Gráficas por producto (<?php echo h($chartIni); ?> a <?php echo h($chartFin); ?>)</p>
-      </div>
-      <div class="row">
-        <div class="col-lg-4"><div id="g_activas_total" style="height:300px;"></div></div>
-        <div class="col-lg-4"><div id="g_totales"></div></div>
-        <div class="col-lg-4"><div id="g_activas"></div></div>
-        <div class="col-lg-4"><div id="g_status"></div></div>
+      <div class="card-grid">
+        <article class="chart-card"><header><h2 class="chart-title">Valor ventas activas</h2></header><div id="g_activas_total" style="height:300px;"></div></article>
+        <article class="chart-card"><header><h2 class="chart-title">Ventas totales</h2></header><div id="g_totales"></div></article>
+        <article class="chart-card"><header><h2 class="chart-title">Ventas activas</h2></header><div id="g_activas"></div></article>
+        <article class="chart-card"><header><h2 class="chart-title">Ventas por estatus</h2></header><div id="g_status"></div></article>
       </div>
 
-      <hr>
+      <hr class="section-divider">
 
-      <div class="center-heading">
-        <p>Curva histórica de ventas efectivas</p>
+      <div class="chart-card">
+        <header><div><p class="chart-subtitle mb-1">Histórico</p><h2 class="chart-title">Curva histórica de ventas efectivas</h2></div></header>
+        <div class="Grafica"><div id="curve_chart"></div></div>
       </div>
-      <div class="Grafica"><div id="curve_chart"></div></div>
 
     </div>
   </main>

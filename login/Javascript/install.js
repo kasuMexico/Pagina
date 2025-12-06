@@ -7,6 +7,8 @@
 
   let deferredPrompt = null;
   const btn = document.getElementById('btnInstall');
+  const ua = navigator.userAgent || '';
+  const isSafari = /Safari/i.test(ua) && !/Chrome|CriOS|EdgiOS|FxiOS/i.test(ua);
 
   const hideButton = () => {
     if (!btn) return;
@@ -25,6 +27,7 @@
   }
 
   window.addEventListener('beforeinstallprompt', (evt) => {
+    if (isSafari) return;
     evt.preventDefault();
     deferredPrompt = evt;
     showButton();
@@ -48,7 +51,7 @@
 
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches
     || window.navigator.standalone === true;
-  if (isStandalone) {
+  if (isStandalone || isSafari) {
     hideButton();
   }
 })();

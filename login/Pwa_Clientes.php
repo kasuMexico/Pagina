@@ -96,20 +96,155 @@ if (isset($_GET['Msg'])) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#F2F2F2">
+  <meta name="theme-color" content="#F1F7FC">
   <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
   <title>Cartera Clientes</title>
 
   <!-- Manifest / iOS -->
   <link rel="manifest" href="/login/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
   <!-- CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?php echo h($VerCache); ?>">
+  <style>
+    body{
+      margin:0;
+      font-family:"Inter","SF Pro Display","Segoe UI",system-ui,-apple-system,sans-serif;
+      background:#F1F7FC;
+      color:#0f172a;
+    }
+    .topbar{
+      backdrop-filter: blur(12px);
+      background:#F1F7FC !important;
+      border-bottom:1px solid rgba(15,23,42,.06);
+      color:#0f172a !important;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: calc(8px + var(--safe-t)) 16px 10px;
+      height: calc(var(--topbar-h) + var(--safe-t));
+    }
+    .topbar .title{
+      margin:0;
+      font-weight:700;
+      font-size:1rem;
+      letter-spacing:.02em;
+    }
+    main.page-content{
+      padding-top: calc(var(--topbar-h) + var(--safe-t) + 6px);
+      padding-bottom: calc(
+        max(var(--bottombar-h), calc(var(--icon) + 2*var(--pad-v)))
+        + max(var(--safe-b), 8px) + 16px
+      );
+    }
+    .dashboard-shell{
+      max-width:1100px;
+      margin:0 auto;
+      padding: 8px 16px 0;
+    }
+    .page-heading{
+      margin:12px 0 14px;
+    }
+    .page-heading h1{
+      font-size:1.5rem;
+      font-weight:800;
+      margin:0 0 4px;
+    }
+    .page-heading p{
+      margin:0;
+      color:#6b7280;
+      font-size:.95rem;
+    }
+    .hero-actions{
+      margin-left:auto;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .btn-crear{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 14px;
+      border-radius:12px;
+      border:none;
+      background:#22c55e;
+      color:#fff;
+      font-weight:700;
+      box-shadow:0 14px 28px -18px rgba(34,197,94,.65);
+    }
+    .list-card{
+      border-radius:20px;
+      padding:16px;
+      background:rgba(255,255,255,.94);
+      backdrop-filter:blur(16px);
+      box-shadow:0 20px 45px rgba(15,23,42,.12);
+      border:1px solid rgba(226,232,240,.9);
+    }
+    .list-card header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:12px;
+    }
+    .client-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:12px;
+    }
+    .client-card{
+      position:relative;
+      padding:14px 14px 12px;
+      border-radius:16px;
+      background:#f9fbff;
+      border:1px solid #e5e9f0;
+      box-shadow:0 10px 26px rgba(15,23,42,.08);
+    }
+    .client-card .badge-status{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:4px 10px;
+      border-radius:999px;
+      font-weight:700;
+      font-size:.8rem;
+      background:#e8edf7;
+      color:#1f2a37;
+      margin-bottom:8px;
+    }
+    .client-card .cta{
+      width:100%;
+      border:none;
+      border-radius:12px;
+      background:#0f6ef0;
+      color:#fff;
+      font-weight:700;
+      padding:10px 12px;
+      box-shadow:0 14px 28px -20px rgba(15,110,240,.65);
+      text-align:left;
+    }
+    .client-card .cta span{
+      display:block;
+      font-size:.78rem;
+      color:#e8f0ff;
+      font-weight:500;
+    }
+    .client-card .cta strong{
+      display:block;
+      font-size:.98rem;
+      color:#fff;
+    }
+    .badge.ACTIVO{background:#e0f7ec;color:#0f5132;}
+    .badge.PREVENTA{background:#fff4e5;color:#8c6d1f;}
+    .badge.COBRANZA{background:#e8f2ff;color:#0f3c91;}
+    .badge.CANCELADO{background:#fdecea;color:#7f1d1d;}
+    .badge.ACTIVACION{background:#e0f2fe;color:#0b4f71;}
+  </style>
 </head>
 
 <body onload="localize()">
@@ -118,16 +253,17 @@ if (isset($_GET['Msg'])) {
   <div class="topbar">
     <div class="d-flex align-items-center w-100">
       <h4 class="title">Cartera de Clientes</h4>
-
-      <!-- Botón crear prospecto (se conserva la lógica, sólo se escapan valores) -->
-      <form class="BtnSocial m-0 ml-auto" method="POST" action="<?php echo h($_SERVER['PHP_SELF']); ?>">
-        <input type="hidden" name="Host" value="<?php echo h($_SERVER['PHP_SELF']); ?>">
-        <input type="hidden" name="SelCte" value="CrearProspecto">
-        <label for="btnCrearCte" title="Crear nuevo prospecto" class="btn" style="background:#58D68D;color:#F8F9F9;cursor:pointer;">
-          <i class="material-icons">person_add</i>
-        </label>
-        <input id="btnCrearCte" type="submit" hidden>
-      </form>
+      <div class="hero-actions">
+        <!-- Botón crear prospecto (lógica intacta) -->
+        <form class="m-0" method="POST" action="<?php echo h($_SERVER['PHP_SELF']); ?>">
+          <input type="hidden" name="Host" value="<?php echo h($_SERVER['PHP_SELF']); ?>">
+          <input type="hidden" name="SelCte" value="CrearProspecto">
+          <button type="submit" class="btn-crear">
+            <i class="material-icons" style="font-size:18px;">person_add</i>
+            Nuevo Cliente
+          </button>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -158,9 +294,14 @@ if (isset($_GET['Msg'])) {
 
   <!-- Contenido listado -->
   <main class="page-content">
-    <section class="container" style="width:99%;">
-      <div class="form-group">
-        <div class="table-responsive">
+    <div class="dashboard-shell">
+      <div class="list-card">
+        <header>
+          <div>
+            <p class="chart-subtitle mb-1">Cartera</p>
+          </div>
+        </header>
+        <div class="client-grid">
           <?php
           /*********************************************************************************
            * Listado por nivel — 05/11/2025, JCCM
@@ -174,14 +315,14 @@ if (isset($_GET['Msg'])) {
             if ($resultado = $mysqli->query($Ventas)) {
               while ($fila = $resultado->fetch_assoc()) {
                 ?>
-                <form method="POST" action="<?php echo h($_SERVER['PHP_SELF']); ?>">
+                <form method="POST" action="<?php echo h($_SERVER['PHP_SELF']); ?>" class="client-card">
                   <input type="number" name="IdVenta"   value="<?php echo (int)$fila['Id']; ?>" hidden>
                   <input type="text"   name="StatusVta" value="<?php echo h($fila['Status']); ?>" hidden>
-                  <span class="new badge blue <?php echo h($fila['Status']); ?>" style="position:relative;padding:0;width:100px;top:20px;">
-                    <?php echo h($fila['Status']); ?>
-                  </span>
-                  <input type="submit" name="SelCte" class="<?php echo h($fila['Status']); ?>"
-                         value="<?php echo h($fila['Nombre']); ?>">
+                  <span class="badge-status badge <?php echo h($fila['Status']); ?>"><?php echo h($fila['Status']); ?></span>
+                  <button type="submit" name="SelCte" class="cta <?php echo h($fila['Status']); ?>">
+                    <span>Cliente</span>
+                    <strong><?php echo h($fila['Nombre']); ?></strong>
+                  </button>
                 </form>
                 <?php
               }
@@ -199,15 +340,15 @@ if (isset($_GET['Msg'])) {
                 if ($resultado = $mysqli->query($Ventas)) {
                   while ($fila = $resultado->fetch_assoc()) {
                     ?>
-                    <form method="POST" action="<?php echo h($_SERVER['PHP_SELF']); ?>">
+                    <form method="POST" action="<?php echo h($_SERVER['PHP_SELF']); ?>" class="client-card">
                       <input type="number" name="IdVenta"    value="<?php echo (int)$fila['Id']; ?>" hidden>
                       <input type="text"   name="StatusVta"  value="<?php echo h($fila['Status']); ?>" hidden>
                       <input type="text"   name="IdVendedor" value="<?php echo h($usr); ?>" hidden>
-                      <span class="new badge blue <?php echo h($fila['Status']); ?>" style="position:relative;padding:0;width:100px;top:20px;">
-                        <?php echo h($fila['Status']); ?>
-                      </span>
-                      <input type="submit" name="SelCte" class="<?php echo h($fila['Status']); ?>"
-                             value="<?php echo h($fila['Nombre'] . ' - ' . $usr . ' - ' . $NomSuc); ?>">
+                      <span class="badge-status badge <?php echo h($fila['Status']); ?>"><?php echo h($fila['Status']); ?></span>
+                      <button type="submit" name="SelCte" class="cta <?php echo h($fila['Status']); ?>">
+                        <span><?php echo h($usr . ' · ' . $NomSuc); ?></span>
+                        <strong><?php echo h($fila['Nombre']); ?></strong>
+                      </button>
                     </form>
                     <?php
                   }
@@ -227,15 +368,15 @@ if (isset($_GET['Msg'])) {
                 if ($resultado = $mysqli->query($Ventas)) {
                   while ($fila = $resultado->fetch_assoc()) {
                     ?>
-                    <form method="POST" action="<?php echo h($_SERVER['PHP_SELF']); ?>">
+                    <form method="POST" action="<?php echo h($_SERVER['PHP_SELF']); ?>" class="client-card">
                       <input type="number" name="IdVenta"    value="<?php echo (int)$fila['Id']; ?>" hidden>
                       <input type="text"   name="StatusVta"  value="<?php echo h($fila['Status']); ?>" hidden>
                       <input type="text"   name="IdVendedor" value="<?php echo h($usr); ?>" hidden>
-                      <span class="new badge blue <?php echo h($fila['Status']); ?>" style="position:relative;padding:0;width:100px;top:20px;">
-                        <?php echo h($fila['Status']); ?>
-                      </span>
-                      <input type="submit" name="SelCte" class="<?php echo h($fila['Status']); ?>"
-                             value="<?php echo h($fila['Nombre'] . ' - ' . $usr . ' - ' . $NomSuc); ?>">
+                      <span class="badge-status badge <?php echo h($fila['Status']); ?>"><?php echo h($fila['Status']); ?></span>
+                      <button type="submit" name="SelCte" class="cta <?php echo h($fila['Status']); ?>">
+                        <span><?php echo h($usr . ' · ' . $NomSuc); ?></span>
+                        <strong><?php echo h($fila['Nombre']); ?></strong>
+                      </button>
                     </form>
                     <?php
                   }
@@ -246,8 +387,7 @@ if (isset($_GET['Msg'])) {
           ?>
         </div>
       </div>
-      <br><br><br><br>
-    </section>
+    </div>
   </main>
 
   <!-- JS (una sola versión para compatibilidad visual del sitio) -->

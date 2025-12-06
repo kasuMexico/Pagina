@@ -1,0 +1,206 @@
+/* =========================================================================
+ * Hoja: Menu_Superior.css
+ * Qué hace: Estilos unificados para el Top Bar de todas las mesas KASU
+ * Fecha: 06/12/2025
+ * ======================================================================= */
+
+:root {
+  --topbar-bg: #F1F7FC;
+  --topbar-border: rgba(15, 23, 42, 0.06);
+  --topbar-height: 58px;
+  --topbar-color: #0f172a;
+}
+
+/* Contenedor principal del top bar */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 16px;
+  min-height: var(--topbar-height);
+  background: var(--topbar-bg);
+  color: var(--topbar-color);
+  border-bottom: 1px solid var(--topbar-border);
+  backdrop-filter: blur(12px);
+}
+
+/* Bloque izquierdo: logo + títulos */
+.topbar-left,
+.topbar .logo-wordmark,
+.topbar .d-flex.align-items-center {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Logo redondo KASU */
+.topbar img[alt="KASU"],
+.topbar .topbar-logo img {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* Textos del top bar */
+.topbar .title,
+.topbar h4.title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.topbar .topbar-label,
+.topbar .logo-wordmark span {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--topbar-color);
+  white-space: nowrap;
+}
+
+.topbar .eyebrow {
+  margin: 0;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #6b7280;
+}
+
+/* Contenedor de acciones a la derecha */
+.topbar-actions,
+.topbar .hero-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Botones base del top bar */
+.topbar .action-btn,
+.topbar .btn-crear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: none;
+  outline: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #e5e7eb;
+  color: #111827;
+  text-decoration: none;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.10);
+  transition:
+    background-color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.08s ease;
+}
+
+/* Variantes de color */
+.topbar .action-btn.success,
+.topbar .btn-crear {
+  background: #22c55e;
+  color: #ffffff;
+  box-shadow: 0 14px 28px rgba(34, 197, 94, 0.5);
+}
+
+.topbar .action-btn.primary {
+  background: #0f6ef0;
+  color: #ffffff;
+  box-shadow: 0 14px 28px rgba(15, 110, 240, 0.45);
+}
+
+/* Hover / active */
+.topbar .action-btn:hover,
+.topbar .btn-crear:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.18);
+}
+
+.topbar .action-btn:active,
+.topbar .btn-crear:active {
+  transform: translateY(0);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
+}
+
+/* Íconos Material */
+.topbar .material-icons {
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* Enlaces tipo botón dentro de .topbar */
+.topbar a.action-btn {
+  color: inherit;
+}
+
+/* Ajustes para formularios de acciones en línea */
+.topbar form {
+  margin: 0;
+}
+
+/* ========================================================================
+ *  Vista móvil: mostrar solo íconos en los botones para no saturar el top bar
+ * ====================================================================== */
+
+@media (max-width: 576px) {
+  .topbar {
+    padding: 6px 10px;
+    gap: 8px;
+  }
+
+  .topbar .title,
+  .topbar .topbar-label,
+  .topbar .logo-wordmark span {
+    font-size: 0.9rem;
+  }
+
+  .topbar .eyebrow {
+    font-size: 0.65rem;
+  }
+
+  .topbar-actions,
+  .topbar .hero-actions {
+    gap: 4px;
+  }
+
+  /* Botones más compactos */
+  .topbar .action-btn,
+  .topbar .btn-crear {
+    padding: 6px 8px;
+    min-width: 36px;
+  }
+
+  /* Ocultar texto de botones que lo llevan en <span> */
+  .topbar .action-btn span,
+  .topbar .action-btn .label {
+    display: none;
+  }
+
+  /* En el caso de .btn-crear donde el texto puede estar suelto,
+     se asume que se ha envuelto en <span>. Si no, este truco de
+     font-size:0 oculta el texto y deja visible solo el ícono. */
+  .topbar .btn-crear {
+    font-size: 0;
+  }
+
+  .topbar .btn-crear span {
+    display: none;
+  }
+
+  .topbar .btn-crear .material-icons,
+  .topbar .action-btn .material-icons {
+    font-size: 22px;
+    margin: 0;
+  }
+}

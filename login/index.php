@@ -9,7 +9,20 @@
 declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/eia/session.php';
-kasu_session_start();
+try {
+    kasu_session_start();
+} catch (Throwable $e) {
+    error_log('[KASU][Index][SessionError] ' . $e->getMessage());
+}
+
+$sessionDebug = [
+    'session_id'      => session_id(),
+    'session_name'    => session_name(),
+    'session_status'  => session_status(),
+    'cookie_params'   => session_get_cookie_params(),
+    'user_agent'      => $_SERVER['HTTP_USER_AGENT'] ?? '',
+];
+error_log('[KASU][Index][SessionDebug] ' . json_encode($sessionDebug, JSON_UNESCAPED_UNICODE));
 
 /* ==========================================================================================
  * Dependencias
@@ -19,7 +32,9 @@ require_once __DIR__ . '/../eia/librerias.php';
 /* ==========================================================================================
  * Acceso directo si ya hay sesión
  * ========================================================================================== */
-if (!empty($_SESSION['Vendedor'])) {
+$hasSession = !empty($_SESSION['Vendedor']) && !empty($_SESSION['IdEmpleado']);
+if ($hasSession) {
+    error_log('[KASU][Index] Sesión válida detectada, redirigiendo a Pwa_Principal.php');
     header('Location: https://kasu.com.mx/login/Pwa_Principal.php');
     exit;
 }

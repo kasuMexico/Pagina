@@ -1,6 +1,6 @@
 <?php
 /********************************************************************************************
- * Pwa_Analisis_Ventas.php — Tablero de análisis KASU
+ * Archivo: Pwa_Analisis_Ventas.php
  * Qué hace: Muestra indicadores financieros totales, anuales y por período + 3 gráficas.
  * Compatibilidad: PHP 8.2
  * Fecha: 2025-11-05
@@ -347,148 +347,11 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
   <!-- CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-  <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?php echo h($ver); ?>">
-  <link rel="stylesheet" href="assets/css/Grafica.css">
-
-  <style>
-    body{
-      margin:0;
-      font-family:"Inter","SF Pro Display","Segoe UI",system-ui,-apple-system,sans-serif;
-      background:#F1F7FC;
-      color:#0f172a;
-    }
-    .topbar{
-      backdrop-filter: blur(12px);
-      background:#F1F7FC !important;
-      border-bottom:1px solid rgba(15,23,42,.06);
-      color:#0f172a !important;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      padding-left:16px;
-    }
-    .topbar h4{
-      margin:0;
-      font-weight:700;
-      font-size:1rem;
-      letter-spacing:.02em;
-    }
-    main.page-content{
-      padding-top: calc(var(--topbar-h) + var(--safe-t) + 8px);
-      padding-bottom: calc(
-        max(var(--bottombar-h), calc(var(--icon) + 2*var(--pad-v)))
-        + max(var(--safe-b), 8px) + 16px
-      );
-    }
-    .dashboard-shell{
-      max-width:1100px;
-      margin:0 auto;
-      padding: 6px 16px 0;
-    }
-    .page-heading{
-      margin:10px 0 14px;
-    }
-    .page-heading h1{
-      font-size:1.5rem;
-      font-weight:800;
-      margin:0 0 4px;
-    }
-    .page-heading p{
-      margin:0;
-      color:#6b7280;
-      font-size:.95rem;
-    }
-    .card-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-      gap:14px;
-      margin-bottom:18px;
-    }
-    .kpi-card,
-    .chart-card{
-      border-radius:20px;
-      padding:16px 16px 14px;
-      background:rgba(255,255,255,.94);
-      backdrop-filter:blur(18px);
-      box-shadow:0 20px 45px rgba(15,23,42,.12);
-      border:1px solid rgba(226,232,240,.9);
-    }
-    .chart-card header,
-    .kpi-card header{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:10px;
-    }
-    .chart-title{
-      margin:0;
-      font-weight:700;
-      font-size:1rem;
-    }
-    .chart-subtitle{
-      margin:0;
-      color:#6b7280;
-      font-size:.85rem;
-    }
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:6px 10px;
-      border-radius:999px;
-      background:#f4f7fb;
-      color:#1f2a37;
-      font-weight:600;
-      font-size:.82rem;
-      border:1px solid #e5e9f0;
-      white-space:nowrap;
-    }
-    .kpi-card .item{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:6px;
-      gap:12px;
-      color:#4b5563;
-      font-size:.92rem;
-    }
-    .kpi-card .item strong{
-      color:#0f172a;
-      font-weight:700;
-    }
-    .form-card{
-      border-radius:20px;
-      padding:16px 16px 12px;
-      background:rgba(255,255,255,.94);
-      border:1px solid rgba(226,232,240,.9);
-      box-shadow:0 20px 45px rgba(15,23,42,.12);
-      margin-bottom:16px;
-    }
-    .form-card .form-group label{
-      font-weight:700;
-      color:#1c2540;
-    }
-    .form-card .form-control{
-      border-radius:12px;
-      border:1px solid #e3ebf5;
-      background:#f5f7fb;
-      color:#1c2540;
-      padding:11px 12px;
-    }
-    .form-actions{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      justify-content:flex-end;
-      margin-top:8px;
-    }
-    hr.section-divider{
-      border:0;
-      border-top:1px solid rgba(15,23,42,.08);
-      margin:18px 0;
-    }
-  </style>
+  <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?= h((string)$VerCache) ?>">
+  <link rel="stylesheet" href="/login/assets/css/Menu_Superior.css?v=<?= h((string)$VerCache) ?>">
+  <link rel="stylesheet" href="/login/assets/css/pwa-core.css?v=<?= h((string)$VerCache) ?>">
+  <link rel="stylesheet" href="/login/assets/css/pwa-components.css?v=<?= h((string)$VerCache) ?>">
+    <link rel="stylesheet" href="assets/css/Grafica.css">
 
   <!-- JS base + Charts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
@@ -678,8 +541,17 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
 </head>
 
 <body onload="localize()">
-  <!-- TOP BAR -->
-  <div class="topbar"><h4 class="title">Análisis de Ventas</h4></div>
+  <!-- TOP BAR  Pwa_Analisis_Ventas.php-->
+  <div class="topbar">
+    <div class="topbar-left">
+      <img alt="KASU" src="/login/assets/img/kasu_logo.jpeg">
+      <div>
+        <p class="eyebrow mb-0">Panel móvil</p>
+        <h4 class="title">Análisis de Ventas</h4>
+      </div>
+    </div>
+    <div class="topbar-actions"></div>
+  </div>
 
   <!-- Menú inferior -->
   <section id="Menu">
@@ -691,7 +563,6 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
     <div class="dashboard-shell">
 
       <div class="page-heading">
-        <h1>Análisis de ventas</h1>
         <p>Indicadores financieros y de conversión · Rango <?= h($chartIni); ?> a <?= h($chartFin); ?></p>
       </div>
 
@@ -700,7 +571,7 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
            =================================================================== -->
       <div class="card-grid">
         <!-- Generales KASU -->
-        <article class="kpi-card">
+        <article class="card-base kpi-card">
           <header><div>
             <p class="chart-subtitle mb-1">Totales</p>
             <h2 class="chart-title">Generales KASU</h2>
@@ -713,7 +584,7 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
         </article>
 
         <!-- Datos Fideicomiso -->
-        <article class="kpi-card">
+        <article class="card-base kpi-card">
           <header><div>
             <p class="chart-subtitle mb-1">Fondos</p>
             <h2 class="chart-title">Datos Fideicomiso</h2>
@@ -726,7 +597,7 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
         </article>
 
         <!-- Datos Crediticios -->
-        <article class="kpi-card">
+        <article class="card-base kpi-card">
           <header><div>
             <p class="chart-subtitle mb-1">Cartera</p>
             <h2 class="chart-title">Datos Crediticios</h2>
@@ -741,7 +612,7 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
 
       <h5 class="mt-3 mb-2">KPIs estratégicos</h5>
       <div class="card-grid">
-        <article class="kpi-card">
+        <article class="card-base kpi-card">
           <header><div><p class="chart-subtitle mb-1">Ingresos y valor</p><h2 class="chart-title">Monetización</h2></div></header>
           <div class="item"><span>Ticket promedio</span><strong><?= h(money_mx($TicketPromedio, $fmtMoney)); ?></strong></div>
           <div class="item"><span>ARPU (por cliente)</span><strong><?= h(money_mx($ARPU, $fmtMoney)); ?></strong></div>
@@ -749,7 +620,7 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
           <div class="item"><span>CIC (cobro por cliente)</span><strong><?= h(money_mx($CIC, $fmtMoney)); ?></strong></div>
         </article>
 
-        <article class="kpi-card">
+        <article class="card-base kpi-card">
           <header><div><p class="chart-subtitle mb-1">Conversión y retención</p><h2 class="chart-title">Salud comercial</h2></div></header>
           <div class="item"><span>Tasa de cancelación</span><strong><?= h(pct($TasaCancelacion)); ?></strong></div>
           <div class="item"><span>Tasa en preventa</span><strong><?= h(pct($TasaPreventas)); ?></strong></div>
@@ -757,7 +628,7 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
           <div class="item"><span>Edad promedio cliente</span><strong><?= $fmtInt ? $fmtInt->format((int)round($EdadPromCte)) : (string)round($EdadPromCte); ?></strong></div>
         </article>
 
-        <article class="kpi-card">
+        <article class="card-base kpi-card">
           <header><div><p class="chart-subtitle mb-1">Cobranza y liquidez</p><h2 class="chart-title">Liquidez</h2></div></header>
           <div class="item"><span>MRR estimado</span><strong><?= h(money_mx($MRREstimado, $fmtMoney)); ?></strong></div>
           <div class="item"><span>Cartera en Cobranza</span><strong><?= h(money_mx($PagEr, $fmtMoney)); ?> (<?= h(pct($MorosidadRatio)); ?>)</strong></div>
@@ -767,7 +638,7 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
       </div>
 
       <div class="card-grid">
-        <article class="chart-card">
+        <article class="card-base chart-card">
           <header>
             <div>
               <p class="chart-subtitle mb-1">KPIs financieros</p>
@@ -776,7 +647,7 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
           </header>
           <div id="g_finanzas_kpi" style="height:320px;"></div>
         </article>
-        <article class="chart-card">
+        <article class="card-base chart-card">
           <header>
             <div>
               <p class="chart-subtitle mb-1">Conversión y riesgo</p>
@@ -794,7 +665,7 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
            =================================================================== -->
       <h5 class="mt-2 mb-2">Indicadores financieros anuales (<?php echo date('Y'); ?>)</h5>
       <div class="card-grid">
-        <article class="kpi-card">
+        <article class="card-base kpi-card">
           <header><div><p class="chart-subtitle mb-1">Totales año</p><h2 class="chart-title">Generales KASU</h2></div></header>
           <div class="item"><span>Cobros anuales</span><strong><?php echo h(money_mx($ANUAL['CobrosTotales'],$fmtMoney)); ?></strong></div>
           <div class="item"><span>Vtas ACTIVAS</span><strong><?php echo h(money_mx($ANUAL['VtasActivas'],$fmtMoney)); ?></strong></div>
@@ -803,7 +674,7 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
           <div class="item"><span>Efectividad</span><strong><?php echo (int)round($ANUAL['Efectividad10']); ?> / 10</strong></div>
         </article>
 
-        <article class="kpi-card">
+        <article class="card-base kpi-card">
           <header><div><p class="chart-subtitle mb-1">Prospección</p><h2 class="chart-title">Generales de Prospección</h2></div></header>
           <div class="item"><span>Prospectos Tierra (año)</span><strong><?= $fmtOut($prosTierra) ?></strong></div>
           <div class="item"><span>Prospectos Digitales</span><strong><?= $fmtOut($prosDigital) ?></strong></div>
@@ -812,7 +683,7 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
           <div class="item"><span>Clientes Generados</span><strong><?= $fmtOut($cteGenerados) ?></strong></div>
         </article>
 
-        <article class="kpi-card">
+        <article class="card-base kpi-card">
           <header><div><p class="chart-subtitle mb-1">Fideicomiso / Servicios</p><h2 class="chart-title">Servicios y fondos</h2></div></header>
           <div class="item"><span>Val. Fideicomitido</span><strong><?php echo h(money_mx($ANUAL['ValFide'],$fmtMoney)); ?></strong></div>
           <div class="item"><span>Val. Actual Fideicomiso</span><strong><?php echo h(money_mx($ANUAL['ValActFide'],$fmtMoney)); ?></strong></div>
@@ -822,7 +693,7 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
       </div>
 
       <div class="card-grid">
-        <article class="kpi-card">
+        <article class="card-base kpi-card">
           <header><div><p class="chart-subtitle mb-1">Comercial (año)</p><h2 class="chart-title">KPIs comerciales</h2></div></header>
           <div class="item"><span>Ticket promedio</span><strong><?= h(money_mx($ANUAL['TicketPromedio'], $fmtMoney)); ?></strong></div>
           <div class="item"><span>ARPU</span><strong><?= h(money_mx($ANUAL['ARPU'], $fmtMoney)); ?></strong></div>
@@ -830,7 +701,7 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
           <div class="item"><span>Tasa de cancelación</span><strong><?= h(pct($ANUAL['CancelRate'])); ?></strong></div>
         </article>
 
-        <article class="kpi-card">
+        <article class="card-base kpi-card">
           <header><div><p class="chart-subtitle mb-1">Retención y cartera</p><h2 class="chart-title">Retención & mora</h2></div></header>
           <div class="item"><span>Retención efectiva</span><strong><?= h(pct($ANUAL['RetentionRate'])); ?></strong></div>
           <div class="item"><span>Morosidad cartera</span><strong><?= h(pct($ANUAL['MoraRatio'])); ?></strong></div>
@@ -840,11 +711,11 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
       </div>
 
       <div class="card-grid">
-        <article class="chart-card">
+        <article class="card-base chart-card">
           <header><div><p class="chart-subtitle mb-1">Finanzas anuales</p><h2 class="chart-title">KPIs financieros anuales</h2></div></header>
           <div id="g_finanzas_kpi_anual" style="height:320px;"></div>
         </article>
-        <article class="chart-card">
+        <article class="card-base chart-card">
           <header><div><p class="chart-subtitle mb-1">Retención anual</p><h2 class="chart-title">Retención & mora anual</h2></div></header>
           <div id="g_conversion_kpi_anual" style="height:320px;"></div>
         </article>
@@ -855,7 +726,7 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
       <!-- ===================================================================
            [C] RESUMEN POR PERÍODO: selector de rango
       =================================================================== -->
-      <section class="form-card">
+      <section class="card-base form-card">
         <form method="POST" action="<?php echo h($_SERVER['PHP_SELF']); ?>" class="mb-1">
           <div class="form-row">
             <div class="form-group col-sm-4">
@@ -878,7 +749,7 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
       <?php if ($showPeriodo && is_array($PERIODO)): ?>
       <div class="card-grid">
         <!-- Generales KASU (período) -->
-        <article class="kpi-card">
+        <article class="card-base kpi-card">
           <header><div><p class="chart-subtitle mb-1">Período</p><h2 class="chart-title">Generales KASU</h2></div></header>
           <div class="item"><span>Cobros</span><strong><?php echo h(money_mx($PERIODO['CobrosTotales'],$fmtMoney)); ?></strong></div>
           <div class="item"><span>Vtas ACTIVAS</span><strong><?php echo h(money_mx($PERIODO['VtasActivas'],$fmtMoney)); ?></strong></div>
@@ -888,7 +759,7 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
         </article>
 
         <!-- Prospección (proxy por ventas/servicios en período) -->
-        <article class="kpi-card">
+        <article class="card-base kpi-card">
           <header><div><p class="chart-subtitle mb-1">Servicios</p><h2 class="chart-title">Fideicomiso / Servicios</h2></div></header>
           <div class="item"><span>Val. Fideicomitido</span><strong><?php echo h(money_mx($PERIODO['ValFide'],$fmtMoney)); ?></strong></div>
           <div class="item"><span>Val. Actual Fideicomiso</span><strong><?php echo h(money_mx($PERIODO['ValActFide'],$fmtMoney)); ?></strong></div>
@@ -897,7 +768,7 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
         </article>
 
         <!-- Crediticios (período) -->
-        <article class="kpi-card">
+        <article class="card-base kpi-card">
           <header><div><p class="chart-subtitle mb-1">Cartera</p><h2 class="chart-title">Datos Crediticios</h2></div></header>
           <div class="item"><span>Valor Cartera</span><strong><?php echo h(money_mx($PERIODO['ValCartera'],$fmtMoney)); ?></strong></div>
           <div class="item"><span>Capital colocado</span><strong><?php echo h(money_mx($PERIODO['CapColocado'],$fmtMoney)); ?></strong></div>
@@ -907,14 +778,14 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
         </article>
       </div>
       <div class="card-grid">
-        <article class="kpi-card">
+        <article class="card-base kpi-card">
           <header><div><p class="chart-subtitle mb-1">Comercial</p><h2 class="chart-title">KPIs comerciales (período)</h2></div></header>
           <div class="item"><span>Ticket promedio</span><strong><?= h(money_mx($PERIODO['TicketPromedio'], $fmtMoney)); ?></strong></div>
           <div class="item"><span>ARPU</span><strong><?= h(money_mx($PERIODO['ARPU'], $fmtMoney)); ?></strong></div>
           <div class="item"><span>MRR estimado</span><strong><?= h(money_mx($PERIODO['MRR'], $fmtMoney)); ?></strong></div>
           <div class="item"><span>Tasa de cancelación</span><strong><?= h(pct($PERIODO['CancelRate'])); ?></strong></div>
         </article>
-        <article class="kpi-card">
+        <article class="card-base kpi-card">
           <header><div><p class="chart-subtitle mb-1">Retención y cartera</p><h2 class="chart-title">Retención & cartera (período)</h2></div></header>
           <div class="item"><span>Retención efectiva</span><strong><?= h(pct($PERIODO['RetentionRate'])); ?></strong></div>
           <div class="item"><span>Morosidad cartera</span><strong><?= h(pct($PERIODO['MoraRatio'])); ?></strong></div>
@@ -928,7 +799,7 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
       <!-- ===================================================================
            [D] GRÁFICAS: selector + gráficas
            =================================================================== -->
-      <section class="form-card">
+      <section class="card-base form-card">
         <form class="form-row align-items-end" method="GET" action="<?php echo h($_SERVER['PHP_SELF']); ?>#graficas-producto">
           <div class="form-group col-md-4">
             <label>Fecha inicio (gráficas)</label>
@@ -952,15 +823,15 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
       </div>
 
       <div class="card-grid">
-        <article class="chart-card"><header><h2 class="chart-title">Valor ventas activas</h2></header><div id="g_activas_total" style="height:300px;"></div></article>
-        <article class="chart-card"><header><h2 class="chart-title">Ventas totales</h2></header><div id="g_totales"></div></article>
-        <article class="chart-card"><header><h2 class="chart-title">Ventas activas</h2></header><div id="g_activas"></div></article>
-        <article class="chart-card"><header><h2 class="chart-title">Ventas por estatus</h2></header><div id="g_status"></div></article>
+        <article class="card-base chart-card"><header><h2 class="chart-title">Valor ventas activas</h2></header><div id="g_activas_total" style="height:300px;"></div></article>
+        <article class="card-base chart-card"><header><h2 class="chart-title">Ventas totales</h2></header><div id="g_totales"></div></article>
+        <article class="card-base chart-card"><header><h2 class="chart-title">Ventas activas</h2></header><div id="g_activas"></div></article>
+        <article class="card-base chart-card"><header><h2 class="chart-title">Ventas por estatus</h2></header><div id="g_status"></div></article>
       </div>
 
       <hr class="section-divider">
 
-      <div class="chart-card">
+      <div class="card-base chart-card">
         <header><div><p class="chart-subtitle mb-1">Histórico</p><h2 class="chart-title">Curva histórica de ventas efectivas</h2></div></header>
         <div class="Grafica"><div id="curve_chart"></div></div>
       </div>

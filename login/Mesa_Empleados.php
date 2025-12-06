@@ -5,6 +5,7 @@
  *           consultas preparadas cuando aplica.
  * Fecha: 05/11/2025
  * Revisado por: JCCM
+ * Archivo: Mesa_Empleados.php
  ********************************************************************************************/
 
 declare(strict_types=1);
@@ -140,26 +141,32 @@ $VerCache = $VerCache ?? time();
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?= h((string)$VerCache) ?>">
+  <link rel="stylesheet" href="/login/assets/css/Menu_Superior.css?v=<?= h((string)$VerCache) ?>">
+  <link rel="stylesheet" href="/login/assets/css/pwa-core.css?v=<?= h((string)$VerCache) ?>">
+  <link rel="stylesheet" href="/login/assets/css/pwa-components.css?v=<?= h((string)$VerCache) ?>">
 </head>
 <body onload="localize()"> 
-  <!-- =================== Top bar fija ===================
+  <!-- =================== Top bar fija Mesa_Empleados.php ===================
        Qué hace: Encabezado y botón para crear empleado
        Fecha: 05/11/2025 | Revisado por: JCCM -->
   <div class="topbar">
-    <div class="d-flex align-items-center w-100">
-      <h4 class="title">Colaboradores de la empresa</h4>
-
-      <!-- botón crear empleado -->
-      <div class="p-2">
-        <?php $ids = uniqid(); ?>
-        <form method="POST" action="<?= h($_SERVER['PHP_SELF']) ?>">
-          <input type="hidden" name="nombre" value="<?= h($name) ?>">
-          <label for="V4<?= h($ids) ?>" class="btn" title="Crear nuevo Empleado" style="background:#F7DC6F;color:#F8F9F9;">
-            <i class="material-icons">person_add</i>
-          </label>
-          <input id="V4<?= h($ids) ?>" type="submit" name="IdEmpleado" value="4<?= h($ids) ?>" hidden>
-        </form>
+    <div class="topbar-left">
+      <img src="/login/assets/img/kasu_logo.jpeg" alt="KASU">
+      <div>
+        <p class="eyebrow mb-0">Mesa</p>
+        <h4 class="title">Colaboradores de la empresa</h4>
       </div>
+    </div>
+    <div class="topbar-actions">
+      <?php $ids = uniqid(); ?>
+      <form method="POST" action="<?= h($_SERVER['PHP_SELF']) ?>">
+        <input type="hidden" name="nombre" value="<?= h($name) ?>">
+        <input type="hidden" name="IdEmpleado" value="4<?= h($ids) ?>">
+        <button type="submit" class="action-btn success" title="Crear nuevo Empleado">
+          <i class="material-icons">person_add</i>
+          <span>Nuevo Empleado</span>
+        </button>
+      </form>
     </div>
   </div>
 

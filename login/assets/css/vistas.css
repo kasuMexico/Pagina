@@ -1,0 +1,368 @@
+/* =========================================================================
+ * Hoja: vistas.css
+ * Qué hace: Estilos base unificados para las vistas PWA y mesas KASU.
+ * Fecha: 06/12/2025
+ * ====================================================================== */
+
+/* Alias de altura de barra superior
+   - Usa --topbar-height definido en Menu_Superior.css
+   - Fallback a 58px si no existe */
+:root{
+  --topbar-h: var(--topbar-height, 58px);
+}
+
+/* Layout general */
+body{
+  margin:0;
+  font-family:"Inter","SF Pro Display","Segoe UI",system-ui,-apple-system,sans-serif;
+  background:#F1F7FC;
+  color:#0f172a;
+}
+
+/* Contenido entre barra superior fija y menú inferior fijo */
+main.page-content{
+  /* IMPORTANTE: que no se sume ningún margen previo */
+  margin-top:0 !important;
+
+  /* Arranca justo debajo de la topbar + safe-area */
+  padding-top: calc(var(--topbar-h) + var(--safe-t, 0px) + 4px);
+
+  /* Respeta la altura del menú inferior + safe-area */
+  padding-bottom: calc(
+    max(var(--bottombar-h), calc(var(--icon) + 2*var(--pad-v)))
+    + max(var(--safe-b), 8px)
+    + 16px
+  );
+}
+
+/* Si el primer bloque dentro de main tenía margen superior (card, panel,
+   container, etc.), lo anulamos para que no se sume al padding-top. */
+main.page-content > *:first-child{
+  margin-top:0 !important;
+}
+
+.dashboard-shell{
+  max-width:1100px;
+  margin:0 auto;
+  padding:10px 16px 0;
+}
+.page-heading{
+  margin:12px 0 14px;
+}
+.page-heading h1{
+  font-size:1.5rem;
+  font-weight:800;
+  margin:0 0 4px;
+}
+.page-heading p{
+  margin:0;
+  color:#6b7280;
+  font-size:.95rem;
+}
+
+/* Tarjetas y paneles */
+.card-glass{
+  border-radius:20px;
+  padding:16px;
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(16px);
+  box-shadow:0 20px 45px rgba(15,23,42,.12);
+  border:1px solid rgba(226,232,240,.9);
+  margin-bottom:14px;
+}
+.card-glass header{
+  margin-bottom:10px;
+}
+.card-glass h2{
+  font-size:1.15rem;
+  font-weight:800;
+  margin:0;
+  color:#0f172a;
+}
+.form-card .form-control{
+  border-radius:12px;
+  border:1px solid #e3ebf5;
+  background:#f5f7fb;
+  color:#1c2540;
+  padding:11px 12px;
+  box-shadow:none;
+}
+.form-card .btn{
+  border-radius:12px;
+  font-weight:700;
+}
+.summary-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:12px;
+  margin-top:10px;
+}
+.summary-box{
+  border-radius:16px;
+  padding:12px;
+  border:1px solid rgba(226,232,240,.9);
+  background:#f9fbff;
+}
+.summary-box p{
+  margin:0 0 6px;
+  color:#4b5563;
+  font-weight:600;
+}
+.summary-box h4{
+  margin:0;
+  font-size:1.2rem;
+  font-weight:800;
+  color:#0f172a;
+}
+.panel{
+  border-radius:18px;
+  padding:14px;
+  border:1px solid rgba(226,232,240,.9);
+  background:#ffffff;
+  box-shadow:0 16px 32px rgba(15,23,42,.08);
+  margin-bottom:12px;
+}
+.panel header{
+  margin-bottom:10px;
+}
+.panel-title{
+  margin:0;
+  font-weight:800;
+  font-size:1.05rem;
+}
+.info-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:12px;
+}
+.info-list{
+  list-style:none;
+  padding:0;
+  margin:0;
+  display:grid;
+  gap:10px;
+}
+.info-list li{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:10px 12px;
+  border-radius:14px;
+  background:#f8fafc;
+  border:1px solid rgba(226,232,240,.85);
+}
+.info-list .label{
+  font-weight:700;
+  color:#1c2540;
+  font-size:.95rem;
+}
+.info-list .value{
+  font-weight:600;
+  color:#0f172a;
+  font-size:.95rem;
+  text-align:right;
+}
+.info-item{
+  padding:10px 12px;
+  border-radius:14px;
+  background:#f8fafc;
+  border:1px solid rgba(226,232,240,.85);
+}
+.info-item .label{
+  display:block;
+  font-weight:700;
+  color:#1c2540;
+  margin-bottom:4px;
+  font-size:.95rem;
+}
+.info-item .value{
+  margin:0;
+  color:#0f172a;
+  font-weight:600;
+  font-size:.95rem;
+  line-height:1.35;
+}
+
+/* Layout específico: Estado de Cuenta */
+.statement-shell{
+  max-width:1100px;
+  margin:0 auto;
+  padding:16px 16px 0;
+}
+.statement-header{
+  margin-bottom:18px;
+  border-bottom:1px solid #E5E7EB;
+  padding-bottom:10px;
+}
+.statement-header h1{
+  font-size:1.35rem;
+  font-weight:700;
+  margin:0 0 4px;
+  color:#111827;
+}
+.statement-header .meta-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  font-size:.85rem;
+  color:#4B5563;
+}
+.badge-status{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 10px;
+  border-radius:999px;
+  background:#f3f4f6;
+  color:#111827;
+  font-weight:700;
+  font-size:.85rem;
+}
+.badge-status.active{
+  background:#e4f9f1;
+  color:#0f9f6e;
+}
+.summary-row{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:10px;
+  margin-bottom:12px;
+}
+.summary-card{
+  border-radius:12px;
+  padding:10px 12px;
+  background:#f9fafb;
+  border:1px solid #e5e7eb;
+}
+.summary-card .label{
+  font-weight:600;
+  color:#4B5563;
+  margin:0 0 4px;
+}
+.summary-card .value{
+  font-weight:800;
+  color:#111827;
+  margin:0;
+}
+.table-panel table{
+  margin-bottom:0;
+}
+.table-panel thead th{
+  border-top:0;
+  font-size:.8rem;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  color:#6B7280;
+  background:#F9FAFB;
+  border-bottom:1px solid #E5E7EB;
+  white-space:nowrap;
+}
+.table-panel tbody td{
+  font-size:.9rem;
+  vertical-align:middle;
+  border-top:1px solid #E5E7EB;
+}
+.totals-panel table{
+  margin-bottom:0;
+}
+.totals-panel td{
+  padding:6px 4px;
+  font-size:.95rem;
+}
+.totals-panel .label{
+  font-weight:500;
+  color:#4B5563;
+}
+.totals-panel .value{
+  font-weight:700;
+  color:#111827;
+}
+
+/* Tablas y acciones de Mesas */
+.mesa-table-wrapper{
+  margin-bottom:10px;
+  overflow-x:auto;
+}
+.mesa-table{
+  width:100%;
+}
+.mesa-table td[data-label]{
+  font-weight:600;
+}
+.mesa-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.mesa-actions-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(44px,1fr));
+  gap:6px;
+  align-items:center;
+}
+.mesa-actions-grid .btn{
+  border:none;
+  border-radius:10px;
+  width:40px;
+  height:40px;
+  padding:0;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 6px 16px rgba(15,23,42,0.15);
+}
+.mesa-actions-grid .btn i.material-icons{
+  font-size:18px;
+  line-height:1;
+}
+
+/* Pills / chips */
+.pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 10px;
+  border-radius:999px;
+  background:#f4f7fb;
+  color:#1f2a37;
+  font-weight:600;
+  font-size:.82rem;
+  border:1px solid #e5e9f0;
+  white-space:nowrap;
+  margin-right:8px;
+  margin-bottom:6px;
+}
+
+/* Botones de acción en topbar */
+.action-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:9px 12px;
+  border-radius:999px;
+  border:1px solid rgba(59,130,246,.25);
+  font-weight:700;
+  font-size:.92rem;
+  background:linear-gradient(135deg,rgba(255,255,255,.9),rgba(236,244,255,.95));
+  color:#1d4ed8;
+  box-shadow:0 14px 32px rgba(59,130,246,.16);
+  text-decoration:none;
+  transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
+  white-space:nowrap;
+}
+.action-btn.primary{
+  background:#0f6ef0;
+  color:#ffffff;
+  border-color:rgba(15,110,240,.35);
+  box-shadow:0 14px 32px rgba(15,110,240,.45);
+}
+.action-btn.success{
+  background:#22c55e;
+  color:#ffffff;
+  border-color:rgba(34,197,94,.35);
+  box-shadow:0 14px 32px rgba(34,197,94,.5);
+}
+.action-btn .material-icons{
+  font-size:18px;
+}

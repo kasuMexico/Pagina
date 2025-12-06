@@ -1,0 +1,90 @@
+/* /login/assets/css/pwa-core.css */
+
+/* Design tokens */
+:root {
+  --pwa-bg: #F1F7FC;
+  --pwa-text: #0f172a;
+  --pwa-muted: #6b7280;
+
+  --pwa-card-bg: rgba(255,255,255,.94);
+  --pwa-card-border: rgba(226,232,240,.9);
+  --pwa-card-shadow: 0 20px 45px rgba(15,23,42,.12);
+
+  --pwa-radius-lg: 20px;
+  --pwa-radius-xl: 22px;
+
+  --pwa-font: "Inter","SF Pro Display","Segoe UI",system-ui,-apple-system,sans-serif;
+
+  /* Alias usado por todas las vistas PWA/Mesa */
+  --topbar-h: var(--topbar-height, 58px);
+}
+
+/* Layout base de TODAS las PWAs */
+body {
+  margin: 0;
+  font-family: var(--pwa-font);
+  background: var(--pwa-bg);
+  color: var(--pwa-text);
+}
+
+main.page-content {
+  /* El topbar es sticky (ocupa su propio espacio), solo dejamos
+     un margen pequeño + safe-area superior */
+  padding-top: calc(var(--safe-t, 0px) + 8px);
+  padding-bottom: calc(
+    max(var(--bottombar-h), calc(var(--icon) + 2 * var(--pad-v)))
+    + max(var(--safe-b), 8px) + 16px
+  );
+}
+
+.dashboard-shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 8px 16px 0;
+}
+
+.page-heading {
+  margin: 10px 0 14px;
+}
+
+.page-heading h1,
+.page-heading .chart-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0 0 4px;
+  color: #0f172a;
+}
+
+.page-heading p,
+.page-heading .chart-subtitle {
+  margin: 0;
+  color: var(--pwa-muted);
+  font-size: .95rem;
+}
+
+/* Grids reutilizables */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.dashboard-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.6fr);
+  gap: 18px;
+}
+
+@media (max-width: 992px) {
+  .dashboard-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Separador estándar */
+.section-divider {
+  border: 0;
+  border-top: 1px solid rgba(15,23,42,.08);
+  margin: 18px 0;
+}

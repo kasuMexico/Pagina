@@ -182,6 +182,10 @@ if ($hora >= 6 && $hora < 12) {
 
   <!-- CSS principal PWA -->
   <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?= htmlspecialchars($VerCacheSafe, ENT_QUOTES) ?>">
+  <link rel="stylesheet" href="/login/assets/css/Menu_Superior.css?v=<?= htmlspecialchars($VerCacheSafe, ENT_QUOTES) ?>">
+  <link rel="stylesheet" href="/login/assets/css/pwa-core.css?v=<?= htmlspecialchars($VerCacheSafe, ENT_QUOTES) ?>">
+  <link rel="stylesheet" href="/login/assets/css/pwa-components.css?v=<?= htmlspecialchars($VerCacheSafe, ENT_QUOTES) ?>">
+  <link rel="stylesheet" href="/login/assets/css/pwa-home.css?v=<?= htmlspecialchars($VerCacheSafe, ENT_QUOTES) ?>">
   <link rel="stylesheet" href="assets/css/Grafica.css">
 
   <!-- Google Charts -->
@@ -189,410 +193,17 @@ if ($hora >= 6 && $hora < 12) {
   <!-- jQuery -->
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 
-  <style>
-    /* Shell general tipo macOS/iOS: fondo muy limpio, tarjetas glass */
-    body{
-      margin:0;
-      font-family:"Inter","SF Pro Display","Segoe UI",system-ui,-apple-system,sans-serif;
-      background:#F1F7FC;
-      color:#0f172a;
-    }
-
-    .dashboard-shell{
-      max-width:1100px;
-      margin:0 auto;
-      padding: calc(var(--topbar-h) + var(--safe-t) + 3=6px) 16px
-               calc(max(var(--bottombar-h), calc(var(--icon) + 2*var(--pad-v))) + max(var(--safe-b), 8px) + 4px);
-    }
-
-    /* Topbar clara, forzando sobre cualquier regla previa */
-    .topbar{
-      backdrop-filter: blur(12px);
-      background:#F9FAFE !important;
-      border-bottom:1px solid rgba(15,23,42,.05);
-      color:#0f172a !important;
-    }
-    .topbar .logo-wordmark{
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-    .topbar .logo-wordmark img{
-      height:30px;
-      border-radius:8px;
-    }
-    .topbar .logo-wordmark span{
-      font-weight:700;
-      letter-spacing:.03em;
-      font-size:.9rem;
-      text-transform:uppercase;
-      color:#4b5563;
-    }
-
-    /* Tarjeta hero: saludo + perfil + resumen rápido */
-    .hero-card{
-      position:relative;
-      display:grid;
-      grid-template-columns: minmax(0,1.6fr) minmax(0,1.2fr);
-      gap:18px;
-      padding:18px 18px 16px;
-      border-radius:22px;
-      background:linear-gradient(135deg, rgba(255,255,255,.92), rgba(241,247,252,.98));
-      box-shadow:0 24px 60px rgba(15,23,42,.12);
-      border:1px solid rgba(148,163,184,.28);
-      margin-bottom:20px;
-    }
-
-    @media (max-width:768px){
-      .hero-card{
-        grid-template-columns: minmax(0,1fr);
-      }
-    }
-
-    .hero-main-title{
-      font-size:1.5rem;
-      font-weight:800;
-      margin:0 0 4px;
-      letter-spacing:.02em;
-    }
-    .hero-subtitle{
-      margin:0;
-      font-size:.93rem;
-      color:#6b7280;
-    }
-    .hero-meta{
-      display:flex;
-      flex-wrap:wrap;
-      gap:12px;
-      margin-top:14px;
-    }
-    .hero-pill{
-      padding:6px 12px;
-      border-radius:999px;
-      font-size:.8rem;
-      background:rgba(15,111,240,.06);
-      color:#0f172a;
-      border:1px solid rgba(148,163,184,.28);
-    }
-    .hero-pill strong{
-      font-weight:600;
-    }
-
-    .hero-kpi-small{
-      margin-top:14px;
-      display:flex;
-      gap:16px;
-      flex-wrap:wrap;
-      font-size:.8rem;
-      color:#6b7280;
-    }
-    .hero-kpi-small span{
-      white-space:nowrap;
-    }
-
-    .hero-secondary{
-      display:flex;
-      align-items:center;
-      justify-content:flex-end;
-      gap:16px;
-      flex-wrap:wrap;
-    }
-
-    .hero-avatar-wrapper{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:10px;
-    }
-
-    .hero-avatar{
-      position:relative;
-      width:116px;
-      height:116px;
-      border-radius:30px;
-      padding:4px;
-      background:linear-gradient(145deg,#e0edff,#fef9c3);
-      box-shadow:0 18px 40px rgba(15,23,42,.24);
-    }
-    .hero-avatar-inner{
-      width:100%;
-      height:100%;
-      border-radius:26px;
-      overflow:hidden;
-      background:#f8fafc;
-    }
-    .hero-avatar-inner img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-    }
-
-    .hero-avatar-badge{
-      position:absolute;
-      right:-6px;
-      bottom:-6px;
-      width:32px;
-      height:32px;
-      border-radius:999px;
-      background:#0f6ef0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:#fff;
-      font-size:1rem;
-      box-shadow:0 12px 26px rgba(15,111,240,.6);
-    }
-
-    .hero-actions{
-      display:flex;
-      justify-content:flex-end;
-      margin-bottom:10px;
-    }
-
-    /* Botón instalar: oculto por defecto, visible solo cuando JS lo marque */
-    .btn-install{
-      display:none; /* se mostrará solo con .is-visible desde JS */
-      position:relative;
-      align-items:center;
-      gap:8px;
-      border-radius:14px;
-      border:none;
-      padding:10px 14px;
-      font-size:.82rem;
-      background:#0f172a;
-      color:#f9fafb;
-      box-shadow:0 18px 40px rgba(15,23,42,.55);
-      white-space:nowrap;
-    }
-    .btn-install i{
-      font-size:1rem;
-    }
-    .btn-install.is-visible{
-      display:inline-flex;
-    }
-
-    /* Tarjetas KPIs */
-    .kpi-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-      gap:16px;
-      margin-bottom:22px;
-    }
-
-    .kpi-card{
-      position:relative;
-      border-radius:20px;
-      padding:16px 16px 14px;
-      background:rgba(255,255,255,.92);
-      backdrop-filter:blur(18px);
-      box-shadow:0 20px 45px rgba(15,23,42,.12);
-      border:1px solid rgba(226,232,240,.9);
-    }
-
-    .kpi-chip{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:4px 9px;
-      border-radius:999px;
-      font-size:.72rem;
-      text-transform:uppercase;
-      letter-spacing:.1em;
-      background:rgba(15,111,240,.06);
-      color:#0f6ef0;
-      border:1px solid rgba(191,219,254,.9);
-      margin-bottom:6px;
-    }
-
-    .kpi-title{
-      font-size:.95rem;
-      font-weight:700;
-      margin:0 0 2px;
-      color:#0f172a;
-    }
-    .kpi-meta{
-      font-size:.8rem;
-      color:#6b7280;
-      margin:0 0 6px;
-    }
-
-    .kpi-main-value{
-      font-size:1.3rem;
-      font-weight:800;
-      margin:0;
-    }
-    .kpi-main-sub{
-      font-size:.78rem;
-      color:#6b7280;
-    }
-
-    .kpi-main-row{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-end;
-      gap:12px;
-      margin-top:4px;
-      margin-bottom:6px;
-    }
-
-    .kpi-progress{
-      margin-top:6px;
-    }
-    .kpi-progress .progress{
-      height:6px;
-      border-radius:999px;
-      background:#e5e7eb;
-      overflow:hidden;
-    }
-    .kpi-progress .progress-bar{
-      border-radius:999px;
-    }
-    .kpi-footer{
-      margin-top:8px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      font-size:.78rem;
-      color:#6b7280;
-    }
-
-    .kpi-link{
-      font-weight:600;
-      text-decoration:none;
-      color:#0f6ef0;
-    }
-    .kpi-link:hover{
-      text-decoration:none;
-      color:#0c5ad1;
-    }
-
-    .badge-soft{
-      padding:3px 9px;
-      border-radius:999px;
-      font-size:.72rem;
-      background:#f3f4ff;
-      color:#4b5563;
-    }
-
-    /* Contenedor de gráfica */
-    .chart-card{
-      border-radius:22px;
-      background:rgba(255,255,255,.9);
-      border:1px solid rgba(226,232,240,.9);
-      box-shadow:0 20px 50px rgba(15,23,42,.12);
-      padding:16px 14px 10px;
-      margin-bottom:22px;
-    }
-    .chart-card-header{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:8px;
-    }
-    .chart-title{
-      margin:0;
-      font-size:.92rem;
-      font-weight:700;
-      color:#111827;
-    }
-    .chart-subtitle{
-      margin:0;
-      font-size:.78rem;
-      color:#6b7280;
-    }
-
-    .chart-range-pill{
-      padding:3px 8px;
-      border-radius:999px;
-      font-size:.72rem;
-      background:#f3f4ff;
-      color:#4b5563;
-    }
-
-    .Grafica{
-      width:100%;
-      min-height:220px;
-    }
-
-    .dashboard-row{
-      display:grid;
-      grid-template-columns: minmax(0,1.4fr) minmax(0,1.6fr);
-      gap:18px;
-    }
-    @media (max-width:992px){
-      .dashboard-row{
-        grid-template-columns:minmax(0,1fr);
-      }
-    }
-
-    /* Perfil integrado */
-    .dpersonales{
-      padding:0;
-      margin-bottom:0;
-    }
-    .imgPerfil{
-      position:relative;
-      width:88px;
-      height:auto;
-      flex-shrink:0;
-    }
-    .imgPerfil img{
-      height:auto;
-      width:100%;
-      border-radius:22px;
-      border:none;
-    }
-
-    #FotoPerfil{
-      border-radius:22px !important;
-      border:none !important;
-      padding:0 !important;
-    }
-
-    .Nombre{
-      padding:0;
-      text-align:left;
-      transform:none;
-    }
-    .Nombre p{
-      margin:0;
-    }
-    .Nombre p:first-child{
-      font-weight:700;
-      font-size:1rem;
-    }
-    .Nombre p:last-child{
-      font-size:.82rem;
-      color:#6b7280;
-    }
-
-    .dashboard-meta-bar{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-top:8px;
-      font-size:.78rem;
-      color:#6b7280;
-    }
-    .dashboard-meta-bar span{
-      display:inline-flex;
-      align-items:center;
-      gap:5px;
-    }
-    .dot{
-      width:8px;
-      height:8px;
-      border-radius:50%;
-      background:#22c55e;
-    }
-  </style>
 </head>
 <body onload="localize()">
-  <!-- TOP BAR -->
+  <!-- TOP BAR Pwa_Principal.php-->
+  <!-- TOP BAR Mesa_Finanzas.php-->
   <div class="topbar">
-    <div class="logo-wordmark">
-      <img alt="KASU" src="/login/assets/img/logoKasu.png">
-      <span>KASU VENTAS</span>
+    <div class="topbar-left">
+      <img src="/login/assets/img/kasu_logo.jpeg" alt="KASU">
+      <div>
+        <p class="eyebrow mb-0">Panel móvil</p>
+        <h4 class="title">Pantalla principal</h4>
+      </div>
     </div>
   </div>
 
@@ -683,7 +294,7 @@ if ($hora >= 6 && $hora < 12) {
       <section class="dashboard-row">
         <!-- Gráfica -->
         <div>
-          <article class="chart-card">
+          <article class="card-base chart-card">
             <header class="chart-card-header">
               <div>
                 <h2 class="chart-title">Desempeño mensual</h2>
@@ -701,7 +312,7 @@ if ($hora >= 6 && $hora < 12) {
         <div>
           <div class="kpi-grid">
             <?php if ($Niv === 7 || $Niv === 6): ?>
-              <article class="kpi-card">
+              <article class="card-base kpi-card">
                 <div class="kpi-chip">
                   <i class="fa fa-line-chart"></i> Comisiones
                 </div>
@@ -728,7 +339,7 @@ if ($hora >= 6 && $hora < 12) {
             <?php endif; ?>
 
             <!-- Cobranza -->
-            <article class="kpi-card">
+            <article class="card-base kpi-card">
               <div class="kpi-chip">
                 <i class="fa fa-credit-card"></i> Cobranza
               </div>
@@ -762,7 +373,7 @@ if ($hora >= 6 && $hora < 12) {
             </article>
 
             <!-- Ventas -->
-            <article class="kpi-card">
+            <article class="card-base kpi-card">
               <div class="kpi-chip">
                 <i class="fa fa-file-text-o"></i> Ventas
               </div>
@@ -796,7 +407,7 @@ if ($hora >= 6 && $hora < 12) {
             </article>
 
             <!-- Pólizas -->
-            <article class="kpi-card">
+            <article class="card-base kpi-card">
               <div class="kpi-chip">
                 <i class="fa fa-shield"></i> Pólizas
               </div>
@@ -835,7 +446,7 @@ if ($hora >= 6 && $hora < 12) {
 
             <!-- Panel extra para Dirección / CEO -->
             <?php if ($Niv === 1): ?>
-              <article class="kpi-card">
+              <article class="card-base kpi-card">
                 <div class="kpi-chip">
                   <i class="fa fa-university"></i> Cobranza global
                 </div>

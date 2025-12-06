@@ -7,6 +7,7 @@
  * - Desde aquí se pueden disparar recordatorios de pago (correo / SMS) vía Funcionalidad_Cobros.php.
  * Fecha: 14/11/2025
  * Revisado por: JCCM
+ * Archivo: Mesa_Finanzas.php
  ********************************************************************************************/
 
 declare(strict_types=1);
@@ -157,146 +158,21 @@ foreach ($mpOps as $mp) {
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?= h($VerCache) ?>">
-  <style>
-    body{
-      margin:0;
-      font-family:"Inter","SF Pro Display","Segoe UI",system-ui,-apple-system,sans-serif;
-      background:#F1F7FC;
-      color:#0f172a;
-    }
-    .topbar{
-      position:sticky;
-      top:0;
-      z-index:10;
-      background:#F1F7FC;
-      border-bottom:1px solid rgba(15,23,42,.06);
-      padding:calc(8px + var(--safe-t)) 16px 12px;
-      backdrop-filter:blur(12px);
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
-    .topbar .title{
-      margin:0;
-      font-weight:800;
-      font-size:1.05rem;
-      letter-spacing:.02em;
-    }
-    main.page-content{
-      padding-top: calc(var(--topbar-h) + var(--safe-t) + 6px);
-      padding-bottom: calc(
-        max(var(--bottombar-h), calc(var(--icon) + 2*var(--pad-v)))
-        + max(var(--safe-b), 8px) + 16px
-      );
-    }
-    .dashboard-shell{
-      max-width:1100px;
-      margin:0 auto;
-      padding:10px 16px 0;
-    }
-    .page-heading{
-      margin:12px 0 14px;
-    }
-    .page-heading h1{
-      font-size:1.5rem;
-      font-weight:800;
-      margin:0 0 4px;
-    }
-    .page-heading p{
-      margin:0;
-      color:#6b7280;
-      font-size:.95rem;
-    }
-    .card-glass{
-      border-radius:20px;
-      padding:16px;
-      background:rgba(255,255,255,.94);
-      backdrop-filter:blur(16px);
-      box-shadow:0 20px 45px rgba(15,23,42,.12);
-      border:1px solid rgba(226,232,240,.9);
-      margin-bottom:14px;
-    }
-    .card-glass header{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:10px;
-    }
-    .card-glass h2{
-      font-size:1.1rem;
-      font-weight:800;
-      margin:0;
-    }
-    .card-glass table{
-      margin-bottom:0;
-    }
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:6px 10px;
-      border-radius:999px;
-      background:#f4f7fb;
-      color:#1f2a37;
-      font-weight:600;
-      font-size:.82rem;
-      border:1px solid #e5e9f0;
-      white-space:nowrap;
-      margin-right:8px;
-      margin-bottom:6px;
-    }
-    .form-card .form-control{
-      border-radius:12px;
-      border:1px solid #e3ebf5;
-      background:#f5f7fb;
-      color:#1c2540;
-      padding:11px 12px;
-      box-shadow:none;
-    }
-    .form-card .btn{
-      border-radius:12px;
-      font-weight:700;
-      padding:10px 12px;
-    }
-    .summary-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-      gap:12px;
-      margin-top:10px;
-    }
-    .summary-box{
-      border-radius:14px;
-      padding:12px 14px;
-      background:#f9fbff;
-      border:1px solid #e5e9f0;
-      box-shadow:0 12px 28px rgba(15,23,42,.08);
-    }
-    .summary-box p{
-      margin:0 0 4px;
-      color:#4b5563;
-      font-weight:600;
-    }
-    .summary-box h4{
-      margin:0;
-      font-weight:800;
-      color:#0f172a;
-    }
-    .mesa-table-wrapper{overflow-x:auto;}
-    .mesa-table{min-width:720px;}
-    .mesa-table td[data-label="Fecha"],
-    .mesa-table td[data-label="Fechas"] small{
-      white-space:nowrap;
-      font-variant-numeric:tabular-nums;
-    }
-  </style>
+  <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?= h((string)$VerCache) ?>">
+  <link rel="stylesheet" href="/login/assets/css/Menu_Superior.css?v=<?= h((string)$VerCache) ?>">
+  <link rel="stylesheet" href="/login/assets/css/pwa-core.css?v=<?= h((string)$VerCache) ?>">
+  <link rel="stylesheet" href="/login/assets/css/pwa-components.css?v=<?= h((string)$VerCache) ?>">
+
 </head>
 <body onload="localize()">
-  <!-- TOP BAR -->
+  <!-- TOP BAR Mesa_Finanzas.php-->
   <div class="topbar">
-    <div class="d-flex align-items-center w-100">
-      <h4 class="title">Mesa Finanzas</h4>
+    <div class="topbar-left">
+      <img src="/login/assets/img/kasu_logo.jpeg" alt="KASU">
+      <div>
+        <p class="eyebrow mb-0">Mesa</p>
+        <h4 class="title">Finanzas</h4>
+      </div>
     </div>
   </div>
 
@@ -309,12 +185,11 @@ foreach ($mpOps as $mp) {
   <main class="page-content">
     <div class="dashboard-shell">
       <div class="page-heading">
-        <h1>Mesa finanzas</h1>
         <p>Conciliación de pagos y operaciones de Mercado Pago.</p>
       </div>
 
       <!-- Filtros de fecha + resumen -->
-      <div class="card-glass form-card">
+      <div class="card-base card-glass form-card">
         <form class="form-row" method="GET" action="<?= h($_SERVER['PHP_SELF']) ?>">
           <div class="form-group col-md-3">
             <label>Desde</label>
@@ -342,7 +217,7 @@ foreach ($mpOps as $mp) {
       </div>
 
       <!-- Pagos pendientes de conciliación -->
-      <div class="card-glass">
+      <div class="card-base card-glass">
         <header><h2>Pagos registrados por vendedores (pendientes de conciliación)</h2></header>
         <div class="table-responsive mesa-table-wrapper" style="margin-bottom:0;">
           <table class="table mesa-table" data-mesa="pagos-pendientes">
@@ -437,7 +312,7 @@ foreach ($mpOps as $mp) {
       </div>
 
       <!-- Operaciones Mercado Pago -->
-      <div class="card-glass">
+      <div class="card-base card-glass">
         <header><h2>Operaciones Mercado Pago</h2></header>
         <div class="table-responsive mesa-table-wrapper" style="margin-bottom:0;">
           <table class="table mesa-table" data-mesa="mp-ops">

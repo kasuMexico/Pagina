@@ -1,3 +1,9 @@
+/* =========================================================================
+ * Hoja: styles.min.css
+ * Qué hace: 
+ * Fecha: 06/12/2025
+ * ======================================================================= */
+
 /* ===== Base ===== */
 :root{
   --kasu-bg:#F1F7FC;
@@ -19,7 +25,7 @@
   --bottombar-h: 48px;   /* alto objetivo mínimo de la barra */
 }
 
-html,body{
+html{
   background:var(--kasu-bg);
   color:var(--kasu-text);
 }
@@ -331,7 +337,7 @@ tbody{border-color:#808B96;}
 .tablaCuenta{border-radius:5px;}
 #resultado{background:red;color:#fff;font-weight:bold;}
 #resultado.ok{background:green;}
-.mesa-table-wrapper{margin-bottom:30px;}
+.mesa-table-wrapper{/* margin-bottom eliminado para evitar conflicto con vistas.css */}
 .mesa-table td{vertical-align:middle;}
 .mesa-actions-grid{display:flex;flex-wrap:wrap;gap:1rem;padding:3px 0;}
 .mesa-actions-grid form{
@@ -587,13 +593,7 @@ body::before{
 #Menu .MenuPrincipal{ padding-bottom: var(--pad-v); }
 
 /* ====== Contenido entre barras ====== */
-main.page-content{
-  padding-top: calc(var(--topbar-h) + var(--safe-t) + 8px);
-  padding-bottom: calc(
-    max(var(--bottombar-h), calc(var(--icon) + 2*var(--pad-v)))
-    + max(var(--safe-b), 8px) + 8px
-  );
-}
+/* (el layout de main.page-content ahora se define en vistas.css para las vistas) */
 
 .btn-install{
   display:none;

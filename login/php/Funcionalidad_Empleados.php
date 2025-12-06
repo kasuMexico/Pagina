@@ -163,6 +163,14 @@ if (
     )
 ) {
 
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        try {
+            kasu_session_start();
+        } catch (Throwable $e) {
+            error_log('[KASU][Login][SessionInitError] ' . $e->getMessage());
+        }
+    }
+
     // Asegurar log central
     $logFile = defined('KASU_ERROR_LOG_FILE')
         ? KASU_ERROR_LOG_FILE
@@ -253,8 +261,37 @@ if (
         // Seteamos IdEmpleado / IdVendedor con base en la sesión o en el usuario
         $_SESSION['IdEmpleado'] = $idEmpSesion;
         $_SESSION['IdVendedor'] = $usuarioSesion;
+        $_SESSION['Vendedor']   = $usuarioSesion;
         if (empty($_SESSION['csrf_logout'])) {
             $_SESSION['csrf_logout'] = bin2hex(random_bytes(32));
+        }
+
+        $ua       = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $isChrome = (stripos($ua, 'Chrome') !== false) && (stripos($ua, 'Edg/') === false) && (stripos($ua, 'OPR/') === false);
+
+        $chromeDebug = [
+            'is_chrome'        => $isChrome,
+            'session_id'       => session_id(),
+            'session_name'     => session_name(),
+            'session_status'   => session_status(),
+            'cookie_params'    => session_get_cookie_params(),
+            'session_vars'     => [
+                'Vendedor'   => $_SESSION['Vendedor'] ?? null,
+                'IdEmpleado' => $_SESSION['IdEmpleado'] ?? null,
+                'IdVendedor' => $_SESSION['IdVendedor'] ?? null,
+            ],
+            'user_agent'       => $ua,
+        ];
+        error_log('[KASU][Login][DEBUG_CHROME] ' . json_encode($chromeDebug, JSON_UNESCAPED_UNICODE));
+
+        header('X-Frame-Options: SAMEORIGIN');
+        header('X-Content-Type-Options: nosniff');
+        header('Referrer-Policy: strict-origin-when-cross-origin');
+
+        session_write_close();
+
+        if ($isChrome) {
+            usleep(100000);
         }
 
         // Auditoría

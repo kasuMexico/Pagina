@@ -4,6 +4,7 @@
  *           para registrar venta, cancelar, reasignar, actualizar y enviar a LeadSales.
  * Fecha: 05/11/2025
  * Revisado por: JCCM
+ * Archivo: Mesa_Proscpectos.php
  ********************************************************************************************/
 
 // =================== Sesión y dependencias ===================
@@ -240,25 +241,32 @@ if (!empty($_POST['CancelaCte'])) {
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?= h($VerCache) ?>">
+  <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?= h((string)$VerCache) ?>">
+  <link rel="stylesheet" href="/login/assets/css/Menu_Superior.css?v=<?= h((string)$VerCache) ?>">
+  <link rel="stylesheet" href="/login/assets/css/pwa-core.css?v=<?= h((string)$VerCache) ?>">
+  <link rel="stylesheet" href="/login/assets/css/pwa-components.css?v=<?= h((string)$VerCache) ?>">
   <link rel="stylesheet" href="assets/css/Grafica.css">
 </head>
 <body onload="localize()">
-  <!-- =================== Top bar fija ===================
+  <!-- =================== Top bar fija Mesa_Prospectos.php ===================
        Qué hace: Encabezado con título y botón para crear prospecto
        Fecha: 05/11/2025 | Revisado por: JCCM -->
   <div class="topbar">
-    <div class="d-flex align-items-center w-100">
-      <h4 class="title">Cartera de Prospectos</h4>
-
-      <!-- botón crear prospecto -->
-      <form class="BtnSocial m-0 ml-auto" method="POST" action="<?= h($_SERVER['PHP_SELF']) ?>">
+    <div class="topbar-left">
+      <img src="/login/assets/img/kasu_logo.jpeg" alt="KASU">
+      <div>
+        <p class="eyebrow mb-0">Mesa</p>
+        <h4 class="title">Cartera de Prospectos</h4>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <form class="m-0" method="POST" action="<?= h($_SERVER['PHP_SELF']) ?>">
         <input type="hidden" name="Host" value="<?= h($_SERVER['PHP_SELF']) ?>">
-        <label for="btnCrear" class="btn mb-0" title="Nuevo prospecto" style="background:#F7DC6F;color:#000;">
+        <input type="hidden" name="IdProspecto" value="40">
+        <button type="submit" class="action-btn success" title="Nuevo prospecto">
           <i class="material-icons">person_add</i>
-        </label>
-        <!-- Enviar IdProspecto = "20" (2 + 0) para que el selector abra Ventana2 -->
-        <input id="btnCrear" type="submit" name="IdProspecto" value="40" hidden>
+          <span>Nuevo prospecto</span>
+        </button>
       </form>
     </div>
   </div>

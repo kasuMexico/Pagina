@@ -4,6 +4,7 @@
  *           abre modal de registro de pago, y calcula totales con consultas preparadas.
  * Fecha: 05/11/2025
  * Revisado por: JCCM
+ * Archivo: Pwa_Registro_Pagos.php
  ********************************************************************************************/
 
 declare(strict_types=1);
@@ -226,132 +227,22 @@ if (isset($_GET['Msg'])) {
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons">
   <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?= htmlspecialchars((string)$VerCache, ENT_QUOTES) ?>">
-  <style>
-    body{
-      margin:0;
-      font-family:"Inter","SF Pro Display","Segoe UI",system-ui,-apple-system,sans-serif;
-      background:#F1F7FC;
-      color:#0f172a;
-    }
-    .topbar{
-      backdrop-filter: blur(12px);
-      background:#F1F7FC !important;
-      border-bottom:1px solid rgba(15,23,42,.06);
-      color:#0f172a !important;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      padding: calc(8px + var(--safe-t)) 16px 10px;
-      height: calc(var(--topbar-h) + var(--safe-t));
-    }
-    .topbar .title{
-      margin:0;
-      font-weight:700;
-      font-size:1rem;
-      letter-spacing:.02em;
-    }
-    main.page-content{
-      padding-top: calc(var(--topbar-h) + var(--safe-t) + 6px);
-      padding-bottom: calc(
-        max(var(--bottombar-h), calc(var(--icon) + 2*var(--pad-v)))
-        + max(var(--safe-b), 8px) + 16px
-      );
-    }
-    .dashboard-shell{
-      max-width:1100px;
-      margin:0 auto;
-      padding: 8px 16px 0;
-    }
-    .page-heading{
-      margin:12px 0 14px;
-    }
-    .page-heading h1{
-      font-size:1.5rem;
-      font-weight:800;
-      margin:0 0 4px;
-    }
-    .page-heading p{
-      margin:0;
-      color:#6b7280;
-      font-size:.95rem;
-    }
-    .list-card{
-      border-radius:20px;
-      padding:16px;
-      background:rgba(255,255,255,.94);
-      backdrop-filter:blur(16px);
-      box-shadow:0 20px 45px rgba(15,23,42,.12);
-      border:1px solid rgba(226,232,240,.9);
-      margin-bottom:16px;
-    }
-    .list-card header{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:12px;
-    }
-    .bucket-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-      gap:12px;
-    }
-    .bucket-card{
-      position:relative;
-      padding:14px 14px 12px;
-      border-radius:16px;
-      background:#f9fbff;
-      border:1px solid #e5e9f0;
-      box-shadow:0 10px 26px rgba(15,23,42,.08);
-    }
-    .badge-status{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      padding:4px 10px;
-      border-radius:999px;
-      font-weight:700;
-      font-size:.8rem;
-      background:#e8edf7;
-      color:#1f2a37;
-      margin-bottom:8px;
-    }
-    .bucket-card .cta{
-      width:100%;
-      border:none;
-      border-radius:12px;
-      background:#0f6ef0;
-      color:#fff;
-      font-weight:700;
-      padding:10px 12px;
-      box-shadow:0 14px 28px -20px rgba(15,110,240,.65);
-      text-align:left;
-    }
-    .bucket-card .cta span{
-      display:block;
-      font-size:.78rem;
-      color:#e8f0ff;
-      font-weight:500;
-    }
-    .bucket-card .cta strong{
-      display:block;
-      font-size:.98rem;
-      color:#fff;
-    }
-    .badge.ACTIVO{background:#e0f7ec;color:#0f5132;}
-    .badge.PREVENTA{background:#fff4e5;color:#8c6d1f;}
-    .badge.COBRANZA{background:#e8f2ff;color:#0f3c91;}
-    .badge.CANCELADO{background:#fdecea;color:#7f1d1d;}
-    .badge.ACTIVACION{background:#e0f2fe;color:#0b4f71;}
-  </style>
+  <link rel="stylesheet" href="/login/assets/css/Menu_Superior.css?v=<?= htmlspecialchars((string)$VerCache, ENT_QUOTES) ?>">
+  <link rel="stylesheet" href="/login/assets/css/pwa-core.css?v=<?= htmlspecialchars((string)$VerCache, ENT_QUOTES) ?>">
+  <link rel="stylesheet" href="/login/assets/css/pwa-components.css?v=<?= htmlspecialchars((string)$VerCache, ENT_QUOTES) ?>">
 </head>
 <body onload="localize()">
 
-  <!-- Topbar -->
+  <!-- TOP BAR Pwa_Registro_Pagos.php-->
   <div class="topbar">
-    <div class="d-flex align-items-center w-100">
-      <h4 class="title">Pagos y Promesas de Pago</h4>
+    <div class="topbar-left">
+      <img alt="KASU" src="/login/assets/img/kasu_logo.jpeg">
+      <div>
+        <p class="eyebrow mb-0">Panel móvil</p>
+        <h4 class="title">Pagos y Promesas de Pago</h4>
+      </div>
     </div>
+    <div class="topbar-actions"></div>
   </div>
 
   <!-- Menú inferior -->
@@ -372,11 +263,10 @@ if (isset($_GET['Msg'])) {
   <main class="page-content">
     <div class="dashboard-shell">
       <div class="page-heading">
-        <h1>Pagos y promesas</h1>
         <p>Revisa promesas vencidas y próximas, registra pagos desde cada tarjeta.</p>
       </div>
 
-      <div class="list-card">
+      <div class="card-base list-card">
         <header>
           <div>
             <p class="chart-subtitle mb-1">Estado de cobros</p>
@@ -394,7 +284,7 @@ if (isset($_GET['Msg'])) {
         ?>
       </div>
 
-      <div class="list-card">
+      <div class="card-base list-card">
         <header>
           <div>
             <p class="chart-subtitle mb-1">Próxima semana</p>
@@ -412,7 +302,7 @@ if (isset($_GET['Msg'])) {
         ?>
       </div>
 
-      <div class="list-card">
+      <div class="card-base list-card">
         <header>
           <div>
             <p class="chart-subtitle mb-1">Semana siguiente</p>

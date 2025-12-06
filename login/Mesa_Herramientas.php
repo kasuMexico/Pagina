@@ -5,6 +5,7 @@
  *           Adaptada a PHP 8.2 con mysqli en modo excepciones y consultas preparadas.
  * Fecha: 05/11/2025
  * Revisado por: JCCM
+ * Archivo: Mesa_Herramientas.php
  ********************************************************************************************/
 
 declare(strict_types=1);
@@ -118,67 +119,14 @@ $VerCache = time();
 <!-- =================== CSS ===================
      Qué hace: Estilos base del sitio
      Fecha: 05/11/2025 | Revisado por: JCCM -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-<link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?php echo (int)$VerCache; ?>">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?= h((string)$VerCache) ?>">
+  <link rel="stylesheet" href="/login/assets/css/Menu_Superior.css?v=<?= h((string)$VerCache) ?>">
+  <link rel="stylesheet" href="/login/assets/css/pwa-core.css?v=<?= h((string)$VerCache) ?>">
+  <link rel="stylesheet" href="/login/assets/css/pwa-components.css?v=<?= h((string)$VerCache) ?>">
 <style>
-  body{
-    margin:0;
-    font-family:"Inter","SF Pro Display","Segoe UI",system-ui,-apple-system,sans-serif;
-    background:#F1F7FC;
-    color:#0f172a;
-  }
-  .topbar{
-    backdrop-filter: blur(12px);
-    background:#F1F7FC !important;
-    border-bottom:1px solid rgba(15,23,42,.06);
-    color:#0f172a !important;
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding: calc(8px + var(--safe-t)) 16px 10px;
-    height: calc(var(--topbar-h) + var(--safe-t));
-  }
-  .topbar .title{
-    margin:0;
-    font-weight:800;
-    font-size:1.05rem;
-    letter-spacing:.02em;
-  }
-  main.page-content{
-    padding-top: calc(var(--topbar-h) + var(--safe-t) + 6px);
-    padding-bottom: calc(
-      max(var(--bottombar-h), calc(var(--icon) + 2*var(--pad-v)))
-      + max(var(--safe-b), 8px) + 16px
-    );
-  }
-  .dashboard-shell{
-    max-width:1100px;
-    margin:0 auto;
-    padding:8px 16px 0;
-  }
-  .page-heading{
-    margin:10px 0 14px;
-  }
-  .page-heading h1{
-    font-size:1.5rem;
-    font-weight:800;
-    margin:0 0 4px;
-  }
-  .page-heading p{
-    margin:0;
-    color:#6b7280;
-    font-size:.95rem;
-  }
-  .list-card{
-    border-radius:20px;
-    padding:16px;
-    background:rgba(255,255,255,.94);
-    backdrop-filter:blur(16px);
-    box-shadow:0 20px 45px rgba(15,23,42,.12);
-    border:1px solid rgba(226,232,240,.9);
-  }
   .tool-sections{
     display:grid;
     grid-template-columns:repeat(1,minmax(0,1fr));
@@ -246,13 +194,20 @@ $VerCache = time();
 
 </head>
 <body onload="localize()">
-<!-- =================== TOP BAR fija ===================
+<!-- =================== TOP BAR fija Mesa_Herramientas.php ===================
      Qué hace: Encabezado de la sección
      Fecha: 05/11/2025 | Revisado por: JCCM -->
-<div class="topbar">
-  <h4 class="title mb-0">Herramientas</h4>
-  <p class="mb-0 ml-2 text-muted" style="font-size:.9rem;">Utilidades rápidas y datos de tu cuenta</p>
-</div>
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <img alt="KASU" src="/login/assets/img/kasu_logo.jpeg">
+      <div>
+        <p class="eyebrow mb-0">Panel móvil</p>
+        <h4 class="title">Herramientas Generales</h4>
+      </div>
+    </div>
+    <div class="topbar-actions"></div>
+  </div>
 
 <!-- =================== Menú inferior ===================
   Qué hace: Carga menú principal de la PWA
@@ -326,7 +281,6 @@ $VerCache = time();
 <main class="page-content">
   <div class="dashboard-shell">
     <div class="page-heading">
-      <h1>Mesa de herramientas</h1>
       <p>Acceso rápido a metas, cargas masivas, búsquedas y soporte.</p>
     </div>
     <div class="tool-sections">

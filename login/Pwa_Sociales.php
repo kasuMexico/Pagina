@@ -6,6 +6,7 @@
  *           => constructor.php registra ese IdVendedorSesion en Eventos.IdUsr
  * Fecha: 09/11/2025
  * Revisado por: JCCM
+ * Archivo: Pwa_Sociales.php
  ********************************************************************************************/
 
 declare(strict_types=1);
@@ -96,55 +97,13 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
   <!-- CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
   <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?= htmlspecialchars($VerCacheSafe, ENT_QUOTES) ?>">
+  <link rel="stylesheet" href="/login/assets/css/Menu_Superior.css?v=<?= htmlspecialchars($VerCacheSafe, ENT_QUOTES) ?>">
+  <link rel="stylesheet" href="/login/assets/css/pwa-core.css?v=<?= htmlspecialchars($VerCacheSafe, ENT_QUOTES) ?>">
+  <link rel="stylesheet" href="/login/assets/css/pwa-components.css?v=<?= htmlspecialchars($VerCacheSafe, ENT_QUOTES) ?>">
   <link rel="stylesheet" href="/login/assets/css/cupones.css">
 
   <style>
-    body{
-      margin:0;
-      font-family:"Inter","SF Pro Display","Segoe UI",system-ui,-apple-system,sans-serif;
-      background:#F1F7FC;
-      color:#0f172a;
-    }
-    .topbar{
-      position:sticky;
-      top:0;
-      z-index:10;
-      background:#F1F7FC;
-      border-bottom:1px solid rgba(15,23,42,.06);
-      padding:calc(8px + var(--safe-t)) 16px 12px;
-      backdrop-filter:blur(12px);
-    }
     .title{font-weight:700; margin:0; font-size:1rem; letter-spacing:.02em;}
-    main.page-content{
-      padding-top: calc(var(--topbar-h) + var(--safe-t) + 0px);
-      padding-bottom: calc(
-        max(var(--bottombar-h), calc(var(--icon) + 2*var(--pad-v)))
-        + max(var(--safe-b), 8px) + 6px
-      );
-    }
-    .dashboard-shell{
-      max-width:1100px;
-      margin:0 auto;
-      padding:10px 16px 0;
-    }
-    .page-heading{
-      margin:4px 0 4px;
-    }
-    .page-heading h1{
-      font-size:1.5rem;
-      font-weight:800;
-      margin:0 0 4px;
-    }
-    .page-heading p{
-      margin:0;
-      color:#6b7280;
-      font-size:.95rem;
-    }
-    .card-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-      gap:14px;
-    }
     .card-social{
       border-radius:20px;
       padding:16px;
@@ -167,19 +126,6 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
     .ico-social{width:36px;height:36px;object-fit:contain;vertical-align:middle}
     .social-meta h3{margin:0;font-size:1rem;font-weight:800;color:#0f172a;}
     .social-meta p{margin:4px 0 0;color:#4b5563;font-size:.95rem;}
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:6px 10px;
-      border-radius:999px;
-      background:#f4f7fb;
-      color:#1f2a37;
-      font-weight:600;
-      font-size:.82rem;
-      border:1px solid #e5e9f0;
-      white-space:nowrap;
-    }
     .cta-row{
       display:flex;
       align-items:center;
@@ -190,11 +136,17 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
   </style>
 </head>
 <body onload="localize()">
-  <!-- Barra superior fija -->
+  
+<!-- TOP BAR Pwa_Sociales.php-->
   <div class="topbar">
-    <div class="d-flex align-items-center w-100">
-      <h4 class="title m-0">Post Sociales — Empleados</h4>
+    <div class="topbar-left">
+      <img alt="KASU" src="/login/assets/img/kasu_logo.jpeg">
+      <div>
+        <p class="eyebrow mb-0">Panel móvil</p>
+        <h4 class="title">Post Sociales — Empleados</h4>
+      </div>
     </div>
+    <div class="topbar-actions"></div>
   </div>
 
   <!-- Menú inferior fijo -->
@@ -206,7 +158,6 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
   <main class="page-content">
     <div class="dashboard-shell">
       <div class="page-heading">
-        <h1>Post Sociales</h1>
         <p>Comparte cupones y artículos activos. El tracking usa tu Id de vendedor en sesión.</p>
       </div>
 
@@ -241,13 +192,12 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
                 <img class="ico-social" src="/login/assets/img/sociales/LinkedIn.png" alt="LinkedIn">
               </a>
             </div>
-
             <div class="social-meta">
               <div class="pill">Comisión por compra · $<?= number_format($Comis, 2) ?></div>
               <h3><?= htmlspecialchars((string)$Reg['TitA'], ENT_QUOTES) ?></h3>
               <p class="mb-1"><?= htmlspecialchars((string)$Reg['DesA'], ENT_QUOTES) ?></p>
             </div>
-          </article>
+            </article>
           <?php
         }
 

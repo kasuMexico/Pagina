@@ -5,6 +5,7 @@
  *           La lista usa el patrón .mesa-table: tabla en desktop, tarjetas en móvil.
  * Fecha: 09/11/2025
  * Revisado por: JCCM
+ * Archivo: Mesa_Marketing.php
  ********************************************************************************************/
 
 declare(strict_types=1);
@@ -105,7 +106,7 @@ if (isset($_GET['Msg'])) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#F2F2F2">
+  <meta name="theme-color" content="#F1F7FC">
   <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
   <title>Mesa Marketing</title>
 
@@ -120,28 +121,27 @@ if (isset($_GET['Msg'])) {
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?= h($VerCache) ?>">
-
-  <style>
-    .topbar{
-      position:fixed;top:0;left:0;right:0;z-index:1200;
-      height:56px;padding:.75rem 1rem;
-      background:#F2F2F2;border-bottom:1px solid #e5e7eb;
-      display:flex;align-items:center;justify-content:space-between;
-    }
-    .topbar .title{margin:0;font-size:1.1rem;font-weight:600;}
-    .card-form{border:1px solid #e5e7eb;border-radius:12px;padding:16px;background:#fff}
-    .img-cup{width:70px;height:40px;object-fit:cover;border-radius:6px}
-    .mesa-table-wrapper{margin-bottom:30px;}
-  </style>
+  <link rel="stylesheet" href="/login/assets/css/Menu_Superior.css?v=<?= h($VerCache) ?>">
+  <link rel="stylesheet" href="/login/assets/css/pwa-core.css?v=<?= h($VerCache) ?>">
+  <link rel="stylesheet" href="/login/assets/css/pwa-components.css?v=<?= h($VerCache) ?>">
 </head>
 <body onload="localize()">
 
-  <!-- Barra superior -->
+  <!-- TOP BAR Mesa_Marketing.php -->
   <div class="topbar">
-    <h4 class="title">Mesa Marketing</h4>
-    <button type="button" class="btn btn-primary" data-toggle="modal" data-target=".bd-example-modal-lg">
-      <i class="material-icons">difference</i>
-    </button>
+    <div class="topbar-left">
+      <img src="/login/assets/img/kasu_logo.jpeg" alt="KASU">
+      <div>
+        <p class="eyebrow mb-1">Mesa</p>
+        <h4 class="title">Tarjetas y cupones</h4>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button type="button" class="action-btn" data-toggle="modal" data-target=".bd-example-modal-lg">
+        <i class="material-icons">difference</i>
+        <span>Nueva tarjeta</span>
+      </button>
+    </div>
   </div>
 
   <!-- Menú inferior -->
@@ -239,9 +239,9 @@ if (isset($_GET['Msg'])) {
             </div>
           </div>
           <div class="modal-footer">
-            <button type="submit" class="btn btn-primary">
-              <i class="material-icons" style="vertical-align:middle;font-size:18px">add</i>
-              Crear tarjeta
+            <button type="submit" class="action-btn">
+              <i class="material-icons" style="font-size:18px;">add</i>
+              <span>Crear tarjeta</span>
             </button>
           </div>
         </form>
@@ -250,162 +250,166 @@ if (isset($_GET['Msg'])) {
   </div>
 
   <!-- CONTENIDO PRINCIPAL -->
-  <main class="page-content container" style="padding-top:72px;">
-    <!-- Filtros -->
-    <h4 class="title">Buscar tarjeta</h4>
-    <br>
-    <form class="card-form mb-3 mt-n1" method="GET" action="<?= h($_SERVER['PHP_SELF']) ?>">
-      <div class="form-row">
-        <div class="form-group col-md-4">
-          <label>Buscar</label>
-          <input type="text" name="q" value="<?= h($f_buscar) ?>" class="form-control" placeholder="título, descripción o producto">
-        </div>
-        <div class="form-group col-md-3">
-          <label>Status</label>
-          <select name="status" class="form-control">
-            <option value="-1" <?= $f_status===-1?'selected':''; ?>>Todos</option>
-            <option value="1"  <?= $f_status===1?'selected':''; ?>>Activos</option>
-            <option value="0"  <?= $f_status===0?'selected':''; ?>>Inactivos</option>
-          </select>
-        </div>
-        <div class="form-group col-md-3">
-          <label>Vigencia</label>
-          <select name="vig" class="form-control">
-            <option value="todas"    <?= $f_vig==='todas'?'selected':''; ?>>Todas</option>
-            <option value="vigentes" <?= $f_vig==='vigentes'?'selected':''; ?>>Vigentes</option>
-            <option value="vencidas" <?= $f_vig==='vencidas'?'selected':''; ?>>Vencidas</option>
-          </select>
-        </div>
-        <div class="form-group col-md-2">
-          <label>&nbsp;</label>
-          <button class="btn btn-secondary btn-block" type="submit">Aplicar</button>
-        </div>
+  <main class="page-content">
+    <div class="dashboard-shell">
+      <div class="page-heading">
+        <p>Gestiona publicaciones, vigencias y acciones rápidas.</p>
       </div>
-    </form>
 
-    <!-- Lista de tarjetas: TABLA + modo tarjetas en móvil -->
-    <h4 class="title">Tarjetas registradas</h4>
-    <br>
+      <!-- Filtros -->
+      <div class="card-base card-glass form-card">
+        <header>
+          <p class="eyebrow mb-1">Filtros</p>
+          <h2>Buscar tarjeta</h2>
+        </header>
+        <form class="mb-0" method="GET" action="<?= h($_SERVER['PHP_SELF']) ?>">
+          <div class="form-row">
+            <div class="form-group col-md-4">
+              <label>Buscar</label>
+              <input type="text" name="q" value="<?= h($f_buscar) ?>" class="form-control" placeholder="título, descripción o producto">
+            </div>
+            <div class="form-group col-md-3">
+              <label>Status</label>
+              <select name="status" class="form-control">
+                <option value="-1" <?= $f_status===-1?'selected':''; ?>>Todos</option>
+                <option value="1"  <?= $f_status===1?'selected':''; ?>>Activos</option>
+                <option value="0"  <?= $f_status===0?'selected':''; ?>>Inactivos</option>
+              </select>
+            </div>
+            <div class="form-group col-md-3">
+              <label>Vigencia</label>
+              <select name="vig" class="form-control">
+                <option value="todas"    <?= $f_vig==='todas'?'selected':''; ?>>Todas</option>
+                <option value="vigentes" <?= $f_vig==='vigentes'?'selected':''; ?>>Vigentes</option>
+                <option value="vencidas" <?= $f_vig==='vencidas'?'selected':''; ?>>Vencidas</option>
+              </select>
+            </div>
+            <div class="form-group col-md-2 d-flex align-items-end">
+              <button class="action-btn w-100 justify-content-center" type="submit">
+                <i class="material-icons">tune</i>
+                <span>Aplicar</span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
 
-    <?php if (!$tarjetas): ?>
-      <p class="text-center text-muted">Sin resultados</p>
-    <?php else: ?>
-      <div class="table-responsive mesa-table-wrapper">
-        <table class="table mesa-table" data-mesa="marketing">
-          <thead>
-            <tr>
-              <th>Tarjeta</th>      <!-- Imagen + título + producto -->
-              <th>Red / Tipo</th>
-              <th>Status</th>
-              <th>Vigencia</th>
-              <th>Usos</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-          <?php foreach ($tarjetas as $row):
-            // URL de imagen
-            $src = ($row['Tipo'] === 'Art')
-              ? (string)$row['Img']
-              : "https://kasu.com.mx/assets/images/cupones/".ltrim((string)$row['Img'], '/');
+      <!-- Lista de tarjetas -->
+      <div class="card-base card-glass table-card">
+        <header class="d-flex align-items-center justify-content-between">
+          <div>
+            <p class="eyebrow mb-1">Listado</p>
+            <h2>Tarjetas registradas</h2>
+          </div>
+          <button type="button" class="action-btn" data-toggle="modal" data-target=".bd-example-modal-lg">
+            <i class="material-icons">add_circle</i>
+            <span>Crear</span>
+          </button>
+        </header>
+        <?php if (!$tarjetas): ?>
+          <div class="empty-state">Sin resultados</div>
+        <?php else: ?>
+          <div class="table-responsive mesa-table-wrapper">
+            <table class="table mesa-table" data-mesa="marketing">
+              <thead>
+                <tr>
+                  <th>Tarjeta</th>
+                  <th>Red / Tipo</th>
+                  <th>Status</th>
+                  <th>Vigencia</th>
+                  <th>Usos</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+              <?php foreach ($tarjetas as $row):
+                // URL de imagen
+                $src = ($row['Tipo'] === 'Art')
+                  ? (string)$row['Img']
+                  : "https://kasu.com.mx/assets/images/cupones/".ltrim((string)$row['Img'], '/');
 
-            $statusVisual = ((int)$row['Status'] === 1) ? 'Activo' : 'Cancelado';
-            $vigencia     = (string)($row['Validez_Fin'] ?? '');
-          ?>
-            <tr>
-              <!-- Tarjeta (imagen + título + producto) -->
-              <td data-label="Tarjeta">
-                <div class="d-flex align-items-center">
-                  <?php if (!empty($row['Img'])): ?>
-                    <img class="img-cup mr-2" src="<?= h($src) ?>" alt="Tarjeta <?= h($row['TitA']) ?>">
-                  <?php endif; ?>
-                  <div>
-                    <strong><?= h($row['TitA']) ?></strong><br>
-                    <small><?= h($row['Producto']) ?></small>
-                  </div>
-                </div>
-              </td>
-
-              <!-- Red / Tipo -->
-              <td data-label="Red / Tipo">
-                <?= h($row['Red']) ?> · <?= h($row['Tipo']) ?>
-              </td>
-
-              <!-- Status visual (chip) -->
-              <td data-label="Status">
-                <?= mesa_status_chip($statusVisual) ?>
-              </td>
-
-              <!-- Vigencia -->
-              <td data-label="Vigencia">
-                <?= $vigencia !== '' ? h($vigencia) : '-' ?>
-              </td>
-
-              <!-- Usos -->
-              <td data-label="Usos">
-                <?= (int)$row['Usos'] ?>
-              </td>
-
-              <!-- Acciones -->
-              <td class="mesa-actions" data-label="Acciones">
-                <div class="mesa-actions-grid">
-                  <!-- Activar -->
-                  <form method="POST" action="/login/php/Funcionalidad_Empleados.php" class="m-0">
-                    <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
-                    <input type="hidden" name="accion" value="activar_tarjeta">
-                    <input type="hidden" name="Id" value="<?= (int)$row['Id'] ?>">
-                    <button class="btn btn-sm btn-success" type="submit"
-                      <?= (int)$row['Status']===1 ? 'disabled' : '' ?>>
-                      <i class="material-icons" style="font-size:16px;">check_circle</i>
-                    </button>
-                  </form>
-
-                  <!-- Desactivar -->
-                  <form method="POST" action="/login/php/Funcionalidad_Empleados.php" class="m-0">
-                    <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
-                    <input type="hidden" name="accion" value="desactivar_tarjeta">
-                    <input type="hidden" name="Id" value="<?= (int)$row['Id'] ?>">
-                    <button class="btn btn-sm btn-warning" type="submit"
-                      <?= (int)$row['Status']===0 ? 'disabled' : '' ?>>
-                      <i class="material-icons" style="font-size:16px;">cancel</i>
-                    </button>
-                  </form>
-
-                  <!-- Borrar -->
-                  <form method="POST" action="/login/php/Funcionalidad_Empleados.php" class="m-0">
-                    <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
-                    <input type="hidden" name="accion" value="borrar_tarjeta">
-                    <input type="hidden" name="Id" value="<?= (int)$row['Id'] ?>">
-                    <button class="btn btn-sm btn-danger" type="submit"
-                      onclick="return confirm('¿Borrar tarjeta <?= (int)$row['Id'] ?>?');">
-                      <i class="material-icons" style="font-size:16px;">delete</i>
-                    </button>
-                  </form>
-
-                  <!-- Actualizar vigencia -->
-                  <form method="POST" action="/login/php/Funcionalidad_Empleados.php" class="m-0">
-                    <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
-                    <input type="hidden" name="accion" value="actualizar_vigencia">
-                    <input type="hidden" name="Id" value="<?= (int)$row['Id'] ?>">
-                    <div class="d-flex align-items-center" style="gap:.25rem">
-                      <input type="date" name="Validez_Fin"
-                             class="form-control form-control-sm"
-                             value="<?= h((string)$row['Validez_Fin']) ?>">
-                      <button class="btn btn-sm btn-primary" type="submit">
-                        <i class="material-icons" style="font-size:16px;">event</i>
-                      </button>
+                $statusVisual = ((int)$row['Status'] === 1) ? 'Activo' : 'Cancelado';
+                $vigencia     = (string)($row['Validez_Fin'] ?? '');
+              ?>
+                <tr>
+                  <td data-label="Tarjeta">
+                    <div class="d-flex align-items-center">
+                      <?php if (!empty($row['Img'])): ?>
+                        <img class="img-cup mr-2" src="<?= h($src) ?>" alt="Tarjeta <?= h($row['TitA']) ?>">
+                      <?php endif; ?>
+                      <div>
+                        <strong><?= h($row['TitA']) ?></strong><br>
+                        <small><?= h($row['Producto']) ?></small>
+                      </div>
                     </div>
-                  </form>
-                </div>
-              </td>
-            </tr>
-          <?php endforeach; ?>
-          </tbody>
-        </table>
-      </div>
-    <?php endif; ?>
+                  </td>
+                  <td data-label="Red / Tipo">
+                    <?= h($row['Red']) ?> · <?= h($row['Tipo']) ?>
+                  </td>
+                  <td data-label="Status">
+                    <?= mesa_status_chip($statusVisual) ?>
+                  </td>
+                  <td data-label="Vigencia">
+                    <?= $vigencia !== '' ? h($vigencia) : '-' ?>
+                  </td>
+                  <td data-label="Usos">
+                    <?= (int)$row['Usos'] ?>
+                  </td>
+                  <td class="mesa-actions" data-label="Acciones">
+                    <div class="mesa-actions-grid">
+                      <form method="POST" action="/login/php/Funcionalidad_Empleados.php">
+                        <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+                        <input type="hidden" name="accion" value="activar_tarjeta">
+                        <input type="hidden" name="Id" value="<?= (int)$row['Id'] ?>">
+                        <button class="btn btn-sm btn-success" type="submit"
+                          <?= (int)$row['Status']===1 ? 'disabled' : '' ?>>
+                          <i class="material-icons" style="font-size:16px;">check_circle</i>
+                        </button>
+                      </form>
 
-    <br><br><br><br>
+                      <form method="POST" action="/login/php/Funcionalidad_Empleados.php">
+                        <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+                        <input type="hidden" name="accion" value="desactivar_tarjeta">
+                        <input type="hidden" name="Id" value="<?= (int)$row['Id'] ?>">
+                        <button class="btn btn-sm btn-warning" type="submit"
+                          <?= (int)$row['Status']===0 ? 'disabled' : '' ?>>
+                          <i class="material-icons" style="font-size:16px;">cancel</i>
+                        </button>
+                      </form>
+
+                      <form method="POST" action="/login/php/Funcionalidad_Empleados.php">
+                        <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+                        <input type="hidden" name="accion" value="borrar_tarjeta">
+                        <input type="hidden" name="Id" value="<?= (int)$row['Id'] ?>">
+                        <button class="btn btn-sm btn-danger" type="submit"
+                          onclick="return confirm('¿Borrar tarjeta <?= (int)$row['Id'] ?>?');">
+                          <i class="material-icons" style="font-size:16px;">delete</i>
+                        </button>
+                      </form>
+
+                      <form method="POST" action="/login/php/Funcionalidad_Empleados.php">
+                        <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+                        <input type="hidden" name="accion" value="actualizar_vigencia">
+                        <input type="hidden" name="Id" value="<?= (int)$row['Id'] ?>">
+                        <div class="d-flex align-items-center" style="gap:.25rem">
+                          <input type="date" name="Validez_Fin"
+                                 class="form-control form-control-sm"
+                                 value="<?= h((string)$row['Validez_Fin']) ?>">
+                          <button class="btn btn-sm btn-primary" type="submit">
+                            <i class="material-icons" style="font-size:16px;">event</i>
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+        <?php endif; ?>
+      </div>
+    </div>
   </main>
 
   <!-- JS -->

@@ -1,0 +1,359 @@
+/* /login/assets/css/pwa-components.css */
+
+/* Base de cualquier tarjeta "glass" */
+.card-base,
+.kpi-card,
+.chart-card,
+.list-card,
+.table-card,
+.form-card,
+.card-glass {
+  position: relative;
+  border-radius: var(--pwa-radius-lg);
+  padding: 16px 16px 14px;
+  background: var(--pwa-card-bg);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--pwa-card-shadow);
+  border: 1px solid var(--pwa-card-border);
+}
+
+/* Tipos de tarjeta que ya existen (todas usan card-base) */
+.kpi-card { padding-bottom: 12px; }
+.chart-card {
+  border-radius: var(--pwa-radius-xl);
+  padding: 16px 14px 10px;
+  margin-bottom: 18px;
+}
+.list-card { margin-bottom: 16px; }
+.table-card { margin-bottom: 14px; }
+.card-glass { margin-bottom: 14px; }
+.form-card { margin-bottom: 16px; }
+
+/* Cabecera estándar de tarjeta */
+.card-header-flex,
+.kpi-card header,
+.chart-card header,
+.chart-card-header,
+.list-card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+/* Chips / pills reutilizables */
+.pill,
+.kpi-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  background: rgba(15,111,240,.06);
+  color: #0f6ef0;
+  border: 1px solid rgba(191,219,254,.9);
+}
+
+/* Variante "suave" para datos secundarios */
+.badge-soft {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: .72rem;
+  background: #f3f4ff;
+  color: #4b5563;
+}
+
+/* KPI genéricos */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.kpi-title {
+  font-size: .95rem;
+  font-weight: 700;
+  margin: 0 0 2px;
+  color: #0f172a;
+}
+.kpi-meta {
+  font-size: .8rem;
+  color: var(--pwa-muted);
+  margin: 0 0 6px;
+}
+.kpi-main-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: 4px;
+  margin-bottom: 6px;
+}
+.kpi-main-value {
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin: 0;
+}
+.kpi-main-sub {
+  font-size: .78rem;
+  color: var(--pwa-muted);
+}
+.kpi-chip { margin-bottom: 6px; }
+.kpi-progress {
+  margin-top: 6px;
+}
+.kpi-progress .progress {
+  height: 6px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+.kpi-progress .progress-bar {
+  border-radius: 999px;
+}
+.kpi-footer {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: .78rem;
+  color: var(--pwa-muted);
+}
+.kpi-link {
+  font-weight: 600;
+  text-decoration: none;
+  color: #0f6ef0;
+}
+.kpi-link:hover {
+  text-decoration: none;
+  color: #0c5ad1;
+}
+.kpi-card .item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  gap: 12px;
+  color: #4b5563;
+  font-size: .92rem;
+}
+.kpi-card .item strong {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+/* Contenedor de gráfica */
+.Grafica {
+  width: 100%;
+  min-height: 220px;
+}
+
+/* Encabezados de gráficas */
+.chart-title {
+  margin: 0;
+  font-size: .98rem;
+  font-weight: 700;
+  color: #111827;
+}
+.chart-subtitle {
+  margin: 0;
+  font-size: .85rem;
+  color: var(--pwa-muted);
+}
+.chart-range-pill {
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: .72rem;
+  background: #f3f4ff;
+  color: #4b5563;
+}
+
+/* Tarjetas tipo lista (clientes, marketing) */
+.list-card header {
+  margin-bottom: 12px;
+}
+.client-grid,
+.bucket-grid,
+.prospect-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
+  gap: 12px;
+}
+.client-card,
+.bucket-card,
+.prospect-card {
+  position: relative;
+  padding: 14px 14px 12px;
+  border-radius: 16px;
+  background: #f9fbff;
+  border: 1px solid #e5e9f0;
+  box-shadow: 0 10px 26px rgba(15,23,42,.08);
+}
+.client-card .badge-status,
+.bucket-card .badge-status,
+.prospect-card .badge-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: .8rem;
+  background: #e8edf7;
+  color: #1f2a37;
+  margin-bottom: 8px;
+}
+.client-card .cta,
+.bucket-card .cta,
+.prospect-card .cta {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  background: #0f6ef0;
+  color: #fff;
+  font-weight: 700;
+  padding: 10px 12px;
+  box-shadow: 0 14px 28px -20px rgba(15,110,240,.65);
+  text-align: left;
+}
+.client-card .cta span,
+.bucket-card .cta span,
+.prospect-card .cta span {
+  display: block;
+  font-size: .78rem;
+  color: #e8f0ff;
+  font-weight: 500;
+}
+.client-card .cta strong,
+.bucket-card .cta strong,
+.prospect-card .cta strong {
+  display: block;
+  font-size: .98rem;
+  color: #fff;
+}
+
+/* Badges de status */
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: .8rem;
+  background: #e8edf7;
+  color: #1f2a37;
+  margin-bottom: 8px;
+}
+.badge.ACTIVO    { background:#e0f7ec;  color:#0f5132; }
+.badge.PREVENTA  { background:#fff4e5; color:#8c6d1f; }
+.badge.COBRANZA  { background:#e8f2ff; color:#0f3c91; }
+.badge.CANCELADO { background:#fdecea; color:#7f1d1d; }
+.badge.ACTIVACION{ background:#e0f2fe; color:#0b4f71; }
+
+/* Formularios */
+.form-card .form-row {
+  margin-left: -6px;
+  margin-right: -6px;
+}
+.form-card .form-group {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+.form-card .form-group label {
+  font-weight: 700;
+  color: #1c2540;
+  font-size: .95rem;
+}
+.form-card .form-control {
+  border-radius: 12px;
+  border: 1px solid #e3ebf5;
+  background: #f5f7fb;
+  color: #1c2540;
+  padding: 11px 12px;
+  box-shadow: none;
+}
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+.card-form {
+  border: 1px solid rgba(226,232,240,.9);
+  border-radius: 16px;
+  background: #ffffff;
+  padding: 14px;
+}
+
+/* Tablas */
+.table-card table { margin-bottom: 0; }
+.table-card thead th {
+  border-top: 0;
+  font-size: .82rem;
+  letter-spacing: .01em;
+  text-transform: uppercase;
+  color: #6b7280;
+  background: #f9fafb;
+  border-bottom: 1px solid rgba(226,232,240,.9);
+}
+.table-card tbody td {
+  vertical-align: middle;
+  font-size: .95rem;
+}
+
+/* Listados vacíos y wrappers */
+.empty-state {
+  text-align: center;
+  padding: 18px 12px;
+  color: #6b7280;
+  font-weight: 600;
+}
+.mesa-table-wrapper {
+  margin-bottom: 10px;
+  overflow-x: auto;
+}
+.mesa-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(44px,1fr));
+  gap: 6px;
+  align-items: center;
+}
+.mesa-actions-grid form { margin: 0; }
+.mesa-actions-grid .btn {
+  border: none;
+  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba(15,23,42,0.15);
+}
+.mesa-actions-grid .btn i.material-icons {
+  font-size: 18px;
+  line-height: 1;
+}
+.img-cup {
+  width: 70px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 8px 18px rgba(15,23,42,.12);
+}
+
+/* Modales */
+.modal-content {
+  border-radius: 20px;
+  border: 1px solid rgba(226,232,240,.9);
+  background: rgba(255,255,255,.98);
+  box-shadow: 0 24px 50px rgba(15,23,42,.18);
+}
+.modal-header { border-bottom: 1px solid rgba(226,232,240,.9); }
+.modal-footer { border-top: 1px solid rgba(226,232,240,.9); }

@@ -1,3 +1,9 @@
+/* =========================================================================
+ * Hoja: Compra.css
+ * Qué hace: 
+ * Fecha: 06/12/2025
+ * ======================================================================= */
+
 body{font-family:'Open Sans',sans-serif}.AreaTrabajo{display:flex;flex-wrap:wrap;justify-content:center;position:-webkit-sticky;position:sticky;top:200px}.Contenedor{margin:auto;border:solid 1px #d6dbdf;height:auto;width:98%;display:flex;background-color:#f5f5f5;flex-wrap:wrap;border-radius:10px}.logo{text-align:center;padding:5%;width:98%}.logo img{height:98px}.NombreProducto{text-align:left;padding-left:10%;width:98%}.NombreProducto h1{color:#fff;font-weight:700}.InformacionProducto{text-align:justify;padding:5%;width:98%}.InformacionProducto p{color:#fff;font-weight:700}
 .Formulario{text-align:center;width:98%}
 .Formulario input{border:solid 1px #d6dbdf;width:95%;height:40px;font-weight:700;margin-bottom:10px;left:5px;border-radius:5px;padding:5px}.Botones{height:98px;display:flex;width:98%;margin-bottom:15px}.Botones label{display:flex;margin:auto}.Botones input{display:none}.Botones img{display:flex;margin:auto;height:70px;width:70px;border-radius:50%;background:#f5da81;border:solid 1px #f3e2a9}.Botones img:hover{background:#a9d0f5}.Ligas{display:flex;flex-wrap:wrap;text-align:center}.Ligas a:link{margin-bottom:10px;text-decoration:none;color:#00008b;width:98%}#Curp{text-transform:uppercase}

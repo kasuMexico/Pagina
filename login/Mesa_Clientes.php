@@ -6,6 +6,7 @@
  *           Ajustes PHP 8.2: mysqli en modo excepciones, salidas saneadas, tipos explícitos.
  * Fecha: 05/11/2025
  * Revisado por: JCCM
+ * Mesa: Mesa_Clientes.php
  ********************************************************************************************/
 
 declare(strict_types=1);
@@ -210,7 +211,7 @@ if (!empty($_POST['IdCliente'])) {
 if (!empty($_POST['CambiVend'])) {
   // Reasignar ejecutivo en tablas relacionadas
   $idVta   = (int)($_POST['IdVenta'] ?? 0);
-  $nvoVend = (string)($_POST['NvoVend'] ?? '');
+  $nvoVend = (string)$_POST['NvoVend'] ?? '';
   if ($idVta > 0 && $nvoVend !== '') {
     $basicas->ActCampo($mysqli, "Venta", "Usuario", $nvoVend, $idVta);
     $basicas->ActTab($mysqli, "PromesaPago", "User", $nvoVend, "IdVta", $idVta);
@@ -261,13 +262,62 @@ $VerCache = time();
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?= h((string)$VerCache) ?>">
+  <link rel="stylesheet" href="/login/assets/css/Menu_Superior.css?v=<?= h((string)$VerCache) ?>">
+  <link rel="stylesheet" href="/login/assets/css/pwa-core.css?v=<?= h((string)$VerCache) ?>">
+  <link rel="stylesheet" href="/login/assets/css/pwa-components.css?v=<?= h((string)$VerCache) ?>">
+
+  <!-- Ajuste específico de botones para Mesa_Clientes
+       (mismo look que Mesa_Prospectos, sin deformarse) -->
+  <style>
+    /* Contenedor de acciones: distribución tipo grid compacto */
+    [data-mesa="clientes"] .mesa-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    [data-mesa="clientes"] .mesa-actions-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 3px 0;
+    }
+    [data-mesa="clientes"] .mesa-actions-grid form {
+      margin: 0;
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    [data-mesa="clientes"] .mesa-actions-grid .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      box-shadow: 0 8px 18px rgba(15,23,42,.18);
+    }
+    @media (min-width: 992px){
+      [data-mesa="clientes"] .mesa-actions-grid .btn {
+        width: 44px;
+        height: 44px;
+        padding: 0;
+      }
+      [data-mesa="clientes"] .mesa-actions-grid .btn i.material-icons{
+        font-size: 22px;
+        line-height: 1;
+      }
+    }
+  </style>
 </head>
 <body onload="localize()">
-  <!-- =================== Top bar fija =================== -->
+  <!-- =================== Top bar fija Mesa_Clientes.php =================== -->
   <div class="topbar">
-    <div class="d-flex align-items-center w-100">
-      <h4 class="title">Cartera de Clientes</h4>
+    <div class="topbar-left">
+      <img src="/login/assets/img/kasu_logo.jpeg" alt="KASU">
+      <div>
+        <p class="eyebrow mb-0">Mesa</p>
+        <h4 class="title">Cartera de Clientes</h4>
+      </div>
     </div>
+    <div class="topbar-actions"></div>
   </div>
 
   <!-- =================== Menú inferior =================== -->
@@ -614,7 +664,7 @@ $VerCache = time();
             <th>Nombre Cliente</th>
             <th>Asignado</th>
             <th>Status</th>
-            <th>Día pago</th>   <!-- NUEVO: muestra el día de pago (1 / 15) -->
+            <th>Día pago</th>
             <th>Producto</th>
             <th>Acciones</th>
           </tr>
@@ -626,7 +676,6 @@ $VerCache = time();
 
         if ($statusReq !== '') {
           if ($statusReq === 'ATRASADO') {
-            // Caso especial: ATRASADO no está en Venta.Status, se deriva de la mora
             $buscar = [];
             $sqlAtr = "
               SELECT *
@@ -643,14 +692,12 @@ $VerCache = time();
                 }
                 $estadoCred = isset($infoEstado['estado']) ? strtoupper((string)$infoEstado['estado']) : '';
                 if ($estadoCred !== '' && $estadoCred !== 'AL CORRIENTE') {
-                  // Solo agregamos los que están en mora / atrasados
                   $buscar[] = $r;
                 }
               }
               $resAtr->close();
             }
           } else {
-            // Resto de estados: se filtra directamente por Venta.Status
             $buscar = $basicas->BLikes($mysqli, "Venta", "Status", $statusReq);
           }
         } elseif ($nombreFiltro !== '') {
@@ -664,7 +711,6 @@ $VerCache = time();
           if ($kasuScopeSet !== null && !isset($kasuScopeSet[$usuarioFila])) {
             continue;
           }
-          // ===== Derivar estado visual ATRASADO según financiera =====
           $estadoLinea = [];
           try {
             $estadoLinea = $financieras->estado_mora_corriente((int)$row['Id']);
@@ -676,9 +722,6 @@ $VerCache = time();
           $estatusVisual  = $estatusBD;
           $estadoCredito  = isset($estadoLinea['estado']) ? (string)$estadoLinea['estado'] : '';
 
-          // Si la venta es de crédito (más de 1 pago) y el estado de crédito no está al corriente,
-          // mostramos el pseudo-estado "ATRASADO" para gestión de cobranza,
-          // pero sin tocar el Status real almacenado en BD.
           $esCredito = ((int)($row['NumeroPagos'] ?? 1) > 1);
           if ($esCredito
               && in_array($estatusBD, ['ACTIVO','COBRANZA','PREVENTA','ACTIVACION'], true)
@@ -709,7 +752,7 @@ $VerCache = time();
                     $btnIconPago       = $enviarLigaPagoRow ? 'credit_card' : 'email';
                     $btnColorPago      = $enviarLigaPagoRow ? '#1ABC9C' : '#3498DB';
                   ?>
-                  <form method="POST" action="<?= h($_SERVER['PHP_SELF']) ?>" class="d-inline">
+                  <form method="POST" action="<?= h($_SERVER['PHP_SELF']) ?>">
                     <input type="hidden" name="nombre" value="<?= h($nombreFiltro) ?>">
                     <input type="hidden" name="Status" value="<?= h($statusFiltro) ?>">
                     <label
@@ -724,7 +767,6 @@ $VerCache = time();
                   </form>
                 <?php endif; ?>
 
-                <!-- Estado de cuenta -->
                 <form method="POST" action="Mesa_Estado_Cuenta.php">
                   <input type="hidden" name="nombre" value="<?= h($nombreFiltro) ?>">
                   <input type="hidden" name="Status" value="<?= h($statusFiltro) ?>">
@@ -737,7 +779,6 @@ $VerCache = time();
                   <?php endif; ?>
                 </form>
 
-                <!-- Acciones por status (se siguen basando en Status real de BD) -->
                 <form method="POST" action="<?= h($_SERVER['PHP_SELF']) ?>">
                   <input type="hidden" name="nombre" value="<?= h($nombreFiltro) ?>">
                   <input type="hidden" name="Status" value="<?= h($statusFiltro) ?>">

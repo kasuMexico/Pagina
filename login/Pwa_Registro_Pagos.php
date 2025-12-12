@@ -211,7 +211,8 @@ if (isset($_GET['Msg'])) {
 <html lang="es-MX">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- 1) Meta viewport: bloquear zoom -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#F1F7FC">
   <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
   <title>Pagos y Promesas de Pago</title>
@@ -328,6 +329,55 @@ if (isset($_GET['Msg'])) {
   <script src="Javascript/finger.js?v=3"></script>
   <script src="Javascript/localize.js?v=3"></script>
   <script src="Javascript/Inyectar_gps_form.js"></script>
+  <script>
+    // 2) Bloquear pellizco (pinch zoom) y
+    // 3) Bloquear doble-tap zoom en esta pantalla PWA
+    (function preventZoom() {
+      // iOS Safari: gestos de pellizco
+      document.addEventListener('gesturestart', function (e) {
+        e.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener('gesturechange', function (e) {
+        e.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener('gestureend', function (e) {
+        e.preventDefault();
+      }, { passive: false });
+
+      // Doble tap zoom
+      var lastTouchEnd = 0;
+      document.addEventListener('touchend', function (e) {
+        var now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+          e.preventDefault();
+        }
+        lastTouchEnd = now;
+      }, { passive: false });
+    })();
+
+    // Marca contexto PWA (SameSite=None) para Chrome en modo standalone
+    (function markPwaContext(){
+      var isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+        (typeof window.navigator.standalone !== 'undefined' && window.navigator.standalone);
+      if (isStandalone) {
+        try { document.cookie = 'KASU_PWA=1; Path=/; SameSite=None; Secure'; } catch (e) {}
+      }
+    })();
+
+    // Evita múltiples toques en los botones que abren el modal: un solo gesto dispara el POST/acción
+    $(function(){
+      $('.bucket-grid button[type="submit"], .list-card button[type="submit"]').on('click', function(){
+        var $btn = $(this);
+        if ($btn.data('clicking')) {
+          return false;
+        }
+        $btn.data('clicking', true);
+        setTimeout(function(){ $btn.data('clicking', false); }, 1200);
+      });
+    });
+  </script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       <?php if (!empty($Ventana)) : ?> $('#Ventana2').modal('show'); <?php endif; ?>

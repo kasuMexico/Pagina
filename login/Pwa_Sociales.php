@@ -90,7 +90,8 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
 <head>
   <meta charset="utf-8">
   <title>Post Sociales</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- 1) Meta viewport con bloqueo de zoom -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#F1F7FC">
   <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
 
@@ -275,5 +276,33 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
   <script src="Javascript/finger.js?v=3"></script>
   <script src="Javascript/localize.js?v=3"></script>
   <script src="Javascript/Inyectar_gps_form.js"></script>
+  <script>
+    // 2) Bloquear pellizco (pinch zoom) y
+    // 3) Bloquear doble-tap zoom en esta pantalla PWA
+    (function preventZoom() {
+      // iOS Safari: gestos de pellizco
+      document.addEventListener('gesturestart', function (e) {
+        e.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener('gesturechange', function (e) {
+        e.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener('gestureend', function (e) {
+        e.preventDefault();
+      }, { passive: false });
+
+      // Doble tap zoom
+      var lastTouchEnd = 0;
+      document.addEventListener('touchend', function (e) {
+        var now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+          e.preventDefault();
+        }
+        lastTouchEnd = now;
+      }, { passive: false });
+    })();
+  </script>
 </body>
 </html>

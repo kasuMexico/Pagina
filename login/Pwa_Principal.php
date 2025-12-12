@@ -165,7 +165,8 @@ if ($hora >= 6 && $hora < 12) {
 <html lang="es-MX">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- Bloquea zoom automático / pinch en la PWA -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#F1F7FC">
   <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
   <title>KASU · Inicio</title>
@@ -192,11 +193,11 @@ if ($hora >= 6 && $hora < 12) {
   <script src="https://www.gstatic.com/charts/loader.js"></script>
   <!-- jQuery -->
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+  <script src="/login/assets/js/kasu-popup.js"></script>
 
 </head>
 <body onload="localize()">
-  <!-- TOP BAR Pwa_Principal.php-->
-  <!-- TOP BAR Mesa_Finanzas.php-->
+  <!-- TOP BAR -->
   <div class="topbar">
     <div class="topbar-left">
       <img src="/login/assets/img/kasu_logo.jpeg" alt="KASU">
@@ -273,6 +274,7 @@ if ($hora >= 6 && $hora < 12) {
                 aria-label="Actualizar foto">
                 <i class="fa fa-camera"></i>
               </button>
+
             </div>
           </div>
         </div>
@@ -292,19 +294,25 @@ if ($hora >= 6 && $hora < 12) {
 
       <!-- FILA PRINCIPAL: Gráfica + KPIs -->
       <section class="dashboard-row">
-        <!-- Gráfica -->
+        <!-- Recomendación IA (tarjeta) -->
         <div>
           <article class="card-base chart-card">
             <header class="chart-card-header">
+              <!-- Orbe IA -->
+              <button class="ai-orb-btn" id="aiOrb" type="button" aria-label="Abrir asistente IA">
+                <img class="ai-img paused" src="/eia/assets/img/Ia-pausada-2.png" alt="IA pausada">
+                <img class="ai-img thinking" src="/eia/assets/img/ia-thinking-2.gif" alt="IA pensando">
+              </button>
               <div>
-                <h2 class="chart-title">Desempeño mensual</h2>
-                <p class="chart-subtitle">Cobranza y ventas acumuladas</p>
+                <h2 class="chart-title">Recomendación IA</h2>
               </div>
               <div class="chart-range-pill">
                 Mes actual · <?= htmlspecialchars(date('M Y'), ENT_QUOTES) ?>
               </div>
             </header>
-            <div class="Grafica" id="chart_container"></div>
+            <div class="Grafica" id="CRecomendacion-IA">
+              <p>Cargando recomendación de IA...</p>
+            </div>
           </article>
         </div>
 
@@ -477,6 +485,47 @@ if ($hora >= 6 && $hora < 12) {
     </div>
   </main>
 
+  <!-- MODAL CHAT IA VISTA 360 -->
+  <div class="ia-modal-overlay" id="iaModal">
+    <div class="ia-modal">
+      <header class="ia-modal-header">
+        <div class="ia-modal-header-left">
+          <div class="ia-modal-header-orb">
+            <img src="/eia/assets/img/ia-thinking-2.gif" alt="IA KASU">
+          </div>
+          <div>
+            <p class="ia-modal-title">IA Comercial KASU · Vista 360</p>
+            <p class="ia-modal-subtitle">Haz preguntas sobre tus clientes, créditos y ventas.</p>
+          </div>
+        </div>
+        <button type="button" class="ia-modal-close" id="iaModalClose" aria-label="Cerrar asistente IA">×</button>
+      </header>
+
+      <div class="ia-chat-log" id="iaChatLog">
+        <div class="ia-chat-bubble ia">
+          <p>Hola, soy tu asistente IA de KASU. Puedo:</p>
+          <ul>
+            <li>Revisar estatus de crédito de tus clientes.</li>
+            <li>Enviar pólizas, fichas o ligas de pago por correo.</li>
+            <li>Analizar tus ventas y ayudarte con objeciones.</li>
+          </ul>
+          <span class="ia-chat-meta">IA · Vista 360</span>
+        </div>
+      </div>
+
+      <form class="ia-chat-form" id="iaChatForm">
+        <textarea
+          id="iaChatInput"
+          class="ia-chat-input"
+          placeholder="En que puedo ayudarte?"
+          rows="1"></textarea>
+        <button type="submit" class="ia-chat-send-btn" id="iaChatSendBtn">
+          Enviar
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- JS PWA / helpers -->
   <script src="Javascript/finger.js?v=3"></script>
   <script src="Javascript/localize.js?v=3"></script>
@@ -484,7 +533,49 @@ if ($hora >= 6 && $hora < 12) {
   <script src="Javascript/perfil.js?v=<?= htmlspecialchars($VerCacheSafe, ENT_QUOTES) ?>"></script>
 
   <script>
-    // Ocultar botón de instalación si ya estás en modo standalone (iOS/Android)
+    // ===================== Bloquear zoom (pinch + doble tap) en la PWA =====================
+    (function preventZoom() {
+      // iOS Safari: gestos de pellizco
+      document.addEventListener('gesturestart', function (e) {
+        e.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener('gesturechange', function (e) {
+        e.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener('gestureend', function (e) {
+        e.preventDefault();
+      }, { passive: false });
+
+      // Doble tap zoom
+      var lastTouchEnd = 0;
+      document.addEventListener('touchend', function (e) {
+        var now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+          e.preventDefault();
+        }
+        lastTouchEnd = now;
+      }, { passive: false });
+    })();
+
+    // ===================== Contexto PWA / instalación =====================
+    (function markPwaContext() {
+      var isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+        (typeof window.navigator.standalone !== 'undefined' && window.navigator.standalone);
+      if (isStandalone) {
+        try { document.cookie = 'KASU_PWA=1; Path=/; SameSite=None; Secure'; } catch (e) {}
+      }
+    })();
+
+    async function openReportePopup() {
+      if (!window.kasuPopup || !window.kasuPopup.open) {
+        alert('No se pudo inicializar el manejador de popups.');
+        return;
+      }
+      await window.kasuPopup.open('/login/Mesa_Finanzas.php');
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
       var btn = document.getElementById('btnInstall');
       if (!btn) return;
@@ -496,9 +587,179 @@ if ($hora >= 6 && $hora < 12) {
       if (isStandalone) {
         btn.style.display = 'none';
       }
-      // Si tu /login/Javascript/install.js lo controla con clases (is-visible),
-      // seguirá funcionado: este archivo solo asegura que nunca se muestre en standalone.
     });
+
+    // ===================== Recomendación IA (tarjeta de gráfica) =====================
+    document.addEventListener('DOMContentLoaded', function () {
+      var contenedorIA = document.getElementById('CRecomendacion-IA');
+      if (!contenedorIA) return;
+
+      contenedorIA.innerHTML = '<p>Cargando recomendación de IA...</p>';
+
+      // Endpoint ESPECÍFICO para la recomendación / orquestador de tools
+      fetch('/eia/Vista-360/vista360_chat_acciones.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          // El endpoint está documentado para recibir "mensaje"
+          mensaje: 'Genera una recomendación breve y accionable para este vendedor, ' +
+                   'basada en su cartera y resultados del mes actual en Vista 360. ' +
+                   'Devuélvela en HTML corto, con bullets concretos para mejorar su desempeño.'
+        })
+      })
+      .then(function (resp) {
+        return resp.json();
+      })
+      .then(function (data) {
+        if (data && data.ok && data.html) {
+          // El endpoint vista360_chat_acciones.php ya está pensado para devolver "html"
+          contenedorIA.innerHTML = data.html;
+        } else {
+          contenedorIA.innerHTML = '<p>No fue posible obtener la recomendación de IA en este momento.</p>';
+          if (data && data.error) {
+            console.error('IA error:', data.error);
+          }
+        }
+      })
+      .catch(function (err) {
+        console.error('Error al llamar a Vista-360 IA:', err);
+        contenedorIA.innerHTML = '<p>Error al conectar con el motor de IA. Intenta de nuevo más tarde.</p>';
+      });
+    });
+
+    // ===================== Chat conversacional Vista360 (modal) =====================
+    document.addEventListener('DOMContentLoaded', function () {
+      var orbBtn      = document.getElementById('aiOrb');
+      var modal       = document.getElementById('iaModal');
+      var modalClose  = document.getElementById('iaModalClose');
+      var chatLog     = document.getElementById('iaChatLog');
+      var chatForm    = document.getElementById('iaChatForm');
+      var chatInput   = document.getElementById('iaChatInput');
+      var sendBtn     = document.getElementById('iaChatSendBtn');
+      
+      // Obtener referencias a las imágenes del orbe
+      var orbPausedImg = document.querySelector('.ai-img.paused');
+      var orbThinkingImg = document.querySelector('.ai-img.thinking');
+      
+      // Obtener referencia a la imagen thinking dentro del modal
+      var modalThinkingImg = document.querySelector('.ia-modal-header-orb img');
+
+      if (!orbBtn || !modal || !chatLog || !chatForm || !chatInput || !sendBtn) return;
+
+      function setOrbThinking(thinking) {
+        if (orbPausedImg && orbThinkingImg) {
+          if (thinking) {
+            orbPausedImg.style.display = 'none';
+            orbThinkingImg.style.display = 'block';
+            orbBtn.classList.add('is-thinking');
+          } else {
+            orbPausedImg.style.display = 'block';
+            orbThinkingImg.style.display = 'none';
+            orbBtn.classList.remove('is-thinking');
+          }
+        }
+      }
+
+      function openModal() {
+        modal.classList.add('is-open');
+        // Mantener el GIF thinking visible mientras el modal esté abierto
+        setOrbThinking(true);
+        
+        // Asegurar que la imagen del modal también muestre el GIF thinking
+        if (modalThinkingImg) {
+          modalThinkingImg.src = '/eia/assets/img/ia-thinking-2.gif';
+        }
+      }
+
+      function closeModal() {
+        modal.classList.remove('is-open');
+        // Restaurar la imagen pausada cuando se cierra el modal
+        setOrbThinking(false);
+      }
+
+      function appendBubble(contentHtml, who) {
+        var bubble = document.createElement('div');
+        bubble.className = 'ia-chat-bubble ' + (who === 'user' ? 'user' : 'ia');
+        bubble.innerHTML = contentHtml;
+        chatLog.appendChild(bubble);
+        chatLog.scrollTop = chatLog.scrollHeight;
+      }
+
+      function appendTyping() {
+        var t = document.createElement('div');
+        t.className = 'ia-typing';
+        t.id = 'iaTypingRow';
+        t.textContent = 'La IA está pensando...';
+        chatLog.appendChild(t);
+        chatLog.scrollTop = chatLog.scrollHeight;
+      }
+
+      function removeTyping() {
+        var t = document.getElementById('iaTypingRow');
+        if (t && t.parentNode) {
+          t.parentNode.removeChild(t);
+        }
+      }
+
+      // Abrir modal desde el orbe
+      orbBtn.addEventListener('click', function () {
+        openModal();
+        chatInput.focus();
+      });
+
+      // Cerrar modal con botón X
+      modalClose.addEventListener('click', function () {
+        closeModal();
+      });
+
+      // Cerrar si se hace click fuera de la tarjeta
+      modal.addEventListener('click', function (evt) {
+        if (evt.target === modal) {
+          closeModal();
+        }
+      });
+
+      // Envío de mensaje
+      chatForm.addEventListener('submit', function (evt) {
+        evt.preventDefault();
+        var text = chatInput.value.trim();
+        if (!text) return;
+
+        appendBubble('<p>' + text.replace(/</g, '&lt;') + '</p>', 'user');
+        chatInput.value = '';
+        chatInput.focus();
+
+        sendBtn.disabled = true;
+        appendTyping();
+
+        fetch('/eia/Vista-360/vista360_chat_acciones.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mensaje: text })
+        })
+        .then(function (resp) { return resp.json(); })
+        .then(function (data) {
+          removeTyping();
+          sendBtn.disabled = false;
+
+          if (data && data.ok && data.html) {
+            appendBubble(data.html, 'ia');
+          } else {
+            var msg = (data && data.error)
+              ? 'No fue posible obtener respuesta de la IA: ' + data.error
+              : 'No fue posible obtener respuesta de la IA.';
+            appendBubble('<p>' + msg + '</p>', 'ia');
+          }
+        })
+        .catch(function (err) {
+          console.error('Error chat Vista360:', err);
+          removeTyping();
+          sendBtn.disabled = false;
+          appendBubble('<p>Ocurrió un error al conectar con la IA. Intenta de nuevo.</p>', 'ia');
+        });
+      });
+    });
+
   </script>
 </body>
 </html>

@@ -151,7 +151,7 @@ $isBot = (bool)preg_match('/facebookexternalhit|twitterbot|linkedinbot|slackbot|
         <p class="d"><?= $descr ?></p>
       </div>
       <a class="cta" href="<?= htmlspecialchars($dest,ENT_QUOTES) ?>" style="display: none;">Abrir</a>
-      <p class="hint" style="text-alitext-align:">Te estamos redirigiendo a la pagina .</p>
+      <p class="hint" style="text-align: center">Te estamos redirigiendo a la pagina .</p>
     </article>
   </div>
 

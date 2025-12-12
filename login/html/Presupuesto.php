@@ -9,10 +9,6 @@
 
 declare(strict_types=1);
 
-// Precondiciones mínimas
-// - $basicas y $mysqli vienen de librerías incluidas en la página padre.
-// - $Reg, $Recg, $Recg1, $name, $nombre, $Metodo, $Niv pueden estar definidos arriba.
-
 // Helper de escape para HTML
 if (!function_exists('h')) {
   function h($v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
@@ -50,6 +46,57 @@ if ($serv === 'TRANSPORTE') {
 // Costo del producto
 $Costo = (float)($basicas->BuscarCampos($mysqli, 'Costo', 'Productos', 'Producto', $ProdSel) ?? 0.0);
 
+// ===== IMPORTANTE: Buscar o crear propuesta en PrespEnviado =====
+$idPropuestaPDF = 0;
+$idProspecto = (int)($Reg['Id'] ?? 0);
+
+if ($idProspecto > 0) {
+    // Buscar si ya existe una propuesta para este prospecto
+    $stmt = $mysqli->prepare("SELECT Id FROM PrespEnviado WHERE IdProspecto = ? ORDER BY Id DESC LIMIT 1");
+    if ($stmt) {
+        $stmt->bind_param("i", $idProspecto);
+        $stmt->execute();
+        $stmt->bind_result($idPropuestaExistente);
+        if ($stmt->fetch()) {
+            $idPropuestaPDF = $idPropuestaExistente;
+        }
+        $stmt->close();
+        
+        // Si no existe, crear una nueva
+        if ($idPropuestaPDF <= 0) {
+            $nombreCompleto = $Reg['FullName'] ?? 'Prospecto';
+            $email = $Reg['Email'] ?? '';
+            $telefono = $Reg['Telefono'] ?? '';
+            $servicio = $Reg['Servicio_Interes'] ?? 'GENERAL';
+            
+            // Crear nueva propuesta
+            $stmtInsert = $mysqli->prepare("
+                INSERT INTO PrespEnviado 
+                (IdProspecto, Nombre, Email, Telefono, Servicio, Producto, Costo, FechaCreacion) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+            ");
+            
+            if ($stmtInsert) {
+                $stmtInsert->bind_param(
+                    "isssssd", 
+                    $idProspecto, 
+                    $nombreCompleto,
+                    $email,
+                    $telefono,
+                    $servicio,
+                    $ProdSel,
+                    $Costo
+                );
+                
+                if ($stmtInsert->execute()) {
+                    $idPropuestaPDF = $stmtInsert->insert_id;
+                }
+                $stmtInsert->close();
+            }
+        }
+    }
+}
+
 // Campos ocultos comunes
 $hidden = [
   'nombre'     => $nombre ?? '',
@@ -58,10 +105,11 @@ $hidden = [
   'IdContact'  => $Recg['id']  ?? '',
   'IdUsuario'  => $Recg1['id'] ?? '',
   'Producto'   => $Reg['Producto'] ?? '',
-  'Id'         => (int)($Reg['Id'] ?? 0),
+  'Id'         => $idProspecto,
   'IdVendedor' => $_POST['IdVendedor'] ?? '',
   'name'       => $name ?? '',
   'csrf'       => $csrf,
+  'id_propuesta_pdf' => $idPropuestaPDF, // Nuevo campo
 ];
 
 // Etiquetas para plan grupal según servicio
@@ -89,13 +137,14 @@ if ($serv === 'SEGURIDAD' || $serv === 'RETIRO') {
   $plazoOptions = ['3'=>'3 Meses','6'=>'6 Meses','9'=>'9 Meses','12'=>'12 Meses'];
 }
 ?>
+
 <div class="modal-header">
   <h5 class="modal-title">Presupuesto de Venta</h5>
   <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
 </div>
 
-<!-- El form envuelve body + footer -->
-<form method="POST" action="https://kasu.com.mx/login/php/Registro_Prospectos.php" autocomplete="off">
+<!-- Formulario para ENVIAR (acción normal) -->
+<form method="POST" action="https://kasu.com.mx/login/php/Registro_Prospectos.php" autocomplete="off" id="formEnviar">
   <div class="modal-body" data-serv="<?= h($serv) ?>">
     <!-- Slots para GPS y Fingerprint -->
     <div id="Gps" style="display:none"></div>
@@ -176,14 +225,75 @@ if ($serv === 'SEGURIDAD' || $serv === 'RETIRO') {
   </div><!-- /.modal-body -->
 
   <div class="modal-footer">
-    <button type="submit" name="DescargaPres" class="btn btn-secondary">Descargar PDF</button>
+    <!-- SOLUCIÓN CORREGIDA: Usar idPropuestaPDF en lugar de idProspecto -->
+    <?php if ($idPropuestaPDF > 0): ?>
+      <a href="https://kasu.com.mx/login/Generar_PDF/Cotizacion_pdf.php?idp=<?= $idPropuestaPDF ?>&download=1&t=<?= time() ?>" 
+         target="_blank" 
+         class="btn btn-secondary"
+         id="btnDescargarPDF"
+         onclick="descargarPDF(this, <?= $idPropuestaPDF ?>); return false;">
+        <i class="fas fa-download"></i> Descargar PDF
+      </a>
+    <?php else: ?>
+      <button type="button" class="btn btn-secondary" disabled>
+        <i class="fas fa-download"></i> Descargar PDF
+      </button>
+    <?php endif; ?>
+    
     <?php if ($hasEmail): ?>
-      <button type="submit" name="EnviaPres" class="btn btn-primary">Enviar</button>
+      <button type="submit" name="EnviaPres" class="btn btn-primary">
+        <i class="fas fa-paper-plane"></i> Enviar
+      </button>
     <?php endif; ?>
   </div>
-</form><!-- /form -->
+</form>
 
 <script>
+// =============== FUNCIÓN PARA DESCARGAR PDF ===============
+
+function descargarPDF(elemento, idPropuesta) {
+  console.log('Iniciando descarga PDF para propuesta ID:', idPropuesta);
+  
+  // 1. Cerrar el modal primero
+  const modal = document.getElementById('modalPresupuesto');
+  if (modal) {
+    const bootstrapModal = bootstrap.Modal.getInstance(modal);
+    if (bootstrapModal) {
+      bootstrapModal.hide();
+    }
+  }
+  
+  // 2. Pequeño delay para que se cierre el modal
+  setTimeout(function() {
+    // 3. Crear URL con parámetros
+    const url = `https://kasu.com.mx/login/Generar_PDF/Cotizacion_pdf.php?idp=${idPropuesta}&download=1&t=${Date.now()}`;
+    
+    // 4. Intentar abrir en nueva pestaña
+    const nuevaVentana = window.open(url, '_blank', 'noopener,noreferrer');
+    
+    // 5. Si fue bloqueada (popup blocker), usar método alternativo
+    if (!nuevaVentana || nuevaVentana.closed || typeof nuevaVentana.closed == 'undefined') {
+      console.log('Popup bloqueado, usando método alternativo');
+      
+      // Método alternativo: crear un link y simular click
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.style.display = 'none';
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }, 300);
+  
+  // Prevenir el comportamiento por defecto del link
+  return false;
+}
+
+// =============== FUNCIONES ORIGINALES DEL FORMULARIO ===============
+
 (function () {
   function qs(sel){ return document.querySelector(sel); }
   function qsa(sel){ return Array.prototype.slice.call(document.querySelectorAll(sel)); }
@@ -252,6 +362,21 @@ if ($serv === 'SEGURIDAD' || $serv === 'RETIRO') {
       var plazoH = qs('#plazo_hidden');
       if (plazoH) plazoH.value = plazo.value;
     });
+    
+    // Configurar el botón PDF
+    const btnPDF = document.getElementById('btnDescargarPDF');
+    if (btnPDF) {
+      btnPDF.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Obtener el ID de propuesta del data attribute o del href
+        const href = this.getAttribute('href');
+        const idMatch = href.match(/idp=(\d+)/);
+        if (idMatch && idMatch[1]) {
+          descargarPDF(this, parseInt(idMatch[1]));
+        }
+      });
+    }
   }
 
   if (document.readyState === 'loading') {
@@ -262,4 +387,48 @@ if ($serv === 'SEGURIDAD' || $serv === 'RETIRO') {
     togglePlanes(); syncPagoYPlazo(); bindEvents();
   }
 })();
+
+// =============== DEBUG: Verificar que todo funcione ===============
+
+console.log('Modal de presupuesto cargado');
+console.log('ID Propuesta para PDF:', <?= $idPropuestaPDF ?>);
+console.log('ID Prospecto:', <?= $idProspecto ?>);
+
+// Verificar que el botón existe
+setTimeout(function() {
+  const btn = document.getElementById('btnDescargarPDF');
+  if (btn) {
+    console.log('✅ Botón PDF encontrado:', btn);
+    console.log('✅ HREF del botón:', btn.href);
+    console.log('✅ Target del botón:', btn.target);
+    
+    // Verificar que el ID en el href sea correcto
+    const match = btn.href.match(/idp=(\d+)/);
+    if (match) {
+      console.log('✅ ID en URL:', match[1]);
+    }
+  } else {
+    console.log('❌ Botón PDF NO encontrado');
+  }
+}, 500);
 </script>
+
+<!-- Estilo para asegurar que los enlaces sean clickeables -->
+<style>
+#btnDescargarPDF {
+  cursor: pointer;
+  text-decoration: none !important;
+  display: inline-block;
+}
+
+/* Asegurar visibilidad y clickeabilidad en móviles */
+@media (max-width: 768px) {
+  #btnDescargarPDF {
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+</style>

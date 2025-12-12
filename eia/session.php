@@ -15,8 +15,69 @@ if (!defined('KASU_SESSION_NAME')) {
     define('KASU_SESSION_NAME', 'KASU_PWA_SESS');
 }
 
-function kasu_session_cookie_params(): array
+function kasu_is_popup_context(array $options = []): bool
 {
+    // Señales explícitas
+    if (!empty($options['force_popup']) || (isset($_GET['popup']) && $_GET['popup'] === '1')) {
+        return true;
+    }
+    if (isset($_COOKIE['KASU_POPUP']) && $_COOKIE['KASU_POPUP'] === '1') {
+        return true;
+    }
+
+    // Headers de navegación (window.open suele enviar Sec-Fetch-User:?1)
+    $fetchDest  = $_SERVER['HTTP_SEC_FETCH_DEST']  ?? '';
+    $fetchMode  = $_SERVER['HTTP_SEC_FETCH_MODE']  ?? '';
+    $fetchSite  = $_SERVER['HTTP_SEC_FETCH_SITE']  ?? '';
+    $fetchUser  = $_SERVER['HTTP_SEC_FETCH_USER']  ?? '';
+
+    if (
+        $fetchDest === 'document'
+        && $fetchMode === 'navigate'
+        && $fetchUser === '?1'
+        && ($fetchSite === 'same-origin' || $fetchSite === 'none')
+    ) {
+        return true;
+    }
+
+    // Referer mismo origen (ventana abierta con window.open desde la app)
+    if (!empty($_SERVER['HTTP_REFERER'])) {
+        $refHost = parse_url((string)$_SERVER['HTTP_REFERER'], PHP_URL_HOST);
+        $curHost = $_SERVER['HTTP_HOST'] ?? '';
+        if ($refHost && $curHost && strcasecmp($refHost, $curHost) === 0) {
+            return true;
+        }
+    }
+
+    // Señal enviada desde PWA instalada
+    if (!empty($_SERVER['HTTP_X_KASU_POPUP']) && $_SERVER['HTTP_X_KASU_POPUP'] === '1') {
+        return true;
+    }
+
+    return false;
+}
+
+function kasu_is_pwa_request(): bool
+{
+    // Permitimos que el cliente marque explícitamente
+    if (!empty($_GET['pwa']) && $_GET['pwa'] === '1') {
+        return true;
+    }
+    if (isset($_COOKIE['KASU_PWA']) && $_COOKIE['KASU_PWA'] === '1') {
+        return true;
+    }
+    if (!empty($_SERVER['HTTP_X_KASU_PWA']) && $_SERVER['HTTP_X_KASU_PWA'] === '1') {
+        return true;
+    }
+    return false;
+}
+
+function kasu_session_cookie_params(array $options = []): array
+{
+    $forceNone = !empty($options['force_same_site_none']);
+    $isPopup   = kasu_is_popup_context($options);
+    $isPwa     = kasu_is_pwa_request();
+
     // Determinar si estamos en HTTPS
     $isHttps = (!empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off')
         || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
@@ -25,12 +86,12 @@ function kasu_session_cookie_params(): array
     
     // Detectar si es Chrome (necesita SameSite=None para PWAs)
     $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
-    $isChrome = stripos($userAgent, 'Chrome') !== false && stripos($userAgent, 'Edge') === false;
+    $isChrome  = stripos($userAgent, 'Chrome') !== false && stripos($userAgent, 'Edge') === false;
     
-    // Para PWAs en Chrome, necesitamos SameSite=None
+    // Para PWAs en Chrome o popups, necesitamos SameSite=None
     $sameSite = 'Lax';
-    if ($isChrome && $isHttps) {
-        $sameSite = 'None'; // Requerido para PWAs en Chrome
+    if (($isChrome && $isHttps) || $forceNone || $isPopup || $isPwa) {
+        $sameSite = 'None'; // Requerido para PWAs / popups en Chrome
     }
     
     // Configuración base
@@ -56,7 +117,7 @@ function kasu_session_cookie_params(): array
     return $params;
 }
 
-function kasu_session_start(): void
+function kasu_session_start(array $options = []): void
 {
     if (session_status() === PHP_SESSION_ACTIVE) {
         return;
@@ -66,7 +127,7 @@ function kasu_session_start(): void
     session_name(KASU_SESSION_NAME);
     
     // Configurar parámetros de cookie
-    $cookieParams = kasu_session_cookie_params();
+    $cookieParams = kasu_session_cookie_params($options);
     
     // Configurar manualmente los headers de cookie para Chrome
     if (PHP_VERSION_ID < 70300) {
@@ -94,6 +155,24 @@ function kasu_session_start(): void
     
     // Iniciar sesión
     session_start();
+    
+    // Headers especiales para popups (evitar bloqueos)
+    $isPopup = kasu_is_popup_context($options);
+    if ($isPopup) {
+        if (!headers_sent()) {
+            header('Cross-Origin-Opener-Policy: same-origin-allow-popups');
+            header('Cross-Origin-Embedder-Policy: unsafe-none');
+            header('Cache-Control: no-store, must-revalidate');
+        }
+        // Marcar cookie de popup para siguientes requests
+        setcookie('KASU_POPUP', '1', [
+            'expires'  => time() + 600,
+            'path'     => '/',
+            'secure'   => $cookieParams['secure'],
+            'httponly' => false,
+            'samesite' => 'None'
+        ]);
+    }
     
     // Regenerar ID periódicamente para seguridad
     if (!isset($_SESSION['SESSION_CREATED'])) {

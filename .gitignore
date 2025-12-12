@@ -84,3 +84,8 @@ sync_config.jsonc
 # Entornos
 .env
 .env.*
+eia/Vista-360/secret_config.php
+
+# Secrets
+**/.env
+eia/Vista-360/secret_config.php

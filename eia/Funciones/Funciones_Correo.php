@@ -3,6 +3,7 @@
  * Qué hace: Clase Correo para generar HTML de emails y enviar mensajes.
  * Fecha: 04/11/2025
  * Revisado por: JCCM
+ * Archivo:eia/Funciones/Funciones_Correo.php
  *
  * Notas PHP 8.2:
  * - Se evita uso de propiedades dinámicas.
@@ -74,8 +75,8 @@ HTML;
                   <a href="https://www.facebook.com/KasuMexico" style="margin:0 8px;">
                     <img src="https://xpnux.stripocdn.email/content/assets/img/social-icons/circle-colored/facebook-circle-colored.png" alt="Facebook" width="32" height="32" style="border:0;">
                   </a>
-                  <a href="https://twitter.com/KASSU_11" style="margin:0 8px;">
-                    <img src="https://xpnux.stripocdn.email/content/assets/img/social-icons/circle-colored/twitter-circle-colored.png" alt="Twitter" width="32" height="32" style="border:0;">
+                  <a href="https://x.com/KASSU_11" style="margin:0 8px;">
+                    <img src="https://xpnux.stripocdn.email/content/assets/img/social-icons/circle-colored/twitter-circle-colored.png" alt="X" width="32" height="32" style="border:0;">
                   </a>
                   <a href="https://www.instagram.com/kasumexico" style="margin:0 8px;">
                     <img src="https://xpnux.stripocdn.email/content/assets/img/social-icons/circle-colored/instagram-circle-colored.png" alt="Instagram" width="32" height="32" style="border:0;">
@@ -467,6 +468,76 @@ HTML;
         </tr>
 HTML;
 
+            case 'IA · CORREO PROSPECTO':
+            case 'IA_CORREO_PROSPECTO':
+                // Nombre del destinatario
+                $nombrePros = $cte !== '' ? $cte : (isset($data['Nombre']) ? (string)$data['Nombre'] : 'Cliente');
+
+                // Cuerpo generado por la IA (HTML acotado)
+                $cuerpo = isset($data['CuerpoHtml']) ? (string)$data['CuerpoHtml'] : '';
+                $cuerpoSan = strip_tags($cuerpo, '<p><br><ul><ol><li><strong><b><em><i>');
+
+                if ($cuerpoSan === '') {
+                    $cuerpoSan = '<p style="margin:0;font-size:16px;font-family:Arial,sans-serif;line-height:24px;color:#666666;">
+                      Este es un correo informativo de KASU. En breve uno de nuestros asesores se pondrá en contacto contigo.
+                    </p>';
+                }
+
+                $ctaTexto = trim((string)($data['CtaTexto'] ?? ''));
+                $ctaUrl   = trim((string)($data['CtaUrl']   ?? ''));
+                $ctaBloque = '';
+
+                if ($ctaTexto !== '' && $ctaUrl !== '') {
+                    $ctaBloque = <<<HTML
+      <tr>
+        <td align="center" style="padding:18px 30px 8px 30px;">
+          <a href="{$ctaUrl}" target="_blank"
+             style="display:inline-block;padding:12px 26px;background:#ee3a87;border-radius:999px;
+                    font-family:'Segoe UI',Arial,sans-serif;font-size:15px;color:#FFFFFF;
+                    text-decoration:none;">
+            {$ctaTexto}
+          </a>
+        </td>
+      </tr>
+HTML;
+                }
+
+                return <<<HTML
+      <tr>
+        <td align="center" style="padding:20px 0 0 0;">
+          <a href="https://kasu.com.mx" style="text-decoration:none;color:whitesmoke;">
+            <img src="https://kasu.com.mx/assets/images/Correo/florredonda.png"
+                 alt="KASU" width="90" height="90" style="display:block;" />
+          </a>
+        </td>
+      </tr>
+      <tr>
+        <td bgcolor="#ffffff" align="left"
+            style="padding:20px 24px 8px 24px;font-family:'Segoe UI',sans-serif;
+                   font-size:16px;line-height:24px;color:#0f172a;">
+          <p style="margin:0 0 8px 0;">Hola <strong>{$nombrePros}</strong>,</p>
+        </td>
+      </tr>
+      <tr>
+        <td bgcolor="#ffffff" align="left"
+            style="padding:4px 24px 8px 24px;font-family:'Segoe UI',sans-serif;
+                   font-size:15px;line-height:24px;color:#475569;">
+          {$cuerpoSan}
+        </td>
+      </tr>
+      {$ctaBloque}
+      <tr>
+        <td bgcolor="#ffffff" align="left"
+            style="padding:8px 24px 24px 24px;font-family:'Segoe UI',sans-serif;
+                   font-size:14px;line-height:22px;color:#64748b;">
+          <p style="margin:0;">
+            Saludos,<br>
+            <strong>Equipo KASU</strong>
+          </p>
+        </td>
+      </tr>
+HTML;
+
             default:
                 return "<tr><td>No se encontró plantilla para el asunto especificado.</td></tr>";
         }
@@ -483,9 +554,7 @@ HTML;
     public function Mensaje($Asunto /* , ... */) {
         $this->trackUsage();
 
-        // Compatibilidad de firmas
         $args = func_get_args();
-        // $Asunto = $args[0];
 
         // Caso NUEVO: segundo argumento es array asociativo
         if (isset($args[1]) && is_array($args[1])) {
@@ -504,7 +573,12 @@ HTML;
         $Id = '';
         if (!empty($args)) {
             $rev = array_reverse($args, true);
-            foreach ($rev as $v) { if (is_string($v) && $v !== '' && $v !== $Asunto && $v !== $cte && $v !== $dirUrl) { $Id = $v; break; } }
+            foreach ($rev as $v) {
+                if (is_string($v) && $v !== '' && $v !== $Asunto && $v !== $cte && $v !== $dirUrl) {
+                    $Id = $v;
+                    break;
+                }
+            }
         }
 
         $data = [
@@ -536,7 +610,6 @@ HTML;
         $headers[] = "From: KASU <no-reply@kasu.com.mx>";
         $headers[] = "Reply-To: soporte@kasu.com.mx";
 
-        // mail() puede estar deshabilitado en algunos entornos; se devuelve bool
         return @mail($to, (string)$asunto, (string)$html, implode("\r\n", $headers));
     }
 
@@ -556,12 +629,10 @@ HTML;
             return;
         }
 
-        // Limpia salida previa
         if (function_exists('ob_get_level')) {
             while (ob_get_level() > 0) { ob_end_clean(); }
         }
 
-        // Tipo MIME
         $type = function_exists('mime_content_type') ? mime_content_type($path) : "application/octet-stream";
 
         header('Content-Description: File Transfer');
@@ -574,7 +645,6 @@ HTML;
         header('Content-Length: ' . filesize($path));
         header('Content-Disposition: attachment; filename="' . $file . '"');
 
-        // Envía archivo
         $fp = fopen($path, 'rb');
         if ($fp) {
             while (!feof($fp)) {
@@ -582,7 +652,6 @@ HTML;
             }
             fclose($fp);
         } else {
-            // Fallback
             readfile($path);
         }
         exit;

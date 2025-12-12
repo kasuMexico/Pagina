@@ -4,6 +4,7 @@ declare(strict_types=1);
  * Envío de correos transaccionales KASU (cotización, póliza, fichas, estado de cuenta, pagos).
  * PHP 8.2. Idempotente. Variables desde .env / entorno.
  * 2025-11-06 — Revisado por Jose Carlos Cabrera Monroy
+ * Archivo: eia/EnviarCorreo.php
  */
 
 session_start();

@@ -357,6 +357,28 @@ if ($Niv >= 5) {
   <script src="Javascript/finger.js?v=3"></script>
   <script src="Javascript/localize.js?v=3"></script>
   <script src="Javascript/Inyectar_gps_form.js"></script>
+  <script>
+    // Marca contexto PWA (SameSite=None) para Chrome en modo standalone
+    (function markPwaContext(){
+      var isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+        (typeof window.navigator.standalone !== 'undefined' && window.navigator.standalone);
+      if (isStandalone) {
+        try { document.cookie = 'KASU_PWA=1; Path=/; SameSite=None; Secure'; } catch (e) {}
+      }
+    })();
+
+    // Evita múltiples toques para abrir el modal; el primer clic dispara el POST y evita repetir
+    $(function(){
+      $('.prospect-card button[type="submit"]').on('click', function(){
+        var $btn = $(this);
+        if ($btn.data('clicking')) {
+          return false;
+        }
+        $btn.data('clicking', true);
+        setTimeout(function(){ $btn.data('clicking', false); }, 1200);
+      });
+    });
+  </script>
   <!-- Abrir modal solo si corresponde -->
   <script>
   document.addEventListener('DOMContentLoaded', function () {

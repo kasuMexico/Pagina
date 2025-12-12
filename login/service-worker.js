@@ -50,13 +50,18 @@ self.addEventListener('activate', (evt) => {
 // =================== FETCH ===================
 self.addEventListener('fetch', (evt) => {
   const request = evt.request;
+  const url = new URL(request.url);
+
+  // EXCEPCIÓN CRÍTICA: NO INTERCEPTAR PDFs ni archivos descargables
+  // Dejar que el navegador maneje las descargas directamente
+  if (isDownloadableFile(request, url)) {
+    return; // Sale sin interceptar
+  }
 
   // Solo GET; no interceptar POST/PUT/DELETE (formularios, login, etc.)
   if (request.method !== 'GET') {
     return;
   }
-
-  const url = new URL(request.url);
 
   // Solo http/https. Ignora chrome-extension://, chrome://, data:, etc.
   if (url.protocol !== 'http:' && url.protocol !== 'https:') {
@@ -65,6 +70,17 @@ self.addEventListener('fetch', (evt) => {
 
   // No interceptar nada del backend de login
   if (url.pathname.startsWith('/login/php/')) {
+    return;
+  }
+
+  // No interceptar rutas de generación de PDF
+  if (url.pathname.includes('Cotizacion_pdf.php') || 
+      url.pathname.includes('Generar_PDF')) {
+    return;
+  }
+
+  // No interceptar archivos en directorio DATES
+  if (url.pathname.includes('/DATES/')) {
     return;
   }
 
@@ -86,7 +102,52 @@ self.addEventListener('fetch', (evt) => {
   evt.respondWith(handleRuntimeRequest(request));
 });
 
-// =============== HANDLERS =================
+// =============== FUNCIONES AUXILIARES =================
+
+// Determina si es un archivo descargable
+function isDownloadableFile(request, url) {
+  // Verificar por Content-Disposition header (si ya tenemos la respuesta)
+  if (request.headers && request.headers.get('Accept')) {
+    const accept = request.headers.get('Accept');
+    if (accept.includes('application/pdf') || accept.includes('application/octet-stream')) {
+      return true;
+    }
+  }
+
+  // Verificar por extensión de archivo o ruta
+  const pathname = url.pathname.toLowerCase();
+  const downloadableExtensions = [
+    '.pdf', '.xlsx', '.xls', '.doc', '.docx', '.zip', '.rar', 
+    '.7z', '.txt', '.csv', '.jpg', '.jpeg', '.png', '.gif'
+  ];
+
+  // Verificar si la ruta contiene indicadores de descarga
+  if (pathname.includes('/download/') || 
+      pathname.includes('/export/') || 
+      pathname.includes('/generar/') ||
+      pathname.includes('/cotizacion') ||
+      pathname.includes('descargar')) {
+    return true;
+  }
+
+  // Verificar por extensión
+  for (const ext of downloadableExtensions) {
+    if (pathname.endsWith(ext)) {
+      return true;
+    }
+  }
+
+  // Verificar por parámetros que indiquen descarga
+  const searchParams = url.searchParams;
+  if (searchParams.has('download') || 
+      searchParams.has('export') || 
+      searchParams.has('pdf') ||
+      searchParams.has('DescargaPres')) {
+    return true;
+  }
+
+  return false;
+}
 
 async function handleNavigation(request) {
   const cache = await caches.open(CACHE_RUNTIME);
@@ -96,12 +157,22 @@ async function handleNavigation(request) {
     const url = new URL(request.url);
 
     // Doble filtro de seguridad: solo cachear http/https de mismo origen
-    if (
+    // Y NO cachear respuestas con headers de descarga
+    const contentType = response.headers.get('content-type');
+    const contentDisposition = response.headers.get('content-disposition');
+    
+    const shouldCache = (
       (url.protocol === 'http:' || url.protocol === 'https:') &&
       url.origin === self.location.origin &&
       response &&
-      response.status === 200
-    ) {
+      response.status === 200 &&
+      contentType &&
+      !contentType.includes('application/pdf') &&
+      !contentType.includes('application/octet-stream') &&
+      (!contentDisposition || !contentDisposition.includes('attachment'))
+    );
+
+    if (shouldCache) {
       await cache.put(request, response.clone());
     }
 
@@ -155,8 +226,22 @@ async function handleRuntimeRequest(request) {
     const response = await fetch(request);
     const url = new URL(request.url);
 
-    // Solo cachear http/https de mismo origen
+    // Verificar si es un archivo descargable antes de cachear
+    const contentType = response.headers.get('content-type');
+    const contentDisposition = response.headers.get('content-disposition');
+    
+    const isDownloadable = (
+      contentType && (
+        contentType.includes('application/pdf') ||
+        contentType.includes('application/octet-stream')
+      )
+    ) || (
+      contentDisposition && contentDisposition.includes('attachment')
+    );
+
+    // Solo cachear si NO es descargable
     if (
+      !isDownloadable &&
       (url.protocol === 'http:' || url.protocol === 'https:') &&
       url.origin === self.location.origin &&
       response &&
@@ -173,3 +258,11 @@ async function handleRuntimeRequest(request) {
     return Response.error();
   }
 }
+
+// =============== GESTIÓN DE MENSAJES =================
+// Para forzar la descarga desde el frontend
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});

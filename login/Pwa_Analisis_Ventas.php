@@ -17,6 +17,12 @@ kasu_session_start();
  * ========================================================================== */
 require_once __DIR__ . '/../eia/librerias.php';          // Debe exponer $mysqli, $basicas, $financieras
 require_once 'php/Analisis_Metas.php';        // Calcula metas del mes, sueldos y comisiones
+/* =============================================================================
+ * [1.5] INCLUIR CÁLCULO FONDO FUNERARIO
+ * ========================================================================== */
+require_once 'php/AnalisisDatos/ConfigFondoFunerario.php';
+require_once 'php/AnalisisDatos/CalculoFondoFunerario.php';
+require_once 'php/AnalisisDatos/FondoInversionManager.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
@@ -49,10 +55,29 @@ if (!function_exists('h')) {
 $fmtMoney = class_exists('NumberFormatter')
   ? new NumberFormatter('es_MX', NumberFormatter::CURRENCY) : null;
 $fmtInt = class_exists('NumberFormatter')
-  ? (function(){ $n = new NumberFormatter('es_MX', NumberFormatter::DECIMAL); $n->setAttribute(NumberFormatter::FRACTION_DIGITS,0); return $n; })()
+  ? (function(){ 
+      $n = new NumberFormatter('es_MX', NumberFormatter::DECIMAL); 
+      $n->setAttribute(NumberFormatter::FRACTION_DIGITS, 0); 
+      return $n; 
+    })()
   : null;
-$fmtOut = function (int $n) use ($fmtInt): string {
-  return $fmtInt ? $fmtInt->format($n) : (string)$n;
+
+$fmtOut = function ($n) use ($fmtInt): string {
+  // Manejar null o vacío
+  if ($n === null || $n === '') {
+    return $fmtInt ? $fmtInt->format(0) : '0';
+  }
+  
+  // Intentar convertir a número
+  if (is_numeric($n)) {
+    $num = (int)$n;
+  } else {
+    // Si no es numérico, intentar extraer números
+    preg_match('/\d+/', (string)$n, $matches);
+    $num = $matches ? (int)$matches[0] : 0;
+  }
+  
+  return $fmtInt ? $fmtInt->format($num) : number_format($num, 0, '.', ',');
 };
 $prosTierra = $prosDigital = $regGenerados = $regDigitales = $cteGenerados = 0;
 
@@ -328,6 +353,39 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
  *          - php/AnalisisDatos/d_Valor_Ventas.php          (valor MXN por producto ACTIVO)
  *          - php/Archivos_Grafica/Consulta_Status.php      (conteo por status)
  * ========================================================================== */
+
+/* =============================================================================
+ * [11] CÁLCULO FONDO FUNERARIO - Nuevo modelo 50%
+ * ========================================================================== */
+$calculadorFondo = new CalculoFondoFunerario($mysqli, $basicas);
+$analisisFondo = $calculadorFondo->analizarVentasActivas();
+$recomendacionesInversion = $calculadorFondo->generarRecomendacionesInversion($analisisFondo);
+
+// Calcular métricas clave para display
+$brechaPorVenta = $analisisFondo['total_ventas_activas'] > 0 ? 
+    $analisisFondo['brecha_total'] / $analisisFondo['total_ventas_activas'] : 0;
+
+$excedentePorVenta = $analisisFondo['total_ventas_activas'] > 0 ? 
+    $analisisFondo['excedente_esperado_total'] / $analisisFondo['total_ventas_activas'] : 0;
+
+$comisionPasivaPorVenta = $analisisFondo['total_ventas_activas'] > 0 ? 
+    $analisisFondo['comision_pasiva_total'] / $analisisFondo['total_ventas_activas'] : 0;
+
+/* =============================================================================
+ * [12] SEGUIMIENTO FONDO DE INVERSIÓN - Historial real
+ * ========================================================================== */
+$fondoManager = new FondoInversionManager($mysqli);
+$historialFondo = $fondoManager->obtenerHistorial(6); // Últimos 6 meses
+$estadisticasFondo = $fondoManager->calcularEstadisticas();
+$umbralInversion = $fondoManager->calcularUmbralInversion();
+
+// Calcular tendencia
+$tendencia = 'ESTABLE';
+if (!empty($historialFondo) && count($historialFondo) >= 2) {
+    $ultimo = $historialFondo[0]['Rendimiento'];
+    $penultimo = $historialFondo[1]['Rendimiento'];
+    $tendencia = ($ultimo > $penultimo) ? 'ALCISTA' : (($ultimo < $penultimo) ? 'BAJISTA' : 'ESTABLE');
+}
 ?>
 <!DOCTYPE html>
 <html lang="es-MX">
@@ -351,7 +409,45 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
   <link rel="stylesheet" href="/login/assets/css/Menu_Superior.css?v=<?= h((string)$VerCache) ?>">
   <link rel="stylesheet" href="/login/assets/css/pwa-core.css?v=<?= h((string)$VerCache) ?>">
   <link rel="stylesheet" href="/login/assets/css/pwa-components.css?v=<?= h((string)$VerCache) ?>">
-    <link rel="stylesheet" href="assets/css/Grafica.css">
+  <link rel="stylesheet" href="assets/css/Grafica.css">
+  <style>
+    /* Estilos adicionales para el fondo de inversión */
+    .alert-card {
+        background: #fff3f3;
+        border: 1px solid #ffcdd2;
+        margin-bottom: 20px;
+    }
+    .alert-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+    }
+    .recommendation-item {
+        transition: all 0.3s ease;
+    }
+    .recommendation-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .badge-danger { background-color: #e74c3c; }
+    .badge-warning { background-color: #f39c12; }
+    .badge-success { background-color: #2ecc71; }
+    .badge-info { background-color: #3498db; }
+    .badge-secondary { background-color: #95a5a6; }
+    .card-header.bg-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white;
+    }
+    .progress-thick {
+        height: 25px;
+        margin-bottom: 10px;
+    }
+    .progress-thick .progress-bar {
+        font-weight: bold;
+        line-height: 25px;
+    }
+  </style>
 
   <!-- JS base + Charts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
@@ -477,6 +573,87 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
       chart.draw(data, options);
     }
 
+    function drawRendimientoEdad() {
+      var container = document.getElementById('g_rendimiento_edad');
+      if (!container) { return; }
+      var data = new google.visualization.DataTable();
+      data.addColumn('string', 'Rango de edad');
+      data.addColumn('number', 'Rendimiento mínimo requerido (%)');
+      data.addColumn({type: 'string', role: 'style'});
+      data.addColumn({type: 'string', role: 'annotation'});
+      
+      <?php foreach ($analisisFondo['resumen_por_rango_edad'] as $rango => $datos): ?>
+      <?php if ($datos['ventas'] > 0): ?>
+      <?php 
+      $rendimiento = $datos['rendimiento_minimo_promedio'] * 100;
+      $color = $rendimiento > 15 ? '#e74c3c' : ($rendimiento > 10 ? '#f39c12' : '#2ecc71');
+      ?>
+      data.addRow([
+        '<?= $rango ?>', 
+        <?= $rendimiento ?>,
+        'color: <?= $color ?>',
+        '<?= number_format($rendimiento, 1) ?>%'
+      ]);
+      <?php endif; ?>
+      <?php endforeach; ?>
+      
+      var options = {
+        title: 'Rendimiento anual mínimo requerido para cubrir servicio funerario',
+        height: 400,
+        legend: { position: 'none' },
+        hAxis: { title: 'Rango de edad' },
+        vAxis: { 
+          title: 'Rendimiento mínimo requerido (%)',
+          minValue: 0,
+          format: '#\'%\'' 
+        },
+        colors: ['#4285F4'],
+        bar: { groupWidth: '60%' }
+      };
+      
+      var chart = new google.visualization.ColumnChart(container);
+      chart.draw(data, options);
+    }
+
+    function drawRendimientoHistorico() {
+      var container = document.getElementById('g_rendimiento_historico');
+      if (!container) { return; }
+      var data = new google.visualization.DataTable();
+      data.addColumn('string', 'Mes');
+      data.addColumn('number', 'Rendimiento Real (%)');
+      data.addColumn('number', 'Meta Mínima (%)');
+      data.addColumn('number', 'Diferencia (%)');
+      
+      <?php foreach ($historialFondo as $registro): ?>
+      data.addRow([
+        '<?= $registro['Mes'] ?>',
+        <?= $registro['Rendimiento'] * 100 ?>,
+        <?= $registro['MetaRendimientoMinimo'] * 100 ?>,
+        <?= $registro['RendimientoRealVsMeta'] * 100 ?>
+      ]);
+      <?php endforeach; ?>
+      
+      var options = {
+        title: 'Evolución del rendimiento del fondo de inversión',
+        height: 400,
+        curveType: 'function',
+        legend: { position: 'bottom' },
+        series: {
+          0: { color: '#4285F4' },
+          1: { color: '#EA4335', lineDashStyle: [4, 4] },
+          2: { color: '#34A853', type: 'bars' }
+        },
+        vAxis: { 
+          title: 'Rendimiento (%)',
+          format: '#\'%\'' 
+        },
+        hAxis: { title: 'Mes' }
+      };
+      
+      var chart = new google.visualization.LineChart(container);
+      chart.draw(data, options);
+    }
+
     function drawAll() {
       drawPieFrom('php/AnalisisDatos/c_Ventas_Totales.php' + chartRangeQuery,    'g_totales', 'Ventas totales por producto');
       drawPieFrom('php/AnalisisDatos/d_Valor_Ventas.php' + chartRangeQuery,      'g_activas', 'Valor de ventas ACTIVAS por producto');
@@ -486,6 +663,8 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
       drawFinancialKpisAnnual();
       drawConversionKpisAnnual();
       drawActiveValueTotal();
+      drawRendimientoEdad();
+      drawRendimientoHistorico();
       <?php /* Curva histórica la generamos abajo */ ?>
     }
     google.charts.setOnLoadCallback(drawAll);
@@ -836,7 +1015,402 @@ if (!empty($_POST['ini']) && !empty($_POST['fin'])) {
         <div class="Grafica"><div id="curve_chart"></div></div>
       </div>
 
+    <!-- ===================================================================
+     [E] ANÁLISIS FONDO FUNERARIO - Nuevo modelo 50%
+     =================================================================== -->
+    <hr class="section-divider">
+
+    <div class="page-heading">
+        <p>Análisis del fondo de inversión · Nuevo modelo 50% aportación</p>
     </div>
+
+    <!-- Tarjeta de alerta si hay riesgo -->
+    <?php if ($analisisFondo['alerta_riesgo']): ?>
+    <div class="card-base alert-card" style="border-left: 4px solid #e74c3c;">
+        <div class="alert-header">
+            <i class="fa fa-exclamation-triangle" style="color: #e74c3c; font-size: 24px;"></i>
+            <div>
+                <h4 style="color: #e74c3c; margin: 0;">Atención: Riesgo en fondo de inversión</h4>
+                <p style="margin: 5px 0 0 0;"><?= h($analisisFondo['mensaje_alerta']) ?></p>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- KPIs del fondo -->
+    <div class="card-grid">
+        <article class="card-base kpi-card">
+            <header><div>
+                <p class="chart-subtitle mb-1">Rendimiento requerido</p>
+                <h2 class="chart-title">Meta de inversión</h2>
+            </div><span class="pill">Promedio</span></header>
+            <div class="item"><span>Rendimiento mínimo promedio</span>
+                <strong style="color: #e67e22;"><?= number_format($analisisFondo['rendimiento_minimo_promedio'] * 100, 2) ?>%</strong>
+            </div>
+            <div class="item"><span>Rendimiento mínimo ponderado</span>
+                <strong style="color: #<?= $analisisFondo['rendimiento_minimo_promedio_ponderado'] > 0.15 ? 'e74c3c' : '2ecc71' ?>">
+                    <?= number_format($analisisFondo['rendimiento_minimo_promedio_ponderado'] * 100, 2) ?>%
+                </strong>
+            </div>
+            <div class="item"><span>Costo servicio por póliza</span>
+                <strong><?= h(money_mx(ConfigFondoFunerario::getCostoServicioHoy(), $fmtMoney)) ?></strong>
+            </div>
+            <div class="item"><span>Brecha inicial promedio</span>
+                <strong><?= h(money_mx($brechaPorVenta, $fmtMoney)) ?></strong>
+            </div>
+        </article>
+
+        <article class="card-base kpi-card">
+            <header><div>
+                <p class="chart-subtitle mb-1">Totales acumulados</p>
+                <h2 class="chart-title">Fondo actual</h2>
+            </div><span class="pill"><?= $fmtOut($analisisFondo['total_ventas_activas']) ?> pólizas</span></header>
+            <div class="item"><span>Aportación total al fondo</span>
+                <strong><?= h(money_mx($analisisFondo['aportacion_total_fondo'], $fmtMoney)) ?></strong>
+            </div>
+            <div class="item"><span>Costo servicios total</span>
+                <strong><?= h(money_mx($analisisFondo['costo_servicio_total'], $fmtMoney)) ?></strong>
+            </div>
+            <div class="item"><span>Brecha total a cubrir</span>
+                <strong><?= h(money_mx($analisisFondo['brecha_total'], $fmtMoney)) ?></strong>
+            </div>
+            <div class="item"><span>Excedente esperado total</span>
+                <strong style="color: #27ae60;"><?= h(money_mx($analisisFondo['excedente_esperado_total'], $fmtMoney)) ?></strong>
+            </div>
+        </article>
+
+        <article class="card-base kpi-card">
+            <header><div>
+                <p class="chart-subtitle mb-1">Incentivos equipo</p>
+                <h2 class="chart-title">Ingreso pasivo</h2>
+            </div><span class="pill">2% excedente</span></header>
+            <div class="item"><span>Comisión pasiva total</span>
+                <strong style="color: #3498db;"><?= h(money_mx($analisisFondo['comision_pasiva_total'], $fmtMoney)) ?></strong>
+            </div>
+            <div class="item"><span>Comisión pasiva promedio</span>
+                <strong><?= h(money_mx($comisionPasivaPorVenta, $fmtMoney)) ?></strong>
+            </div>
+            <div class="item"><span>Excedente promedio</span>
+                <strong><?= h(money_mx($excedentePorVenta, $fmtMoney)) ?></strong>
+            </div>
+            <div class="item"><span>Rendimiento esperado</span>
+                <strong>8.00% anual</strong>
+            </div>
+        </article>
+    </div>
+
+    <!-- Recomendaciones de inversión -->
+    <div class="card-base mt-3">
+        <header><div>
+            <p class="chart-subtitle mb-1">Estrategia de inversión</p>
+            <h2 class="chart-title">Recomendaciones para el fondo</h2>
+        </div></header>
+        
+        <?php foreach ($recomendacionesInversion as $rec): ?>
+        <div class="recommendation-item" style="margin-bottom: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid 
+            <?= $rec['nivel'] == 'BAJO' ? '#2ecc71' : 
+              ($rec['nivel'] == 'MODERADO' ? '#f39c12' : 
+              ($rec['nivel'] == 'ALTO' ? '#e67e22' : '#e74c3c')) ?>;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h5 style="margin: 0; color: 
+                    <?= $rec['nivel'] == 'BAJO' ? '#2ecc71' : 
+                      ($rec['nivel'] == 'MODERADO' ? '#f39c12' : 
+                      ($rec['nivel'] == 'ALTO' ? '#e67e22' : '#e74c3c')) ?>;">
+                    Nivel <?= h($rec['nivel']) ?>: <?= h($rec['mensaje']) ?>
+                </h5>
+                <span class="badge" style="background: 
+                    <?= $rec['nivel'] == 'BAJO' ? '#2ecc71' : 
+                      ($rec['nivel'] == 'MODERADO' ? '#f39c12' : 
+                      ($rec['nivel'] == 'ALTO' ? '#e67e22' : '#e74c3c')) ?>;">
+                    <?= h($rec['nivel']) ?>
+                </span>
+            </div>
+            <p style="margin: 10px 0 5px 0;"><?= h($rec['detalle']) ?></p>
+            <div style="margin-top: 10px;">
+                <strong>Instrumentos recomendados:</strong>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px;">
+                    <?php foreach ($rec['instrumentos_recomendados'] as $instrumento): ?>
+                    <span class="badge badge-secondary"><?= h($instrumento) ?></span>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    </div>
+
+    <!-- Resumen por rango de edad -->
+    <div class="card-base mt-3">
+        <header><div>
+            <p class="chart-subtitle mb-1">Análisis por edad</p>
+            <h2 class="chart-title">Rendimiento requerido por rango de edad</h2>
+        </div></header>
+        
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Rango de edad</th>
+                        <th>Pólizas</th>
+                        <th>Aportación promedio</th>
+                        <th>Rendimiento mínimo req.</th>
+                        <th>Excedente esperado</th>
+                        <th>Comisión pasiva</th>
+                        <th>Riesgo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                  <?php foreach ($analisisFondo['resumen_por_rango_edad'] as $rango => $datos): ?>
+                  <?php 
+                  // Asegurar que tenemos valores numéricos
+                  $ventas = (int)($datos['ventas'] ?? 0);
+                  if ($ventas > 0): 
+                  $rendimiento = (float)($datos['rendimiento_minimo_promedio'] ?? 0);
+                  $colorRiesgo = $rendimiento > 0.15 ? 'danger' : ($rendimiento > 0.10 ? 'warning' : 'success');
+                  $textoRiesgo = $rendimiento > 0.15 ? 'Alto' : ($rendimiento > 0.10 ? 'Moderado' : 'Bajo');
+                  ?>
+                  <tr>
+                      <td><?= h($rango) ?></td>
+                      <td><?= $fmtOut($ventas) ?></td>
+                      <td><?= h(money_mx((float)($datos['aportacion_promedio'] ?? 0), $fmtMoney)) ?></td>
+                      <td>
+                          <span class="badge badge-<?= $colorRiesgo ?>">
+                              <?= number_format($rendimiento * 100, 2) ?>%
+                          </span>
+                      </td>
+                      <td><?= h(money_mx((float)($datos['excedente_esperado'] ?? 0), $fmtMoney)) ?></td>
+                      <td><?= h(money_mx((float)($datos['excedente_esperado'] ?? 0) * 0.02, $fmtMoney)) ?></td>
+                      <td><span class="badge badge-<?= $colorRiesgo ?>"><?= $textoRiesgo ?></span></td>
+                  </tr>
+                  <?php endif; ?>
+                  <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="mt-3" style="font-size: 0.9em; color: #666;">
+            <p><strong>Nota:</strong> El rendimiento mínimo requerido es la tasa anual que debe lograr el fondo 
+            para cubrir el costo del servicio funerario (<?= h(money_mx(ConfigFondoFunerario::getCostoServicioHoy(), $fmtMoney)) ?> 
+            = 2600 UDIs) al momento del fallecimiento.</p>
+            <p>El excedente se calcula asumiendo un rendimiento real del 8% anual. El 2% del excedente se reparte 
+            como ingreso pasivo al equipo comercial.</p>
+        </div>
+    </div>
+
+    <!-- Gráfica de rendimiento por edad -->
+    <div class="card-base chart-card mt-3">
+        <header><div>
+            <p class="chart-subtitle mb-1">Visualización</p>
+            <h2 class="chart-title">Rendimiento mínimo requerido por edad</h2>
+        </div></header>
+        <div id="g_rendimiento_edad" style="height: 400px;"></div>
+    </div>
+
+    <!-- ===================================================================
+     [F] SEGUIMIENTO FONDO DE INVERSIÓN - Historial real
+     =================================================================== -->
+    <hr class="section-divider">
+
+    <div class="page-heading">
+        <p>Seguimiento del fondo de inversión · Historial real vs meta</p>
+    </div>
+
+    <!-- Estado actual del fondo -->
+    <div class="card-grid">
+        <article class="card-base kpi-card">
+            <header><div>
+                <p class="chart-subtitle mb-1">Estado actual</p>
+                <h2 class="chart-title">Fondo de Inversión</h2>
+            </div>
+            <span class="pill badge-<?= $umbralInversion['estado'] == 'CRÍTICO' ? 'danger' : 
+                                    ($umbralInversion['estado'] == 'MANEJABLE' ? 'warning' : 'success') ?>">
+                <?= h($umbralInversion['estado']) ?>
+            </span></header>
+            <div class="item"><span>Valor actual estimado</span>
+                <strong><?= h(money_mx($estadisticasFondo['valor_actual'] ?? 0, $fmtMoney)) ?></strong>
+            </div>
+            <div class="item"><span>Cobertura de servicios</span>
+                <strong><?= number_format(($umbralInversion['cobertura_actual'] ?? 0) * 100, 1) ?>%</strong>
+            </div>
+            <div class="item"><span>Rendimiento promedio anual</span>
+                <strong><?= number_format(($estadisticasFondo['rendimiento_promedio_anual'] ?? 0) * 100, 2) ?>%</strong>
+            </div>
+            <div class="item"><span>Tendencia</span>
+                <strong class="<?= $tendencia == 'ALCISTA' ? 'text-success' : 
+                               ($tendencia == 'BAJISTA' ? 'text-danger' : 'text-info') ?>">
+                    <?= h($tendencia) ?>
+                </strong>
+            </div>
+        </article>
+
+        <article class="card-base kpi-card">
+            <header><div>
+                <p class="chart-subtitle mb-1">Cumplimiento de meta</p>
+                <h2 class="chart-title">Rendimiento vs Meta</h2>
+            </div>
+            <span class="pill">
+                <?= number_format(($estadisticasFondo['diferencia_promedio'] ?? 0) * 100, 2) ?>%
+            </span></header>
+            <div class="item"><span>Meta promedio mensual</span>
+                <strong><?= number_format(($estadisticasFondo['meta_promedio'] ?? 0) * 100, 2) ?>%</strong>
+            </div>
+            <div class="item"><span>Real promedio mensual</span>
+                <strong><?= number_format(($estadisticasFondo['rendimiento_promedio_mensual'] ?? 0) * 100, 2) ?>%</strong>
+            </div>
+            <div class="item"><span>Diferencia promedio</span>
+                <strong class="<?= ($estadisticasFondo['diferencia_promedio'] ?? 0) >= 0 ? 'text-success' : 'text-danger' ?>">
+                    <?= number_format(($estadisticasFondo['diferencia_promedio'] ?? 0) * 100, 2) ?>%
+                </strong>
+            </div>
+            <div class="item"><span>Meses registrados</span>
+                <strong><?= $fmtOut($estadisticasFondo['total_meses'] ?? 0) ?></strong>
+            </div>
+        </article>
+
+        <article class="card-base kpi-card">
+            <header><div>
+                <p class="chart-subtitle mb-1">Acción requerida</p>
+                <h2 class="chart-title">Umbral Mínimo</h2>
+            </div>
+            <span class="pill badge-info">5 años</span></header>
+            <div class="item"><span>Brecha actual</span>
+                <strong><?= h(money_mx($umbralInversion['brecha_actual'] ?? 0, $fmtMoney)) ?></strong>
+            </div>
+            <div class="item"><span>Aporte mensual necesario</span>
+                <strong><?= h(money_mx($umbralInversion['aportacion_mensual_necesaria_5anios'] ?? 0, $fmtMoney)) ?></strong>
+            </div>
+            <div class="item"><span>Años para cerrar brecha</span>
+                <strong><?= number_format($umbralInversion['anios_para_cerrar_brecha'] ?? 0, 1) ?></strong>
+            </div>
+            <div class="item"><span>UDI actual</span>
+                <strong>$<?= number_format(ConfigFondoFunerario::$UDI_ACTUAL, 4) ?></strong>
+            </div>
+        </article>
+    </div>
+
+    <!-- Barra de cobertura -->
+    <div class="card-base mt-3">
+        <header><div>
+            <p class="chart-subtitle mb-1">Cobertura del fondo</p>
+            <h2 class="chart-title">¿Cuánto cubrimos realmente?</h2>
+        </div></header>
+        <div class="card-body">
+            <?php 
+            $cobertura = $umbralInversion['cobertura_actual'] ?? 0;
+            $colorBarra = $cobertura >= 1 ? 'success' : ($cobertura >= 0.7 ? 'warning' : 'danger');
+            $mensajeCobertura = $cobertura >= 1 ? '✅ Fondo sobrecumple requerimientos' : 
+                                ($cobertura >= 0.7 ? '⚠️ Fondo en nivel aceptable' : 
+                                ($cobertura >= 0.4 ? '⚠️ Fondo en nivel crítico - Monitorear' : '❌ Fondo insuficiente - Acción requerida'));
+            ?>
+            <div class="progress progress-thick">
+                <div class="progress-bar bg-<?= $colorBarra ?>" 
+                     role="progressbar" 
+                     style="width: <?= min(100, $cobertura * 100) ?>%"
+                     aria-valuenow="<?= $cobertura * 100 ?>"
+                     aria-valuemin="0" 
+                     aria-valuemax="100">
+                    <?= number_format($cobertura * 100, 1) ?>% de cobertura
+                </div>
+            </div>
+            <div class="mt-2">
+                <small class="text-muted">
+                    <?= $mensajeCobertura ?>
+                </small>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <div class="card bg-light">
+                        <div class="card-body py-2">
+                            <small class="text-muted d-block">Aportación Total</small>
+                            <strong><?= h(money_mx($umbralInversion['aportacion_total'] ?? 0, $fmtMoney)) ?></strong>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-light">
+                        <div class="card-body py-2">
+                            <small class="text-muted d-block">Costo Total Servicios</small>
+                            <strong><?= h(money_mx($umbralInversion['costo_total_servicios'] ?? 0, $fmtMoney)) ?></strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfica de rendimiento histórico -->
+    <div class="card-base chart-card mt-3">
+        <header><div>
+            <p class="chart-subtitle mb-1">Evolución mensual</p>
+            <h2 class="chart-title">Rendimiento real vs meta</h2>
+        </div>
+        <a href="php/AnalisisDatos/form_fondo.php" class="btn btn-sm btn-outline-primary">
+            <i class="fa fa-edit"></i> Actualizar valores
+        </a></header>
+        <div id="g_rendimiento_historico" style="height: 400px;"></div>
+    </div>
+
+    <!-- Tabla de historial -->
+    <div class="card-base mt-3">
+        <header><div>
+            <p class="chart-subtitle mb-1">Historial detallado</p>
+            <h2 class="chart-title">Registros mensuales del fondo</h2>
+        </div></header>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Mes</th>
+                            <th>Valor Inicial</th>
+                            <th>Valor Final</th>
+                            <th>Aportaciones</th>
+                            <th>Retiros</th>
+                            <th>Rend. Mensual</th>
+                            <th>Meta</th>
+                            <th>Diferencia</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php 
+                        foreach ($historialFondo as $registro): 
+                            $diferencia = (float)$registro['RendimientoRealVsMeta'];
+                        ?>
+                        <tr>
+                            <td><?= $registro['Mes'] ?></td>
+                            <td><?= h(money_mx($registro['ValorInicial'], $fmtMoney)) ?></td>
+                            <td><strong><?= h(money_mx($registro['ValorFinal'], $fmtMoney)) ?></strong></td>
+                            <td><?= h(money_mx($registro['Aportaciones'], $fmtMoney)) ?></td>
+                            <td><?= h(money_mx($registro['Retiros'], $fmtMoney)) ?></td>
+                            <td><?= number_format($registro['Rendimiento'] * 100, 2) ?>%</td>
+                            <td><?= number_format($registro['MetaRendimientoMinimo'] * 100, 2) ?>%</td>
+                            <td class="<?= $diferencia >= 0 ? 'text-success' : 'text-danger' ?>">
+                                <?= number_format($diferencia * 100, 2) ?>%
+                            </td>
+                            <td>
+                                <span class="badge badge-<?= $diferencia >= 0.002 ? 'success' : ($diferencia >= -0.002 ? 'warning' : 'danger') ?>">
+                                    <?= $diferencia >= 0.002 ? '✅ Excelente' : ($diferencia >= -0.002 ? '⚠️ Aceptable' : '❌ Bajo') ?>
+                                </span>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enlace a formulario de actualización -->
+    <div class="text-center mt-3 mb-4">
+        <a href="php/AnalisisDatos/form_fondo.php" class="btn btn-primary btn-lg">
+            <i class="fa fa-chart-line"></i> Actualizar Valores del Fondo Mensual
+        </a>
+        <p class="text-muted mt-2">
+            Actualiza mensualmente los valores reales del fondo para mantener precisión en los cálculos
+        </p>
+    </div>
+
+    </div> <!-- cierre de dashboard-shell -->
   </main>
 
   <!-- Helpers -->

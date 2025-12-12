@@ -89,3 +89,6 @@ eia/Vista-360/secret_config.php
 # Secrets
 **/.env
 eia/Vista-360/secret_config.php
+
+# runtime logs
+/eia/Funciones/usage_log.txt

@@ -5,6 +5,7 @@
  *           slots de GPS/fingerprint y CSRF. Listo para PHP 8.2.
  * Fecha: 05/11/2025
  * Revisado por: JCCM
+ * Archivo: Presupuesto.php
  ********************************************************************************************/
 
 declare(strict_types=1);
@@ -46,62 +47,19 @@ if ($serv === 'TRANSPORTE') {
 // Costo del producto
 $Costo = (float)($basicas->BuscarCampos($mysqli, 'Costo', 'Productos', 'Producto', $ProdSel) ?? 0.0);
 
-// ===== IMPORTANTE: Buscar o crear propuesta en PrespEnviado =====
-$idPropuestaPDF = 0;
-$idProspecto = (int)($Reg['Id'] ?? 0);
+// Conexión correcta para PrespEnviado (SOLO base de prospectos)
+$dbPresp = $pros ?? null;
 
-if ($idProspecto > 0) {
-    // Buscar si ya existe una propuesta para este prospecto
-    $stmt = $mysqli->prepare("SELECT Id FROM PrespEnviado WHERE IdProspecto = ? ORDER BY Id DESC LIMIT 1");
-    if ($stmt) {
-        $stmt->bind_param("i", $idProspecto);
-        $stmt->execute();
-        $stmt->bind_result($idPropuestaExistente);
-        if ($stmt->fetch()) {
-            $idPropuestaPDF = $idPropuestaExistente;
-        }
-        $stmt->close();
-        
-        // Si no existe, crear una nueva
-        if ($idPropuestaPDF <= 0) {
-            $nombreCompleto = $Reg['FullName'] ?? 'Prospecto';
-            $email = $Reg['Email'] ?? '';
-            $telefono = $Reg['Telefono'] ?? '';
-            $servicio = $Reg['Servicio_Interes'] ?? 'GENERAL';
-            
-            // Crear nueva propuesta
-            $stmtInsert = $mysqli->prepare("
-                INSERT INTO PrespEnviado 
-                (IdProspecto, Nombre, Email, Telefono, Servicio, Producto, Costo, FechaCreacion) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
-            ");
-            
-            if ($stmtInsert) {
-                $stmtInsert->bind_param(
-                    "isssssd", 
-                    $idProspecto, 
-                    $nombreCompleto,
-                    $email,
-                    $telefono,
-                    $servicio,
-                    $ProdSel,
-                    $Costo
-                );
-                
-                if ($stmtInsert->execute()) {
-                    $idPropuestaPDF = $stmtInsert->insert_id;
-                }
-                $stmtInsert->close();
-            }
-        }
-    }
-}
+// ===== IMPORTANTE: Buscar o crear propuesta en PrespEnviado =====
+$idPropuestaPDF = (int)($_GET['idp'] ?? $_POST['id_propuesta_pdf'] ?? 0);
+$idProspecto   = (int)($Reg['Id'] ?? 0);
 
 // Campos ocultos comunes
 $hidden = [
   'nombre'     => $nombre ?? '',
   'Host'       => $_SERVER['PHP_SELF'] ?? '',
-  'IdVenta'    => $Reg['Id']   ?? '',
+  'IdVenta'    => $idProspecto,
+  'IdProspecto'=> $idProspecto,
   'IdContact'  => $Recg['id']  ?? '',
   'IdUsuario'  => $Recg1['id'] ?? '',
   'Producto'   => $Reg['Producto'] ?? '',
@@ -125,16 +83,16 @@ $groupValue = [
   'TRANSPORTE' => 'TRANSPORTE',
 ][$serv] ?? null;
 
-// Opciones de pago/plazo según servicio
-$pagoOptions  = ['CREDITO' => 'CRÉDITO', 'CONTADO' => 'CONTADO'];
-$plazoOptions = ['3' => '3 Meses', '6' => '6 Meses', '9' => '9 Meses'];
-
+// Opciones de pago/plazo según servicio (combo único usando MaxCredito de Productos)
+$maxCredito = (int)($basicas->BuscarCampos($mysqli, 'MaxCredito', 'Productos', 'Producto', $ProdSel) ?? 0);
+$pagoPlazoOptions = ['CONTADO_1' => 'CONTADO']; // valor => label
+foreach ([3,6,9,12] as $term) {
+  if ($term <= $maxCredito) {
+    $pagoPlazoOptions['CREDITO_' . $term] = $term . ' Meses (Crédito)';
+  }
+}
 if ($serv === 'SEGURIDAD' || $serv === 'RETIRO') {
-  $pagoOptions  = ['CONTADO' => 'CONTADO'];
-  $plazoOptions = []; // sin plazos
-} elseif ($serv === 'TRANSPORTE') {
-  $pagoOptions  = ['CREDITO' => 'CRÉDITO', 'CONTADO' => 'CONTADO'];
-  $plazoOptions = ['3'=>'3 Meses','6'=>'6 Meses','9'=>'9 Meses','12'=>'12 Meses'];
+  $pagoPlazoOptions = ['CONTADO_1' => 'CONTADO']; // sin crédito
 }
 ?>
 
@@ -189,60 +147,33 @@ if ($serv === 'SEGURIDAD' || $serv === 'RETIRO') {
       </div>
     <?php endif; ?>
 
-    <label class="mt-3">Selecciona el Tipo de Pago</label>
+    <label class="mt-3">Selecciona el Pago/Plazo</label>
     <?php
-      $pagoTieneUna = count($pagoOptions) === 1;
-      $pagoDefault  = array_key_first($pagoOptions);
+      $pagoPlazoDefault = array_key_first($pagoPlazoOptions);
+      $defaultParts = explode('_', $pagoPlazoDefault);
+      $defaultPago = $defaultParts[0] ?? 'CONTADO';
+      $defaultPlazo = $defaultParts[1] ?? '1';
     ?>
-    <select class="form-control" name="Pago" id="pago"
-            data-has-plazos="<?= empty($plazoOptions) ? '0' : '1' ?>"
-            <?= $pagoTieneUna ? 'disabled' : 'required' ?>>
-      <?php foreach ($pagoOptions as $val => $txt): ?>
-        <option value="<?= h($val) ?>" <?= $val===$pagoDefault ? 'selected' : '' ?>><?= h($txt) ?></option>
+    <select class="form-control" name="pago_plazo_ui" id="pago_plazo" required>
+      <?php foreach ($pagoPlazoOptions as $val => $txt): ?>
+        <option value="<?= h($val) ?>" <?= $val===$pagoPlazoDefault ? 'selected' : '' ?>><?= h($txt) ?></option>
       <?php endforeach; ?>
     </select>
-    <!-- Espejo para cuando el select esté disabled (disabled no se envía) -->
-    <input type="hidden" name="Pago_shadow" id="pago_hidden" value="<?= h($pagoDefault) ?>">
-
-    <div id="plazo-row" class="mt-2" style="<?= empty($plazoOptions) ? 'display:none' : '' ?>">
-      <label>Selecciona el Plazo</label>
-      <?php
-        $plazoDefault = empty($plazoOptions) ? '1' : array_key_first($plazoOptions);
-      ?>
-      <select class="form-control" name="plazo_ui" id="plazo" <?= empty($plazoOptions) ? '' : 'required' ?>>
-        <?php if (empty($plazoOptions)): ?>
-          <option value="1" selected>Contado</option>
-        <?php else: ?>
-          <?php foreach ($plazoOptions as $val => $txt): ?>
-            <option value="<?= h($val) ?>" <?= $val===$plazoDefault ? 'selected' : '' ?>><?= h($txt) ?></option>
-          <?php endforeach; ?>
-        <?php endif; ?>
-      </select>
-    </div>
-    <!-- Espejo que SIEMPRE se envía para plazo -->
-    <input type="hidden" name="plazo" id="plazo_hidden" value="<?= h($plazoDefault) ?>">
+    <!-- Espejos que SIEMPRE se envían -->
+    <input type="hidden" name="Pago" id="pago_hidden" value="<?= h($defaultPago) ?>">
+    <input type="hidden" name="plazo" id="plazo_hidden" value="<?= h($defaultPlazo) ?>">
 
   </div><!-- /.modal-body -->
 
   <div class="modal-footer">
     <!-- SOLUCIÓN CORREGIDA: Usar idPropuestaPDF en lugar de idProspecto -->
-    <?php if ($idPropuestaPDF > 0): ?>
-      <a href="https://kasu.com.mx/login/Generar_PDF/Cotizacion_pdf.php?idp=<?= $idPropuestaPDF ?>&download=1&t=<?= time() ?>" 
-         target="_blank" 
-         class="btn btn-secondary"
-         id="btnDescargarPDF"
-         onclick="descargarPDF(this, <?= $idPropuestaPDF ?>); return false;">
-        <i class="fas fa-download"></i> Descargar PDF
-      </a>
-    <?php else: ?>
-      <button type="button" class="btn btn-secondary" disabled>
-        <i class="fas fa-download"></i> Descargar PDF
-      </button>
-    <?php endif; ?>
+    <button type="submit" name="DescargaPres" class="btn btn-secondary">
+      <i class="fas fa-download"></i> Generar y descargar PDF
+    </button>
     
     <?php if ($hasEmail): ?>
       <button type="submit" name="EnviaPres" class="btn btn-primary">
-        <i class="fas fa-paper-plane"></i> Enviar
+        <i class="fas fa-paper-plane"></i> Enviar por correo
       </button>
     <?php endif; ?>
   </div>
@@ -307,84 +238,34 @@ function descargarPDF(elemento, idPropuesta) {
     if (ind) ind.style.display = (val === 'INDIVIDUAL') ? 'block' : 'none';
   }
 
-  function syncPagoYPlazo(){
-    var body   = qs('.modal-body');
-    var serv   = body ? (body.getAttribute('data-serv') || '') : '';
-    var pago   = qs('#pago');
+  function syncPagoPlazoCombo(){
+    var sel = qs('#pago_plazo');
     var pagoH  = qs('#pago_hidden'); // espejo
-    var plazo  = qs('#plazo');
     var plazoH = qs('#plazo_hidden'); // espejo
-    var row    = qs('#plazo-row');
-    var hasPlazos = pago && pago.getAttribute('data-has-plazos') === '1';
-
-    // Servicios sin plazos ni crédito
-    if (serv === 'SEGURIDAD' || serv === 'RETIRO') {
-      if (pago) {
-        pago.value = 'CONTADO';
-        pago.setAttribute('disabled','disabled');
-      }
-      if (pagoH) pagoH.value = 'CONTADO';
-
-      if (row) row.style.display = 'none';
-      if (plazo) plazo.value = '1';
-      if (plazoH) plazoH.value = '1';
-      return;
-    }
-
-    // Normal
-    if (!pago || !plazo || !row) return;
-    var contado = pago.value === 'CONTADO';
-
-    // Mantener espejo de Pago
-    if (pagoH) pagoH.value = pago.value;
-
-    if (!hasPlazos) {
-      row.style.display = 'none';
-      if (plazo) plazo.value = '1';
-      if (plazoH) plazoH.value = '1';
-      return;
-    }
-    row.style.display = contado ? 'none' : '';
-    if (contado) {
-      plazo.value = '1';
-    }
-    if (plazoH) plazoH.value = plazo.value;
+    if (!sel || !pagoH || !plazoH) return;
+    var val = sel.value || 'CONTADO_1';
+    var parts = val.split('_');
+    var pago = parts[0] || 'CONTADO';
+    var plazo = parts[1] || '1';
+    pagoH.value = pago;
+    plazoH.value = plazo;
   }
 
   function bindEvents(){
     qsa('input[name="tipo_plan"]').forEach(function(r){
       r.addEventListener('change', togglePlanes);
     });
-    var pago = qs('#pago');
-    if (pago) pago.addEventListener('change', syncPagoYPlazo);
-    var plazo = qs('#plazo');
-    if (plazo) plazo.addEventListener('change', function(){
-      var plazoH = qs('#plazo_hidden');
-      if (plazoH) plazoH.value = plazo.value;
-    });
+    var combo = qs('#pago_plazo');
+    if (combo) combo.addEventListener('change', syncPagoPlazoCombo);
     
-    // Configurar el botón PDF
-    const btnPDF = document.getElementById('btnDescargarPDF');
-    if (btnPDF) {
-      btnPDF.addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        // Obtener el ID de propuesta del data attribute o del href
-        const href = this.getAttribute('href');
-        const idMatch = href.match(/idp=(\d+)/);
-        if (idMatch && idMatch[1]) {
-          descargarPDF(this, parseInt(idMatch[1]));
-        }
-      });
-    }
   }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function(){
-      togglePlanes(); syncPagoYPlazo(); bindEvents();
+      togglePlanes(); syncPagoPlazoCombo(); bindEvents();
     });
   } else {
-    togglePlanes(); syncPagoYPlazo(); bindEvents();
+    togglePlanes(); syncPagoPlazoCombo(); bindEvents();
   }
 })();
 

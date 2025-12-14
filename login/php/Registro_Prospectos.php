@@ -205,15 +205,27 @@ if (isset($_POST['DescargaPres']) || isset($_POST['EnviaPres'])) {
   $a02a29      = s_int(p_get('a02a29')) ?? 0;
   $a30a49      = s_int(p_get('a30a49')) ?? 0;
   $a50a54      = s_int(p_get('a50a54')) ?? 0;
-  $a55a59      = s_int(p_get('a55a59')) ?? 0;
-  $a60a64      = s_int(p_get('a60a64')) ?? 0;
-  $a65a69      = s_int(p_get('a65a69')) ?? 0;
-  $Retiro      = s_int(p_get('Retiro')) ?? 0;
-  $plazo       = s_int(p_get('plazo')) ?? 0;
+$a55a59      = s_int(p_get('a55a59')) ?? 0;
+$a60a64      = s_int(p_get('a60a64')) ?? 0;
+$a65a69      = s_int(p_get('a65a69')) ?? 0;
+$Retiro      = s_int(p_get('Retiro')) ?? 0;
+$pagoPlazoUi = s_str(p_get('pago_plazo_ui'));
+$plazo       = s_int(p_get('plazo')) ?? 0;
 
-  if (!$IdVenta) {
-    redirect303('https://kasu.com.mx'.$Host.'?Vt=1&Msg='.rawurlencode('Id de prospecto inválido'));
-  }
+// Alinear IdProspecto: si no vino, usar IdVenta
+if (!$IdProspecto && $IdVenta) {
+  $IdProspecto = $IdVenta;
+}
+
+// Compatibilidad con el nuevo combo pago/plazo (ej. CONTADO_1, CREDITO_6)
+if ($pagoPlazoUi) {
+  $parts = explode('_', $pagoPlazoUi);
+  $plazo = s_int($parts[1] ?? null) ?? $plazo;
+}
+
+if (!$IdVenta) {
+  redirect303('https://kasu.com.mx'.$Host.'?Vt=1&Msg='.rawurlencode('Id de prospecto inválido'));
+}
 
   $stmt = $pros->prepare('SELECT * FROM prospectos WHERE Id = ? LIMIT 1');
   $stmt->bind_param('i', $IdVenta);
@@ -239,7 +251,7 @@ if (isset($_POST['DescargaPres']) || isset($_POST['EnviaPres'])) {
     $rangos = ['02a29','30a49','50a54','55a59','60a64','65a69'];
 
     $data = [
-      'IdProspecto'  => $IdVenta,
+      'IdProspecto'  => $IdProspecto,
       'IdUser'       => $IdVendedor,
       'SubProducto'  => $fila['Servicio_Interes'] ?? '',
       'a02a29'       => 0,
@@ -249,7 +261,7 @@ if (isset($_POST['DescargaPres']) || isset($_POST['EnviaPres'])) {
       'a60a64'       => 0,
       'a65a69'       => 0,
       'Retiro'       => $Retiro,
-      'plazo'        => $plazo,
+      'Plazo'        => $plazo,
       'FechaRegistro'=> $fila['Alta'] ?? ($hoy.' '.$HoraActual),
     ];
     if (in_array($Vtn, $rangos, true)) {
@@ -257,7 +269,7 @@ if (isset($_POST['DescargaPres']) || isset($_POST['EnviaPres'])) {
     }
   } else {
     $data = [
-      'IdProspecto'  => $IdVenta,
+      'IdProspecto'  => $IdProspecto,
       'IdUser'       => $IdVendedor,
       'SubProducto'  => $fila['Servicio_Interes'] ?? '',
       'a02a29'       => $a02a29,
@@ -267,7 +279,7 @@ if (isset($_POST['DescargaPres']) || isset($_POST['EnviaPres'])) {
       'a60a64'       => $a60a64,
       'a65a69'       => $a65a69,
       'Retiro'       => $Retiro,
-      'plazo'        => $plazo,
+      'Plazo'        => $plazo,
       'FechaRegistro'=> $fila['Alta'] ?? ($hoy.' '.$HoraActual),
     ];
   }

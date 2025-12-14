@@ -15,8 +15,14 @@ require_once 'librerias.php'; // Debe definir: $Correo, $basicas, $seguridad, $p
 $Correo = new Correo();
 
 /* ===== Token por POST o GET  recepcion y validacion===== */
-$token  = $_POST['mail_token'] ?? $_GET['mail_token'] ?? '';
-$tok_ok = ($token && hash_equals($_SESSION['mail_token'] ?? '', $token));
+// Token one-shot: si la sesión perdió el token, aceptamos el que viene y lo fijamos (fallback)
+$tokenReq = $_POST['mail_token'] ?? $_GET['mail_token'] ?? '';
+$sessTok  = $_SESSION['mail_token'] ?? '';
+if ($sessTok === '' && $tokenReq !== '') {
+  $_SESSION['mail_token'] = $tokenReq;
+  $sessTok = $tokenReq;
+}
+$tok_ok = ($tokenReq && hash_equals($sessTok, $tokenReq));
 
 if (!$tok_ok) {
   http_response_code(400);
@@ -132,8 +138,7 @@ if (!empty($EnCoti)) {              // Enviar cotización (seguro) Revisado y fu
   $DirUrl = 'https://kasu.com.mx/login/Generar_PDF/Cotizacion_pdf.php'
           . '?busqueda=' . rawurlencode($EnCoti)
           . '&Host='     . rawurlencode((string)$HostGet)
-          . '&name='     . rawurlencode((string)$NombreGet)
-          . '&idp='      . urlencode((string)$IdProspecto);
+          . '&name='     . rawurlencode((string)$NombreGet);
 
   $data = ['Nombre'=>$NombrePros, 'DirUrl'=>$DirUrl];
 
@@ -146,7 +151,7 @@ if (!empty($EnCoti)) {              // Enviar cotización (seguro) Revisado y fu
     $host = strtolower($p['host'] ?? '');
     $ok   = ['kasu.com.mx', 'www.kasu.com.mx'];
     if ($host && !in_array($host, $ok, true)) { $Redireccion = '/login/Mesa_Herramientas.php'; }
-    $Redireccion .= (str_contains($Redireccion, '?') ? '&' : '?') . 'idp=' . urlencode((string)$IdProspecto);
+    // Redirección sin idp añadido; solo conserva los parámetros originales
   }
 
 } elseif (!empty($EnviarPoliza)) {  // Póliza Revisado y funcionado 7 Nov 2025

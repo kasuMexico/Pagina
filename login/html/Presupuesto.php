@@ -166,16 +166,21 @@ if ($serv === 'SEGURIDAD' || $serv === 'RETIRO') {
   </div><!-- /.modal-body -->
 
   <div class="modal-footer">
-    <!-- SOLUCIÓN CORREGIDA: Usar idPropuestaPDF en lugar de idProspecto -->
-    <button type="submit" name="DescargaPres" class="btn btn-secondary">
-      <i class="fas fa-download"></i> Generar y descargar PDF
-    </button>
+    <?php if (!(bool)($_SERVER['HTTP_X_PWA'] ?? false)): ?>
+      <!-- Considerar si dejar visible es util para pwa ya que solo se puede visualizar no descarga -->
+      <button type="submit" name="DescargaPres" class="btn btn-secondary">
+        <i class="fas fa-download"></i> Generar y descargar PDF
+      </button>
+    <?php endif; ?>
     
     <?php if ($hasEmail): ?>
       <button type="submit" name="EnviaPres" class="btn btn-primary">
         <i class="fas fa-paper-plane"></i> Enviar por correo
       </button>
     <?php endif; ?>
+    <button type="button" class="btn btn-info" id="btnSmsPres">
+      <i class="fa fa-mobile"></i> Enviar por SMS
+    </button>
   </div>
 </form>
 
@@ -258,6 +263,31 @@ function descargarPDF(elemento, idPropuesta) {
     var combo = qs('#pago_plazo');
     if (combo) combo.addEventListener('change', syncPagoPlazoCombo);
     
+    var smsBtn = document.getElementById('btnSmsPres');
+    if (smsBtn) {
+      smsBtn.addEventListener('click', function(){
+        var idPros = document.querySelector('input[name="IdProspecto"]')?.value || document.querySelector('input[name="IdVenta"]')?.value || '';
+        if (!idPros) { alert('Falta Id de prospecto'); return; }
+        var plazoVal = document.getElementById('plazo_hidden') ? document.getElementById('plazo_hidden').value : '';
+        // No pedimos teléfono: el endpoint lo tomará de prospectos.NoTel
+        fetch('/eia/php/sms/enviar_presupuesto_sms.php', {
+          method: 'POST',
+          headers: {'Content-Type':'application/x-www-form-urlencoded'},
+          body: new URLSearchParams({
+            presupuesto_id: '',
+            telefono: '',
+            IdProspecto: idPros,
+            plazo: plazoVal
+          }).toString()
+        }).then(r=>r.json()).then(function(res){
+          if (res.ok) {
+            alert('SMS enviado');
+          } else {
+            alert('No se envió SMS: ' + (res.error || res.message || 'Error'));
+          }
+        }).catch(function(err){ alert('Error SMS: '+err); });
+      });
+    }
   }
 
   if (document.readyState === 'loading') {

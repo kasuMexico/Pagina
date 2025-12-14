@@ -262,7 +262,8 @@ if (!$IdVenta) {
       'a65a69'       => 0,
       'Retiro'       => $Retiro,
       'Plazo'        => $plazo,
-      'FechaRegistro'=> $fila['Alta'] ?? ($hoy.' '.$HoraActual),
+      // Usar fecha/hora actual para la cotización
+      'FechaRegistro'=> $hoy.' '.$HoraActual,
     ];
     if (in_array($Vtn, $rangos, true)) {
       $data['a'.$Vtn] = 1;
@@ -280,7 +281,8 @@ if (!$IdVenta) {
       'a65a69'       => $a65a69,
       'Retiro'       => $Retiro,
       'Plazo'        => $plazo,
-      'FechaRegistro'=> $fila['Alta'] ?? ($hoy.' '.$HoraActual),
+      // Usar fecha/hora actual para la cotización
+      'FechaRegistro'=> $hoy.' '.$HoraActual,
     ];
   }
 

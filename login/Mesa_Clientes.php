@@ -214,7 +214,7 @@ if (!empty($_POST['CambiVend'])) {
   $nvoVend = (string)$_POST['NvoVend'] ?? '';
   if ($idVta > 0 && $nvoVend !== '') {
     $basicas->ActCampo($mysqli, "Venta", "Usuario", $nvoVend, $idVta);
-    $basicas->ActTab($mysqli, "PromesaPago", "User", $nvoVend, "IdVta", $idVta);
+    $basicas->ActTab($mysqli, "PromesaPago", "Usuario", $nvoVend, "IdVenta", $idVta);
     $basicas->ActTab($mysqli, "Pagos", "Usuario", $nvoVend, "IdVenta", $idVta);
   }
 } elseif (!empty($_POST['CancelaCte'])) {

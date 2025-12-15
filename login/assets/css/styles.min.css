@@ -269,17 +269,19 @@ html{
 .alta-cliente{margin-top:8px;}
 #btn_reloj{height:47px;width:50px;}
 
-.ACTIVO{padding:10px;border:1px solid #abebc6;width:100%;background:#fcf3cf;display:none;}
-.ACTIVACION{padding:10px;border:1px solid #5c93e7;width:100%;background:#a9cce3;}
-.COBRANZA{padding:10px;border:1px solid #fad7a0;width:100%;background:#d5f5e3;}
-.CANCELADO{padding:10px;border:1px solid #e6b0aa;width:100%;background:#f2d7d5;display:none;}
-.FALLECIDO{padding:10px;border:1px solid #e6b0aa;width:100%;background:#f2d7d5;display:none;}
-.PREVENTA{padding:10px;border:1px solid #e6b0aa;width:100%;background:#f2d7d5;}
-.FUNERARIO{padding:10px;border:1px solid #fcf3cf;width:100%;background:#fcf3cf;}
-.SEGURIDAD{padding:10px;border:1px solid #4e71f0;width:100%;background:#4e71f0;}
-.TRANSPORTE{padding:10px;border:1px solid #fcf3cf;width:100%;background:#fcf3cf;}
-.DISTRIBUIDOR{padding:10px;border:1px solid #5c93e7;width:100%;background:#a9cce3;}
-.RETIRO{padding:10px;border:1px solid #fad7a0;width:100%;background:#d5f5e3;}
+/* Status de las ventas*/
+.ACTIVO{padding:10px;border:1px solid #4fd0f1;width:100%;background:#017794;display:none;}
+.ACTIVACION{padding:10px;border:1px solid #428af7;width:100%;background:#0e63e3;}
+.COBRANZA{padding:10px;border:1px solid #fbd381;width:100%;background:#f6b126;}
+.CANCELADO{padding:10px;border:1px solid #d73226;background:#960b01;display:none;}
+.FALLECIDO{padding:10px;border:1px solid #de46e9;width:100%;background:#bc0cc8;display:none;}
+.PREVENTA{padding:10px;border:1px solid #62dd43;width:100%;background:#1e9401;}
+/* Tipos de servicios */
+.FUNERARIO{padding:10px;border:1px solid #da46e5;width:100%;background:#800588;}
+.SEGURIDAD{padding:10px;border:1px solid #7892ef;width:100%;background:#4e71f0;}
+.TRANSPORTE{padding:10px;border:1px solid #f2ca54;width:100%;background:#f7be11;}
+.DISTRIBUIDOR{padding:10px;border:1px solid #6c5af0;width:100%;background:#2107ec;}
+.RETIRO{padding:10px;border:1px solid #68f8a6;width:100%;background:#02d45d;}
 
 @media(max-height:649px){.table-responsive{width:100%;height:600px;}}
 @media(min-height:650px) and (max-height:749px){.table-responsive{width:100%;height:700px;}}

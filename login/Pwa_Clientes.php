@@ -114,6 +114,28 @@ if (isset($_GET['Msg'])) {
   <link rel="stylesheet" href="/login/assets/css/Menu_Superior.css?v=<?= h((string)$VerCache) ?>">
   <link rel="stylesheet" href="/login/assets/css/pwa-core.css?v=<?= h((string)$VerCache) ?>">
   <link rel="stylesheet" href="/login/assets/css/pwa-components.css?v=<?= h((string)$VerCache) ?>">
+  <style>
+    /* Lista vertical (como prospectos) y ancho completo */
+    .client-grid { display: flex; flex-direction: column; gap: 12px; }
+    .client-card { width: 100%; }
+    /* Forzar botones con color del status (sobre escribiendo bootstrap/cta) */
+    .status-btn {
+      width: 100%;
+      text-align: left;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: #fff;
+      box-shadow: 0 4px 8px -4px rgba(0,0,0,0.25);
+    }
+    .status-btn.ACTIVO      { background: #017794 !important; border: 1px solid #4fd0f1 !important; }
+    .status-btn.ACTIVACION  { background: #0e63e3 !important; border: 1px solid #428af7 !important; }
+    .status-btn.COBRANZA    { background: #f6b126 !important; border: 1px solid #fbd381 !important; }
+    .status-btn.CANCELADO   { background: #960b01 !important; border: 1px solid #d73226 !important; }
+    .status-btn.FALLECIDO   { background: #bc0cc8 !important; border: 1px solid #de46e9 !important; }
+    .status-btn.PREVENTA    { background: #1e9401 !important; border: 1px solid #62dd43 !important; }
+    .status-label { font-weight: 700; margin-bottom: 4px; display: inline-block; }
+  </style>
 </head>
 
 <body onload="localize()">
@@ -182,19 +204,26 @@ if (isset($_GET['Msg'])) {
            *       porque tu hoja de estilos pinta por esas clases. No se mapea ni se altera.
            *********************************************************************************/
 
+          $vistos = [];
           if ($Niv >= 5) {
             $usr = (string)$_SESSION["Vendedor"];
             $Ventas = "SELECT * FROM Venta WHERE Usuario = '" . $mysqli->real_escape_string($usr) . "'";
             if ($resultado = $mysqli->query($Ventas)) {
               while ($fila = $resultado->fetch_assoc()) {
+                // Evitar duplicados por IdContact
+                $uid = (int)($fila['IdContact'] ?? 0);
+                if ($uid && in_array($uid, $vistos, true)) { continue; }
+                if ($uid) { $vistos[] = $uid; }
                 ?>
                 <form method="POST" action="<?php echo h($_SERVER['PHP_SELF']); ?>" class="client-card">
                   <input type="number" name="IdVenta"   value="<?php echo (int)$fila['Id']; ?>" hidden>
                   <input type="text"   name="StatusVta" value="<?php echo h($fila['Status']); ?>" hidden>
-                  <span class="badge-status badge <?php echo h($fila['Status']); ?>"><?php echo h($fila['Status']); ?></span>
-                  <button type="submit" name="SelCte" class="cta <?php echo h($fila['Status']); ?>">
-                    <span>Cliente</span>
-                    <strong><?php echo h($fila['Nombre']); ?></strong>
+                  <button type="submit" name="SelCte" value="Ver" class="cta status-btn <?php echo h($fila['Status']); ?>">
+                    <div class="d-flex flex-column text-left text-white">
+                      <small><?php echo h($fila['Status']); ?></small>
+                      <small><?php echo h($fila['Usuario'] ?? ''); ?> · <?php echo h($fila['Servicio'] ?? ''); ?></small>
+                      <strong><?php echo h($fila['Nombre']); ?></strong>
+                    </div>
                   </button>
                 </form>
                 <?php
@@ -212,15 +241,20 @@ if (isset($_GET['Msg'])) {
                 $Ventas = "SELECT * FROM Venta WHERE Usuario = '" . $mysqli->real_escape_string($usr) . "'";
                 if ($resultado = $mysqli->query($Ventas)) {
                   while ($fila = $resultado->fetch_assoc()) {
+                    $uid = (int)($fila['IdContact'] ?? 0);
+                    if ($uid && in_array($uid, $vistos, true)) { continue; }
+                    if ($uid) { $vistos[] = $uid; }
                     ?>
                     <form method="POST" action="<?php echo h($_SERVER['PHP_SELF']); ?>" class="client-card">
                       <input type="number" name="IdVenta"    value="<?php echo (int)$fila['Id']; ?>" hidden>
                       <input type="text"   name="StatusVta"  value="<?php echo h($fila['Status']); ?>" hidden>
                       <input type="text"   name="IdVendedor" value="<?php echo h($usr); ?>" hidden>
-                      <span class="badge-status badge <?php echo h($fila['Status']); ?>"><?php echo h($fila['Status']); ?></span>
-                      <button type="submit" name="SelCte" class="cta <?php echo h($fila['Status']); ?>">
-                        <span><?php echo h($usr . ' · ' . $NomSuc); ?></span>
-                        <strong><?php echo h($fila['Nombre']); ?></strong>
+                      <button type="submit" name="SelCte" value="Ver" class="cta status-btn <?php echo h($fila['Status']); ?>">
+                        <div class="d-flex flex-column text-left text-white">
+                          <small><?php echo h($fila['Status']); ?></small>
+                          <small><?php echo h($usr . ' · ' . $NomSuc); ?></small>
+                          <strong><?php echo h($fila['Nombre']); ?></strong>
+                        </div>
                       </button>
                     </form>
                     <?php
@@ -240,15 +274,20 @@ if (isset($_GET['Msg'])) {
                 $Ventas = "SELECT * FROM Venta WHERE Usuario = '" . $mysqli->real_escape_string($usr) . "'";
                 if ($resultado = $mysqli->query($Ventas)) {
                   while ($fila = $resultado->fetch_assoc()) {
+                    $uid = (int)($fila['IdContact'] ?? 0);
+                    if ($uid && in_array($uid, $vistos, true)) { continue; }
+                    if ($uid) { $vistos[] = $uid; }
                     ?>
                     <form method="POST" action="<?php echo h($_SERVER['PHP_SELF']); ?>" class="client-card">
                       <input type="number" name="IdVenta"    value="<?php echo (int)$fila['Id']; ?>" hidden>
                       <input type="text"   name="StatusVta"  value="<?php echo h($fila['Status']); ?>" hidden>
                       <input type="text"   name="IdVendedor" value="<?php echo h($usr); ?>" hidden>
-                      <span class="badge-status badge <?php echo h($fila['Status']); ?>"><?php echo h($fila['Status']); ?></span>
-                      <button type="submit" name="SelCte" class="cta <?php echo h($fila['Status']); ?>">
-                        <span><?php echo h($usr . ' · ' . $NomSuc); ?></span>
-                        <strong><?php echo h($fila['Nombre']); ?></strong>
+                      <button type="submit" name="SelCte" value="Ver" class="cta status-btn <?php echo h($fila['Status']); ?>">
+                        <div class="d-flex flex-column text-left text-white">
+                          <small><?php echo h($fila['Status']); ?></small>
+                          <small><?php echo h($usr . ' · ' . $NomSuc); ?></small>
+                          <strong><?php echo h($fila['Nombre']); ?></strong>
+                        </div>
                       </button>
                     </form>
                     <?php

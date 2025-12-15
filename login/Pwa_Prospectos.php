@@ -179,6 +179,22 @@ $Metodo = 'Vtas';
   <link rel="stylesheet" href="/login/assets/css/Menu_Superior.css?v=<?= htmlspecialchars($VerCache, ENT_QUOTES) ?>">
   <link rel="stylesheet" href="/login/assets/css/pwa-core.css?v=<?= htmlspecialchars($VerCache, ENT_QUOTES) ?>">
   <link rel="stylesheet" href="/login/assets/css/pwa-components.css?v=<?= htmlspecialchars($VerCache, ENT_QUOTES) ?>">
+  <style>
+    .prospect-card .service-type{
+      display:block;
+      font-size:12px;
+      font-weight:700;
+      color:#fff;
+      text-transform:uppercase;
+      margin-bottom:2px;
+    }
+    /* Botones coloreados por tipo de servicio (usa colores de styles.min.css) */
+    .prospect-card .cta.FUNERARIO   { background:#800588 !important; border:1px solid #da46e5 !important; color:#fff; }
+    .prospect-card .cta.SEGURIDAD   { background:#4e71f0 !important; border:1px solid #7892ef !important; color:#fff; }
+    .prospect-card .cta.TRANSPORTE  { background:#f7be11 !important; border:1px solid #f2ca54 !important; color:#fff; }
+    .prospect-card .cta.DISTRIBUIDOR{ background:#2107ec !important; border:1px solid #6c5af0 !important; color:#fff; }
+    .prospect-card .cta.RETIRO      { background:#02d45d !important; border:1px solid #68f8a6 !important; color:#fff; }
+  </style>
 </head>
 <body onload="localize()">
 
@@ -252,37 +268,35 @@ $Metodo = 'Vtas';
 
 // Helper para pintar tarjeta/form con fila de prospecto
 $renderProsForm = function(array $fila, string $extraLabel = '', ?string $idVend = null, ?string $nomSuc = null) {
-  // $fila[0] = Id, $fila[4] = Nombre?, $fila[9] = Status? (conservamos índice por compatibilidad)
-  $idPros   = (int)($fila[0] ?? 0);
-  $status   = (string)($fila[9] ?? '');
-  $nombre   = (string)($fila[4] ?? ('Prospecto #' . $idPros));
+  // Compatibilidad: acepta arreglos asociativos o numéricos
+  $idPros   = (int)($fila['Id'] ?? $fila[0] ?? 0);
+  $servicio = (string)($fila['Servicio_Interes'] ?? $fila[9] ?? $fila[11] ?? '');
+  $status   = (string)($fila['Papeline'] ?? $fila['Papeline'] ?? $fila[11] ?? $fila[9] ?? '');
+  $nombre   = (string)($fila['FullName'] ?? $fila[4] ?? ('Prospecto #' . $idPros));
   $labelTxt = $extraLabel !== '' ? ' - ' . $extraLabel : '';
-  $vendTxt  = $idVend ? ' - ' . $idVend : '';
+  $vendTxt  = $idVend ? '' . $idVend : '';
   $sucTxt   = $nomSuc ? ' - ' . $nomSuc : '';
   $detalle  = trim($vendTxt . ' ' . $sucTxt . ' ' . $labelTxt);
+  $action   = htmlspecialchars((string)($_SERVER['PHP_SELF'] ?? ''), ENT_QUOTES);
+  $hiddenVend = $idVend ? "<input type='text' name='IdVendedor' value='".htmlspecialchars($idVend, ENT_QUOTES)."' hidden>" : '';
+  $clsStatus  = htmlspecialchars($status !== '' ? $status : 'btn', ENT_QUOTES);
+  $clsServ    = htmlspecialchars($servicio !== '' ? $servicio : '', ENT_QUOTES);
+  $serviceTxt = htmlspecialchars($servicio !== '' ? $servicio : 'SERVICIO', ENT_QUOTES);
+  $detalleTxt = htmlspecialchars($detalle !== '' ? $detalle : 'Asignado a ti', ENT_QUOTES);
+  $nombreTxt  = htmlspecialchars($nombre, ENT_QUOTES);
 
-  printf("
-    <form method='POST' action='%s' class='prospect-card'>
-      <input type='number' name='IdProspecto' value='%s' hidden>
-      <input type='text'   name='StatusVta'  value='%s' hidden>
-      %s
-      <span class='badge-status badge %s'>%s</span>
-      <button type='submit' name='SelPros' value='1' class='cta %s'>
-        <span>%s</span>
-        <strong>%s</strong>
+  echo "
+    <form method='POST' action='{$action}' class='prospect-card'>
+      <input type='number' name='IdProspecto' value='{$idPros}' hidden>
+      <input type='text'   name='StatusVta'  value='{$clsStatus}' hidden>
+      {$hiddenVend}
+      <button type='submit' name='SelPros' value='1' class='cta {$clsStatus} {$clsServ}'>
+        <span class=\"service-type\">{$serviceTxt}</span>
+        <span class=\"service-label\">{$detalleTxt}</span>
+        <strong>{$nombreTxt}</strong>
       </button>
     </form>
-  ",
-  htmlspecialchars((string)($_SERVER['PHP_SELF'] ?? ''), ENT_QUOTES),
-  $idPros,
-  htmlspecialchars($status, ENT_QUOTES),
-  $idVend ? "<input type='text' name='IdVendedor' value='".htmlspecialchars($idVend, ENT_QUOTES)."' hidden>" : '',
-  htmlspecialchars($status, ENT_QUOTES),
-  htmlspecialchars($status, ENT_QUOTES),
-  htmlspecialchars($status !== '' ? $status : 'btn btn-primary', ENT_QUOTES),
-  htmlspecialchars($detalle !== '' ? $detalle : 'Asignado a ti', ENT_QUOTES),
-  htmlspecialchars($nombre, ENT_QUOTES)
-  );
+    ";
 };
 
 if ($Niv >= 5) {
@@ -293,7 +307,7 @@ if ($Niv >= 5) {
   $st->bind_param('i', $VendeId);
   $st->execute();
   $rs = $st->get_result();
-  while ($fila = $rs->fetch_row()) {
+  while ($fila = $rs->fetch_assoc()) {
     $renderProsForm($fila);
   }
   $st->close();
@@ -315,7 +329,7 @@ if ($Niv >= 5) {
     $stPros->bind_param('i', $empId);
     $stPros->execute();
     $rs = $stPros->get_result();
-    while ($fila = $rs->fetch_row()) {
+    while ($fila = $rs->fetch_assoc()) {
       $renderProsForm($fila, '', (string)$emp['IdUsuario'], $NomSuc);
     }
   }
@@ -338,7 +352,7 @@ if ($Niv >= 5) {
     $stPros->bind_param('i', $empId);
     $stPros->execute();
     $rs = $stPros->get_result();
-    while ($fila = $rs->fetch_row()) {
+    while ($fila = $rs->fetch_assoc()) {
       $renderProsForm($fila, '', (string)$emp['IdUsuario'], $nomS);
     }
   }

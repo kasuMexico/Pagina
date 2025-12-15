@@ -389,7 +389,7 @@ $VerCache = time();
 
           <form method="POST" action="Mesa_Clientes.php" class="integrated-search mb-2">
             <select name="Status">
-              <option value="">Status de cobranza</option>
+              <option value="">Buscar por status</option>
               <option value="COBRANZA">COBRANZA</option>
               <option value="ATRASADO">ATRASADO</option>
               <option value="PREVENTA">PREVENTA</option>

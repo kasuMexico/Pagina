@@ -245,15 +245,16 @@
   border-radius: 999px;
   font-weight: 700;
   font-size: .8rem;
-  background: #e8edf7;
+  background: rgba(255,255,255,0.85);
   color: #1f2a37;
   margin-bottom: 8px;
 }
-.badge.ACTIVO    { background:#e0f7ec;  color:#0f5132; }
-.badge.PREVENTA  { background:#fff4e5; color:#8c6d1f; }
-.badge.COBRANZA  { background:#e8f2ff; color:#0f3c91; }
-.badge.CANCELADO { background:#fdecea; color:#7f1d1d; }
-.badge.ACTIVACION{ background:#e0f2fe; color:#0b4f71; }
+.badge.ACTIVO    { background:#017794;  color:#fff; border:1px solid #4fd0f1; }
+.badge.ACTIVACION{ background:#0e63e3;  color:#fff; border:1px solid #428af7; }
+.badge.COBRANZA  { background:#f6b126;  color:#fff; border:1px solid #fbd381; }
+.badge.CANCELADO { background:#960b01;  color:#fff; border:1px solid #d73226; }
+.badge.FALLECIDO { background:#bc0cc8;  color:#fff; border:1px solid #de46e9; }
+.badge.PREVENTA  { background:#1e9401;  color:#fff; border:1px solid #62dd43; }
 
 /* Formularios */
 .form-card .form-row {

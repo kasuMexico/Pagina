@@ -83,6 +83,55 @@ $VerCache = $VerCache ?? 1;
   <link rel="stylesheet" href="/login/assets/css/pwa-components.css?v=<?= h((string)$VerCache) ?>">
   <link rel="stylesheet" href="/login/assets/css/vistas.css?v=<?= h((string)$VerCache ?? time()) ?>">
   <link rel="stylesheet" href="assets/css/Grafica.css">
+  <style>
+    /* Ajuste de la tarjeta Resumen para eliminar espacio sobrante */
+    .summary-card{
+      width: 100%;
+      margin: 0 0 18px 0;
+      padding: 14px 16px;
+      height: auto;
+      min-height: 0;
+    }
+    .summary-card header h2{
+      margin-bottom: 10px;
+    }
+    .summary-card .table{
+      margin-bottom: 0;
+    }
+    .summary-card .table td{
+      padding: 8px 6px;
+    }
+    /* Compactar tabla de pagos para mobile */
+    .payments-card{
+      width: 100%;
+      margin: 0 0 18px 0;
+      padding: 14px 16px;
+      height: auto;
+      min-height: 0;
+    }
+    .payments-card .table{
+      margin-bottom: 0;
+      font-size: 14px;
+    }
+    .payments-card .table td,
+    .payments-card .table th{
+      padding: 8px 6px;
+      vertical-align: middle;
+    }
+    @media (max-width: 480px){
+      .payments-card .table td,
+      .payments-card .table th{
+        padding: 6px 4px;
+        font-size: 13px;
+      }
+    }
+    /* Anula altura fija de .table-responsive de estilos generales en esta vista */
+    .payments-card .table-responsive,
+    .summary-card .table-responsive{
+      height: auto !important;
+      max-height: none !important;
+    }
+  </style>
 </head>
 <body onload="localize()">
   <!-- TOP BAR Pwa_Estado_Cuenta.php-->
@@ -119,7 +168,7 @@ $VerCache = $VerCache ?? 1;
         </div>
       </div>
 
-      <div class="card-base card-glass">
+      <div class="card-base card-glass payments-card">
         <header><h2>Pagos registrados</h2></header>
         <div class="table-responsive">
           <table class="table table-sm mb-0">

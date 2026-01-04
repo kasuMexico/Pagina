@@ -9,9 +9,6 @@
 //Funicones de Trackeo
 require_once __DIR__ . '/FunctionUsageTracker.php';
 
-// Instancia global para funciones básicas
-$basicas = $basicas ?? new Basicas();
-
 class Basicas{
 
   // Telemetría de uso
@@ -257,3 +254,6 @@ class Basicas{
     return mysqli_real_escape_string($c0, (string)$v);
   }
 }
+
+// Instancia global para funciones básicas (después de declarar la clase)
+$basicas = $basicas ?? new Basicas();

@@ -2,7 +2,7 @@
 // Contador de veces que se usa cada funcion para seguimiento *JCCM
 // Actualizado a compatibilidad PHP 8.2. Sin cambiar firmas ni retornos.
 // Fecha: 2025-11-03 — Revisado por JCCM
-require_once 'FunctionUsageTracker.php';
+require_once __DIR__ . '/FunctionUsageTracker.php';
 
 class Basicas {
     // Usa el trait para poder registrar el uso de los métodos.

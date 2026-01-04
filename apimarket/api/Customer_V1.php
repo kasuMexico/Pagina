@@ -1,4 +1,6 @@
 <?php
+// Carpeta: apimarket/api/Customer_V1.php
+// Archivo: Customer_V1.php
 //Este código busca todos los archivos con extensión ".php" en la carpeta "Funciones"  con un array los requiere
 foreach (glob("../Funciones/*.php") as $archivo) {
     require_once $archivo;

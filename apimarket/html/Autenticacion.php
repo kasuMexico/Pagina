@@ -3,9 +3,10 @@
   <div class="container">
     <div class="Consulta">
         <h2 class="titulos"><strong>AUTENTICACION</strong></h2>
-        <p><strong>token_full</strong></p>
+        <p class="auth-subtitle"><strong>token_full</strong></p>
         <br>
-        <p>Esta API está protegida por el protocolo de autenticación abierta <strong>OAuth</strong> de dos vias. Después del protocolo de enlace de <strong>OAuth</strong>, se otorga un token de <strong>OAuth</strong> válido para acceder a los diferentes puntos finales de la API en nombre de un usuario de KASU.</p>
+        <p class="auth-lead">Flujo de autenticación: firma <strong>HMAC</strong> &rarr; <strong>token_full</strong> &rarr; consumo con <strong>Authorization: Bearer</strong>.</p>
+        <p class="auth-lead">Los ejemplos específicos de consumo están en la documentación de cada API.</p>
         <br>
     </div>
     <div class="row">

@@ -63,6 +63,40 @@ function mask_email(?string $e): string {
   return $u2 . '@' . $d;
 }
 
+function format_fecha_es(DateTime $dt): string {
+  $dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  $meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  $diaIdx = (int)$dt->format('w');
+  $mesIdx = (int)$dt->format('n') - 1;
+  $dia = $dias[$diaIdx] ?? '';
+  $mes = $meses[$mesIdx] ?? '';
+  return $dia . ' ' . $dt->format('j') . ' de ' . $mes . ', ' . $dt->format('H:i');
+}
+
+function table_exists(mysqli $db, string $table): bool {
+  $sql = "SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ? LIMIT 1";
+  $stmt = $db->prepare($sql);
+  if (!$stmt) return false;
+  $stmt->bind_param('s', $table);
+  $stmt->execute();
+  $res = $stmt->get_result();
+  $ok = $res && $res->fetch_row();
+  $stmt->close();
+  return (bool)$ok;
+}
+
+function column_exists(mysqli $db, string $table, string $column): bool {
+  $sql = "SELECT 1 FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ? LIMIT 1";
+  $stmt = $db->prepare($sql);
+  if (!$stmt) return false;
+  $stmt->bind_param('ss', $table, $column);
+  $stmt->execute();
+  $res = $stmt->get_result();
+  $ok = $res && $res->fetch_row();
+  $stmt->close();
+  return (bool)$ok;
+}
+
 /* ===== Inputs ===== */
 $EnCoti        = filter_input(INPUT_GET,  'EnCoti',         FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 $hash          = filter_input(INPUT_GET,  'hash',           FILTER_SANITIZE_FULL_SPECIAL_CHARS);
@@ -83,6 +117,10 @@ $EnviarPoliza  = filter_input(INPUT_POST, 'EnviarPoliza',   FILTER_SANITIZE_FULL
 $EnviarFichas  = filter_input(INPUT_POST, 'EnviarFichas',   FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 $EnviarEdoCta  = filter_input(INPUT_POST, 'EnviarEdoCta',   FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 $ReenCOntra    = filter_input(INPUT_POST, 'ReenCOntra',     FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$EnviarGuia    = filter_input(INPUT_POST, 'EnviarGuia',    FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+if ($EnviarGuia === null || $EnviarGuia === false || $EnviarGuia === '') {
+  $EnviarGuia = filter_input(INPUT_GET, 'EnviarGuia', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+}
 
 $Descripcion   = filter_input(INPUT_POST, 'Descripcion',    FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 $Usuario       = filter_input(INPUT_POST, 'Usuario',        FILTER_SANITIZE_FULL_SPECIAL_CHARS);
@@ -95,18 +133,21 @@ $StatusPost    = filter_input(INPUT_POST, 'Status',         FILTER_SANITIZE_FULL
 
 $IdVenta       = $_POST['IdVenta']   ?? $_GET['IdVenta']   ?? null;
 $IdContactPost = $_POST['IdContact'] ?? $_GET['IdContact'] ?? null;
+$IdProspectoReq = (int)($_POST['IdProspecto'] ?? $_GET['IdProspecto'] ?? 0);
 $EmailPost = filter_input(INPUT_POST, 'Email', FILTER_VALIDATE_EMAIL) ?? filter_input(INPUT_GET, 'Email', FILTER_VALIDATE_EMAIL);
 
 /* ===== Parámetros que enviaste en la URL ===== */
 $Vta_Liquidada = (int)($_GET['Vta_Liquidada'] ?? $_POST['Vta_Liquidada'] ?? 0);
 $Redireccion   = (string)($_GET['Redireccion']   ?? $_POST['Redireccion']   ?? '');
 $Msg           = (string)($_GET['Msg']           ?? $_POST['Msg']           ?? '');
+$MsgBase       = (string)($_GET['MsgBase']       ?? $_POST['MsgBase']       ?? '');
 
 dbg('INPUT.GET', $_GET);
 dbg('INPUT.POST', $_POST);
 
 /* ===== Variables base ===== */
-$stat = ""; $Asunto = ""; $Email = ""; $FullName = ""; $Id = ""; $Msg = ""; $data = []; $Redireccion = "";
+$stat = ""; $Asunto = ""; $Email = ""; $FullName = ""; $Id = ""; $Msg = ""; $data = [];
+$skipSend = false;
 dbg('Inicio selección de acción');
 
 /* ===== Selección de acción ===== */
@@ -163,6 +204,111 @@ if (!empty($EnCoti)) {              // Enviar cotización (seguro) Revisado y fu
   $data = ['Cte'=>$FullName, 'DirUrl'=>base64_encode((string)$IdContactPost)];
   $Id  = $IdVenta;
   $Msg = "Se envió la póliza al cliente";
+
+} elseif (!empty($EnviarGuia)) {  // Guia para prospecto
+  dbg('Ruta: EnviarGuia');
+  $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Envio_Guia_Prospecto', $HostPost ?? $_SERVER['PHP_SELF']);
+
+  $IdProspecto = $IdProspectoReq;
+  $fechaCitaTxt = '';
+  if ($IdProspecto > 0) {
+    $FullName = (string)$basicas->BuscarCampos($pros, "FullName", "prospectos", "Id", $IdProspecto);
+    $Email    = (string)$basicas->BuscarCampos($pros, "Email",    "prospectos", "Id", $IdProspecto);
+    $Id       = (string)$IdProspecto;
+    if (isset($pros) && $pros instanceof mysqli) {
+      if (table_exists($pros, 'citas')) {
+        $stmt = $pros->prepare("SELECT FechaCita FROM citas WHERE IdProspecto = ? ORDER BY FechaCita DESC LIMIT 1");
+        if ($stmt) {
+          $stmt->bind_param('i', $IdProspecto);
+          $stmt->execute();
+          $row = $stmt->get_result()->fetch_assoc();
+          $stmt->close();
+          $fechaCitaTxt = (string)($row['FechaCita'] ?? '');
+        }
+      } elseif (table_exists($pros, 'agenda_llamadas')) {
+        $stmt = $pros->prepare("SELECT inicio FROM agenda_llamadas WHERE prospecto_id = ? ORDER BY inicio DESC LIMIT 1");
+        if ($stmt) {
+          $stmt->bind_param('i', $IdProspecto);
+          $stmt->execute();
+          $row = $stmt->get_result()->fetch_assoc();
+          $stmt->close();
+          $fechaCitaTxt = (string)($row['inicio'] ?? '');
+        }
+      }
+    }
+  } else {
+    $FullName = $FullNamePost ?: ($NombrePost ?: 'Prospecto');
+    $Email    = $EmailPost ?: '';
+    $Id       = '';
+  }
+
+  $Asunto = "GUIA COMPLETA KASU";
+
+  if ($Email === '' || !filter_var($Email, FILTER_VALIDATE_EMAIL)) {
+    $Msg = 'No se pudo enviar: correo invalido.';
+    $skipSend = true;
+  } elseif (!isset($pros) || !($pros instanceof mysqli)) {
+    $Msg = 'No se pudo generar la guia: base de datos no disponible.';
+    $skipSend = true;
+  } elseif (!table_exists($pros, 'document_tokens')) {
+    $Msg = 'No se pudo generar la guia: tabla document_tokens no disponible.';
+    $skipSend = true;
+  } elseif ($IdProspecto <= 0) {
+    $Msg = 'No se pudo generar la guia: prospecto invalido.';
+    $skipSend = true;
+  } else {
+    $token  = bin2hex(random_bytes(32));
+    $expira = (new DateTime('+7 days'))->format('Y-m-d H:i:s');
+    $hasUsos = column_exists($pros, 'document_tokens', 'usos_restantes');
+    if ($hasUsos) {
+      $stmt = $pros->prepare("
+        INSERT INTO document_tokens (token, tipo, ref_id, cliente_id, expira_at, created_at, usos_restantes)
+        VALUES (?, 'guia_kasu', ?, ?, ?, NOW(), 3)
+      ");
+      if ($stmt) {
+        $stmt->bind_param('siis', $token, $IdProspecto, $IdProspecto, $expira);
+      }
+    } else {
+      $stmt = $pros->prepare("
+        INSERT INTO document_tokens (token, tipo, ref_id, cliente_id, expira_at, created_at)
+        VALUES (?, 'guia_kasu', ?, ?, ?, NOW())
+      ");
+      if ($stmt) {
+        $stmt->bind_param('siis', $token, $IdProspecto, $IdProspecto, $expira);
+      }
+    }
+
+    if ($stmt) {
+      $ok = $stmt->execute();
+      $stmt->close();
+      if ($ok) {
+        $publicBase = rtrim(env('PUBLIC_URL', 'https://kasu.com.mx'), '/');
+        $DirUrl = $publicBase . '/eia/descargar_guia.php?token=' . urlencode($token);
+        if ($fechaCitaTxt !== '') {
+          $dt = DateTime::createFromFormat('Y-m-d H:i:s', $fechaCitaTxt);
+          if ($dt) {
+            $fechaCitaTxt = format_fecha_es($dt);
+          }
+        }
+        $data = [
+          'Cte'       => $FullName ?: 'Prospecto',
+          'DirUrl'    => $DirUrl,
+          'FechaCita' => $fechaCitaTxt,
+        ];
+        $Msg = trim(($MsgBase ? $MsgBase . '. ' : '') . 'Se envio la guia al correo ' . $Email);
+      } else {
+        $Msg = 'No se pudo generar la liga de descarga.';
+        $skipSend = true;
+      }
+    } else {
+      $Msg = 'No se pudo generar la liga de descarga.';
+      $skipSend = true;
+    }
+  }
+
+  if ($Redireccion === '') {
+    $Redireccion = $HostPost ? ('https://kasu.com.mx' . $HostPost) : ($HostGet ?: '');
+  }
 
 } elseif (!empty($EnviarFichas)) {  // Fichas de pago Revisado y funcionado 7 Nov 2025
   dbg('Ruta: EnviarFichas', ['IdVenta'=>$IdVenta, 'EmailPost'=>$EmailPost]);
@@ -378,17 +524,20 @@ use PHPMailer\PHPMailer\Exception;
 
 $accion = !empty($EnCoti)        ? 'EnCoti'
         : (!empty($EnviarPoliza) ? 'EnviarPoliza'
+        : (!empty($EnviarGuia)   ? 'EnviarGuia'
         : (!empty($EnviarFichas) ? 'EnviarFichas'
         : (!empty($EnviarEdoCta) ? 'EnviarEdoCta'
         : (!empty($EnFi)         ? 'EnFi'
         : (!empty($MxVta)        ? 'MxVta'
         : (!empty($ProReIn)      ? 'ProReIn'
-        : (!empty($ReenCOntra)   ? 'ReenCOntra' : 'Generic')))))));
+        : (!empty($ReenCOntra)   ? 'ReenCOntra' : 'Generic'))))))));
 
 $destinatarioValido = (bool)filter_var($Email, FILTER_VALIDATE_EMAIL);
 dbg('Validación destinatario', ['email'=>mask_email($Email), 'valido'=>$destinatarioValido]);
 
-if ($destinatarioValido) {
+if ($skipSend) {
+  dbg('Envio omitido', $Msg);
+} elseif ($destinatarioValido) {
   $mail = new PHPMailer(true);
   try {
     // SMTP

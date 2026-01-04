@@ -14,7 +14,7 @@
  ********************************************************************************************/
 
 // Contador de veces que se usa cada funcion para seguimiento *JCCM
-require_once 'FunctionUsageTracker.php';
+require_once __DIR__ . '/FunctionUsageTracker.php';
 
 class Correo {
 
@@ -113,6 +113,14 @@ HTML;
         $cte    = isset($data['Cte'])    ? (string)$data['Cte']    : (isset($data['Nombre']) ? (string)$data['Nombre'] : '');
         $dirUrl = isset($data['DirUrl']) ? (string)$data['DirUrl'] : '';
         $Nombre = isset($data['Nombre']) ? (string)$data['Nombre'] : $cte;
+        $fechaCita = isset($data['FechaCita']) ? (string)$data['FechaCita'] : '';
+        $fechaCitaHtml = '';
+        if ($fechaCita !== '') {
+            $fechaCitaSafe = htmlspecialchars($fechaCita, ENT_QUOTES, 'UTF-8');
+            $fechaCitaHtml = '<p style="font-size:15px; font-family:arial, sans-serif; line-height:22px; color:#666666;">'
+                           . 'Tu cita esta agendada para <strong>' . $fechaCitaSafe . '</strong>.'
+                           . '</p>';
+        }
 
         switch ($Asunto) {
             case '¡BIENVENIDO A KASU!':
@@ -466,6 +474,49 @@ HTML;
             </p>
           </td>
         </tr>
+HTML;
+
+            case 'GUIA COMPLETA KASU':
+                return <<<HTML
+      <tr>
+        <td align="center" style="padding:2px; font-size:25px; color:#153643; font-family:Arial, sans-serif;">
+          <a href="https://kasu.com.mx" style="text-decoration:none; color:whitesmoke;">
+            <img src="https://kasu.com.mx/assets/images/Correo/florredonda.png" alt="KASU" width="100" height="100" style="display:block;" />
+          </a>
+        </td>
+      </tr>
+      <tr>
+        <td bgcolor="#ffffff" align="justify" style="padding:20px 15px 5px 25px; font-family:Arial, sans-serif; font-size:16px; color:#153643;">
+          <b>{$Nombre}</b>
+        </td>
+      </tr>
+      <tr>
+        <td align="left" bgcolor="#ffffff" style="padding:10px 30px 5px 30px;">
+          <p style="font-size:16px; font-family:arial, sans-serif; line-height:24px; color:#666666;">
+            Gracias por registrarte. Aqui tienes la <b>Guia completa KASU</b>.
+          </p>
+          <p style="font-size:14px; font-family:arial, sans-serif; line-height:22px; color:#666666;">
+            El enlace es de un solo uso.
+          </p>
+          {$fechaCitaHtml}
+        </td>
+      </tr>
+      <tr>
+        <td bgcolor="#ffffff" align="center" style="padding:30px;">
+          <span style="border:solid #ee3a87; background:#ee3a87; border-width:18px; display:inline-block; border-radius:5px;">
+            <a href="{$dirUrl}" class="es-button" target="_blank" style="text-decoration:none; font-family:Arial, sans-serif; font-size:26px; color:#FFFFFF; background:#ee3a87; border-radius:5px; line-height:30px;">
+              Descargar guia
+            </a>
+          </span>
+        </td>
+      </tr>
+      <tr>
+        <td bgcolor="#ffffff" align="justify" style="padding:5px 25px 30px 25px; font-family:Arial, sans-serif; font-size:16px; line-height:20px; color:#666666;">
+          <p style="font-size:12px; font-family:Arial, sans-serif; line-height:24px; color:#666666;">
+            Saludos<br>Equipo KASU
+          </p>
+        </td>
+      </tr>
 HTML;
 
             case 'IA · CORREO PROSPECTO':

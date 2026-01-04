@@ -3,6 +3,7 @@
  * Qué hace: Página pública del API Market de KASU. Muestra métricas y módulos estáticos.
  * Fecha: 04/11/2025
  * Revisado por: JCCM
+ * Archivo: index.php
  *
  * Notas PHP 8.2:
  * - Sanitización estricta en echo de parámetros GET (ENT_QUOTES, UTF-8).
@@ -11,6 +12,64 @@
  ********************************************************************************************/
 
 declare(strict_types=1);
+
+// Debug control (set ?debug=1 or APIMARKET_DEBUG=1)
+$debugEnabled = false;
+if (isset($_GET['debug'])) {
+    $debugEnabled = ($_GET['debug'] === '1' || $_GET['debug'] === 'true');
+}
+if (getenv('APIMARKET_DEBUG') === '1') {
+    $debugEnabled = true;
+}
+
+if ($debugEnabled) {
+    ini_set('display_errors', '1');
+    ini_set('display_startup_errors', '1');
+    ini_set('log_errors', '1');
+    ini_set('error_log', __DIR__ . '/_debug.log');
+    error_reporting(E_ALL);
+
+    set_exception_handler(function (Throwable $e): void {
+        if (!headers_sent()) {
+            header('Content-Type: text/plain; charset=UTF-8', true, 500);
+        }
+        echo "Uncaught exception:\n";
+        echo $e->getMessage() . "\n";
+        echo "File: " . $e->getFile() . "\n";
+        echo "Line: " . $e->getLine() . "\n";
+    });
+
+    register_shutdown_function(function (): void {
+        $err = error_get_last();
+        if (!$err) {
+            return;
+        }
+        $fatalTypes = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR];
+        if (!in_array($err['type'], $fatalTypes, true)) {
+            return;
+        }
+        if (!headers_sent()) {
+            header('Content-Type: text/plain; charset=UTF-8', true, 500);
+        }
+        echo "Fatal error:\n";
+        echo $err['message'] . "\n";
+        echo "File: " . $err['file'] . "\n";
+        echo "Line: " . $err['line'] . "\n";
+    });
+}
+
+// Prefijos relativos para assets y documentación (root vs /documentacion)
+function apimarket_path_prefixes(): array {
+    $script = isset($_SERVER['SCRIPT_NAME']) ? (string)$_SERVER['SCRIPT_NAME'] : '';
+    $scriptDir = str_replace('\\', '/', dirname($script));
+    $isDocPage = (strpos($scriptDir, '/documentacion') !== false);
+    $assetPrefix = $isDocPage ? '../assets/' : 'assets/';
+    $docPrefix = $isDocPage ? '../documentacion/' : 'documentacion/';
+    return [$isDocPage, $assetPrefix, $docPrefix];
+}
+
+[$isDocPage, $assetPrefix, $docPrefix] = apimarket_path_prefixes();
+$assetFsPrefix = $isDocPage ? dirname(__DIR__) . '/assets/' : __DIR__ . '/assets/';
 
 // Librerías y conexiones
 require_once __DIR__ . '/librerias_api.php';
@@ -70,8 +129,8 @@ if (isset($_GET['Msg'])) {
   <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/font-awesome.css">
   <link rel="stylesheet" href="https://kasu.com.mx/assets/css/templatemo-softy-pinko.css">
   <link rel="stylesheet" href="https://kasu.com.mx/assets/css/index.css">
-  <link rel="stylesheet" href="assets/index.css">
-  <link rel="stylesheet" href="assets/codigo.css">
+  <link rel="stylesheet" href="<?php echo htmlspecialchars($assetPrefix . 'index.css', ENT_QUOTES, 'UTF-8'); ?>">
+  <link rel="stylesheet" href="<?php echo htmlspecialchars($assetPrefix . 'codigo.css', ENT_QUOTES, 'UTF-8'); ?>">
 
   <!-- PWA tint opcional -->
   <meta name="theme-color" content="#e83e8c">
@@ -153,12 +212,31 @@ if (isset($_GET['Msg'])) {
     </div>
   </header>
 
-  <div class="welcome-area">
-    <div class="header-text">
+  <div class="welcome-area apimarket-hero">
+    <div class="header-text apimarket-hero__text">
       <div class="container">
-        <div class="row">
-          <div class="offset-xl-3 col-xl-6 offset-lg-2 col-lg-8 col-md-12 col-sm-12">
-            <h1 style="color:white">Todas las oportunidades del open insurance a tu alcance <strong>Apimarket_KASU</strong></h1>
+        <?php
+        $heroFile = $assetFsPrefix . 'img/hero_apimarket.svg';
+        $heroUrl = $assetPrefix . 'img/hero_apimarket.svg';
+        ?>
+        <div class="row align-items-center">
+          <div class="col-lg-6 col-md-12 col-sm-12">
+            <h1 class="apimarket-hero__title">Todas las oportunidades del open insurance a tu alcance <strong>Apimarket_KASU</strong></h1>
+            <p class="apimarket-hero__lead">Integra cobros, cuentas y validaciones con APIs seguras, documentación clara y soporte directo.</p>
+            <a class="main-button-slider apimarket-hero__cta" href="<?php echo htmlspecialchars($docPrefix . 'doc_customer.php', ENT_QUOTES, 'UTF-8'); ?>">Documentación</a>
+          </div>
+          <div class="col-lg-6 col-md-12 col-sm-12">
+            <?php if (is_file($heroFile)) { ?>
+              <img src="<?php echo htmlspecialchars($heroUrl, ENT_QUOTES, 'UTF-8'); ?>" alt="API Market KASU" class="img-fluid apimarket-hero__img" loading="lazy" decoding="async">
+            <?php } else { ?>
+              <div class="features-small-item" style="margin-top: 20px;">
+                <div class="section-title">
+                  <h2><strong>Documenta y lanza en minutos</strong></h2>
+                </div>
+                <p>Activa endpoints, valida identidad y escala tu producto con un flujo simple de autenticación.</p>
+                <a class="btn btn-info" href="<?php echo htmlspecialchars($docPrefix . 'doc_customer.php', ENT_QUOTES, 'UTF-8'); ?>">Documentación</a>
+              </div>
+            <?php } ?>
           </div>
         </div>
       </div>
@@ -228,67 +306,31 @@ if (isset($_GET['Msg'])) {
         <br>
       </div>
       <div class="table-container">
-        <table class="table">
+        <table class="table api-table">
           <tbody>
-
             <tr>
               <td class="blue">
                 <h2><strong>API_CUSTOMER</strong></h2>
-                <br><p>Esta aplicacion funciona en forma de <strong>PREPAGO</strong> cada consulta descuenta se descuenta del saldo principal.</p>
+                <br><p>Modelo <strong>PREPAGO</strong> para consultas de datos de clientes.</p>
               </td>
               <td class="red">
                 <h2><strong>API_PAYMENTS</strong></h2>
-                <br><p>esta apliacion funciona en forma de <strong>POSPAGO</strong>, cobras al momento y se genera una conciliacion mensual.</p>
+                <br><p>Modelo <strong>POSPAGO</strong> para cobros y conciliación mensual.</p>
               </td>
               <td class="purple">
                 <h2><strong>API_ACCOUNTS</strong></h2>
-                <br><p>Esta aplicacion es gratuita, te permite generar ventas desde tu plataforma y comisionar, por la cada pago realizado por la poliza</p>
+                <br><p>Alta de servicios KASU y comisiones por venta desde tu plataforma.</p>
+              </td>
+              <td class="teal">
+                <h2><strong>Validate_Mexico</strong></h2>
+                <br><p>Validación de identidad <strong>CURP/RFC</strong> con caché y prepago.</p>
               </td>
             </tr>
             <tr>
-              <td colspan="3" class="green">
+              <td colspan="4" class="green">
                 <h2><strong>token_full</strong></h2>
-                <p>Consulta que retorna un token de acceso para todas las API_KASU...</p>
+                <p>Token de acceso para las APIs de KASU. Los detalles y ejemplos se encuentran en cada documentación.</p>
               </td>
-            </tr>
-            <tr>
-              <td class="blue">
-                <h2><strong>valida_curp</strong></h2>
-                <br><p>te permite usar a api de KASU para obtener los datos de una persona...</p>
-              </td>
-              <td class="red">
-                <h2><strong>account_status</strong></h2>
-                <br><p>Consulta el <strong>monto a pagar</strong> por un cliente, y en una poliza especifica...</p>
-              </td>
-              <td class="purple">
-                <h2><strong>new_service</strong></h2>
-                <br><p>Te permite realizar el registro de un servicio <strong>KASU</strong>...</p>
-              </td>
-            </tr>
-            <tr>
-              <td class="blue">
-                <h2><strong>individual_request</strong></h2>
-                <br><p>Te muestra los datos individuales de una poliza KASU...</p>
-              </td>
-              <td class="red">
-                <h2><strong>pagos_psd2</strong></h2>
-                <br><p>Realiza el <strong>cobro de un servicio</strong> KASU y genera una comisión...</p>
-              </td>
-              <td class="purple">
-                <h2><strong>modify_record</strong></h2>
-                <br><p>Te permite realizar modificaciones al registro de un cliente...</p>
-              </td>
-            </tr>
-            <tr>
-              <td class="blue">
-                <h2><strong>request_block</strong></h2>
-                <br><p>Te muestra por bloques los datos de una poliza KASU...</p>
-              </td>
-              <td class="red">
-                <h2><strong>comision_prod</strong></h2>
-                <br><p>Retorna la comision que genera un producto <strong>Especifico por cliente</strong>...</p>
-              </td>
-              <td class="purple"></td>
             </tr>
           </tbody>
         </table>

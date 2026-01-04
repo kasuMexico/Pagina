@@ -1,6 +1,6 @@
 <?php
 /********************************************************************************************
- * Página: registro.php (raíz)
+ * Página: prospectos.php (raíz)
  * Qué hace: Registro de prospectos para recibir más información de KASU.
  *           - Envía a login/php/Registro_Prospectos.php (mismo destino que el modal interno).
  *           - Registra GPS y Fingerprint usando los mismos slots que el sistema actual.
@@ -24,9 +24,10 @@ if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
 /* ===== Contexto básico ===== */
 $nombre      = $_GET['nombre']   ?? '';
 $producto    = $_GET['producto'] ?? ''; // opcional
+$productoRaw = trim((string)$producto);
 $nombreSafe  = htmlspecialchars((string)$nombre,   ENT_QUOTES, 'UTF-8');
 $selfSafe    = htmlspecialchars((string)($_SERVER['PHP_SELF'] ?? ''), ENT_QUOTES, 'UTF-8');
-$productoSafe= htmlspecialchars((string)$producto, ENT_QUOTES, 'UTF-8');
+$productoSafe= htmlspecialchars($productoRaw, ENT_QUOTES, 'UTF-8');
 
 /* ===== CSRF (mismo esquema que el modal de prospectos) ===== */
 $csrf = $_SESSION['csrf_auth'] ?? ($_SESSION['csrf'] ?? null);
@@ -52,7 +53,7 @@ if (isset($_GET['Msg'])) {
   <title>Regístrate para recibir información | KASU</title>
 
   <!-- Canonical y hreflang -->
-  <link rel="canonical" href="https://kasu.com.mx/registro.php">
+  <link rel="canonical" href="https://kasu.com.mx/prospectos.php">
   <link rel="alternate" hreflang="es-MX" href="https://kasu.com.mx/prospectos.php">
 
   <!-- Viewport -->
@@ -68,7 +69,7 @@ if (isset($_GET['Msg'])) {
   <meta property="og:site_name" content="KASU Servicios a Futuro">
   <meta property="og:title" content="KASU | Regístrate para recibir información">
   <meta property="og:description" content="Déjanos tus datos para que un asesor KASU te brinde toda la información que necesitas.">
-  <meta property="og:url" content="https://kasu.com.mx/registro.php">
+  <meta property="og:url" content="https://kasu.com.mx/prospectos.php">
   <meta property="og:image" content="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
   <meta property="og:locale" content="es_MX">
 
@@ -132,6 +133,11 @@ if (isset($_GET['Msg'])) {
       font-weight:500;
       margin-bottom:4px;
     }
+    .ProspectoForm .form-control {
+      max-width:100%;
+      box-sizing:border-box;
+      min-width:0;
+    }
     .ProspectoForm small {
       color:#777;
     }
@@ -167,7 +173,7 @@ if (isset($_GET['Msg'])) {
     }
   </style>
 </head>
-<body onload="localize()">
+<body>
 
 <!-- Modal Geolocalización (mismo que en página de compra) -->
 <div class="modal fade" id="geoModal" tabindex="-1" role="dialog" aria-labelledby="geoModalLabel">
@@ -240,32 +246,53 @@ if (isset($_GET['Msg'])) {
           <!-- Origen fijado a WEB (puedes cambiarlo en el backend si lo requieres) -->
           <input type="hidden" name="Origen" value="<?= $metodoSafe ?>">
 
-          <div class="form-group">
-            <label>CURP del prospecto (opcional)</label>
+          <div class="form-group" id="CurpGroup">
+            <label>Registra tu CURP </label>
             <input class="form-control text-uppercase"
                    type="text"
+                   id="CurpInput"
                    name="CURP"
                    placeholder="CLAVE CURP (18 caracteres)"
                    pattern="[A-Za-z0-9]{18}"
                    maxlength="18"
                    minlength="18"
                    oninput="this.value=this.value.toUpperCase()"
+                   required
                    autocomplete="off">
-            <small>Si no la tienes a la mano, puedes dejar este campo vacío.</small>
+            <small>Si no la tienes a la mano, usa el botón para ingresar tu nombre.</small>
+            <button type="button" class="btn btn-link" id="toggleCurpBtn" style="padding:0; font-size:12px;">
+              No tengo mi CURP
+            </button>
+          </div>
+
+          <div class="form-group" id="NombreProspectoGroup" style="display:none;">
+            <label>Registra tu nombre completo</label>
+            <input class="form-control text-uppercase"
+                   type="text"
+                   id="FullNameInput"
+                   name="FullName"
+                   placeholder="Nombre completo"
+                   autocomplete="name"
+                   disabled>
+            <small>Si prefieres, puedes volver a ingresar tu CURP.</small>
+            <button type="button" class="btn btn-link" id="toggleCurpBackBtn" style="padding:0; font-size:12px;">
+              Tengo mi CURP
+            </button>
           </div>
 
           <div class="form-group">
-            <label>E-mail</label>
+            <label>Tu E-mail</label>
             <input class="form-control"
                    type="email"
                    name="Email"
                    placeholder="Correo electrónico"
                    inputmode="email"
+                   required
                    autocomplete="email">
           </div>
 
           <div class="form-group">
-            <label>Teléfono (obligatorio)</label>
+            <label>Registra tu teléfono</label>
             <input class="form-control"
                    type="tel"
                    name="Telefono"
@@ -279,38 +306,40 @@ if (isset($_GET['Msg'])) {
           </div>
 
           <div class="form-group">
-            <label>Estoy interesado en</label>
-            <select class="form-control" name="Servicio" required>
-              <option value="">Selecciona una opción</option>
-              <option value="FUNERARIO">Gastos funerarios</option>
-              <option value="RETIRO">Ahorro para el retiro</option>
-              <option value="SEGURIDAD">Gastos funerarios oficiales</option>
-              <option value="TRANSPORTE">Servicio de traslado</option>
-              <option value="DISTRIBUIDOR">Ser distribuidor</option>
-            </select>
+            <label>Selecciona una fecha en la cual podamos llamarte</label>
+            <input class="form-control"
+                   type="date"
+                   name="FechaLlamada"
+                   id="FechaLlamadaInput"
+                   required
+                   autocomplete="off">
           </div>
 
           <div class="form-group">
-            <label>¿Cómo te enteraste de KASU?</label>
-            <select class="form-control" name="OrigenVisible" required>
-              <option value="">Selecciona una opción</option>
-              <option value="fb">Facebook</option>
-              <option value="ig">Instagram</option>
-              <option value="tt">TikTok</option>
-              <option value="Gg">Búsqueda en Google</option>
-              <option value="ref">Recomendación de un amigo</option>
-              <option value="Vtas">Vendedor / asesor KASU</option>
-              <option value="otro">Otro</option>
+            <label>Hora para llamada</label>
+            <select class="form-control" name="HoraLlamada" id="HoraLlamadaInput" disabled required>
+              <option value="">Selecciona una hora</option>
             </select>
-            <small>Este campo es informativo; en el backend puedes mapearlo si lo necesitas.</small>
+            <small id="HoraLlamadaHint">Lunes a viernes 9:00 a 18:00, sabados 10:00 a 14:00.</small>
           </div>
 
-          <div class="checkbox">
-            <label>
-              <input type="checkbox" name="AvisoProspecto" required>
-              Acepto el <a href="/privacidad.php" target="_blank" rel="noopener">Aviso de Privacidad</a> y autorizo que KASU me contacte para brindarme información.
-            </label>
-          </div>
+          <?php if ($productoRaw !== ''): ?>
+            <input type="hidden" name="Servicio" value="<?= $productoSafe ?>">
+          <?php else: ?>
+            <div class="form-group">
+              <label>Estoy interesado en</label>
+              <select class="form-control" name="Servicio" required>
+                <option value="">Selecciona una opción</option>
+                <option value="FUNERARIO">Gastos funerarios</option>
+                <option value="RETIRO">Ahorro para el retiro</option>
+                <option value="SEGURIDAD">Gastos funerarios oficiales</option>
+                <option value="TRANSPORTE">Servicio de traslado</option>
+                <option value="DISTRIBUIDOR">Ser distribuidor</option>
+              </select>
+            </div>
+          <?php endif; ?>
+
+          <input type="hidden" name="OrigenVisible" id="OrigenVisibleInput" value="otro">
 
           <button type="submit" name="prospectoNvo">Registrar mis datos</button>
 
@@ -328,6 +357,144 @@ if (isset($_GET['Msg'])) {
 <script>
 (function(){
   var gpsDiv = document.getElementById('Gps');
+  var origenInput = document.getElementById('OrigenVisibleInput');
+  var curpGroup = document.getElementById('CurpGroup');
+  var curpInput = document.getElementById('CurpInput');
+  var nombreGroup = document.getElementById('NombreProspectoGroup');
+  var nombreInput = document.getElementById('FullNameInput');
+  var toggleCurpBtn = document.getElementById('toggleCurpBtn');
+  var toggleCurpBackBtn = document.getElementById('toggleCurpBackBtn');
+  var fechaLlamadaInput = document.getElementById('FechaLlamadaInput');
+  var horaLlamadaInput = document.getElementById('HoraLlamadaInput');
+  var horaLlamadaHint = document.getElementById('HoraLlamadaHint');
+
+  function setCurpMode(useNombre){
+    if (useNombre) {
+      if (curpGroup) curpGroup.style.display = 'none';
+      if (nombreGroup) nombreGroup.style.display = '';
+      if (curpInput) { curpInput.value = ''; curpInput.disabled = true; curpInput.required = false; }
+      if (nombreInput) { nombreInput.disabled = false; nombreInput.required = true; nombreInput.focus(); }
+    } else {
+      if (curpGroup) curpGroup.style.display = '';
+      if (nombreGroup) nombreGroup.style.display = 'none';
+      if (curpInput) { curpInput.disabled = false; curpInput.required = true; }
+      if (nombreInput) { nombreInput.value = ''; nombreInput.disabled = true; nombreInput.required = false; }
+    }
+  }
+
+  if (toggleCurpBtn) {
+    toggleCurpBtn.addEventListener('click', function(){ setCurpMode(true); });
+  }
+  if (toggleCurpBackBtn) {
+    toggleCurpBackBtn.addEventListener('click', function(){ setCurpMode(false); });
+  }
+
+  function formatHora(mins){
+    var h = Math.floor(mins / 60);
+    var m = mins % 60;
+    return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+  }
+
+  function updateHoraOptions(){
+    if (!fechaLlamadaInput || !horaLlamadaInput) return;
+    var fechaVal = fechaLlamadaInput.value;
+    horaLlamadaInput.innerHTML = '<option value="">Selecciona una hora</option>';
+    if (!fechaVal) {
+      horaLlamadaInput.disabled = true;
+      horaLlamadaInput.required = false;
+      if (fechaLlamadaInput.setCustomValidity) {
+        fechaLlamadaInput.setCustomValidity('');
+      }
+      if (horaLlamadaHint) {
+        horaLlamadaHint.textContent = 'Lunes a viernes 9:00 a 18:00, sabados 10:00 a 14:00.';
+      }
+      return;
+    }
+    var dateObj = new Date(fechaVal + 'T00:00:00');
+    var dow = dateObj.getDay(); // 0 domingo, 6 sabado
+    var startMin;
+    var endMin;
+
+    if (dow >= 1 && dow <= 5) {
+      startMin = 9 * 60;
+      endMin = 18 * 60;
+    } else if (dow === 6) {
+      startMin = 10 * 60;
+      endMin = 14 * 60;
+    } else {
+      horaLlamadaInput.disabled = true;
+      horaLlamadaInput.required = false;
+      if (fechaLlamadaInput.setCustomValidity) {
+        fechaLlamadaInput.setCustomValidity('Domingos no hay citas disponibles.');
+      }
+      if (horaLlamadaHint) horaLlamadaHint.textContent = 'Domingos no hay citas disponibles.';
+      return;
+    }
+
+    for (var mins = startMin; mins + 30 <= endMin; mins += 30) {
+      var hora = formatHora(mins);
+      var opt = document.createElement('option');
+      opt.value = hora + ':00';
+      opt.textContent = hora;
+      horaLlamadaInput.appendChild(opt);
+    }
+    horaLlamadaInput.disabled = false;
+    horaLlamadaInput.required = true;
+    if (fechaLlamadaInput.setCustomValidity) {
+      fechaLlamadaInput.setCustomValidity('');
+    }
+    if (horaLlamadaHint) {
+      horaLlamadaHint.textContent = 'Lunes a viernes 9:00 a 18:00, sabados 10:00 a 14:00.';
+    }
+  }
+
+  if (fechaLlamadaInput) {
+    fechaLlamadaInput.addEventListener('change', updateHoraOptions);
+    updateHoraOptions();
+  }
+
+  setCurpMode(false);
+
+  function normalize(val){
+    return (val || '').toString().trim().toLowerCase();
+  }
+
+  function setOrigenVisible(val){
+    if (!origenInput) return;
+    origenInput.value = val || 'otro';
+  }
+
+  function detectOrigenVisible(){
+    var params = new URLSearchParams(window.location.search);
+    var utmSource = normalize(params.get('utm_source'));
+    var utmMedium = normalize(params.get('utm_medium'));
+    var gclid = params.get('gclid') || params.get('gbraid') || params.get('wbraid');
+    var fbclid = params.get('fbclid');
+
+    if (utmSource) {
+      if (utmSource.includes('whatsapp') || utmSource === 'wa') return 'whatsapp';
+      if (utmSource.includes('linkedin') || utmSource === 'li') return 'linkedin';
+      if (utmSource === 'x' || utmSource.includes('twitter')) return 'x';
+      if (utmSource.includes('facebook') || utmSource === 'fb') return 'fb';
+      if (utmSource.includes('instagram') || utmSource === 'ig') return 'ig';
+      if (utmSource.includes('tiktok') || utmSource === 'tt') return 'tt';
+      if (utmSource.includes('google') || utmSource === 'gg' || utmMedium === 'cpc') return 'Gg';
+      return 'otro';
+    }
+
+    if (gclid) return 'Gg';
+    if (fbclid) return 'fb';
+
+    var ref = normalize(document.referrer);
+    if (ref.includes('x.com') || ref.includes('twitter.com')) return 'x';
+    if (ref.includes('linkedin.com')) return 'linkedin';
+    if (ref.includes('whatsapp.com') || ref.includes('wa.me')) return 'whatsapp';
+    if (ref.includes('facebook.com') || ref.includes('fb.com')) return 'fb';
+    if (ref.includes('instagram.com')) return 'ig';
+    if (ref.includes('tiktok.com')) return 'tt';
+    if (ref.includes('google.')) return 'Gg';
+    return 'otro';
+  }
 
   function injectGPS(pos){
     if(!gpsDiv) return;
@@ -414,12 +581,13 @@ if (isset($_GET['Msg'])) {
   } else {
     initGeo();
   }
+
+  setOrigenVisible(detectOrigenVisible());
 })();
 </script>
 
-<!-- Fingerprint + localización adicional -->
+<!-- Fingerprint -->
 <script src="eia/javascript/finger.js?v=3"></script>
-<script src="eia/javascript/localize.js?v=3"></script>
 
 </body>
 </html>

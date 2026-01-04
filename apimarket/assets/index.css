@@ -1,6 +1,6 @@
 /* Establecemos el ancho de las celdas */
-.table td {
-  width: 33%;
+.api-table td {
+  width: 25%;
 }
 
 /* Color de las celdas */
@@ -22,4 +22,127 @@
 .table .purple {
   background-color: #AE48E9;
   padding: 15px;
+}
+
+.table .teal {
+  background-color: #36B0A7;
+  padding: 15px;
+}
+
+/* Hero adjustments for apimarket landing */
+.welcome-area.apimarket-hero {
+  display: block;
+  height: auto;
+  min-height: 0;
+  padding: 160px 0 90px;
+  background: linear-gradient(135deg, #f4f6ff 0%, #eef9ff 45%, #f7f3ff 100%);
+}
+
+.welcome-area.apimarket-hero .apimarket-hero__text {
+  position: static;
+  transform: none;
+  text-align: left;
+}
+
+.welcome-area.apimarket-hero .apimarket-hero__title {
+  color: #1d2433;
+  font-weight: 600;
+  font-size: 38px;
+  line-height: 1.3;
+  margin-bottom: 18px;
+}
+
+.welcome-area.apimarket-hero .apimarket-hero__lead {
+  color: #4b5563;
+  font-size: 16px;
+  line-height: 26px;
+  margin-bottom: 18px;
+}
+
+.welcome-area.apimarket-hero .apimarket-hero__cta {
+  margin-top: 6px;
+}
+
+.welcome-area.apimarket-hero .apimarket-hero__img {
+  width: 100%;
+  border-radius: 22px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+  margin-top: 20px;
+}
+
+/* Cards in select_api */
+.api-card {
+  height: 100%;
+  padding: 28px 24px;
+}
+
+.api-card__badge {
+  background: #e6f4ff;
+  color: #246b9c;
+  border: 1px solid #b6def6;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.api-card__title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 16px;
+  margin: 0;
+}
+
+.api-card__icon {
+  font-size: 20px;
+}
+
+.api-card__desc {
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 22px;
+  min-height: 66px;
+}
+
+.api-card__cta {
+  border-radius: 12px;
+  padding: 10px 16px;
+}
+
+/* Auth section helper text */
+.auth-subtitle {
+  color: #2f3b52;
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+.auth-lead {
+  color: #4b5563;
+  line-height: 1.7;
+  margin-bottom: 0;
+}
+
+/* Anchor offset for sticky header */
+.section {
+  scroll-margin-top: 130px;
+}
+
+@media (max-width: 991px) {
+  .welcome-area.apimarket-hero {
+    padding: 130px 0 70px;
+  }
+
+  .welcome-area.apimarket-hero .apimarket-hero__text {
+    text-align: center;
+  }
+
+  .welcome-area.apimarket-hero .apimarket-hero__title {
+    font-size: 28px;
+  }
+}
+
+@media (min-width: 992px) {
+  .welcome-area.apimarket-hero .apimarket-hero__img {
+    margin-top: 0;
+  }
 }

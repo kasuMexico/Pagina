@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600" viewBox="0 0 900 600" role="img" aria-labelledby="title desc">
+  <title>API Market KASU</title>
+  <desc>Abstract hero illustration for API Market</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4aa3df"/>
+      <stop offset="100%" stop-color="#8ce948"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.7"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="600" rx="32" fill="url(#bg)"/>
+  <circle cx="700" cy="120" r="70" fill="#ffffff" opacity="0.25"/>
+  <circle cx="120" cy="480" r="90" fill="#ffffff" opacity="0.18"/>
+  <rect x="140" y="140" width="620" height="320" rx="24" fill="url(#card)"/>
+  <rect x="200" y="210" width="180" height="20" rx="10" fill="#48a0e9"/>
+  <rect x="200" y="250" width="320" height="18" rx="9" fill="#e84444"/>
+  <rect x="200" y="290" width="260" height="16" rx="8" fill="#ae48e9"/>
+  <rect x="200" y="330" width="360" height="14" rx="7" fill="#2f2f2f" opacity="0.2"/>
+  <rect x="200" y="360" width="280" height="14" rx="7" fill="#2f2f2f" opacity="0.2"/>
+  <rect x="520" y="210" width="160" height="160" rx="18" fill="#e84444" opacity="0.85"/>
+  <path d="M560 250h80M560 280h80M560 310h80" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+  <text x="200" y="190" font-family="Arial, sans-serif" font-size="22" fill="#1f2937">API Market KASU</text>
+</svg>

@@ -1,4 +1,6 @@
 <?php
+// Carpeta: apimarket/api/Accounts_V1.php
+// Archivo: Accounts_V1.php
 // Incluye la librería de funciones y conexiones (asegúrate de que la ruta es correcta)
 require_once 'librerias_api.php';
 //Este código busca todos los archivos con extensión ".php" en la carpeta "Funciones"  con un array los requiere

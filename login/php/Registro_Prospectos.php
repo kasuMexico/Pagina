@@ -65,6 +65,12 @@ function s_date($v): ?string { // -> Y-m-d
   }
   return null;
 }
+function s_time($v): ?string { // -> H:i:s
+  if ($v === null) return null;
+  $v = trim((string)$v);
+  if (!preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $v)) return null;
+  return strlen($v) === 5 ? $v.':00' : $v;
+}
 function s_datetime($v): ?string { // -> Y-m-d H:i:s
   if ($v === null) return null;
   foreach (['Y-m-d H:i:s','d/m/Y H:i:s','Y-m-d'] as $fmt) {
@@ -80,8 +86,133 @@ function s_choice($v, array $allowed): ?string {
   $x = strtoupper(trim((string)$v));
   return in_array($x, $allowed, true) ? $x : null;
 }
+function table_exists(mysqli $db, string $table): bool {
+  $sql = "SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ? LIMIT 1";
+  $stmt = $db->prepare($sql);
+  if (!$stmt) return false;
+  $stmt->bind_param('s', $table);
+  $stmt->execute();
+  $res = $stmt->get_result();
+  $ok = $res && $res->fetch_row();
+  $stmt->close();
+  return (bool)$ok;
+}
+function agenda_fetch_slots(mysqli $db, ?string $fecha, int $limit): array {
+  $limit = max(1, min($limit, 200));
+  if ($fecha) {
+    $stmt = $db->prepare("SELECT id, inicio, fin FROM agenda_llamadas WHERE estado = 'disponible' AND DATE(inicio) = ? ORDER BY inicio ASC LIMIT ?");
+    if (!$stmt) return [];
+    $stmt->bind_param('si', $fecha, $limit);
+  } else {
+    $stmt = $db->prepare("SELECT id, inicio, fin FROM agenda_llamadas WHERE estado = 'disponible' AND inicio >= NOW() ORDER BY inicio ASC LIMIT ?");
+    if (!$stmt) return [];
+    $stmt->bind_param('i', $limit);
+  }
+  $stmt->execute();
+  $res = $stmt->get_result();
+  $rows = $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+  $stmt->close();
+  return $rows;
+}
+function agenda_reservar_por_id(mysqli $db, int $agendaId, int $prospectoId): ?array {
+  $stmt = $db->prepare("UPDATE agenda_llamadas SET estado = 'reservado', prospecto_id = ?, reservado_en = NOW() WHERE id = ? AND estado = 'disponible'");
+  if (!$stmt) return null;
+  $stmt->bind_param('ii', $prospectoId, $agendaId);
+  $stmt->execute();
+  $ok = $stmt->affected_rows === 1;
+  $stmt->close();
+  if (!$ok) return null;
+
+  $stmt = $db->prepare("SELECT inicio, fin FROM agenda_llamadas WHERE id = ? LIMIT 1");
+  if (!$stmt) return null;
+  $stmt->bind_param('i', $agendaId);
+  $stmt->execute();
+  $row = $stmt->get_result()->fetch_assoc();
+  $stmt->close();
+  return $row ?: null;
+}
+function agenda_reservar_por_fecha(mysqli $db, string $fecha, ?string $hora, int $prospectoId): ?array {
+  if ($hora) {
+    $stmt = $db->prepare("SELECT id FROM agenda_llamadas WHERE estado = 'disponible' AND DATE(inicio) = ? AND TIME(inicio) = ? ORDER BY inicio ASC LIMIT 1");
+    if (!$stmt) return null;
+    $stmt->bind_param('ss', $fecha, $hora);
+  } else {
+    $stmt = $db->prepare("SELECT id FROM agenda_llamadas WHERE estado = 'disponible' AND DATE(inicio) = ? ORDER BY inicio ASC LIMIT 1");
+    if (!$stmt) return null;
+    $stmt->bind_param('s', $fecha);
+  }
+  $stmt->execute();
+  $row = $stmt->get_result()->fetch_assoc();
+  $stmt->close();
+  if (!$row) return null;
+  return agenda_reservar_por_id($db, (int)$row['id'], $prospectoId);
+}
+function agenda_slot_valido(string $fecha, string $hora): bool {
+  $dt = DateTime::createFromFormat('Y-m-d H:i:s', $fecha.' '.$hora);
+  if (!$dt) return false;
+  $dow = (int)$dt->format('N'); // 1=lunes, 7=domingo
+  $mins = ((int)$dt->format('H') * 60) + (int)$dt->format('i');
+  if (($mins % 30) !== 0) return false;
+
+  if ($dow >= 1 && $dow <= 5) {
+    $start = 9 * 60;
+    $end = 18 * 60;
+  } elseif ($dow === 6) {
+    $start = 10 * 60;
+    $end = 14 * 60;
+  } else {
+    return false;
+  }
+
+  return $mins >= $start && ($mins + 30) <= $end;
+}
+function agenda_reservar_slot(mysqli $db, string $fecha, string $hora, int $prospectoId): ?array {
+  if (!agenda_slot_valido($fecha, $hora)) return null;
+  $inicio = $fecha.' '.$hora;
+  $dt = DateTime::createFromFormat('Y-m-d H:i:s', $inicio);
+  if (!$dt) return null;
+  $fin = (clone $dt)->modify('+30 minutes')->format('Y-m-d H:i:s');
+
+  $stmt = $db->prepare("SELECT id, estado FROM agenda_llamadas WHERE inicio = ? LIMIT 1");
+  if (!$stmt) return null;
+  $stmt->bind_param('s', $inicio);
+  $stmt->execute();
+  $row = $stmt->get_result()->fetch_assoc();
+  $stmt->close();
+
+  if ($row) {
+    if (($row['estado'] ?? '') !== 'disponible') return null;
+    $agendaId = (int)$row['id'];
+    $stmt = $db->prepare("UPDATE agenda_llamadas SET estado = 'reservado', prospecto_id = ?, reservado_en = NOW() WHERE id = ? AND estado = 'disponible'");
+    if (!$stmt) return null;
+    $stmt->bind_param('ii', $prospectoId, $agendaId);
+    $stmt->execute();
+    $ok = $stmt->affected_rows === 1;
+    $stmt->close();
+    if (!$ok) return null;
+  } else {
+    $stmt = $db->prepare("INSERT INTO agenda_llamadas (inicio, fin, duracion_min, estado, prospecto_id, reservado_en) VALUES (?, ?, 30, 'reservado', ?, NOW())");
+    if (!$stmt) return null;
+    $stmt->bind_param('ssi', $inicio, $fin, $prospectoId);
+    $stmt->execute();
+    $ok = $stmt->affected_rows === 1;
+    $stmt->close();
+    if (!$ok) return null;
+  }
+
+  return ['inicio' => $inicio, 'fin' => $fin];
+}
 function redirect303(string $url): never {
   header('Location: '.$url, true, 303);
+  exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['agenda_slots'])) {
+  $fecha = s_date($_GET['fecha'] ?? null);
+  $limit = (int)($_GET['limit'] ?? 40);
+  $slots = agenda_fetch_slots($pros, $fecha, $limit);
+  header('Content-Type: application/json; charset=UTF-8');
+  echo json_encode(['ok' => true, 'fecha' => $fecha, 'slots' => $slots], JSON_UNESCAPED_SLASHES);
   exit;
 }
 
@@ -89,6 +220,7 @@ function redirect303(string $url): never {
 $Host         = s_str(p_get('Host', $_SERVER['PHP_SELF'] ?? '/'));
 $name         = s_str(p_get('name') ?? p_get('nombre'));
 $IdProspecto  = s_int(p_get('IdProspecto'));
+$vendedorSesion = s_int($_SESSION['Vendedor'] ?? null);
 $fingerprint  = s_str(p_get('fingerprint') ?? p_get('IdFingerprint'));
 $connection   = s_str(p_get('connection'));
 $timezone     = s_str(p_get('timezone'));
@@ -96,9 +228,13 @@ $touch        = s_str(p_get('touch'));
 $Cupon        = s_str(p_get('Cupon'));
 $Telefono     = s_phone10(p_get('Telefono'));
 $Mail         = s_email(p_get('Correo') ?? p_get('Mail') ?? p_get('Email'));
+$FechaLlamada = s_date(p_get('FechaLlamada'));
+$HoraLlamada  = s_time(p_get('HoraLlamada'));
+$AgendaId     = s_int(p_get('AgendaId') ?? p_get('IdAgenda'));
 $FechaCita    = s_date(p_get('FechaCita'));
 $HoraCita     = preg_match('/^\d{2}:\d{2}(:\d{2})?$/', (string)p_get('HoraCita')) ? (string)p_get('HoraCita') : '00:00:00';
-$Rastreo      = s_str(p_get('Rastreo'));
+$OrigenVisible= s_str(p_get('OrigenVisible'));
+$Rastreo      = s_str(p_get('Rastreo')) ?? $OrigenVisible;
 $MotivoBaja   = s_str(p_get('MotivoBaja'));
 $NvoVend      = s_int(p_get('NvoVend'));
 
@@ -110,6 +246,7 @@ if (isset($_POST['prospectoNvo'])) {
   $SERV_ALLOWED = ['FUNERARIO','SEGURIDAD','TRANSPORTE','RETIRO','DISTRIBUIDOR'];
 
   $Curp             = s_curp(p_get('Curp') ?? p_get('CURP'));
+  $FullNameInput    = s_str(p_get('FullName') ?? p_get('NombreCompleto') ?? p_get('Nombre'));
   $NoTel            = s_phone10(p_get('NoTel') ?? p_get('Telefono'));
   $Email            = s_email(p_get('Email'));
   $Servicio_Interes = s_choice(p_get('Servicio_Interes') ?? p_get('Servicio'), $SERV_ALLOWED) ?? 'FUNERARIO';
@@ -126,23 +263,29 @@ if (isset($_POST['prospectoNvo'])) {
 
   $Msg = 'Operación no concluida';
   $ValidacionProducto = '';
+  $FullNameToSave = null;
+  $FechaNacSave = $FechaNac;
 
   // Duplicados en BD de prospectos
   $CurpValid = $basicas->BuscarCampos($pros,   'Id', 'prospectos', 'Curp', $Curp);
   $ValidTele = $basicas->BuscarCampos($pros,   'Id', 'prospectos', 'NoTel', $NoTel);
   $ValidMail = $basicas->BuscarCampos($pros,   'Id', 'prospectos', 'Email', $Email);
 
-  // Si ya es cliente, validar producto permitido
-  $IdContac = $basicas->BuscarCampos($mysqli, 'IdContact', 'Usuario', 'ClaveCurp', $Curp);
-  if (!empty($IdContac)) {
-    $StatVta = $basicas->BuscarCampos($mysqli, 'Producto', 'Venta', 'IdContact', $IdContac);
-    // Fix lógico: inválido si NO es ni "Universidad" ni "Retiro"
-    if ($StatVta !== 'Universidad' && $StatVta !== 'Retiro') {
-      $ValidacionProducto = 'InValido';
+  // Si ya es cliente, validar producto permitido (solo si hay CURP)
+  if ($Curp !== null) {
+    $IdContac = $basicas->BuscarCampos($mysqli, 'IdContact', 'Usuario', 'ClaveCurp', $Curp);
+    if (!empty($IdContac)) {
+      $StatVta = $basicas->BuscarCampos($mysqli, 'Producto', 'Venta', 'IdContact', $IdContac);
+      // Fix lógico: inválido si NO es ni "Universidad" ni "Retiro"
+      if ($StatVta !== 'Universidad' && $StatVta !== 'Retiro') {
+        $ValidacionProducto = 'InValido';
+      }
     }
   }
 
-  if ($ValidacionProducto === 'InValido') {
+  if ($Curp === null && $FullNameInput === null) {
+    $Msg = 'Ingresa tu CURP o tu nombre completo';
+  } elseif ($ValidacionProducto === 'InValido') {
     $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Pros_ya_Cte_Pwa', $Host);
     $Msg = 'Este prospecto ya es cliente de KASU';
   } elseif (!empty($CurpValid) && $basicas->BuscarCampos($pros, 'Papeline', 'prospectos', 'Curp', $Curp) === 'Prospeccion') {
@@ -152,14 +295,27 @@ if (isset($_POST['prospectoNvo'])) {
     $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Pros_Contacto_Duplicado', $Host);
     $Msg = 'Los datos de contacto de este prospecto ya se encuentran registrados';
   } else {
-    // Validación CURP por API
-    $DatProsp = $seguridad->peticion_get($Curp);
-    if (!is_array($DatProsp) || ($DatProsp['Response'] ?? 'Error') === 'Error') {
-      $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Pros_Curp_Falsa_Pwa', $Host);
-      $Msg = (string)($DatProsp['Msg'] ?? 'CURP no válida');
+    $canInsert = true;
+    if ($Curp !== null) {
+      $DatProsp = $seguridad->peticion_get($Curp);
+      if (!is_array($DatProsp) || ($DatProsp['Response'] ?? 'Error') === 'Error') {
+        $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Pros_Curp_Falsa_Pwa', $Host);
+        $Msg = (string)($DatProsp['Msg'] ?? 'CURP no válida');
+        $canInsert = false;
+      } else {
+        $FullNameToSave = trim(($DatProsp['Nombre'] ?? '').' '.($DatProsp['Paterno'] ?? '').' '.($DatProsp['Materno'] ?? ''));
+        $FechaNacSave = $DatProsp['FechaNacimiento'] ?? $FechaNac;
+      }
     } else {
-      // Asignado = Id de Empleados del Vendedor en sesión
-      $Asignado = (int)$basicas->BuscarCampos($mysqli, 'Id', 'Empleados', 'IdUsuario', $_SESSION['Vendedor']);
+      $FullNameToSave = $FullNameInput;
+    }
+
+    if ($canInsert && $FullNameToSave !== null) {
+      // Asignado = Id de Empleados del Vendedor en sesión (si existe)
+      $Asignado = 0;
+      if ($vendedorSesion) {
+        $Asignado = (int)$basicas->BuscarCampos($mysqli, 'Id', 'Empleados', 'IdUsuario', $vendedorSesion);
+      }
 
       $ids = $seguridad->auditoria_registrar($mysqli, $basicas, $_POST, 'Pros_Alta_Pwa', $Host);
 
@@ -167,8 +323,8 @@ if (isset($_POST['prospectoNvo'])) {
         'IdFingerprint'    => $ids['fingerprint_id'] ?? null,
         'IdFacebook'       => $IdFacebook,
         'UsrApi'           => $UsrApi,
-        'FullName'         => trim(($DatProsp['Nombre'] ?? '').' '.($DatProsp['Paterno'] ?? '').' '.($DatProsp['Materno'] ?? '')),
-        'Curp'             => $Curp,
+        'FullName'         => $FullNameToSave,
+        'Curp'             => $Curp ?? '',
         'NoTel'            => $NoTel,
         'Email'            => $Email,
         'Direccion'        => $Direccion,
@@ -179,13 +335,60 @@ if (isset($_POST['prospectoNvo'])) {
         'PosPapeline'      => 1,
         'Sugeridos'        => $Sugeridos,
         'Cancelacion'      => $Cancelacion,
-        'FechaNac'         => $DatProsp['FechaNacimiento'] ?? $FechaNac,
+        'FechaNac'         => $FechaNacSave,
         'Automatico'       => $Automatico,
         'Asignado'         => $Asignado,
       ];
-      $basicas->InsertCampo($pros, 'prospectos', $data);
-      $Msg = 'Se ha registrado correctamente el prospecto';
+      $insertRes = $basicas->InsertCampo($pros, 'prospectos', $data);
+      $prospectoId = is_numeric($insertRes) ? (int)$insertRes : 0;
+      if ($prospectoId > 0) {
+        $Msg = 'Se ha registrado correctamente el prospecto';
+        if ($FechaLlamada || $AgendaId) {
+          $reserva = null;
+          if ($AgendaId) {
+            $reserva = agenda_reservar_por_id($pros, $AgendaId, $prospectoId);
+          } elseif ($FechaLlamada && $HoraLlamada) {
+            $reserva = agenda_reservar_slot($pros, $FechaLlamada, $HoraLlamada, $prospectoId);
+          } elseif ($FechaLlamada && !$HoraLlamada) {
+            $Msg = 'Se registro el prospecto, pero falta seleccionar la hora de la llamada';
+          }
+          if ($reserva) {
+            if (table_exists($pros, 'citas')) {
+              $basicas->InsertCampo($pros, 'citas', [
+                'IdProspecto'   => $prospectoId,
+                'Telefono'      => $NoTel,
+                'Correo'        => $Email,
+                'FechaCita'     => $reserva['inicio'],
+                'Rastreo'       => $Rastreo,
+                'FechaRegistro' => $hoy.' '.$HoraActual,
+              ]);
+              $Msg = 'Se ha registrado correctamente el prospecto y su llamada quedo agendada';
+            } else {
+              $Msg = 'Se registro el prospecto y se reservo la llamada, pero falta crear la tabla de citas';
+            }
+          } elseif (($FechaLlamada && $HoraLlamada) || $AgendaId) {
+            $Msg = 'Se registro el prospecto, pero no hay disponibilidad para la fecha seleccionada';
+          }
+        }
+      } else {
+        $Msg = 'No se pudo registrar el prospecto';
+      }
+    } elseif ($canInsert) {
+      $Msg = 'Ingresa tu nombre completo';
     }
+  }
+
+  if (($prospectoId ?? 0) > 0 && $Email !== null) {
+    $_SESSION['mail_token'] = bin2hex(random_bytes(32));
+    $params = [
+      'EnviarGuia'  => 1,
+      'IdProspecto' => $prospectoId,
+      'mail_token'  => $_SESSION['mail_token'],
+      'Redireccion' => 'https://kasu.com.mx/',
+      'MsgBase'     => $Msg,
+    ];
+    header('Location: https://kasu.com.mx/eia/EnviarCorreo.php?' . http_build_query($params), true, 303);
+    exit;
   }
 
   $url = 'https://kasu.com.mx'.$Host.'?Vt=1&Msg='.rawurlencode($Msg).($name ? '&nombre='.rawurlencode($name) : '');
@@ -200,7 +403,7 @@ if (isset($_POST['DescargaPres']) || isset($_POST['EnviaPres'])) {
   $IdContact   = s_int(p_get('IdContact'));
   $IdUsuario   = s_int(p_get('IdUsuario'));
   $Producto    = s_str(p_get('Producto'));
-  $IdVendedor  = s_int(p_get('IdVendedor')) ?? $_SESSION['Vendedor'];
+  $IdVendedor  = s_int(p_get('IdVendedor')) ?? $vendedorSesion ?? 0;
   $tipo_plan   = s_str(p_get('tipo_plan')) ?? 'INDIVIDUAL';
   $a02a29      = s_int(p_get('a02a29')) ?? 0;
   $a30a49      = s_int(p_get('a30a49')) ?? 0;
@@ -345,7 +548,9 @@ if (isset($_POST['Cita']) && $IdProspecto && $FechaCita) {
     'Rastreo'       => $Rastreo,
     'FechaRegistro' => $hoy.' '.$HoraActual,
   ];
-  $basicas->InsertCampo($pros, 'citas', $CitaReg);
+  if (table_exists($pros, 'citas')) {
+    $basicas->InsertCampo($pros, 'citas', $CitaReg);
+  }
 
   $DatEventos = [
     'Us'            => $IdProspecto,

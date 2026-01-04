@@ -112,6 +112,35 @@ if (!function_exists('kasu_load_empleados_tree')) {
   }
 }
 
+if (!function_exists('kasu_table_exists')) {
+  function kasu_table_exists(mysqli $db, string $table): bool {
+    $sql = "SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ? LIMIT 1";
+    $stmt = $db->prepare($sql);
+    if (!$stmt) return false;
+    $stmt->bind_param('s', $table);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $ok = $res && $res->fetch_row();
+    $stmt->close();
+    return (bool)$ok;
+  }
+}
+
+if (!function_exists('kasu_format_fecha_es')) {
+  function kasu_format_fecha_es(string $raw): string {
+    if ($raw === '') return '';
+    $dt = DateTime::createFromFormat('Y-m-d H:i:s', $raw)
+      ?: DateTime::createFromFormat('Y-m-d H:i', $raw)
+      ?: DateTime::createFromFormat('Y-m-d', $raw);
+    if (!$dt) return $raw;
+    $dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+    $meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    $dia = $dias[(int)$dt->format('w')] ?? '';
+    $mes = $meses[(int)$dt->format('n') - 1] ?? '';
+    return $dia . ' ' . $dt->format('j') . ' de ' . $mes . ', ' . $dt->format('H:i');
+  }
+}
+
 // =================== Fechas periodo ===================
 // Qué hace: Define inicio de mes y fecha de hoy para filtros y vistas
 // Fecha: 05/11/2025 | Revisado por: JCCM
@@ -200,6 +229,17 @@ if (is_array($kasuScopeUsers)) {
   }
 }
 
+$hasCitas = kasu_table_exists($pros, 'citas');
+$hasAgenda = kasu_table_exists($pros, 'agenda_llamadas');
+$stmtCita = null;
+$stmtAgenda = null;
+if ($hasCitas) {
+  $stmtCita = $pros->prepare("SELECT FechaCita FROM citas WHERE IdProspecto = ? ORDER BY FechaCita DESC LIMIT 1");
+}
+if ($hasAgenda) {
+  $stmtAgenda = $pros->prepare("SELECT inicio FROM agenda_llamadas WHERE prospecto_id = ? ORDER BY inicio DESC LIMIT 1");
+}
+
 // =================== Cancelación de prospecto (POST CancelaCte) ===================
 // Qué hace: Registra auditoría, marca cancelación y notifica por mensaje
 // Fecha: 05/11/2025 | Revisado por: JCCM
@@ -216,6 +256,42 @@ if (!empty($_POST['CancelaCte'])) {
     $_GET['Msg'] = "Se ha cancelado el prospecto";
     // Cambio de Status de Prospecto
     $basicas->ActCampo($pros, "prospectos", "Cancelacion", 1, (int)($_POST['IdVenta'] ?? 0));
+}
+
+// =================== Comentarios de prospecto (POST RegistrarComentario) ===================
+// Qué hace: Guarda comentario del ejecutivo en tabla Prospectos_Comentarios
+// Fecha: 08/01/2026 | Revisado por: IA
+if (!empty($_POST['RegistrarComentario'])) {
+  $idProspectoNum = (int)($_POST['IdProspectoNum'] ?? 0);
+  $comentario = trim((string)($_POST['Comentario'] ?? ''));
+  if ($idProspectoNum > 0 && $comentario !== '') {
+    if (kasu_table_exists($pros, 'Prospectos_Comentarios')) {
+      $idUsuario = (string)($_SESSION['Vendedor'] ?? '');
+      $stmtCom = $pros->prepare("
+        INSERT INTO Prospectos_Comentarios (IdProspecto, IdUsuario, Comentario, FechaRegistro)
+        VALUES (?, ?, ?, NOW())
+      ");
+      if ($stmtCom) {
+        $stmtCom->bind_param('iss', $idProspectoNum, $idUsuario, $comentario);
+        $stmtCom->execute();
+        $stmtCom->close();
+        $seguridad->auditoria_registrar(
+          $mysqli,
+          $basicas,
+          $_POST,
+          'Prospecto_Comentario',
+          $_POST['Host'] ?? $_SERVER['PHP_SELF']
+        );
+        $_GET['Msg'] = 'Comentario guardado.';
+      } else {
+        $_GET['Msg'] = 'No se pudo guardar el comentario.';
+      }
+    } else {
+      $_GET['Msg'] = 'Tabla Prospectos_Comentarios no disponible.';
+    }
+  } else {
+    $_GET['Msg'] = 'Comentario vacio o prospecto invalido.';
+  }
 }
 ?>
 <!DOCTYPE html>
@@ -246,8 +322,47 @@ if (!empty($_POST['CancelaCte'])) {
   <link rel="stylesheet" href="/login/assets/css/pwa-core.css?v=<?= h((string)$VerCache) ?>">
   <link rel="stylesheet" href="/login/assets/css/pwa-components.css?v=<?= h((string)$VerCache) ?>">
   <link rel="stylesheet" href="assets/css/Grafica.css">
+  <style>
+    :root {
+      --mesa-menu-bg: #808b96;
+      --mesa-menu-text: #f8f9f9;
+    }
+    .mesa-prospectos .topbar {
+      background: var(--mesa-menu-bg);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+      color: var(--mesa-menu-text);
+      position: fixed;
+    }
+    .mesa-prospectos .topbar .title,
+    .mesa-prospectos .topbar .eyebrow,
+    .mesa-prospectos .topbar .topbar-label {
+      color: var(--mesa-menu-text);
+    }
+    .mesa-prospectos .topbar .eyebrow {
+      opacity: 0.85;
+    }
+    .mesa-prospectos-content {
+      padding-top: calc(var(--topbar-h, 56px) + var(--safe-t, 0px));
+      padding-bottom: calc(var(--bottombar-h, 48px) + var(--safe-b, 0px) + 8px);
+    }
+    .mesa-prospectos-scroll {
+      max-height: calc(
+        100vh - (var(--topbar-h, 56px) + var(--safe-t, 0px))
+        - (var(--bottombar-h, 48px) + var(--safe-b, 0px))
+        - 16px
+      );
+      overflow-y: auto;
+    }
+    .mesa-prospectos-scroll thead th {
+      position: sticky;
+      top: 0;
+      background: var(--mesa-menu-bg);
+      color: var(--mesa-menu-text);
+      z-index: 2;
+    }
+  </style>
 </head>
-<body onload="localize()">
+<body class="mesa-prospectos" onload="localize()">
   <!-- =================== Top bar fija Mesa_Prospectos.php ===================
        Qué hace: Encabezado con título y botón para crear prospecto
        Fecha: 05/11/2025 | Revisado por: JCCM -->
@@ -370,23 +485,135 @@ if (!empty($_POST['CancelaCte'])) {
       <?php elseif ($Ventana === "Ventana6"): ?>
         <!-- (6) Enviar a LeadSales HTML Listo para revision Formulario -->
         <?php require 'html/CrearLeadSales.php'; ?>
+
+      <?php elseif ($Ventana === "Ventana7"): ?>
+        <!-- (7) Comentarios y analisis IA del prospecto -->
+        <?php
+          $prospectoId = (int)($Reg['Id'] ?? 0);
+          $comentarios = [];
+          if ($prospectoId > 0 && kasu_table_exists($pros, 'Prospectos_Comentarios')) {
+            $stmtCom = $pros->prepare("
+              SELECT IdUsuario, Comentario, FechaRegistro
+              FROM Prospectos_Comentarios
+              WHERE IdProspecto = ?
+              ORDER BY FechaRegistro DESC
+              LIMIT 20
+            ");
+            if ($stmtCom) {
+              $stmtCom->bind_param('i', $prospectoId);
+              $stmtCom->execute();
+              $resCom = $stmtCom->get_result();
+              while ($rowCom = $resCom->fetch_assoc()) {
+                $comentarios[] = $rowCom;
+              }
+              $stmtCom->close();
+            }
+          }
+
+          $analisis = null;
+          if ($prospectoId > 0 && kasu_table_exists($pros, 'Prospectos_Analisis_IA')) {
+            $stmtAna = $pros->prepare("
+              SELECT LeadScore, Resumen, PasosSugeridos, Recomendacion, AnalisisJson, FechaAnalisis
+              FROM Prospectos_Analisis_IA
+              WHERE IdProspecto = ?
+              ORDER BY FechaAnalisis DESC
+              LIMIT 1
+            ");
+            if ($stmtAna) {
+              $stmtAna->bind_param('i', $prospectoId);
+              $stmtAna->execute();
+              $analisis = $stmtAna->get_result()->fetch_assoc() ?: null;
+              $stmtAna->close();
+            }
+          }
+
+          $analisisHtml = '<p class="text-muted mb-2">Sin analisis reciente. Usa "Analizar con IA".</p>';
+          if (is_array($analisis)) {
+            $score = (int)($analisis['LeadScore'] ?? 0);
+            $resumen = (string)($analisis['Resumen'] ?? '');
+            $reco = (string)($analisis['Recomendacion'] ?? '');
+            $pasosRaw = (string)($analisis['PasosSugeridos'] ?? '');
+            $pasos = json_decode($pasosRaw, true);
+            if (!is_array($pasos)) {
+              $pasos = array_filter(array_map('trim', preg_split('/\r?\n/', $pasosRaw)));
+            }
+            $analisisHtml = '<p><strong>Calificacion lead:</strong> ' . h((string)$score) . '</p>';
+            if ($resumen !== '') {
+              $analisisHtml .= '<p><strong>Resumen:</strong> ' . h($resumen) . '</p>';
+            }
+            if (!empty($pasos)) {
+              $analisisHtml .= '<p><strong>Siguientes pasos:</strong></p><ul>';
+              foreach ($pasos as $paso) {
+                $analisisHtml .= '<li>' . h((string)$paso) . '</li>';
+              }
+              $analisisHtml .= '</ul>';
+            }
+            if ($reco !== '') {
+              $analisisHtml .= '<p><strong>Recomendacion:</strong> ' . h($reco) . '</p>';
+            }
+          }
+        ?>
+        <form method="POST" action="<?= h($_SERVER['PHP_SELF']) ?>">
+          <div class="modal-header">
+            <h5 class="modal-title">Comentarios y seguimiento</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" name="IdProspecto" value="7<?= (int)$prospectoId ?>">
+            <input type="hidden" name="IdProspectoNum" value="<?= (int)$prospectoId ?>">
+            <input type="hidden" name="nombre" value="<?= h($nombre) ?>">
+            <input type="hidden" name="Host" value="<?= h($_SERVER['PHP_SELF']) ?>">
+
+            <div class="border rounded p-3 mb-3">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <strong>Analisis IA</strong>
+              </div>
+              <div id="ia-prospecto-result" data-ia-prospecto="<?= (int)$prospectoId ?>">
+                <?= $analisisHtml ?>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="Comentario">Comentario del ejecutivo</label>
+              <textarea id="Comentario" name="Comentario" class="form-control" rows="3" placeholder="Registra el seguimiento..."></textarea>
+            </div>
+
+            <div class="mb-3">
+              <strong>Historial de comentarios</strong>
+              <?php if (!empty($comentarios)): ?>
+                <ul class="mt-2">
+                  <?php foreach ($comentarios as $com): ?>
+                    <li>
+                      <small><?= h((string)($com['FechaRegistro'] ?? '')) ?> · <?= h((string)($com['IdUsuario'] ?? '')) ?></small><br>
+                      <?= h((string)($com['Comentario'] ?? '')) ?>
+                    </li>
+                  <?php endforeach; ?>
+                </ul>
+              <?php else: ?>
+                <p class="text-muted mt-2">Sin comentarios registrados.</p>
+              <?php endif; ?>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" name="RegistrarComentario" class="btn btn-primary">Guardar comentario</button>
+          </div>
+        </form>
       <?php endif; ?>
     </div></div>
   </div>
 
-  <br><br>
-
   <!-- =================== Tabla de prospectos ===================
        Qué hace: Lista prospectos activos, calcula semanas y muestra acciones
        Fecha: 05/11/2025 | Revisado por: JCCM -->
-  <section name="impresion de datos finales">
-    <div class="table-responsive mesa-table-wrapper">
+  <section name="impresion de datos finales" class="mesa-prospectos-content">
+    <div class="mesa-prospectos-scroll table-responsive mesa-table-wrapper">
       <table class="table mesa-table" data-mesa="prospectos">
         <thead>
           <tr>
             <th>Nombre Prospecto</th>
             <th>Sem. Activo</th>
             <th>Servicio</th>
+            <th>Cita</th>
             <th>Origen</th>
             <th>Asignado</th>
             <th>Acciones</th>
@@ -407,7 +634,7 @@ if (!empty($_POST['CancelaCte'])) {
           if (isset($kasuEmpleadosMap[$assignedId])) {
             $assignedUser = strtoupper(trim((string)$kasuEmpleadosMap[$assignedId]['IdUsuario']));
           }
-          if ($kasuScopeSet !== null && !isset($kasuScopeSet[$assignedUser])) {
+          if ($kasuScopeSet !== null && $assignedUser !== '' && !isset($kasuScopeSet[$assignedUser])) {
             continue;
           }
           $Sem     = strtotime($row['Alta']);
@@ -415,11 +642,31 @@ if (!empty($_POST['CancelaCte'])) {
           $ContSem = ($HoyA - $Sem) / 604800; // 7*24*3600
 
           $esDistribuidor = (strtoupper((string)$row['Servicio_Interes']) === 'DISTRIBUIDOR');
+          $citaTxt = '';
+          $prosId = (int)($row['Id'] ?? 0);
+          if ($prosId > 0 && $stmtCita) {
+            $stmtCita->bind_param('i', $prosId);
+            $stmtCita->execute();
+            $rowCita = $stmtCita->get_result()->fetch_assoc();
+            $citaTxt = $rowCita ? kasu_format_fecha_es((string)($rowCita['FechaCita'] ?? '')) : '';
+          }
+          if ($citaTxt === '' && $prosId > 0 && $stmtAgenda) {
+            $stmtAgenda->bind_param('i', $prosId);
+            $stmtAgenda->execute();
+            $rowCita = $stmtAgenda->get_result()->fetch_assoc();
+            $citaTxt = $rowCita ? kasu_format_fecha_es((string)($rowCita['inicio'] ?? '')) : '';
+          }
+          $telRaw = preg_replace('/\D+/', '', (string)($row['NoTel'] ?? ''));
+          $telIntl = $telRaw;
+          if ($telRaw !== '' && strlen($telRaw) === 10) {
+            $telIntl = '52' . $telRaw;
+          }
         ?>
           <tr>
             <td><?= h($row['FullName']) ?></td>
             <td><?= (int)round($ContSem, 0) ?></td>
             <td><?= h($row['Servicio_Interes']) ?></td>
+            <td><?= h($citaTxt) ?></td>
             <td><?= h($row['Origen']) ?></td>
             <td><?= h($basicas->BuscarCampos($mysqli,'IdUsuario','Empleados','Id',(int)$row['Asignado'])) ?></td>
             <td class="mesa-actions" data-label="Acciones">
@@ -429,10 +676,12 @@ if (!empty($_POST['CancelaCte'])) {
                   <input type="hidden" name="nombre" value="<?= h($nombre) ?>">
 
                   <!-- Registrar Venta (1) -->
-                  <label for="b1<?= (int)$row['Id'] ?>" title="Registrar Venta" class="btn" style="background:#58D68D;color:#F8F9F9;">
-                    <i class="material-icons">verified_user</i>
-                  </label>
-                  <input id="b1<?= (int)$row['Id'] ?>" type="submit" name="IdProspecto" value="1<?= (int)$row['Id'] ?>" hidden>
+                  <?php if (trim((string)($row['Curp'] ?? '')) !== ''): ?>
+                    <label for="b1<?= (int)$row['Id'] ?>" title="Registrar Venta" class="btn" style="background:#58D68D;color:#F8F9F9;">
+                      <i class="material-icons">verified_user</i>
+                    </label>
+                    <input id="b1<?= (int)$row['Id'] ?>" type="submit" name="IdProspecto" value="1<?= (int)$row['Id'] ?>" hidden>
+                  <?php endif; ?>
 
                   <!-- Enviar lead Sales (6) -->
                   <label for="b6<?= (int)$row['Id'] ?>" title="Enviar lead Sales" class="btn" style="background:#21618C;color:#F8F9F9;">
@@ -452,23 +701,34 @@ if (!empty($_POST['CancelaCte'])) {
                   </label>
                   <input id="b3<?= (int)$row['Id'] ?>" type="submit" name="IdProspecto" value="3<?= (int)$row['Id'] ?>" hidden>
 
-                  <!-- Enviar correo (7) 
-                  <label for="b7<?= (int)$row['Id'] ?>" title="Enviar correo electrónico" class="btn" style="background:#EB984E;color:#F8F9F9;">
-                    <i class="material-icons">send_to_mobile</i>
+                  <!-- Comentarios y seguimiento (7) -->
+                  <label for="b7<?= (int)$row['Id'] ?>" title="Comentarios y seguimiento" class="btn" style="background:#3498DB;color:#F8F9F9;">
+                    <i class="material-icons">chat</i>
                   </label>
                   <input id="b7<?= (int)$row['Id'] ?>" type="submit" name="IdProspecto" value="7<?= (int)$row['Id'] ?>" hidden>
-                  -->
                   <!-- Cambiar datos (5) -->
                   <label for="b5<?= (int)$row['Id'] ?>" title="Cambiar datos del Prospecto" class="btn" style="background:#AAB7B8;color:#F8F9F9;">
                     <i class="material-icons">badge</i>
                   </label>
                   <input id="b5<?= (int)$row['Id'] ?>" type="submit" name="IdProspecto" value="5<?= (int)$row['Id'] ?>" hidden>
 
+                  <?php if ($telRaw !== ''): ?>
+                    <a class="btn" href="<?= h('tel:' . $telRaw) ?>" title="Llamar" style="background:#1abc9c;color:#F8F9F9;">
+                      <i class="material-icons">call</i>
+                    </a>
+                    <a class="btn" href="<?= h('https://wa.me/' . $telIntl) ?>" title="WhatsApp" target="_blank" rel="noopener" style="background:#25D366;color:#F8F9F9;">
+                      <i class="fa fa-whatsapp" aria-hidden="true" style="font-size:18px;line-height:1;"></i>
+                    </a>
+                  <?php endif; ?>
                 </form>
               </div>
             </td>
           </tr>
         <?php endforeach; ?>
+        <?php
+          if ($stmtCita) { $stmtCita->close(); }
+          if ($stmtAgenda) { $stmtAgenda->close(); }
+        ?>
         </tbody>
       </table>
     </div>
@@ -492,6 +752,32 @@ if (!empty($_POST['CancelaCte'])) {
       <?php if (!empty($Lanzar)): ?>
         $('<?= h($Lanzar) ?>').modal('show');
       <?php endif; ?>
+    });
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      $('#Ventana').on('shown.bs.modal', async function () {
+        const resultBox = document.getElementById('ia-prospecto-result');
+        if (!resultBox) return;
+        const prospectoId = resultBox.getAttribute('data-ia-prospecto');
+        if (!prospectoId) return;
+        resultBox.innerHTML = '<p class="text-muted mb-0">Analizando...</p>';
+        try {
+          const resp = await fetch('/eia/Vista-360/vista360_prospecto_analisis.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_prospecto: Number(prospectoId), force: true })
+          });
+          const data = await resp.json();
+          if (data && data.ok && data.html) {
+            resultBox.innerHTML = data.html;
+          } else {
+            resultBox.innerHTML = '<p class="text-danger mb-0">No se pudo generar el analisis.</p>';
+          }
+        } catch (err) {
+          resultBox.innerHTML = '<p class="text-danger mb-0">Error al llamar a IA.</p>';
+        }
+      });
     });
   </script>
 </body>

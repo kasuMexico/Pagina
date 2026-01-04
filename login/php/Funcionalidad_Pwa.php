@@ -344,6 +344,106 @@ if (isset($_POST['PromPago'])) {
 }
 
 // ======================================================================
+// ============ BLOQUE: REGISTRAR PROCESO LEAD SALES (EMAIL) ============
+// === Qué hace: guarda la frecuencia y programa el primer envio. =======
+// === Fecha: 05/11/2025 | Revisado por: JCCM ===========================
+// ======================================================================
+if (!empty($_POST['LeadSales'])) {
+    if (!isset($pros) || !($pros instanceof mysqli)) {
+        http_response_code(500);
+        exit('BD prospectos no disponible.');
+    }
+
+    $idProspecto = isset($_POST['IdProspecto']) ? (int)$_POST['IdProspecto'] : 0;
+    $freqRaw = strtoupper(trim((string)($_POST['Frecuencia'] ?? '')));
+    $nombre  = trim((string)($_POST['nombre'] ?? ''));
+
+    $hostInput = (string)($_POST['Host'] ?? '/login/Mesa_Prospectos.php');
+    $hostPath  = parse_url($hostInput, PHP_URL_PATH) ?: '/login/Mesa_Prospectos.php';
+
+    $validFreq = ['DIARIO', 'SEMANAL', 'QUINCENAL', 'MENSUAL'];
+    if ($idProspecto <= 0) {
+        $Msg = 'Prospecto invalido.';
+        header('Location: https://kasu.com.mx' . $hostPath . '?Vt=1&Msg=' . rawurlencode($Msg) . '&nombre=' . rawurlencode($nombre), true, 303);
+        exit();
+    }
+    if (!in_array($freqRaw, $validFreq, true)) {
+        $Msg = 'Selecciona una frecuencia valida.';
+        header('Location: https://kasu.com.mx' . $hostPath . '?Vt=1&Msg=' . rawurlencode($Msg) . '&nombre=' . rawurlencode($nombre), true, 303);
+        exit();
+    }
+
+    $seguridad->auditoria_registrar(
+        $mysqli, $basicas, $_POST, 'LeadSales_Email', $hostPath
+    );
+
+    $fechaRegistro = $hoy . ' ' . $HoraActual;
+    $fechaProxima  = $fechaRegistro; // se enviara en el siguiente cron
+    $IdVendedor    = (int)$basicas->BuscarCampos($mysqli, 'Id', 'Empleados', 'IdUsuario', $_SESSION['Vendedor']);
+
+    $fuente     = 'Mesa_Prospectos';
+    $tipoNota   = 'EMAIL_AUTO';
+    $titulo     = 'Seguimiento automatico';
+    $comentario = 'Frecuencia: ' . $freqRaw;
+
+    $stmt = $pros->prepare("SELECT Id FROM Prospectos_Seguimiento_IA WHERE IdProspecto = ? AND TipoNota = 'EMAIL_AUTO' ORDER BY Id DESC LIMIT 1");
+    if (!$stmt) {
+        error_log('LeadSales: prepare select failed: ' . $pros->error);
+        $Msg = 'Error al registrar el seguimiento.';
+        header('Location: https://kasu.com.mx' . $hostPath . '?Vt=1&Msg=' . rawurlencode($Msg) . '&nombre=' . rawurlencode($nombre), true, 303);
+        exit();
+    }
+    $stmt->bind_param('i', $idProspecto);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $row = $res ? $res->fetch_assoc() : null;
+    $stmt->close();
+
+    if ($row && isset($row['Id'])) {
+        $idReg = (int)$row['Id'];
+        $stmtUp = $pros->prepare(
+            "UPDATE Prospectos_Seguimiento_IA
+             SET IdVendedor = ?, Fuente = ?, Titulo = ?, Comentario = ?, ProximaAccion = ?, FechaProxima = ?
+             WHERE Id = ?"
+        );
+        if ($stmtUp) {
+            $stmtUp->bind_param('isssssi', $IdVendedor, $fuente, $titulo, $comentario, $freqRaw, $fechaProxima, $idReg);
+            $stmtUp->execute();
+            $stmtUp->close();
+        }
+        $Msg = 'Seguimiento actualizado.';
+    } else {
+        $relCorreoId = 0;
+        $stmtIn = $pros->prepare(
+            "INSERT INTO Prospectos_Seguimiento_IA
+             (IdProspecto, IdVendedor, Fuente, TipoNota, Titulo, Comentario, ProximaAccion, FechaProxima, RelacionadoCorreoId, FechaRegistro)
+             VALUES (?,?,?,?,?,?,?,?,?,?)"
+        );
+        if ($stmtIn) {
+            $stmtIn->bind_param(
+                'iissssssis',
+                $idProspecto,
+                $IdVendedor,
+                $fuente,
+                $tipoNota,
+                $titulo,
+                $comentario,
+                $freqRaw,
+                $fechaProxima,
+                $relCorreoId,
+                $fechaRegistro
+            );
+            $stmtIn->execute();
+            $stmtIn->close();
+        }
+        $Msg = 'Seguimiento registrado.';
+    }
+
+    header('Location: https://kasu.com.mx' . $hostPath . '?Vt=1&Msg=' . rawurlencode($Msg) . '&nombre=' . rawurlencode($nombre), true, 303);
+    exit();
+}
+
+// ======================================================================
 // ============== BLOQUE: ACTUALIZAR DATOS DE UN PROSPECTO ==============
 // === Qué hace: actualiza teléfono, email, dirección y servicio. =======
 // === Fecha: 05/11/2025 | Revisado por: JCCM ===========================
@@ -355,6 +455,7 @@ if (!empty($_POST['ActDatosPROS'])) {
         exit('IdProspecto inválido.');
     }
 
+    $CurpRaw          = isset($_POST['CURP']) ? trim((string)$_POST['CURP']) : '';
     $Telefono         = isset($_POST['Telefono']) ? trim((string)$_POST['Telefono']) : '';
     $EmailRaw         = isset($_POST['Email']) ? trim((string)$_POST['Email']) : '';
     $Email            = $EmailRaw !== '' ? ((filter_var($EmailRaw, FILTER_VALIDATE_EMAIL) ?: '')) : '';
@@ -375,7 +476,7 @@ if (!empty($_POST['ActDatosPROS'])) {
     );
 
     // Usa la conexión $pros para la tabla prospectos
-    $stmt = $pros->prepare("SELECT NoTel, Email, Direccion, Servicio_Interes FROM prospectos WHERE Id = ?");
+    $stmt = $pros->prepare("SELECT NoTel, Email, Direccion, Servicio_Interes, Curp, FullName, FechaNac FROM prospectos WHERE Id = ?");
     if (!$stmt) {
         error_log('Prepare failed: ' . $pros->error);
         http_response_code(500);
@@ -393,6 +494,47 @@ if (!empty($_POST['ActDatosPROS'])) {
     }
 
     $actualizados = 0;
+    $msgCurp = '';
+
+    if ($CurpRaw !== '') {
+        $CurpUp = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $CurpRaw));
+        $reCurp = '/^[A-Z]{4}\d{6}[HM](AS|BC|BS|CC|CS|CH|CL|CM|CO|DF|DG|GT|GR|HG|JC|MC|MN|MS|NT|NL|OC|PL|QT|QR|SP|SL|SR|TC|TS|TL|VZ|YN|ZS|NE)[B-DF-HJ-NP-TV-Z]{3}[A-Z0-9]\d$/';
+
+        if (!empty($Reg['Curp'])) {
+            if (strtoupper((string)$Reg['Curp']) !== $CurpUp) {
+                $msgCurp = 'El prospecto ya tiene CURP registrada.';
+            }
+        } elseif (!preg_match($reCurp, $CurpUp)) {
+            $msgCurp = 'CURP no válida.';
+        } else {
+            $curpDup = $basicas->BuscarCampos($pros, 'Id', 'prospectos', 'Curp', $CurpUp);
+            if (!empty($curpDup) && (int)$curpDup !== $idProspecto) {
+                $msgCurp = 'La CURP ya está registrada.';
+            } else {
+                $DatProsp = $seguridad->peticion_get($CurpUp);
+                if (!is_array($DatProsp) || ($DatProsp['Response'] ?? 'Error') === 'Error') {
+                    $msgCurp = (string)($DatProsp['Msg'] ?? 'CURP no válida.');
+                } else {
+                    $fullName = trim(($DatProsp['Nombre'] ?? '').' '.($DatProsp['Paterno'] ?? '').' '.($DatProsp['Materno'] ?? ''));
+                    if ($fullName !== '' && ($Reg['FullName'] ?? '') !== $fullName) {
+                        $basicas->ActCampo($pros, "prospectos", "FullName", $fullName, $idProspecto);
+                        $actualizados++;
+                    }
+                    if (($Reg['Curp'] ?? '') !== $CurpUp) {
+                        $basicas->ActCampo($pros, "prospectos", "Curp", $CurpUp, $idProspecto);
+                        $actualizados++;
+                    }
+                    $fechaNac = $DatProsp['FechaNacimiento'] ?? '';
+                    if ($fechaNac !== '' && ($Reg['FechaNac'] ?? '') !== $fechaNac) {
+                        $basicas->ActCampo($pros, "prospectos", "FechaNac", $fechaNac, $idProspecto);
+                        $actualizados++;
+                    }
+                    $msgCurp = 'CURP registrada correctamente.';
+                }
+            }
+        }
+    }
+
     if ($Telefono !== '' && $Reg['NoTel'] !== $Telefono) {
         $basicas->ActCampo($pros, "prospectos", "NoTel", $Telefono, $idProspecto);
         $actualizados++;
@@ -411,6 +553,9 @@ if (!empty($_POST['ActDatosPROS'])) {
     }
 
     $Msg = $actualizados > 0 ? "Se actualizaron {$actualizados} campo(s)." : "No hubo cambios.";
+    if ($msgCurp !== '') {
+        $Msg = trim($Msg . ' ' . $msgCurp);
+    }
 
     $location = 'https://kasu.com.mx' . $hostPath
         . '?Vt=1'

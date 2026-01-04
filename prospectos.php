@@ -205,7 +205,6 @@ if (isset($_GET['Msg'])) {
     <!-- LADO IZQUIERDO: texto + guía -->
     <div class="col-sm-5">
       <div class="ProspectoImg">
-        <img src="assets/images/kasu_logo.jpeg" alt="KASU">
         <h1>Regístrate para recibir información</h1>
         <p>
           Déjanos tus datos para que un asesor KASU pueda contactarte y explicarte

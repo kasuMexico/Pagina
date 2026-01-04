@@ -269,6 +269,54 @@ $VerCache = time();
   <!-- Ajuste específico de botones para Mesa_Clientes
        (mismo look que Mesa_Prospectos, sin deformarse) -->
   <style>
+    :root {
+      --mesa-menu-bg: #808b96;
+      --mesa-menu-text: #f8f9f9;
+    }
+    body.mesa-clientes {
+      --mesa-topbar-h: calc(var(--topbar-height, 58px) + 16px + var(--safe-t, 0px));
+    }
+    body.mesa-clientes main.page-content {
+      padding-top: var(--mesa-topbar-h);
+    }
+    body.mesa-clientes .topbar {
+      background: var(--mesa-menu-bg);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+      color: var(--mesa-menu-text);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--mesa-topbar-h);
+      min-height: 0;
+      padding: calc(8px + var(--safe-t, 0px)) 16px 8px;
+      box-sizing: border-box;
+    }
+    body.mesa-clientes .topbar .title,
+    body.mesa-clientes .topbar .eyebrow,
+    body.mesa-clientes .topbar .topbar-label {
+      color: var(--mesa-menu-text);
+    }
+    body.mesa-clientes .topbar .eyebrow {
+      opacity: 0.85;
+    }
+    body.mesa-clientes .mesa-clientes-scroll {
+      height: auto !important;
+      max-height: calc(
+        100vh - var(--mesa-topbar-h)
+        - (var(--bottombar-h, 48px) + var(--safe-b, 0px))
+        - 16px
+      );
+      overflow-x: auto;
+      overflow-y: auto;
+    }
+    body.mesa-clientes .mesa-clientes-scroll thead th {
+      position: sticky;
+      top: 0;
+      background: var(--mesa-menu-bg);
+      color: var(--mesa-menu-text);
+      z-index: 2;
+    }
     /* Contenedor de acciones: distribución tipo grid compacto */
     [data-mesa="clientes"] .mesa-actions {
       display: flex;
@@ -307,7 +355,7 @@ $VerCache = time();
     }
   </style>
 </head>
-<body onload="localize()">
+<body class="mesa-clientes" onload="localize()">
   <!-- =================== Top bar fija Mesa_Clientes.php =================== -->
   <div class="topbar">
     <div class="topbar-left">
@@ -657,7 +705,7 @@ $VerCache = time();
 
   <!-- =================== Contenido =================== -->
   <main class="page-content" name="impresion de datos finales">
-    <div class="table-responsive mesa-table-wrapper">
+    <div class="table-responsive mesa-table-wrapper mesa-clientes-scroll">
       <table class="table mesa-table" data-mesa="clientes">
         <thead>
           <tr>

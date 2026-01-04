@@ -47,6 +47,8 @@ $ctx = [
 // Si estamos en Mesa_Prospectos, personaliza encabezado
 if ($isDistrib === '/login/Mesa_Prospectos.php') {
     $ctx['encabezado'] = 'Iniciar proceso de lead sales';
+    $ctx['vlBtn'] = 'LeadSales';
+    $ctx['dirhttps'] = 'php/Funcionalidad_Pwa.php';
 }
 
 // Hidden comunes
@@ -108,7 +110,7 @@ if ($papelineKey !== '' && $basicas && $pros) {
     <br>
     <?php if ($isDistrib === '/login/Mesa_Prospectos.php'): ?>
       <p>¿Qué frecuencia de email deseas?</p>
-      <select class="form-control" name="Servicio_Interes">
+      <select class="form-control" name="Frecuencia" required>
         <option value="0">SELECCIONA UNA FRECUENCIA</option>
         <option value="DIARIO">DIARIO</option>
         <option value="SEMANAL">SEMANAL</option>

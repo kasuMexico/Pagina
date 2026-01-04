@@ -165,6 +165,18 @@ $hidden = [
     <input type="email" class="form-control" name="Email" value="<?= h($ctx['email']) ?>" required>
 
     <?php if ($selfPathRaw === '/login/Mesa_Prospectos.php'): ?>
+      <?php if (empty($Reg['Curp'])): ?>
+        <p class="mt-2">CURP del prospecto:</p>
+        <input class="form-control text-uppercase"
+               type="text"
+               name="CURP"
+               placeholder="CLAVE CURP (18 caracteres)"
+               pattern="[A-Za-z0-9]{18}"
+               maxlength="18"
+               minlength="18"
+               oninput="this.value=this.value.toUpperCase()"
+               autocomplete="off">
+      <?php endif; ?>
       <br>
       <p>¿Deseas cambiar el Servicio de Interés?</p>
       <select class="form-control" name="Servicio_Interes">

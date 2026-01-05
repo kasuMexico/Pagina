@@ -272,59 +272,8 @@ if ($qsMsg !== null) {
             </div>
         </div>
     </section>
+    <!-- Articulos de Blog -->
 
-    <!-- Beneficios
-    <section class="mini" id="Beneficios">
-        <div class="mini-content">
-            <div class="container">
-                <div class="col-lg-12">
-                    <div class="center-heading">
-                        <h2 class="section-title" style="color: #F9EBF9;">Los principales beneficios de contratar con <strong>KASU</strong></h2>
-                    </div>
-                </div>
-                <br>
-                <div class="row">
-                    <div class="col-lg-2 col-md-3 col-sm-6 col-6">
-                        <a href="#" class="mini-box" aria-label="Pago único de por vida">
-                            <i><img src="/assets/images/infinito.png" alt="Pago único" style="height: 30px; width: 50px;" loading="lazy" decoding="async"></i>
-                            <h2>Adquiere tu servicio una sola vez en la vida.</h2>
-                        </a>
-                    </div>
-                    <div class="col-lg-2 col-md-3 col-sm-6 col-6">
-                        <a href="#" class="mini-box" aria-label="Cobertura nacional">
-                            <i><img src="/assets/images/republica.png" alt="Cobertura nacional" style="height: 40px; width: 40px;" loading="lazy" decoding="async"></i>
-                            <h2>Cobertura en toda la República </h2>
-                        </a>
-                    </div>
-                    <div class="col-lg-2 col-md-3 col-sm-6 col-6">
-                        <a href="#" class="mini-box" aria-label="Precio ligado a edad">
-                            <i><img src="/assets/images/usuario.png" alt="Ligado a CURP" style="height: 40px; width: 50px;" loading="lazy" decoding="async"></i>
-                            <h2>Ligado a tu edad mediante CURP</h2>
-                        </a>
-                    </div>
-                    <div class="col-lg-2 col-md-3 col-sm-6 col-6">
-                        <a href="#" class="mini-box" aria-label="Mejor precio si eres joven">
-                            <i><img src="/assets/images/relog.png" alt="Mejor precio joven" style="height: 35px; width: 35px;" loading="lazy" decoding="async"></i>
-                            <h2>Mientras más joven, más bajo el costo</h2>
-                        </a>
-                    </div>
-                    <div class="col-lg-2 col-md-3 col-sm-6 col-6">
-                        <a href="#" class="mini-box" aria-label="Pago a crédito">
-                            <i><img src="/assets/images/tarjeta.png" alt="Pago a crédito" style="height: 35px; width: 35px;" loading="lazy" decoding="async"></i>
-                            <h2>Puedes pagar a crédito (3, 6 y 9 meses)</h2>
-                        </a>
-                    </div>
-                    <div class="col-lg-2 col-md-3 col-sm-6 col-6">
-                        <a href="#" class="mini-box" aria-label="Sin cargos ocultos">
-                            <i><img src="/assets/images/ok.png" alt="Sin cargos" style="height: 35px; width: 35px;" loading="lazy" decoding="async"></i>
-                            <h2>Sin renovaciones ni cargos ocultos</h2>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    -->
     <!-- Opiniones -->
     <section class="section colored" id="testimonials" >
         <div class="container">

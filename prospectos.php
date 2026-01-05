@@ -465,12 +465,13 @@ if (isset($_GET['Msg'])) {
 
   function detectOrigenVisible(){
     var params = new URLSearchParams(window.location.search);
-    var utmSource = normalize(params.get('utm_source'));
+    var utmSource = normalize(params.get('utm_source') || params.get('origen') || params.get('source'));
     var utmMedium = normalize(params.get('utm_medium'));
     var gclid = params.get('gclid') || params.get('gbraid') || params.get('wbraid');
     var fbclid = params.get('fbclid');
 
     if (utmSource) {
+      if (utmSource.includes('blog')) return 'blog';
       if (utmSource.includes('whatsapp') || utmSource === 'wa') return 'whatsapp';
       if (utmSource.includes('linkedin') || utmSource === 'li') return 'linkedin';
       if (utmSource === 'x' || utmSource.includes('twitter')) return 'x';
@@ -481,10 +482,12 @@ if (isset($_GET['Msg'])) {
       return 'otro';
     }
 
+    if (utmMedium && utmMedium.includes('blog')) return 'blog';
     if (gclid) return 'Gg';
     if (fbclid) return 'fb';
 
     var ref = normalize(document.referrer);
+    if (ref.includes('kasu.com.mx/blog')) return 'blog';
     if (ref.includes('x.com') || ref.includes('twitter.com')) return 'x';
     if (ref.includes('linkedin.com')) return 'linkedin';
     if (ref.includes('whatsapp.com') || ref.includes('wa.me')) return 'whatsapp';

@@ -3,6 +3,7 @@
  * Qué hace: Renderiza el menú inferior de la PWA con iconos activos/inactivos por página.
  * Fecha: 06/12/2025
  * Revisado por: JCCM
+ * Archivo: Menuprinc.php
  * Cambios:
  *  - Si la página actual inicia con "Mesa_": solo mostrar "Pwa_Principal.php" y opciones Mesa_*.
  *  - Agregar Mesa_Marketing.php y Mesa_Finanzas.php con iconos color/B&N.

@@ -156,6 +156,7 @@ $Lanzar  = null;   // "#Ventana" (contenedor único)
 $Metodo  = "Mesa";
 $nombre  = $_POST['nombre'] ?? ($_GET['nombre'] ?? '');
 if ($nombre === '') $nombre = ' ';
+$nombreTrim = trim((string)$nombre);
 
 // =================== Selector (IdProspecto = {V}{Id}) ===================
 // Qué hace: Interpreta el parámetro IdProspecto, determina la ventana a abrir y carga el prospecto
@@ -231,6 +232,7 @@ if (is_array($kasuScopeUsers)) {
 
 $hasCitas = kasu_table_exists($pros, 'citas');
 $hasAgenda = kasu_table_exists($pros, 'agenda_llamadas');
+$hasFunerarias = kasu_table_exists($pros, 'prospectos_funerarias');
 $stmtCita = null;
 $stmtAgenda = null;
 if ($hasCitas) {
@@ -621,14 +623,16 @@ if (!empty($_POST['RegistrarComentario'])) {
         </thead>
         <tbody>
         <?php
-        // Mostrar solo Cancelacion = 0
+        $rowsUnified = [];
+
+        // Prospectos de ventas
         if ($nombre === ' ') {
           $buscar = $basicas->BLikesD2($pros,'prospectos','FullName',$nombre,'Cancelacion',0,'Automatico',0);
         } else {
           $buscar = $basicas->BLikesCan($pros,'prospectos','FullName',$nombre,'Cancelacion',0);
         }
 
-        foreach ($buscar as $row):
+        foreach ($buscar as $row) {
           $assignedId = (int)($row['Asignado'] ?? 0);
           $assignedUser = '';
           if (isset($kasuEmpleadosMap[$assignedId])) {
@@ -637,30 +641,89 @@ if (!empty($_POST['RegistrarComentario'])) {
           if ($kasuScopeSet !== null && $assignedUser !== '' && !isset($kasuScopeSet[$assignedUser])) {
             continue;
           }
-          $Sem     = strtotime($row['Alta']);
-          $HoyA    = strtotime(date("Y-m-d"));
-          $ContSem = ($HoyA - $Sem) / 604800; // 7*24*3600
+          $rowsUnified[] = [
+            'tipo' => 'venta',
+            'sort' => strtotime((string)($row['Alta'] ?? '')) ?: 0,
+            'data' => $row,
+          ];
+        }
 
-          $esDistribuidor = (strtoupper((string)$row['Servicio_Interes']) === 'DISTRIBUIDOR');
-          $citaTxt = '';
-          $prosId = (int)($row['Id'] ?? 0);
-          if ($prosId > 0 && $stmtCita) {
-            $stmtCita->bind_param('i', $prosId);
-            $stmtCita->execute();
-            $rowCita = $stmtCita->get_result()->fetch_assoc();
-            $citaTxt = $rowCita ? kasu_format_fecha_es((string)($rowCita['FechaCita'] ?? '')) : '';
+        // Prospectos de funerarias
+        if ($hasFunerarias) {
+          if ($nombreTrim !== '') {
+            $like = '%' . $nombreTrim . '%';
+            $stmtFun = $pros->prepare("
+              SELECT NombreComercial, RazonSocial, Contacto, Cargo, Telefono, Whatsapp, Email,
+                     Direccion, Ciudad, Estado, CP, Cobertura, Servicios, Salas, CapacidadSala,
+                     Disponibilidad, Permisos, Comentarios, FechaRegistro
+              FROM prospectos_funerarias
+              WHERE NombreComercial LIKE ? OR RazonSocial LIKE ? OR Contacto LIKE ?
+              ORDER BY FechaRegistro DESC
+            ");
+            if ($stmtFun) {
+              $stmtFun->bind_param('sss', $like, $like, $like);
+              $stmtFun->execute();
+              $funRows = $stmtFun->get_result()->fetch_all(MYSQLI_ASSOC);
+              $stmtFun->close();
+              foreach ($funRows as $rowFun) {
+                $rowsUnified[] = [
+                  'tipo' => 'funeraria',
+                  'sort' => strtotime((string)($rowFun['FechaRegistro'] ?? '')) ?: 0,
+                  'data' => $rowFun,
+                ];
+              }
+            }
+          } else {
+            if ($resFun = $pros->query("
+              SELECT NombreComercial, RazonSocial, Contacto, Cargo, Telefono, Whatsapp, Email,
+                     Direccion, Ciudad, Estado, CP, Cobertura, Servicios, Salas, CapacidadSala,
+                     Disponibilidad, Permisos, Comentarios, FechaRegistro
+              FROM prospectos_funerarias
+              ORDER BY FechaRegistro DESC
+            ")) {
+              $funRows = $resFun->fetch_all(MYSQLI_ASSOC);
+              $resFun->close();
+              foreach ($funRows as $rowFun) {
+                $rowsUnified[] = [
+                  'tipo' => 'funeraria',
+                  'sort' => strtotime((string)($rowFun['FechaRegistro'] ?? '')) ?: 0,
+                  'data' => $rowFun,
+                ];
+              }
+            }
           }
-          if ($citaTxt === '' && $prosId > 0 && $stmtAgenda) {
-            $stmtAgenda->bind_param('i', $prosId);
-            $stmtAgenda->execute();
-            $rowCita = $stmtAgenda->get_result()->fetch_assoc();
-            $citaTxt = $rowCita ? kasu_format_fecha_es((string)($rowCita['inicio'] ?? '')) : '';
-          }
-          $telRaw = preg_replace('/\D+/', '', (string)($row['NoTel'] ?? ''));
-          $telIntl = $telRaw;
-          if ($telRaw !== '' && strlen($telRaw) === 10) {
-            $telIntl = '52' . $telRaw;
-          }
+        }
+
+        usort($rowsUnified, function ($a, $b) {
+          return ($b['sort'] ?? 0) <=> ($a['sort'] ?? 0);
+        });
+
+        foreach ($rowsUnified as $item):
+          if ($item['tipo'] === 'venta'):
+            $row = $item['data'];
+            $Sem     = strtotime((string)($row['Alta'] ?? ''));
+            $HoyA    = strtotime(date("Y-m-d"));
+            $ContSem = $Sem ? (($HoyA - $Sem) / 604800) : 0;
+
+            $citaTxt = '';
+            $prosId = (int)($row['Id'] ?? 0);
+            if ($prosId > 0 && $stmtCita) {
+              $stmtCita->bind_param('i', $prosId);
+              $stmtCita->execute();
+              $rowCita = $stmtCita->get_result()->fetch_assoc();
+              $citaTxt = $rowCita ? kasu_format_fecha_es((string)($rowCita['FechaCita'] ?? '')) : '';
+            }
+            if ($citaTxt === '' && $prosId > 0 && $stmtAgenda) {
+              $stmtAgenda->bind_param('i', $prosId);
+              $stmtAgenda->execute();
+              $rowCita = $stmtAgenda->get_result()->fetch_assoc();
+              $citaTxt = $rowCita ? kasu_format_fecha_es((string)($rowCita['inicio'] ?? '')) : '';
+            }
+            $telRaw = preg_replace('/\D+/', '', (string)($row['NoTel'] ?? ''));
+            $telIntl = $telRaw;
+            if ($telRaw !== '' && strlen($telRaw) === 10) {
+              $telIntl = '52' . $telRaw;
+            }
         ?>
           <tr>
             <td><?= h($row['FullName']) ?></td>
@@ -724,6 +787,79 @@ if (!empty($_POST['RegistrarComentario'])) {
               </div>
             </td>
           </tr>
+        <?php else:
+          $rowFun = $item['data'];
+          $fechaFun = (string)($rowFun['FechaRegistro'] ?? '');
+          $SemFun = strtotime($fechaFun);
+          $HoyA = strtotime(date("Y-m-d"));
+          $ContSemFun = $SemFun ? (($HoyA - $SemFun) / 604800) : 0;
+          $citaFun = 'Espacio: ' . (int)($rowFun['Salas'] ?? 0) . ' salas / ' . (int)($rowFun['CapacidadSala'] ?? 0) . ' pax';
+          $ubicFun = trim((string)($rowFun['Ciudad'] ?? '') . ', ' . (string)($rowFun['Estado'] ?? ''));
+          $telFun = preg_replace('/\D+/', '', (string)($rowFun['Telefono'] ?? ''));
+          $waFun = preg_replace('/\D+/', '', (string)($rowFun['Whatsapp'] ?? ''));
+        ?>
+          <tr>
+            <td>
+              <?= h($rowFun['NombreComercial'] ?? '') ?><br>
+              <small class="text-muted"><?= h($rowFun['RazonSocial'] ?? '') ?></small>
+            </td>
+            <td><?= (int)round($ContSemFun, 0) ?></td>
+            <td>
+              FUNERARIA<br>
+              <small class="text-muted"><?= h($rowFun['Servicios'] ?? '') ?></small>
+            </td>
+            <td><?= h($citaFun) ?></td>
+            <td>
+              <?= h($ubicFun) ?><br>
+              <small class="text-muted"><?= h($rowFun['Cobertura'] ?? '') ?></small>
+            </td>
+            <td>
+              <?= h($rowFun['Contacto'] ?? '') ?><br>
+              <small class="text-muted"><?= h($rowFun['Cargo'] ?? '') ?></small>
+            </td>
+            <td class="mesa-actions" data-label="Acciones">
+              <div class="mesa-actions-grid">
+                <button
+                  type="button"
+                  class="btn"
+                  style="background:#5D6D7E;color:#F8F9F9;"
+                  data-toggle="modal"
+                  data-target="#ModalFuneraria"
+                  data-nombre="<?= h($rowFun['NombreComercial'] ?? '') ?>"
+                  data-razon="<?= h($rowFun['RazonSocial'] ?? '') ?>"
+                  data-contacto="<?= h($rowFun['Contacto'] ?? '') ?>"
+                  data-cargo="<?= h($rowFun['Cargo'] ?? '') ?>"
+                  data-telefono="<?= h($telFun) ?>"
+                  data-whatsapp="<?= h($waFun) ?>"
+                  data-email="<?= h($rowFun['Email'] ?? '') ?>"
+                  data-direccion="<?= h($rowFun['Direccion'] ?? '') ?>"
+                  data-ciudad="<?= h($rowFun['Ciudad'] ?? '') ?>"
+                  data-estado="<?= h($rowFun['Estado'] ?? '') ?>"
+                  data-cp="<?= h($rowFun['CP'] ?? '') ?>"
+                  data-cobertura="<?= h($rowFun['Cobertura'] ?? '') ?>"
+                  data-servicios="<?= h($rowFun['Servicios'] ?? '') ?>"
+                  data-disponibilidad="<?= h($rowFun['Disponibilidad'] ?? '') ?>"
+                  data-permisos="<?= h($rowFun['Permisos'] ?? '') ?>"
+                  data-comentarios="<?= h($rowFun['Comentarios'] ?? '') ?>"
+                  data-registro="<?= h(kasu_format_fecha_es($fechaFun)) ?>"
+                >
+                  <i class="material-icons">visibility</i>
+                </button>
+
+                <?php if ($telFun !== ''): ?>
+                  <a class="btn" href="<?= h('tel:' . $telFun) ?>" title="Llamar" style="background:#1abc9c;color:#F8F9F9;">
+                    <i class="material-icons">call</i>
+                  </a>
+                <?php endif; ?>
+                <?php if ($waFun !== ''): ?>
+                  <a class="btn" href="<?= h('https://wa.me/52' . $waFun) ?>" title="WhatsApp" target="_blank" rel="noopener" style="background:#25D366;color:#F8F9F9;">
+                    <i class="fa fa-whatsapp" aria-hidden="true" style="font-size:18px;line-height:1;"></i>
+                  </a>
+                <?php endif; ?>
+              </div>
+            </td>
+          </tr>
+        <?php endif; ?>
         <?php endforeach; ?>
         <?php
           if ($stmtCita) { $stmtCita->close(); }
@@ -731,8 +867,52 @@ if (!empty($_POST['RegistrarComentario'])) {
         ?>
         </tbody>
       </table>
+
     </div>
   </section>
+
+  <div class="modal fade" id="ModalFuneraria" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Detalle de funeraria</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6">
+              <p class="mb-1"><strong>Funeraria</strong></p>
+              <p id="fun-nombre" class="mb-2"></p>
+              <p class="mb-1"><strong>Razon social</strong></p>
+              <p id="fun-razon" class="mb-2"></p>
+              <p class="mb-1"><strong>Contacto</strong></p>
+              <p id="fun-contacto" class="mb-2"></p>
+              <p class="mb-1"><strong>Telefono</strong></p>
+              <p id="fun-telefono" class="mb-2"></p>
+              <p class="mb-1"><strong>Email</strong></p>
+              <p id="fun-email" class="mb-2"></p>
+            </div>
+            <div class="col-md-6">
+              <p class="mb-1"><strong>Direccion</strong></p>
+              <p id="fun-direccion" class="mb-2"></p>
+              <p class="mb-1"><strong>Cobertura</strong></p>
+              <p id="fun-cobertura" class="mb-2"></p>
+              <p class="mb-1"><strong>Servicios</strong></p>
+              <p id="fun-servicios" class="mb-2"></p>
+              <p class="mb-1"><strong>Disponibilidad / Permisos</strong></p>
+              <p id="fun-status" class="mb-2"></p>
+              <p class="mb-1"><strong>Registro</strong></p>
+              <p id="fun-registro" class="mb-0"></p>
+            </div>
+          </div>
+          <div class="mt-3">
+            <p class="mb-1"><strong>Comentarios</strong></p>
+            <p id="fun-comentarios" class="mb-0"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- =================== JS únicos y en orden ===================
        Qué hace: Carga dependencias JS y utilidades de la PWA
@@ -752,6 +932,52 @@ if (!empty($_POST['RegistrarComentario'])) {
       <?php if (!empty($Lanzar)): ?>
         $('<?= h($Lanzar) ?>').modal('show');
       <?php endif; ?>
+    });
+  </script>
+  <script>
+    $('#ModalFuneraria').on('show.bs.modal', function (event) {
+      var btn = $(event.relatedTarget);
+      var nombre = btn.data('nombre') || '';
+      var razon = btn.data('razon') || '';
+      var contacto = btn.data('contacto') || '';
+      var cargo = btn.data('cargo') || '';
+      var telefono = btn.data('telefono') || '';
+      var whatsapp = btn.data('whatsapp') || '';
+      var email = btn.data('email') || '';
+      var direccion = btn.data('direccion') || '';
+      var ciudad = btn.data('ciudad') || '';
+      var estado = btn.data('estado') || '';
+      var cp = btn.data('cp') || '';
+      var cobertura = btn.data('cobertura') || '';
+      var servicios = btn.data('servicios') || '';
+      var disponibilidad = btn.data('disponibilidad') || '';
+      var permisos = btn.data('permisos') || '';
+      var comentarios = btn.data('comentarios') || '';
+      var registro = btn.data('registro') || '';
+
+      var contactoTxt = contacto;
+      if (cargo) contactoTxt += (contactoTxt ? ' · ' : '') + cargo;
+
+      var telefonoTxt = telefono;
+      if (whatsapp) telefonoTxt += (telefonoTxt ? ' · ' : '') + 'WA: ' + whatsapp;
+
+      var direccionTxt = direccion;
+      if (ciudad || estado) {
+        direccionTxt += (direccionTxt ? ', ' : '') + ciudad + (estado ? ', ' + estado : '');
+      }
+      if (cp) direccionTxt += (direccionTxt ? ' ' : '') + 'CP ' + cp;
+
+      $('#fun-nombre').text(nombre);
+      $('#fun-razon').text(razon);
+      $('#fun-contacto').text(contactoTxt);
+      $('#fun-telefono').text(telefonoTxt);
+      $('#fun-email').text(email);
+      $('#fun-direccion').text(direccionTxt);
+      $('#fun-cobertura').text(cobertura);
+      $('#fun-servicios').text(servicios);
+      $('#fun-status').text((disponibilidad ? 'Disp: ' + disponibilidad : '') + (permisos ? ' · Permisos: ' + permisos : ''));
+      $('#fun-comentarios').text(comentarios || 'Sin comentarios');
+      $('#fun-registro').text(registro);
     });
   </script>
   <script>

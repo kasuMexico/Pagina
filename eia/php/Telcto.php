@@ -1,43 +1,69 @@
 <?php
-// Activar la visualización de errores para depuración (quitar en producción)
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+/**
+ * Archivo: Telcto.php
+ */
 
-// Establece la zona horaria predeterminada
 date_default_timezone_set('America/Mexico_City');
 
-// Se obtiene la hora y la fecha actuales
-$datHora  = date("H:i:00");
-$datFecha = date("Y-m-d");
+$telOficinaDefault = '7208177632';
+$telFueraHorario = '3123091366';
 
-// Convierte la hora actual y los límites de horario a timestamps para facilitar la comparación
-$datHActual  = strtotime($datHora);
-$datHEntrada = strtotime("09:00:00");
-$datHSalida  = strtotime("17:00:00");
+function kasu_parse_client_time(): ?DateTimeImmutable {
+    $clientTs = filter_input(INPUT_COOKIE, 'kasu_client_ts', FILTER_VALIDATE_INT);
+    if (!$clientTs) {
+        $clientTs = filter_input(INPUT_GET, 'client_ts', FILTER_VALIDATE_INT);
+    }
+
+    if (!$clientTs) {
+        return null;
+    }
+
+    $offsetMinutes = filter_input(INPUT_COOKIE, 'kasu_tz_offset', FILTER_VALIDATE_INT);
+    $tz = null;
+    if (is_int($offsetMinutes)) {
+        $offsetSeconds = -$offsetMinutes * 60;
+        $hours = intdiv($offsetSeconds, 3600);
+        $minutes = abs(intdiv($offsetSeconds % 3600, 60));
+        $tz = new DateTimeZone(sprintf('%+03d:%02d', $hours, $minutes));
+    }
+
+    $time = new DateTimeImmutable('@' . $clientTs);
+    return $tz ? $time->setTimezone($tz) : $time;
+}
+
+$now = kasu_parse_client_time();
+if (!$now) {
+    $now = new DateTimeImmutable('now', new DateTimeZone('America/Mexico_City'));
+}
+
+$datHora = $now->format('H:i:00');
+$datFecha = $now->format('Y-m-d');
+
+$datHActual = strtotime($datHora);
+$datHEntrada = strtotime('09:00:00');
+$datHSalida = strtotime('17:00:00');
 
 // -------------------------------------------------------------------------
 // Consulta de los días festivos
 // Se asume que $mysqli es una conexión válida a la base de datos.
 $cont = 0;
-if (isset($mysqli)) {
-    $queryDF = "SELECT diaFest FROM DiasFestivos WHERE diaFest = '$datFecha'";
-    $resQueDF = $mysqli->query($queryDF);
-    if ($resQueDF) {
-        // Cuenta el número de registros que coinciden con la fecha actual
-        $cont = mysqli_num_rows($resQueDF);
-        //echo "DEBUG: Número de días festivos encontrados: " . $cont . "<br>";
-    } else {
-        error_log("Error en la consulta de días festivos: " . $mysqli->error);
-        //echo "DEBUG: Error en consulta de días festivos.<br>";
+if (isset($mysqli) && $mysqli instanceof mysqli) {
+    $stmt = $mysqli->prepare("SELECT 1 FROM DiasFestivos WHERE diaFest = ? LIMIT 1");
+    if ($stmt) {
+        $stmt->bind_param('s', $datFecha);
+        if ($stmt->execute()) {
+            $stmt->store_result();
+            $cont = (int) $stmt->num_rows;
+        }
+        $stmt->close();
     }
-} else {
-    //echo "DEBUG: Conexión a la base de datos no definida.<br>";
 }
 
 // -------------------------------------------------------------------------
 // Determinar el teléfono a utilizar en función de la fecha y hora actual
 
-$tel = ""; // Variable para almacenar el teléfono a asignar
+$tel = '';
+$telOficina = $telOficinaDefault;
 
 if ($cont === 0) {
     // No es día festivo
@@ -48,33 +74,27 @@ if ($cont === 0) {
         // Dentro de días laborales
         if ($datHActual >= $datHEntrada && $datHActual <= $datHSalida) {
             // Dentro del horario de oficina (09:00 - 17:00)
-            $venta = "SELECT * FROM Empleados WHERE Nivel = '2' LIMIT 1";
-            $res = mysqli_query($mysqli, $venta);
-            if ($res && $Reg = mysqli_fetch_assoc($res)) {
-                // Si el empleado tiene 'Telefono' igual a 0, se asigna un teléfono de oficina predeterminado
-                $tel = ($Reg['Telefono'] == 0) ? "7208177632" : $Reg['Telefono'];
-                //echo "DEBUG: Empleado encontrado: " . htmlspecialchars($Reg['Nombre']) . ", teléfono asignado: " . $tel . "<br>";
-            } else {
-                // Si no se encuentra empleado o hay error, asignar teléfono por defecto
-                $tel = "3123091366";
-                //echo "DEBUG: No se encontró empleado o error en la consulta; se asigna teléfono por defecto: " . $tel . "<br>";
+            if (isset($mysqli) && $mysqli instanceof mysqli) {
+                $resEmp = $mysqli->query("SELECT * FROM Empleados WHERE Nivel = '2' LIMIT 1");
+                if ($resEmp && ($row = $resEmp->fetch_assoc())) {
+                    foreach (['Telefono', 'NoTel', 'Celular', 'Telefono1', 'Tel', 'Tel1'] as $field) {
+                        if (!empty($row[$field]) && $row[$field] !== '0') {
+                            $telOficina = (string) $row[$field];
+                            break;
+                        }
+                    }
+                }
             }
+            $tel = $telOficina;
         } else {
-            // Fuera del horario de oficina
-            $tel = "3123091366";
-            //echo "DEBUG: Fuera del horario de oficina; teléfono asignado: " . $tel . "<br>";
+            $tel = $telFueraHorario;
         }
     } else {
         // Fin de semana (sábado o domingo)
-        $tel = "3123091366";
-        //echo "DEBUG: Es fin de semana; teléfono asignado: " . $tel . "<br>";
+        $tel = $telFueraHorario;
     }
 } else {
     // Es día festivo
-    $tel = "3123091366";
-    //echo "DEBUG: Es día festivo; teléfono asignado: " . $tel . "<br>";
+    $tel = $telFueraHorario;
 }
-
-// Mostrar el teléfono asignado (para depuración)
-//echo "Teléfono asignado: " . $tel;
 ?>

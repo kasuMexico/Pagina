@@ -91,6 +91,7 @@ if ($qsMsg !== null) {
     <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css?v=<? echo $VerCache;?>">
     <link rel="stylesheet" type="text/css" href="/assets/css/kasu-menu.css?v=<? echo $VerCache;?>">
     <link rel="stylesheet" type="text/css" href="/assets/css/index-home.css?v=<? echo $VerCache;?>">
+    <link rel="stylesheet" type="text/css" href="/assets/css/kasu-chat.css?v=<? echo $VerCache;?>">
 
     <!-- JS propio -->
     <script src="/eia/javascript/Registro.js" defer></script>
@@ -517,8 +518,33 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var fabButton = document.getElementById('kasu-fab');
     var fabPanel = document.getElementById('kasu-fab-panel');
+    var hideFabPanel = function () {
+        if (fabPanel) {
+            fabPanel.setAttribute('hidden', 'hidden');
+        }
+        if (fabButton) {
+            fabButton.setAttribute('aria-expanded', 'false');
+        }
+    };
+
+    var showFabPanel = function () {
+        if (fabPanel) {
+            fabPanel.removeAttribute('hidden');
+        }
+        if (fabButton) {
+            fabButton.setAttribute('aria-expanded', 'true');
+        }
+    };
+
     if (fabButton && fabPanel) {
         fabButton.addEventListener('click', function () {
+            var chatOpenNow = chatOverlay && !chatOverlay.hasAttribute('hidden');
+            if (chatOpenNow) {
+                closeChat();
+                showFabPanel();
+                return;
+            }
+
             var expanded = fabButton.getAttribute('aria-expanded') === 'true';
             fabButton.setAttribute('aria-expanded', String(!expanded));
             if (expanded) {
@@ -528,6 +554,62 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+
+    var chatOpen = document.getElementById('kasu-chat-open');
+    var chatOverlay = document.getElementById('kasu-chat-overlay');
+    var chatClose = document.getElementById('kasu-chat-close');
+    var chatForm = document.getElementById('kasu-chat-form');
+    var chatInput = document.getElementById('kasu-chat-input');
+    var chatBody = document.getElementById('kasu-chat-messages');
+
+    var openChat = function () {
+        if (!chatOverlay) return;
+        chatOverlay.removeAttribute('hidden');
+        if (chatOpen) chatOpen.setAttribute('aria-expanded', 'true');
+        if (chatInput) chatInput.focus();
+        hideFabPanel();
+    };
+
+    var closeChat = function () {
+        if (!chatOverlay) return;
+        chatOverlay.setAttribute('hidden', 'hidden');
+        if (chatOpen) chatOpen.setAttribute('aria-expanded', 'false');
+        showFabPanel();
+    };
+
+    if (chatOpen) {
+        chatOpen.addEventListener('click', function () {
+            var isOpen = chatOverlay && !chatOverlay.hasAttribute('hidden');
+            if (isOpen) {
+                closeChat();
+            } else {
+                openChat();
+            }
+        });
+    }
+
+    if (chatClose) {
+        chatClose.addEventListener('click', closeChat);
+    }
+
+    if (chatForm && chatInput && chatBody) {
+        chatForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            var message = chatInput.value.trim();
+            if (!message) return;
+
+            var wrapper = document.createElement('div');
+            wrapper.className = 'kasu-chat-message kasu-chat-message--user';
+            var bubble = document.createElement('div');
+            bubble.className = 'kasu-chat-bubble';
+            bubble.textContent = message;
+            wrapper.appendChild(bubble);
+            chatBody.appendChild(wrapper);
+            chatBody.scrollTop = chatBody.scrollHeight;
+            chatInput.value = '';
+        });
+    }
+
 });
 </script>
 
@@ -541,12 +623,48 @@ document.addEventListener('DOMContentLoaded', function () {
             <span class="kasu-fab-icon" aria-hidden="true">💬</span>
             Enviar WhatsApp
         </a>
+        <button type="button" class="kasu-fab-action kasu-fab-action--chat" id="kasu-chat-open" aria-expanded="false" aria-controls="kasu-chat-overlay">
+            <span class="kasu-fab-icon" aria-hidden="true">🗨️</span>
+            Hablar con alguien
+        </button>
     </div>
     <button type="button" class="kasu-fab" id="kasu-fab" aria-expanded="false" aria-controls="kasu-fab-panel">
         <img src="/assets/images/flor_redonda.svg" alt="" width="34" height="34" loading="lazy" decoding="async">
-        Atención inmediata
+        Atención al cliente
     </button>
 </div>
+
+<section class="kasu-chat-overlay" id="kasu-chat-overlay" aria-live="polite" hidden>
+    <div class="kasu-chat-panel">
+        <header class="kasu-chat-panel__header">
+            <div class="kasu-chat-panel__brand">
+                <img src="/assets/images/flor_redonda.svg" alt="KASU" width="28" height="28" loading="lazy" decoding="async">
+                <div>
+                    <p class="kasu-chat-panel__title">Chat KASU</p>
+                    <span class="kasu-chat-panel__status">En linea</span>
+                </div>
+            </div>
+            <div class="kasu-chat-panel__actions">
+                <span class="kasu-chat-panel__pill">Vista 360</span>
+                <button type="button" class="kasu-chat-panel__close" id="kasu-chat-close" aria-label="Cerrar chat">×</button>
+            </div>
+        </header>
+
+        <div class="kasu-chat-panel__messages" id="kasu-chat-messages">
+            <div class="kasu-chat-message kasu-chat-message--bot">
+                <img src="/assets/images/flor_redonda.svg" alt="KASU" class="kasu-chat-avatar" width="26" height="26" loading="lazy" decoding="async">
+                <div class="kasu-chat-bubble">
+                    Hola, soy la asistente virtual de KASU. en que puedo ayudarte hoy?
+                </div>
+            </div>
+        </div>
+
+        <form class="kasu-chat-panel__form" id="kasu-chat-form" autocomplete="off">
+            <input type="text" id="kasu-chat-input" name="kasu-chat-input" placeholder="Escribe tu mensaje">
+            <button type="submit">Enviar</button>
+        </form>
+    </div>
+</section>
 
 </body>
 </html>

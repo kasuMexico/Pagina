@@ -14,6 +14,31 @@ RewriteCond %{HTTP_HOST} !=kasu.com.mx [OR]
 RewriteCond %{HTTPS} !=on
 RewriteRule ^ https://kasu.com.mx%{REQUEST_URI} [R=308,L]
 
+# === Canonicalizar URLs .php -> limpias (solo páginas públicas) ===
+RewriteCond %{THE_REQUEST} \s/+index\.php[?\s] [NC]
+RewriteRule ^index\.php$ / [R=301,L]
+
+RewriteCond %{THE_REQUEST} \s/+nft\.php[?\s] [NC]
+RewriteRule ^nft\.php$ /nft [R=301,L]
+
+RewriteCond %{THE_REQUEST} \s/+fundacion\.php[?\s] [NC]
+RewriteRule ^fundacion\.php$ /fundacion [R=301,L]
+
+RewriteCond %{THE_REQUEST} \s/+testimonios\.php[?\s] [NC]
+RewriteRule ^testimonios\.php$ /testimonios [R=301,L]
+
+RewriteCond %{THE_REQUEST} \s/+terminos-y-condiciones\.php[?\s] [NC]
+RewriteRule ^terminos-y-condiciones\.php$ /terminos-y-condiciones [R=301,L]
+
+RewriteCond %{THE_REQUEST} \s/+privacidad\.php[?\s] [NC]
+RewriteRule ^privacidad\.php$ /privacidad [R=301,L]
+
+RewriteCond %{THE_REQUEST} \s/+prospectos\.php[?\s] [NC]
+RewriteRule ^prospectos\.php$ /prospectos [R=301,L]
+
+RewriteCond %{THE_REQUEST} \s/+ActualizacionDatos/index\.php[?\s] [NC]
+RewriteRule ^ActualizacionDatos/index\.php$ /ActualizacionDatos/ [R=301,L]
+
 # =========================================
 # SWITCH DE CACHÉ (elige UNO)
 # -----------------------------------------
@@ -86,11 +111,12 @@ ErrorDocument 404 /error.php
   ExpiresByType image/png  "access plus 90 days"
   ExpiresByType image/gif   "access plus 90 days"
   ExpiresByType image/svg+xml "access plus 90 days"
-  #ExpiresByType text/css "access plus 30 days"
-  #ExpiresByType application/javascript "access plus 30 days"
-  #ExpiresByType application/json "access plus 1 day"
-  #ExpiresByType application/manifest+json "access plus 1 day"
-  #ExpiresByType application/font-woff2 "access plus 180 days"
+  ExpiresByType text/css "access plus 30 days"
+  ExpiresByType application/javascript "access plus 30 days"
+  ExpiresByType application/json "access plus 1 day"
+  ExpiresByType application/manifest+json "access plus 1 day"
+  ExpiresByType application/font-woff2 "access plus 180 days"
+  ExpiresByType font/woff2 "access plus 180 days"
 </IfModule>
 
 # === HEADERS ===
@@ -109,6 +135,9 @@ ErrorDocument 404 /error.php
   </FilesMatch>
 
   # Cache normal para CSS/JS (sin override de desarrollo)
+  <FilesMatch "\.(?:css|js|mjs|json|svg|woff2?)$">
+    Header set Cache-Control "public, max-age=2592000, immutable"
+  </FilesMatch>
 </IfModule>
 # Archivo de .Env para mercado pago
 <Files ".env">
@@ -118,7 +147,7 @@ ErrorDocument 404 /error.php
 <IfModule mod_autoindex.c>
   Options -Indexes
 </IfModule>
-//Proteccion de Archivo de contraseñas de correo masivo
+# Proteccion de Archivo de contraseñas de correo masivo
 <Files ".env">
   Require all denied
 </Files>

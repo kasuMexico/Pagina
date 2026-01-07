@@ -1,5 +1,14 @@
 /* Funerarias page layout */
 .funerarias-page {
+  --color-bg: #f6f7f9;
+  --color-text: var(--home-text, #151821);
+  --color-muted: var(--home-muted, #5e6a7b);
+  --color-border: var(--home-border, #e3e7ee);
+  --color-accent: var(--home-accent, #8e1f63);
+  --color-accent-2: #0f3d4c;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --shadow-sm: var(--home-shadow, 0 18px 36px rgba(15, 23, 42, 0.14));
   background: var(--color-bg);
 }
 
@@ -187,10 +196,39 @@
 
 .funerarias-page label {
   display: inline-block;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--color-text);
   margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.funerarias-page input,
+.funerarias-page select,
+.funerarias-page textarea {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  padding: 12px 14px;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  background: #ffffff;
+  box-shadow: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.funerarias-page input::placeholder,
+.funerarias-page textarea::placeholder {
+  color: var(--color-muted);
+}
+
+.funerarias-page input:focus,
+.funerarias-page select:focus,
+.funerarias-page textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(142, 31, 99, 0.15);
 }
 
 .funerarias-page textarea {
@@ -231,9 +269,23 @@
   accent-color: var(--color-accent);
 }
 
+.funerarias-page .checkbox input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(142, 31, 99, 0.2);
+  border-radius: 4px;
+}
+
 .funerarias-page .submit-btn {
   width: 100%;
   justify-content: center;
+  border-radius: 999px;
+  padding: 12px 20px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--color-accent);
+  color: #ffffff;
+  border: 1px solid var(--color-accent);
 }
 
 .funerarias-page .section {

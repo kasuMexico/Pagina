@@ -1,6 +1,13 @@
 <?php
 declare(strict_types=1);
 
+$verCache = null;
+if (is_file(__DIR__ . '/eia/librerias.php')) {
+  require_once __DIR__ . '/eia/librerias.php';
+  $verCache = $VerCache ?? null;
+}
+$verCache = is_numeric($verCache) ? (string) $verCache : (string) time();
+
 $udiActual = 0.0;
 $udisServicio = 2000;
 $udiSource = __DIR__ . '/login/php/AnalisisDatos/ConfigFondoFunerario.php';
@@ -34,13 +41,14 @@ if (isset($_GET['Msg'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Integra tu funeraria a la red KASU. Registro de convenios, requisitos y estandares de servicio.">
   <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600&family=Raleway:wght@600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/css/kasu-ui.css?v=142">
-  <link rel="stylesheet" href="/assets/css/funerarias.css?v=142">
+  <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css?v=<?php echo $verCache; ?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css?v=<?php echo $verCache; ?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/kasu-menu.css?v=<?php echo $verCache; ?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/index-home.css?v=<?php echo $verCache; ?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/funerarias.css?v=<?php echo $verCache; ?>">
 </head>
 <body class="kasu-ui funerarias-page">
+  <?php require_once __DIR__ . '/html/MenuPrincipal.php'; ?>
   <main class="page">
     <div class="container">
       <header class="brand-header">

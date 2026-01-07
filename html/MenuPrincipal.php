@@ -25,10 +25,18 @@
 
           <!-- Menú -->
           <ul class="nav" id="primary-nav" role="menubar">
+
             <?php
             // Mostrar "+ Información" en todas menos en la home
             if ($uri_norm !== '/') {
-              echo '<li role="none"><a href="/prospectos" role="menuitem" itemprop="url"><span itemprop="name"><strong>+ Informacion</strong></span></a></li>';
+              echo '
+
+              <li role="none">
+                <a href="/index.php" role="menuitem" itemprop="url"><span itemprop="name">Inicio</span></a>
+              </li>
+
+              <li role="none"><a href="/prospectos" role="menuitem" itemprop="url"><span itemprop="name"><strong>+ Informacion</strong></span></a></li>
+              ';
             }
             ?>
             <li role="none">
@@ -38,9 +46,6 @@
               <a href="/nft" role="menuitem" itemprop="url"><span itemprop="name">NFT</span></a>
             </li>
             <?php
-            if ($uri_norm !== '/fundacion') {
-              echo '<li role="none"><a href="/fundacion" role="menuitem" itemprop="url"><span itemprop="name">Fundacion</span></a></li>';
-            }
             if ($uri_norm === '/') {
               echo '
               <li role="none" class="nav-cta"><a href="#Clientes" role="menuitem" itemprop="url"><span itemprop="name">Cotizar</span></a></li>

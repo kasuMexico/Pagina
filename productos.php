@@ -184,17 +184,20 @@ if($Reg['Producto'] === 'Policias') {
   </script>
 
   <!-- Fuentes + Favicon -->
-  <link href="https://fonts.googleapis.com/css?family=Raleway:100,300,400,500,700,900" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="/assets/images/kasu_logo.jpeg">
 
   <!-- CSS/JS con rutas absolutas -->
-  <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
-  <link rel="stylesheet" href="/assets/css/font-awesome.css">
-  <link rel="stylesheet" href="/assets/css/kasu-ui.css">
-  <link rel="stylesheet" href="/assets/css/productos.css?v=2">
+  <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css?v=<? echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css?v=<? echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/kasu-menu.css?v=<? echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/index-home.css?v=<? echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/productos.css?v=<? echo $VerCache;?>">
   <script src="/assets/js/js_productos.js" defer></script>
 </head>
-<body>
+<body class="kasu-ui">
 
 <section name="EmergentesServicio">
   <div class="modal fade" id="ModalGaleria" tabindex="-1" role="dialog" aria-labelledby="ModalGaleria" aria-hidden="true">
@@ -247,115 +250,88 @@ if($Reg['Producto'] === 'Policias') {
 
 <?php require_once __DIR__ . '/html/MenuPrincipal.php';?>
 
-<section class="section padding-top-140 padding-bottom-0" id="features">
+<section class="product-hero" id="features">
   <div class="container">
-    <div class="row">
+    <div class="row product-hero-grid">
       <div class="col-lg-5 col-md-12 col-sm-12 align-self-center" data-scroll-reveal="enter left move 30px over 0.6s after 0.4s">
         <img src="<?= htmlspecialchars($Reg['Imagen_Producto'] ?? '', ENT_QUOTES) ?>"
-             class="rounded img-fluid d-block mx-auto"
+             class="product-hero-image img-fluid d-block mx-auto"
              alt="<?= htmlspecialchars($Reg['Nombre'] ?? 'Producto KASU', ENT_QUOTES) ?>">
       </div>
       <div class="col-lg-1"></div>
-      <div class="col-lg-6 col-md-12 col-sm-12 align-self-center mobile-top-fix">
-        <div class="left-heading">
+      <div class="col-lg-6 col-md-12 col-sm-12 align-self-center product-hero-content">
+        <div class="left-heading product-hero-heading">
           <?php
           if (!empty($Nombre)) {
-              echo '<h1 class="section-title"><strong>' . htmlspecialchars($Nombre, ENT_QUOTES, 'UTF-8') . '</strong></h1>';
+              echo '<h1 class="product-hero-title"><strong>' . htmlspecialchars($Nombre, ENT_QUOTES, 'UTF-8') . '</strong></h1>';
           } else {
               $n = htmlspecialchars($Reg['Nombre'] ?? 'Producto', ENT_QUOTES, 'UTF-8');
-              echo '<h1 class="section-title"><strong>' . $n . '</strong></h1>';
+              echo '<h1 class="product-hero-title"><strong>' . $n . '</strong></h1>';
           }
           ?>
         </div>
-        <div class="left-text">
+        <div class="left-text product-hero-text">
 
           <?php
             //Imprimimos la descripcion de el producto
             echo $Reg['DesIni_Producto'] ?? '';
-            //Imprimimos el bototn de Comprar
+          ?>
+          <div class="product-hero-actions">
+          <?php
+            //Imprimimos el boton de Comprar
             if (!empty($Desc)) {
               $imgCupon = $basicas->BuscarCampos($mysqli, "Img", "PostSociales", "Id", $_SESSION["tarjeta"]);
-              echo '<br><img class="img-thumbnail" src="/assets/images/cupones/' . htmlspecialchars($imgCupon, ENT_QUOTES) . '" style="width: 15em;"><br>';
+              echo '<img class="img-thumbnail product-coupon" src="/assets/images/cupones/' . htmlspecialchars($imgCupon, ENT_QUOTES) . '" alt="Cupón de descuento">';
               $buyUrl = url_with_idp('/registro.php?pro=' . $dat, $idp);
-              echo '<a href="' . htmlspecialchars($buyUrl, ENT_QUOTES) . '" class="main-button-slider-pol"><strong>Descuento hoy $ ' . number_format((float)$Desc, 2) . '</strong></a><br>';
+              echo '<a href="' . htmlspecialchars($buyUrl, ENT_QUOTES) . '" class="kasu-btn product-btn"><strong>Descuento hoy $ ' . number_format((float)$Desc, 2) . '</strong></a>';
             } elseif (!empty($preference)) {
               // Enlace directo a Mercado Pago: no se anexa idp
-              echo '<br><a href="' . htmlspecialchars($preference, ENT_QUOTES) . '" class="main-button-slider-pol"><strong>Comprar</strong></a><br><br>';
+              echo '<a href="' . htmlspecialchars($preference, ENT_QUOTES) . '" class="kasu-btn product-btn"><strong>Comprar</strong></a>';
             } elseif($Reg['Producto'] !== 'Funerario') {
                 $buyUrl = url_with_idp('/registro.php?pro=' . $dat, $idp);
                 //Construimos el numero de telefono
                 $dest = preg_replace('/\D+/', '', $tel ?? '');
                 //Imprimimos el boton
-                echo '<br>
-                        <a href="https://wa.me/'.$dest.'?text='.$Mensaje.'" class="main-button-slider-pol">
-                          <strong>
-                            Contactar un Agente
-                          </strong>
-                        </a>
-                      <br><br>';
+                echo '<a href="https://wa.me/'.$dest.'?text='.$Mensaje.'" class="kasu-btn product-btn"><strong>Contactar un Agente</strong></a>';
               } else {
                 $buyUrl = url_with_idp('/registro.php?pro=' . $dat, $idp);
-                echo '<br><a href="' . htmlspecialchars($buyUrl, ENT_QUOTES) . '" class="main-button-slider-pol"><strong>Comprar Ahora</strong></a><br><br>';
+                echo '<a href="' . htmlspecialchars($buyUrl, ENT_QUOTES) . '" class="kasu-btn product-btn"><strong>Comprar Ahora</strong></a>';
               }
           ?>
+          </div>
         </div>
       </div>
     </div>
   </div>
-  <br>
 </section>
 
-<section class="mini" id="work-process">
-  <div class="mini-content">
-    <div class="container">
-      <div class="row" id="video">
-        <?php if ($artId !== 2): ?>
-          <div class="offset-xl-3 col-xl-6 offset-lg-2 col-lg-8 col-md-12 col-sm-12">
-            <br><a href="#" class="main-button-slider-pol"><strong>Agencias Autorizadas</strong></a>
-          </div>
-        <?php else: ?>
-          <div class="offset-xl-3 col-xl-6 offset-lg-2 col-lg-8 col-md-12 col-sm-12">
-            <br><a href="#" class="main-button-slider-pol"><strong>Fondos de Retiro </strong></a>
-          </div>
-        <?php endif; ?>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section padding-bottom-100" id="Comprar">
+<section class="product-pricing" id="Comprar">
   <div class="container">
     <div class="row">
-            <div class="col-lg-5 col-md-12 col-sm-12 align-self-center mobile-bottom-fix-big" data-scroll-reveal="enter right move 30px over 0.6s after 0.4s">
-        <div class="pricing-item">
-          <div class="pricing-body">
-            <i><img style="height: 80px;" src="/assets/images/icon/credit-card.png" alt="Producto Kasu"></i>
-            <br><br><strong>¿Cuánto cuesta el producto?</strong><br><br>
-            <div style="padding: 15px;"><?= $Reg['Precios_Producto'] ?? '' ?></div>
+      <div class="col-lg-5 col-md-12 col-sm-12 align-self-center" data-scroll-reveal="enter right move 30px over 0.6s after 0.4s">
+        <div class="pricing-item product-price-card">
+          <div class="pricing-body product-price-body">
+            <i><img class="product-price-icon" src="/assets/images/icon/credit-card.png" alt="Producto Kasu"></i>
+            <h2 class="product-price-title">¿Cuánto cuesta el producto?</h2>
+            <div class="product-price-table"><?= $Reg['Precios_Producto'] ?? '' ?></div>
 
             <?php
               if (!empty($Desc)) {
                 $imgCupon = $basicas->BuscarCampos($mysqli, "Img", "PostSociales", "Id", $_SESSION["tarjeta"]);
-                echo '<br><img class="img-thumbnail" src="/assets/images/cupones/' . htmlspecialchars($imgCupon, ENT_QUOTES) . '" style="width: 15em;"><br>';
+                echo '<img class="img-thumbnail product-coupon" src="/assets/images/cupones/' . htmlspecialchars($imgCupon, ENT_QUOTES) . '" alt="Cupón de descuento">';
                 $buyUrl = url_with_idp('/registro.php?pro=' . $dat, $idp);
-                echo '<a href="' . htmlspecialchars($buyUrl, ENT_QUOTES) . '" class="main-button-slider-pol"><strong>Descuento hoy $ ' . number_format((float)$Desc, 2) . '</strong></a><br>';
+                echo '<a href="' . htmlspecialchars($buyUrl, ENT_QUOTES) . '" class="kasu-btn product-btn"><strong>Descuento hoy $ ' . number_format((float)$Desc, 2) . '</strong></a>';
               } elseif (!empty($preference)) {
-                echo '<br><a href="' . htmlspecialchars($preference, ENT_QUOTES) . '" class="main-button-slider-pol"><strong>Comprar</strong></a><br><br>';
+                echo '<a href="' . htmlspecialchars($preference, ENT_QUOTES) . '" class="kasu-btn product-btn"><strong>Comprar</strong></a>';
               } elseif($Reg['Producto'] !== 'Funerario') {
                 $buyUrl = url_with_idp('/registro.php?pro=' . $dat, $idp);
                 //Construimos el numero de telefono
                 $dest = preg_replace('/\D+/', '', $tel ?? '');
                 //Imprimimos el boton
-                echo '<br>
-                        <a href="https://wa.me/'.$dest.'?text='.$Mensaje.'" class="main-button-slider-pol">
-                          <strong>
-                            Contactar un Agente
-                          </strong>
-                        </a>
-                      <br><br>';
+                echo '<a href="https://wa.me/'.$dest.'?text='.$Mensaje.'" class="kasu-btn product-btn"><strong>Contactar un Agente</strong></a>';
               } else {
                 $buyUrl = url_with_idp('/registro.php?pro=' . $dat, $idp);
-                echo '<br><a href="' . htmlspecialchars($buyUrl, ENT_QUOTES) . '" class="main-button-slider-pol"><strong>Contratar a un agente</strong></a><br><br>';
+                echo '<a href="' . htmlspecialchars($buyUrl, ENT_QUOTES) . '" class="kasu-btn product-btn"><strong>Contratar a un agente</strong></a>';
               }
             ?>
 
@@ -363,25 +339,32 @@ if($Reg['Producto'] === 'Policias') {
         </div>
       </div>
       <div class="col-lg-1"></div>
-      <div class="col-lg-6 col-md-12 col-sm-12 align-self-center mobile-bottom-fix">
-        <!-- Caja con borde, margen, padding y sombra -->
-        <div class="border rounded shadow bg-white mx-3 my-4">
-          <div class="p-4 p-md-5">
-            <div class="col-12 mb-3 text-center">
+      <div class="col-lg-6 col-md-12 col-sm-12 align-self-center">
+        <div class="product-includes-card">
+          <div class="product-includes-body">
+            <div class="product-includes-header">
               <i>
-                <img style="height: 80px;" src="<?= htmlspecialchars($Reg['Image_Desc'] ?? '', ENT_QUOTES) ?>" alt="Producto Kasu">
+                <img class="product-includes-icon" src="<?= htmlspecialchars($Reg['Image_Desc'] ?? '', ENT_QUOTES) ?>" alt="Producto Kasu">
               </i>
-              <br><br>
-              <h2 class="section-title">
+              <h2 class="product-includes-title">
                 <strong>¿Qué incluye, el servicio <?= htmlspecialchars($Reg['Nombre'] ?? 'este producto', ENT_QUOTES) ?>?</strong>
               </h2>
             </div>
-            <hr>
-            <div class="col-12">
-              <!-- Icons -->
+            <div class="product-includes-content">
               <div class="row justify-content-center text-center">
                 <?= $Reg['Descripcion_Producto'] ?? '' ?>
               </div>
+            </div>
+            <div class="row justify-content-center" id="video">
+              <?php if ($artId !== 2): ?>
+                 <div class="col-lg-6 col-md-10 text-center">
+                  <a href="#" class="kasu-btn product-btn product-strip-btn"><strong>Agencias Autorizadas</strong></a>
+                </div>
+              <?php else: ?>
+                <div class="col-lg-6 col-md-10 text-center">
+                  <a href="#" class="kasu-btn product-btn product-strip-btn"><strong>Fondos de Retiro</strong></a>
+                </div>
+              <?php endif; ?>
             </div>
           </div>
         </div>
@@ -390,24 +373,25 @@ if($Reg['Producto'] === 'Policias') {
   </div>
 </section>
 
-<section class="section colored" id="pricing-plans">
+<section class="product-faq" id="pricing-plans">
   <div class="container">
     <div class="row">
-      <br><br>
-      <div class="dudasfun"><?= $Reg['Tab_Producto'] ?? '' ?></div>
-      <br>
+      <div class="col-12">
+        <div class="product-faq-content">
+          <?= $Reg['Tab_Producto'] ?? '' ?>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<section class="section colored" id="contacto">
+<section class="product-cta" id="contacto">
   <div class="container">
-    <div class="col-md-4 col-md-12 col-sm-12 align-self-center">
-      <div class="center-heading">
-        <h2 class="section-title">¿Aún no te convencemos?</h2>
-        <p>Brindamos un servicio para proteger y ayudar a tu familia. Cada producto es una oportunidad para cuidar lo que más amas.</p>
-      </div>
-      <div class="center-body"><br>
+    <div class="row justify-content-center">
+      <div class="col-lg-8 text-center">
+        <h2 class="product-cta-title">¿Aún no te convencemos?</h2>
+        <p class="product-cta-text">Brindamos un servicio para proteger y ayudar a tu familia. Cada producto es una oportunidad para cuidar lo que más amas.</p>
+        <div class="product-cta-actions">
         <?php
           $uppercaseText     = strtoupper($Reg['Producto'] ?? 'PRODUCTO');
           $base64EncodedText = base64_encode($uppercaseText);
@@ -416,32 +400,25 @@ if($Reg['Producto'] === 'Policias') {
           //Construimos el numero de telefono
           $dest = preg_replace('/\D+/', '', $tel ?? '');
           //Imprimimos el boton
-          echo '<br>
-                <a href="https://wa.me/'.$dest.'?text='.$Mensaje.'" class="main-button-slider-pol">
-                    <strong>
-                      Contactar un Agente
-                    </strong>
-                  </a>
-                <br><br>';
+          echo '<a href="https://wa.me/'.$dest.'?text='.$Mensaje.'" class="kasu-btn product-btn"><strong>Contactar un Agente</strong></a>';
         ?>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="section colored padding-top-70"> 
+<section class="Productos-Index"> 
   <div class="container" itemscope itemtype="https://schema.org/CollectionPage">
-    <div class="col-lg-12">
-      <div class="center-heading">
-        <h2 class="section-title" style="color: #333333;">Protege a quien amas, <strong> de la mano de KASU</strong></h2>
-      </div>
+    <div class="product-list-heading">
+      <h2 class="product-list-title">Protege a quien amas, <strong>de la mano de KASU</strong></h2>
     </div>
     <!-- Productos -->
     <?php require_once __DIR__ . '/html/Section_Productos.php'; ?>
   </div>
 </section>
 
-<footer><?php require_once __DIR__ . '/html/footer.php'; ?></footer>
+<footer class="site-footer"><?php require_once __DIR__ . '/html/footer.php'; ?></footer>
 
 <!-- JS con rutas absolutas -->
 <script src="/assets/js/jquery-2.1.0.min.js"></script>

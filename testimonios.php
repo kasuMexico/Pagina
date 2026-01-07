@@ -3,6 +3,7 @@
  * Qué hace: Página de testimonios. Lista opiniones reales desde la BD y muestra estructura SEO.
  * Fecha: 03/11/2025
  * Revisado por: JCCM
+ * Archivo: testimonios.php
  */
 
 // Iniciar la sesión
@@ -52,9 +53,10 @@ if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
   <link rel="icon" href="/assets/images/kasu_logo.jpeg">
 
   <!-- CSS -->
-  <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css">
-  <link rel="stylesheet" type="text/css" href="assets/css/font-awesome.css">
-  <link rel="stylesheet" type="text/css" href="assets/css/kasu-ui.css">
+  <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css?v=<? echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css?v=<? echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/kasu-menu.css?v=<? echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/index-home.css?v=<? echo $VerCache;?>">
 
   <!-- Schema WebPage -->
   <script type="application/ld+json">

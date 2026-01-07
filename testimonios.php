@@ -49,7 +49,7 @@ if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
   <!-- Fuentes e ícono -->
-  <link href="https://fonts.googleapis.com/css?family=Raleway:100,300,400,500,700,900" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="/assets/images/kasu_logo.jpeg">
 
   <!-- CSS -->
@@ -57,6 +57,7 @@ if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
   <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css?v=<? echo $VerCache;?>">
   <link rel="stylesheet" type="text/css" href="/assets/css/kasu-menu.css?v=<? echo $VerCache;?>">
   <link rel="stylesheet" type="text/css" href="/assets/css/index-home.css?v=<? echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/testimonios.css?v=<? echo $VerCache;?>">
 
   <!-- Schema WebPage -->
   <script type="application/ld+json">
@@ -70,76 +71,65 @@ if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
   }
   </script>
 </head>
-<body>
+<body class="kasu-ui">
   <!-- Header -->
   <?php require_once __DIR__ . '/html/MenuPrincipal.php'; ?>
-  <br><br><br><br><br>
-
-  <section class="section" id="testimonials" itemscope itemtype="https://schema.org/ItemList" aria-label="Opiniones de clientes">
-    <meta itemprop="name" content="Opiniones de nuestros clientes">
-    <div class="container">
-      <!-- Título -->
-      <div class="row">
-        <div class="col-lg-12">
-          <div class="center-heading">
-            <h1 class="section-title">Opiniones de nuestros clientes</h1>
-          </div>
-        </div>
-        <div class="offset-lg-3 col-lg-6">
-          <div class="center-text">
-            <p>En KASU, creemos en la transparencia y la confianza. Aquí solo verás opiniones reales de clientes que han vivido nuestro servicio.</p>
-            <p>No simulamos testimonios. Cada comentario es auténtico y representa la voz de quienes nos eligieron para proteger a su familia.</p>
-          </div>
-        </div>
+  <main class="testimonials-page">
+    <section class="testimonials-hero">
+      <div class="container">
+        <p class="testimonials-eyebrow">Opiniones reales</p>
+        <h1 class="testimonials-title">Opiniones de nuestros clientes</h1>
+        <p class="testimonials-sub">En KASU creemos en la transparencia y la confianza. Aqui solo veras opiniones reales de clientes que han vivido nuestro servicio.</p>
+        <p class="testimonials-sub">No simulamos testimonios. Cada comentario es autentico y representa la voz de quienes nos eligieron para proteger a su familia.</p>
       </div>
+    </section>
 
-      <!-- Lista de testimonios -->
-      <div class="row" role="list">
-        <?php
-        // Una sola consulta
-        $sql = "SELECT id, Nombre, Opinion, Servicio, foto FROM opiniones";
-        if ($result = $mysqli->query($sql)) {
-          $pos = 1;
-          while ($art = $result->fetch_assoc()) {
-            $nombre   = htmlspecialchars((string)($art['Nombre'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-            $opinion  = htmlspecialchars((string)($art['Opinion'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-            $servicio = htmlspecialchars((string)($art['Servicio'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-            $foto     = htmlspecialchars((string)($art['foto'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    <section class="testimonials-grid-section" id="testimonials" itemscope itemtype="https://schema.org/ItemList" aria-label="Opiniones de clientes">
+      <meta itemprop="name" content="Opiniones de nuestros clientes">
+      <div class="container">
+        <div class="testimonials-grid" role="list">
+          <?php
+          // Una sola consulta
+          $sql = "SELECT id, Nombre, Opinion, Servicio, foto FROM opiniones";
+          if ($result = $mysqli->query($sql)) {
+            $pos = 1;
+            while ($art = $result->fetch_assoc()) {
+              $nombre   = htmlspecialchars((string)($art['Nombre'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+              $opinion  = htmlspecialchars((string)($art['Opinion'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+              $servicio = htmlspecialchars((string)($art['Servicio'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+              $fotoRaw  = (string)($art['foto'] ?? '');
+              $foto     = $fotoRaw !== '' ? htmlspecialchars($fotoRaw, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '/assets/images/flor_redonda.svg';
 
-            // Ítem de lista para schema ItemList
-            echo '<meta itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">';
-            echo '<meta itemprop="position" content="'.(int)$pos.'">';
+              echo '<div class="testimonials-item" role="listitem" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">';
+              echo '<meta itemprop="position" content="'.(int)$pos.'">';
 
-            echo "
-            <div class='col-lg-4 col-md-6 col-sm-12' role='listitem'>
-              <div class='team-item' itemscope itemtype='https://schema.org/Review'>
-                <div class='team-content'>
-                  <div class='team-info'>
-                    <br>
+              echo "
+                <article class='opinion-card testimonials-card' itemscope itemtype='https://schema.org/Review'>
+                  <div class='opinion-avatar'>
                     <img src='{$foto}' alt='Foto de {$nombre}' loading='lazy' decoding='async' itemprop='image'>
-                    <p itemprop='reviewBody'>{$opinion}</p>
-                    <h3 class='user-name' itemprop='author'>{$nombre}</h3>
-                    <span itemprop='itemReviewed' itemscope itemtype='https://schema.org/Thing'>
-                      <meta itemprop='name' content='{$servicio}'>{$servicio}
-                    </span>
                   </div>
-                </div>
-              </div>
-            </div>";
-            $pos++;
+                  <p class='opinion-text' itemprop='reviewBody'>{$opinion}</p>
+                  <div class='opinion-name' itemprop='author'>{$nombre}</div>
+                  <div class='opinion-service' itemprop='itemReviewed' itemscope itemtype='https://schema.org/Thing'>
+                    <meta itemprop='name' content='{$servicio}'>{$servicio}
+                  </div>
+                </article>
+              ";
+              echo '</div>';
+              $pos++;
+            }
+            $result->free();
+          } else {
+            echo "<div class='col-12'><p>No fue posible cargar testimonios en este momento.</p></div>";
           }
-          $result->free();
-        } else {
-          // Evitar warnings en 8.2 y dar salida limpia
-          echo "<div class='col-12'><p>No fue posible cargar testimonios en este momento.</p></div>";
-        }
-        ?>
+          ?>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </main>
 
   <!-- Footer -->
-  <footer>
+  <footer class="site-footer">
     <?php require_once __DIR__ . '/html/footer.php'; ?>
   </footer>
 

@@ -33,37 +33,19 @@ function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES,
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Actualiza los datos de tu servicio de gastos funerarios de KASU">
   <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet">
 
   <!-- CSS existentes -->
   <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
   <link rel="stylesheet" href="../assets/css/font-awesome.css">
-
-  <!-- Fix layout: evita encimados -->
-  <style>
-    /* Contenedor centrado y con ancho controlado */
-    .auth-wrap { max-width: 520px; margin: 32px auto; }
-    /* Card limpia y apilable */
-    .features-small-item {
-      display: block; position: relative; overflow: hidden;
-      border-radius: 16px; box-shadow: 0 12px 28px rgba(0,0,0,.08);
-      background: #fff; padding: 28px 24px;
-    }
-    .features-small-item .icon img { display:block; width:72px; height:auto; margin: 0 auto 8px; }
-    .features-title { text-align:center; margin: 8px 0 0; font-weight:600; }
-    .pricing-body { text-align:center; margin: 12px 0 18px; }
-    .pricing-body hr { margin: 12px 0 18px; }
-    .consulta label { font-weight:600; margin-top:10px; }
-    .main-button-slider,
-    .btn-primary {
-      display:inline-block; border:0; border-radius: 22px; padding: 10px 20px;
-      background:#012F91; color:#fff; text-transform:uppercase; font-size:14px; cursor:pointer;
-    }
-    .muted-link { color:#911F66; }
-    /* Evita transformaciones de scrollreveal en estos paneles */
-    .no-reveal { transform:none !important; opacity:1 !important; }
-  </style>
+  <link rel="stylesheet" href="../assets/css/kasu-menu.css?v=<?php echo $VerCache; ?>">
+  <link rel="stylesheet" href="../assets/css/actualizacion-datos.css?v=<?php echo $VerCache; ?>">
 </head>
-<body>
+<body class="kasu-ui kasu-auth-page">
+  <?php require_once '../html/MenuPrincipal.php'; ?>
+  <main class="kasu-auth">
 
   <!-- Modal: Instrucciones -->
   <div id="Instruccion" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
@@ -108,20 +90,21 @@ function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES,
   </div>
 
   <!-- Sección principal -->
-  <section class="section" id="Clientes">
+  <section class="section kasu-auth__section" id="Clientes">
     <div class="container">
       <div class="row justify-content-center">
         <div class="col-12 auth-wrap">
 
           <!-- Panel único: o captura CURP o CURP+Póliza -->
-          <div class="features-small-item no-reveal">
-            <div class="icon">
+          <div class="features-small-item no-reveal kasu-auth__card">
+            <div class="kasu-auth__header">
               <img src="../assets/images/Index/florkasu.png" alt="Kasu Logo">
+              <span class="kasu-auth__eyebrow">Servicios a Futuro</span>
             </div>
             <h1 class="features-title">Ingresar a mi cuenta KASU</h1>
+            <p class="kasu-auth__lead">Actualiza tus datos y consulta tu póliza de forma segura.</p>
             
-            <div class="pricing-body">
-              </br>
+            <div class="pricing-body kasu-auth__plan">
               <hr>
               <h2 class="mb-1"><strong>Plan de Referidos</strong></h2>
               <p class="mb-1">Genera ingresos extras solo por ser cliente KASU</p>
@@ -129,7 +112,7 @@ function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES,
               <hr>
             </div>
               <!-- Form: CURP fija + Póliza -->
-              <form method="POST" id="FormCurpPoliza" action="php/datos.php" autocomplete="off" novalidate class="consulta">
+              <form method="POST" id="FormCurpPoliza" action="php/datos.php" autocomplete="off" novalidate class="consulta kasu-auth__form">
                 <label>CURP</label>
                 <?php if (isset($_GET['value'])): ?>
                   <input type="text" class="form-control" value="<?php echo h($curp); ?>" disabled>
@@ -150,7 +133,7 @@ function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES,
                 <!-- honeypot -->
                 <input type="text" name="hp" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0;">
 
-                <div class="text-center mt-3">
+                <div class="text-center mt-3 kasu-auth__actions">
                   <button type="submit" id="btnConsultar_ActIndCli" name="btnConsultar_ActIndCli" class="main-button-slider">Consultar</button>
                 </div>
 
@@ -162,6 +145,7 @@ function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES,
       </div>
     </div>
   </section>
+  </main>
 
   <!-- JS -->
   <script src="../assets/js/jquery-2.1.0.min.js"></script>

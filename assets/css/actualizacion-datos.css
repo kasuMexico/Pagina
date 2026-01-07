@@ -1,0 +1,155 @@
+.kasu-auth-page {
+  --kasu-auth-ink: #0c1726;
+  --kasu-auth-muted: #4b5b72;
+  --kasu-auth-accent: #8e1f63;
+  --kasu-auth-surface: #ffffff;
+  --kasu-auth-border: #dfe4ec;
+  --kasu-auth-shadow: 0 22px 48px rgba(12, 23, 38, 0.18);
+  font-family: "IBM Plex Sans", "Roboto", sans-serif;
+  background: #0b1320;
+}
+
+.kasu-auth {
+  min-height: calc(100vh - var(--kasu-header-height, 72px));
+  padding: 96px 0 72px;
+  background: linear-gradient(120deg, rgba(8, 16, 30, 0.75), rgba(8, 16, 30, 0.25)),
+    url("/assets/images/patrocinios_en_mexico.jpeg") center/cover no-repeat;
+}
+
+.kasu-auth__section {
+  position: relative;
+}
+
+.kasu-auth__section .auth-wrap {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.kasu-auth__card {
+  background: var(--kasu-auth-surface);
+  border-radius: 22px;
+  padding: 32px 30px;
+  box-shadow: var(--kasu-auth-shadow);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.no-reveal {
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+.kasu-auth__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.kasu-auth__header img {
+  width: 68px;
+  height: auto;
+}
+
+.kasu-auth__eyebrow {
+  font-size: 0.7rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--kasu-auth-muted);
+  font-weight: 600;
+}
+
+.kasu-auth__card .features-title {
+  text-align: center;
+  margin: 0.5rem 0 0.4rem;
+  font-family: "IBM Plex Serif", serif;
+  font-size: clamp(1.7rem, 3vw, 2.1rem);
+  color: var(--kasu-auth-ink);
+}
+
+.kasu-auth__lead {
+  text-align: center;
+  color: var(--kasu-auth-muted);
+  margin-bottom: 1.6rem;
+}
+
+.kasu-auth__plan {
+  text-align: center;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: #f4f6fa;
+  border: 1px solid var(--kasu-auth-border);
+  margin-bottom: 1.6rem;
+}
+
+.kasu-auth__plan h2 {
+  font-weight: 600;
+  color: var(--kasu-auth-ink);
+}
+
+.kasu-auth__form label {
+  font-weight: 600;
+  color: var(--kasu-auth-ink);
+  margin-top: 12px;
+}
+
+.kasu-auth__form .form-control {
+  border-radius: 12px;
+  border: 1px solid var(--kasu-auth-border);
+  padding: 12px 14px;
+  font-size: 0.98rem;
+  box-shadow: none;
+}
+
+.kasu-auth__form .form-control:focus {
+  border-color: rgba(142, 31, 99, 0.5);
+  box-shadow: 0 0 0 3px rgba(142, 31, 99, 0.15);
+}
+
+.kasu-auth__actions {
+  margin-top: 1.2rem;
+}
+
+.kasu-auth__card .main-button-slider,
+.kasu-auth__card .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 26px;
+  background: var(--kasu-auth-accent);
+  color: #ffffff;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kasu-auth__card .main-button-slider:hover,
+.kasu-auth__card .btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(142, 31, 99, 0.2);
+  color: #ffffff;
+}
+
+.kasu-auth-page .muted-link {
+  color: var(--kasu-auth-accent);
+}
+
+.kasu-auth-page .modal-content {
+  border-radius: 16px;
+  border: 1px solid var(--kasu-auth-border);
+}
+
+@media (max-width: 767px) {
+  .kasu-auth {
+    padding: 72px 0 56px;
+  }
+
+  .kasu-auth__card {
+    padding: 26px 22px;
+  }
+}

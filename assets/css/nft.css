@@ -1,0 +1,462 @@
+.kasu-nft {
+  --kasu-nft-bg: #f5f6fa;
+  --kasu-nft-surface: #ffffff;
+  --kasu-nft-surface-muted: #f0f3f8;
+  --kasu-nft-ink: #0d1628;
+  --kasu-nft-ink-soft: #4b5565;
+  --kasu-nft-accent: #0f3d4c;
+  --kasu-nft-accent-strong: #0b2f3b;
+  --kasu-nft-gold: #c9a15a;
+  --kasu-nft-border: #e1e6ef;
+  --kasu-nft-shadow: 0 18px 40px rgba(13, 22, 40, 0.08);
+  --kasu-nft-shadow-soft: 0 10px 26px rgba(13, 22, 40, 0.06);
+  font-family: "IBM Plex Sans", "Roboto", sans-serif;
+  color: var(--kasu-nft-ink);
+  background: var(--kasu-nft-bg);
+}
+
+.kasu-nft *,
+.kasu-nft *::before,
+.kasu-nft *::after {
+  box-sizing: border-box;
+}
+
+.kasu-nft a {
+  color: inherit;
+}
+
+.kasu-nft img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.kasu-nft__hero {
+  padding: 120px 0 72px;
+  background: linear-gradient(130deg, #f8f9fc 0%, #eef2f8 50%, #e8eef7 100%);
+  border-bottom: 1px solid var(--kasu-nft-border);
+}
+
+.kasu-nft__hero-top {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.kasu-nft__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.kasu-nft__brand img {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid var(--kasu-nft-border);
+}
+
+.kasu-nft__brand span {
+  font-size: 0.85rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--kasu-nft-ink-soft);
+}
+
+.kasu-nft__lang-select {
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--kasu-nft-border);
+  background: #ffffff;
+  font-weight: 600;
+  color: var(--kasu-nft-ink);
+  min-width: 190px;
+}
+
+.kasu-nft__eyebrow {
+  font-size: 0.82rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--kasu-nft-accent);
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.kasu-nft__title {
+  font-family: "IBM Plex Serif", serif;
+  font-size: clamp(2.4rem, 4vw, 3.6rem);
+  margin-bottom: 0.6rem;
+}
+
+.kasu-nft__subtitle {
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--kasu-nft-ink-soft);
+}
+
+.kasu-nft__cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1.6rem 0 1.2rem;
+}
+
+.kasu-nft__btn {
+  padding: 0.7rem 1.6rem;
+  border-radius: 999px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kasu-nft__btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--kasu-nft-shadow-soft);
+}
+
+.kasu-nft__btn-primary,
+.kasu-nft a.kasu-nft__btn-primary {
+  background: var(--kasu-nft-ink);
+  color: #ffffff;
+  border-color: var(--kasu-nft-ink);
+}
+
+.kasu-nft__btn-primary:hover,
+.kasu-nft__btn-primary:focus,
+.kasu-nft__btn-primary:visited,
+.kasu-nft a.kasu-nft__btn-primary:hover,
+.kasu-nft a.kasu-nft__btn-primary:focus,
+.kasu-nft a.kasu-nft__btn-primary:visited {
+  background: var(--kasu-nft-accent-strong);
+  color: #ffffff;
+}
+
+.kasu-nft__btn-secondary {
+  background: transparent;
+  color: var(--kasu-nft-accent);
+  border-color: var(--kasu-nft-accent);
+}
+
+.kasu-nft__trust {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  color: var(--kasu-nft-ink-soft);
+  font-size: 0.92rem;
+}
+
+.kasu-nft__trust li {
+  position: relative;
+  padding-right: 1.2rem;
+}
+
+.kasu-nft__trust li::after {
+  content: "";
+  position: absolute;
+  right: 0.2rem;
+  top: 50%;
+  width: 1px;
+  height: 14px;
+  background: var(--kasu-nft-border);
+  transform: translateY(-50%);
+}
+
+.kasu-nft__trust li:last-child::after {
+  display: none;
+}
+
+.kasu-nft__hero-media {
+  background: #ffffff;
+  border-radius: 22px;
+  padding: 1.5rem;
+  border: 1px solid var(--kasu-nft-border);
+  box-shadow: var(--kasu-nft-shadow);
+}
+
+.kasu-nft__section {
+  padding: 72px 0;
+}
+
+.kasu-nft__section--muted {
+  background: var(--kasu-nft-surface-muted);
+}
+
+.kasu-nft__section-header {
+  max-width: 760px;
+  margin-bottom: 2.5rem;
+}
+
+.kasu-nft__section-title {
+  font-family: "IBM Plex Serif", serif;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  margin-bottom: 0.9rem;
+}
+
+.kasu-nft__lead {
+  font-size: 1.05rem;
+  color: var(--kasu-nft-ink-soft);
+}
+
+.kasu-nft__prose p {
+  color: var(--kasu-nft-ink-soft);
+  margin-bottom: 1rem;
+}
+
+.kasu-nft__card {
+  background: var(--kasu-nft-surface);
+  border-radius: 20px;
+  padding: 1.6rem;
+  border: 1px solid var(--kasu-nft-border);
+  box-shadow: var(--kasu-nft-shadow);
+}
+
+.kasu-nft__card--highlight {
+  border-top: 4px solid var(--kasu-nft-gold);
+}
+
+.kasu-nft__card-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.kasu-nft__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  color: var(--kasu-nft-ink-soft);
+}
+
+.kasu-nft__list li {
+  padding-left: 1.2rem;
+  position: relative;
+  margin-bottom: 0.8rem;
+}
+
+.kasu-nft__list li::before {
+  content: "—";
+  position: absolute;
+  left: 0;
+  color: var(--kasu-nft-gold);
+}
+
+.kasu-nft__steps {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.2rem;
+}
+
+.kasu-nft__step {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 1.4rem;
+  border: 1px solid var(--kasu-nft-border);
+  box-shadow: var(--kasu-nft-shadow-soft);
+}
+
+.kasu-nft__step-number {
+  font-weight: 700;
+  color: var(--kasu-nft-accent);
+  letter-spacing: 0.1em;
+  font-size: 0.9rem;
+}
+
+.kasu-nft__step-title {
+  font-size: 1.15rem;
+  margin: 0.6rem 0 0.5rem;
+}
+
+.kasu-nft__step p {
+  color: var(--kasu-nft-ink-soft);
+  margin: 0;
+}
+
+.kasu-nft__table-wrapper {
+  display: none;
+  overflow-x: auto;
+  border-radius: 16px;
+  border: 1px solid var(--kasu-nft-border);
+  background: #ffffff;
+}
+
+.kasu-nft__table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+.kasu-nft__table th,
+.kasu-nft__table td {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--kasu-nft-border);
+  text-align: left;
+}
+
+.kasu-nft__table thead th {
+  background: #f1f4f9;
+  font-weight: 600;
+}
+
+.kasu-nft__range-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.kasu-nft__range-card {
+  background: #ffffff;
+  border: 1px solid var(--kasu-nft-border);
+  border-radius: 16px;
+  padding: 1.2rem;
+  box-shadow: var(--kasu-nft-shadow-soft);
+}
+
+.kasu-nft__range-card h3 {
+  margin-bottom: 0.6rem;
+  font-size: 1.1rem;
+}
+
+.kasu-nft__footnotes {
+  margin-top: 1.5rem;
+  padding-left: 1.2rem;
+  color: var(--kasu-nft-ink-soft);
+}
+
+.kasu-nft__collections {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.kasu-nft__collection-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 1.6rem;
+  border: 1px solid var(--kasu-nft-border);
+  box-shadow: var(--kasu-nft-shadow);
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kasu-nft__collection-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 22px 40px rgba(13, 22, 40, 0.12);
+}
+
+.kasu-nft__collection-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.kasu-nft__collection-year {
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.kasu-nft__badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(15, 61, 76, 0.08);
+  color: var(--kasu-nft-accent);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.kasu-nft__badge--muted {
+  background: rgba(75, 85, 101, 0.12);
+  color: var(--kasu-nft-ink-soft);
+}
+
+.kasu-nft__collection-link {
+  font-weight: 600;
+  color: var(--kasu-nft-accent);
+}
+
+.kasu-nft__media-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 1.4rem;
+  border: 1px solid var(--kasu-nft-border);
+  box-shadow: var(--kasu-nft-shadow);
+}
+
+.kasu-nft__faq {
+  display: grid;
+  gap: 1rem;
+}
+
+.kasu-nft__faq details {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid var(--kasu-nft-border);
+  padding: 1rem 1.2rem;
+  box-shadow: var(--kasu-nft-shadow-soft);
+}
+
+.kasu-nft__faq summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--kasu-nft-ink);
+}
+
+.kasu-nft__faq p {
+  color: var(--kasu-nft-ink-soft);
+  margin: 0.8rem 0 0;
+}
+
+@media (min-width: 768px) {
+  .kasu-nft__hero-top {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .kasu-nft__steps {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .kasu-nft__collections {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 992px) {
+  .kasu-nft__hero {
+    padding: 140px 0 96px;
+  }
+
+  .kasu-nft__steps {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .kasu-nft__table-wrapper {
+    display: block;
+  }
+
+  .kasu-nft__range-cards {
+    display: none;
+  }
+
+  .kasu-nft__collections {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .kasu-nft__hero-media {
+    margin-top: 2rem;
+  }
+}

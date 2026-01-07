@@ -53,7 +53,15 @@ function some_function3($VAr) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<?php
+  $langAttr = 'es';
+  if ($Lgj === 'Ingles') {
+    $langAttr = 'en';
+  } elseif ($Lgj === 'Aleman') {
+    $langAttr = 'de';
+  }
+?>
+<html lang="<?= $langAttr ?>">
 <head>
   <?php
     // SEO dinámico por idioma (no altera lógica)
@@ -119,60 +127,129 @@ function some_function3($VAr) {
 
   <!-- Fuentes + Favicon -->
   <link rel="icon" href="/assets/images/kasu_logo.jpeg">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Serif:wght@400;500;600&display=swap">
   <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons'>
 
-  <!-- CSS existentes -->
-  <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css">
-  <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css">
-  <link rel="stylesheet" type="text/css" href="/assets/css/kasu-ui.css">
+    <!-- CSS -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css?v=<? echo $VerCache;?>">
+    <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css?v=<? echo $VerCache;?>">
+    <link rel="stylesheet" type="text/css" href="/assets/css/kasu-menu.css?v=<? echo $VerCache;?>">
+    <link rel="stylesheet" type="text/css" href="/assets/css/index-home.css?v=<? echo $VerCache;?>">
+    <link rel="stylesheet" type="text/css" href="/assets/css/nft.css?v=<? echo $VerCache;?>">
+    
 </head>
-<body>
-  <?php require_once __DIR__ . '/html/MenuPrincipal.php'; ?>
-  <!-- Portada de pagina -->
-  <div class="welcome-area">
-    <!-- <div class="welcome-area" style="background-image:url(assets/images/Correo/entregables.jpeg);"> -->
-    <br><br><br>
-    <div class="Mover">
-      <div class="features-small-item">
-        <div class="logo">
-          <a href="#"><img src="/assets/images/kasu_logo.jpeg" alt="KASU"></a>
-        </div>
-        <h1><strong>KASU</strong></h1>
-        <br>
-        <h2>
-          <?php
-            if ($Lgj === "Ingles") {
-              echo "EVERY NFT GENERATES REWARDS";
-            } elseif ($Lgj === "Aleman") {
-              echo "JEDE NFT ERZIELT BELOHNUNGEN";
-            } else {
-              echo "CADA NFT GENERA RECOMPENSAS";
-            }
-          ?>
-        </h2>
-        <br>
-        <select class="custom-select mr-sm-2" onchange="this.value && (window.location = this.value);">
-          <option value="">Lenguaje</option>
-          <option value="https://kasu.com.mx/nft.php?Lg=Ingles">English</option>
-          <option value="https://kasu.com.mx/nft.php?Lg=Aleman">Deutsch</option>
-          <option value="https://kasu.com.mx/nft.php?Lg=Espanol">Español</option>
-        </select>
-        <br><br>
-        <a href="#" class="btn btn-dark btn-lg">Vincular tu wallet</a>
-      </div>
-    </div>
-  </div>
-
+<body class="kasu-ui">
   <?php
-    // Carga del bloque según idioma
-    if ($Lgj === "Ingles") {
-      echo some_function2($Lgj);
-    } elseif ($Lgj === "Aleman") {
-      echo some_function3($Lgj);
-    } else {
-      echo some_function($Lgj);
-    }
+    $heroCopy = [
+      'Espanol' => [
+        'eyebrow' => 'KASU NFT',
+        'subtitle' => 'CADA NFT GENERA RECOMPENSAS',
+        'cta_primary' => 'Vincular wallet',
+        'cta_secondary' => 'Ver colección en OpenSea',
+        'lang_label' => 'Idioma',
+        'open_sea_label' => 'Abrir colección KASU NFT en OpenSea',
+        'trust' => [
+          'Colección verificada en OpenSea',
+          'Recompensas variables según rendimiento',
+          'Sin custodia de fondos',
+        ],
+      ],
+      'Ingles' => [
+        'eyebrow' => 'KASU NFT',
+        'subtitle' => 'EVERY NFT GENERATES REWARDS',
+        'cta_primary' => 'Connect wallet',
+        'cta_secondary' => 'View collection on OpenSea',
+        'lang_label' => 'Language',
+        'open_sea_label' => 'Open KASU NFT collection on OpenSea',
+        'trust' => [
+          'Verified collection on OpenSea',
+          'Variable rewards based on performance',
+          'Non-custodial flow',
+        ],
+      ],
+      'Aleman' => [
+        'eyebrow' => 'KASU NFT',
+        'subtitle' => 'JEDE NFT ERZIELT BELOHNUNGEN',
+        'cta_primary' => 'Wallet verbinden',
+        'cta_secondary' => 'Kollektion auf OpenSea ansehen',
+        'lang_label' => 'Sprache',
+        'open_sea_label' => 'KASU NFT Kollektion auf OpenSea öffnen',
+        'trust' => [
+          'Verifizierte Kollektion auf OpenSea',
+          'Variable Belohnungen je nach Performance',
+          'Keine Verwahrung von Geldern',
+        ],
+      ],
+    ];
+    $hero = $heroCopy[$Lgj] ?? $heroCopy['Espanol'];
   ?>
+  <?php require_once __DIR__ . '/html/MenuPrincipal.php'; ?>
+  
+  <main class="kasu-nft">
+    <section class="kasu-nft__hero" aria-labelledby="kasu-nft-hero-title">
+      <div class="container">
+        <div class="kasu-nft__hero-top">
+          <div class="kasu-nft__brand">
+            <img src="/assets/images/kasu_logo.jpeg" alt="KASU" width="48" height="48">
+            <span>KASU</span>
+          </div>
+          <div class="kasu-nft__lang">
+            <label for="kasu-lang" class="sr-only"><?= htmlspecialchars($hero['lang_label'], ENT_QUOTES, 'UTF-8') ?></label>
+            <select id="kasu-lang" class="kasu-nft__lang-select" onchange="this.value && (window.location = this.value);">
+              <option value="https://kasu.com.mx/nft.php?Lg=Espanol" <?= $Lgj === 'Espanol' ? 'selected' : '' ?>>Español</option>
+              <option value="https://kasu.com.mx/nft.php?Lg=Ingles" <?= $Lgj === 'Ingles' ? 'selected' : '' ?>>English</option>
+              <option value="https://kasu.com.mx/nft.php?Lg=Aleman" <?= $Lgj === 'Aleman' ? 'selected' : '' ?>>Deutsch</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row align-items-center">
+          <div class="col-lg-6">
+            <p class="kasu-nft__eyebrow"><?= htmlspecialchars($hero['eyebrow'], ENT_QUOTES, 'UTF-8') ?></p>
+            <h1 id="kasu-nft-hero-title" class="kasu-nft__title">KASU NFT</h1>
+            <p class="kasu-nft__subtitle"><?= htmlspecialchars($hero['subtitle'], ENT_QUOTES, 'UTF-8') ?></p>
+            <div class="kasu-nft__cta">
+              <a href="#" id="kasu-wallet-connect" class="btn kasu-nft__btn kasu-nft__btn-primary">
+                <?= htmlspecialchars($hero['cta_primary'], ENT_QUOTES, 'UTF-8') ?>
+              </a>
+              <a href="https://opensea.io/collection/kasunft" target="_blank" rel="noopener noreferrer" class="btn kasu-nft__btn kasu-nft__btn-secondary">
+                <?= htmlspecialchars($hero['cta_secondary'], ENT_QUOTES, 'UTF-8') ?>
+              </a>
+            </div>
+            <ul class="kasu-nft__trust">
+              <li><?= htmlspecialchars($hero['trust'][0], ENT_QUOTES, 'UTF-8') ?></li>
+              <li><?= htmlspecialchars($hero['trust'][1], ENT_QUOTES, 'UTF-8') ?></li>
+              <li><?= htmlspecialchars($hero['trust'][2], ENT_QUOTES, 'UTF-8') ?></li>
+            </ul>
+          </div>
+          <div class="col-lg-6">
+            <div class="kasu-nft__hero-media">
+              <a href="https://opensea.io/collection/kasunft" target="_blank" rel="noopener noreferrer" aria-label="<?= htmlspecialchars($hero['open_sea_label'], ENT_QUOTES, 'UTF-8') ?>">
+                <img
+                  src="/assets/images/nft2.gif"
+                  alt="KASU NFT"
+                  loading="lazy"
+                  decoding="async"
+                  width="960"
+                  height="960">
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <?php
+      // Carga del bloque según idioma
+      if ($Lgj === "Ingles") {
+        echo some_function2($Lgj);
+      } elseif ($Lgj === "Aleman") {
+        echo some_function3($Lgj);
+      } else {
+        echo some_function($Lgj);
+      }
+    ?>
+  </main>
 
   <footer>
     <?php require_once __DIR__ . '/html/footer.php'; ?>

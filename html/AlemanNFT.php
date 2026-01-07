@@ -1,240 +1,272 @@
-<!-- ***** Inicio Seccion de Clientes (DE) ***** -->
-<section class="section padding-top-70 padding-bottom-0" id="Clientes-de" aria-labelledby="title-why-kasu-nft-de">
+<section class="kasu-nft__section" id="kasu-nft-what" aria-labelledby="kasu-nft-what-title">
   <div class="container">
-    <div class="row">
-      <div class="col-lg-5 col-md-12 col-sm-12 align-self-center" data-scroll-reveal="enter left move 30px over 0.6s after 0.4s">
-        <div class="center-heading">
-          <h2 id="title-why-kasu-nft-de" class="section-title">Warum KASU NFT?</h2>
-        </div>
-
-        <div class="center-heading">
-          <p>
-            KASU wurde 2016 als Projekt gegründet, das mexikanischen Familien, die eine Lebensversicherung zu einem fairen Preis benötigen, eine zugängliche Option bietet. Wenn Sie KASU kaufen, müssen Sie sich nicht um jährliche Verlängerungen, Selbstbeteiligungen oder versteckte Gebühren kümmern – mit einer einzigen Zahlung sind Sie lebenslang abgesichert. Wir bieten ein Produkt, das den Bedürfnissen des lateinamerikanischen Versicherungsmarktes entspricht.
-          </p>
-          <br>
-          <p>
-            Wir haben beschlossen, die Basisinformationen unserer Kundinnen und Kunden in einer Reihe von NFTs zu prägen. Durch den Erstverkauf und die Lizenzgebühren wächst das Vermögen des Investmentfonds, und die Gewinne werden zwischen dem Kunden und der Inhaberin/dem Inhaber des NFTs aufgeteilt.
-          </p>
-          <br>
-        </div>
-      </div>
-
-      <div class="col-lg-1"></div>
-
-      <div class="col-lg-6 col-md-12 col-sm-12 align-self-center mobile-top-fix">
-        <a href="https://opensea.io/collection/kasunft" target="_blank" rel="noopener noreferrer" aria-label="KASU NFT Kollektion auf OpenSea öffnen">
-          <img
-            id="NftKAsu"
-            src="/assets/images/nft2.gif"
-            class="rounded img-fluid d-block mx-auto"
-            alt="KASU NFT animierte Vorschau"
-            style="width:85%;"
-            loading="lazy"
-            decoding="async"
-            width="960"
-            height="960">
-        </a>
-      </div>
+    <div class="kasu-nft__section-header">
+      <p class="kasu-nft__eyebrow">Was ist KASU NFT?</p>
+      <h2 id="kasu-nft-what-title" class="kasu-nft__section-title">Ein digitales Asset, das den KASU-Fonds stärkt</h2>
+      <p class="kasu-nft__lead">Eine Kollektion, die den KASU-Investmentfonds stärkt und Belohnungen transparent verteilt.</p>
     </div>
-    <br><br>
-  </div>
-</section>
-
-<!-- ***** Vorteile ***** -->
-<section class="mini1" id="Vorteile-de" aria-labelledby="title-vorteile-de">
-  <div class="mini-content">
-    <div class="container">
-      <div class="col-lg-12">
-        <div class="center-heading">
-          <h2 id="title-vorteile-de" class="section-title"><strong>KASU NFT</strong> ist mehr als Krypto-Kunst – es geht um Menschen</h2>
+    <div class="row">
+      <div class="col-lg-7">
+        <div class="kasu-nft__prose">
+          <p>KASU wurde 2016 gegründet, um mexikanischen Familien eine bezahlbare Lebensversicherung mit einer Einmalzahlung und ohne versteckte Gebühren zu bieten. Dieser langfristige Ansatz setzt sich bei KASU NFT fort.</p>
+          <p>Jedes NFT tokenisiert die Basisinformationen der Kundschaft. Der Erstverkauf und die Lizenzgebühren helfen, den Investmentfonds zu kapitalisieren und Gewinne zwischen Kundin/Kunde und NFT-Inhaberin/Inhaber zu teilen.</p>
         </div>
       </div>
-
-      <div class="center-heading">
-        <p>
-          Mit dieser Kollektion wollen wir den Investmentfonds von KASU ausbauen. Mit dem eingesammelten Kapital betreiben wir ein Kryptowährungs-<em>Staking</em>, das den Inhaberinnen und Inhabern jedes NFTs 60&nbsp;% der Produktion zuweist – anteilig gemäß der in den Metadaten des NFTs angegebenen Quote. Der verbleibende Anteil wird wieder in den Fonds investiert. So können wir zusätzliche Leistungen für KASU-Kundschaft finanzieren und weiterhin ausschüttungsfähige Erträge für die NFTs generieren – eine Symbiose zwischen NFTs und dem Kundennutzen.
-        </p>
-        <br>
-        <p>
-          Während der Lebensdauer des NFTs erhalten Sie Belohnungen, die aus dem <em>Staking</em> und dem Investmentfonds stammen. Wenn der Service an die Kundschaft erbracht wird, erhalten Sie 50&nbsp;% des verbleibenden Fonds, und Ihr NFT wird deaktiviert – Sie behalten eine einzigartige Erfahrung und ein besonderes Sammlerstück.
-        </p>
-        <br>
-        <p>
-          Jedes Jahr am „Geburtstag“ des NFTs erhält die zugehörige ETH-Adresse 30&nbsp;% des vom Investmentfonds erwirtschafteten Gewinns – anteilig gemäß den NFT-Metadaten. Wählen Sie also ein für Sie passendes Datum aus unserer Kollektion – oder veräußern Sie Ihr NFT und realisieren Sie einen Verkaufserlös.
-        </p>
-        <br>
-
-        <div class="row d-flex justify-content-center">
-          <table class="table table-bordered table-striped w-auto" aria-describedby="tabelle-belohnungen-desc">
-            <caption id="tabelle-belohnungen-desc" class="sr-only">Übersicht: Stückzahl, tägliche Belohnung und Startpreis je NFT-Altersbereich</caption>
-            <thead>
-              <tr>
-                <th scope="col">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Alter NFT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
-                <th scope="col">&nbsp;&nbsp;Anzahl*&nbsp;&nbsp;</th>
-                <th scope="col">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Tägliche Belohnung**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
-                <th scope="col">&nbsp;&nbsp;Startpreis&nbsp;&nbsp;</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row">02–29</th>
-                <td>131</td>
-                <td>0,000245 ETH</td>
-                <td>0,16 ETH</td>
-              </tr>
-              <tr>
-                <th scope="row">30–49</th>
-                <td>162</td>
-                <td>0,000417 ETH</td>
-                <td>0,28 ETH</td>
-              </tr>
-              <tr>
-                <th scope="row">50–54</th>
-                <td>46</td>
-                <td>0,000712 ETH</td>
-                <td>0,47 ETH</td>
-              </tr>
-              <tr>
-                <th scope="row">55–59</th>
-                <td>46</td>
-                <td>0,000982 ETH</td>
-                <td>0,65 ETH</td>
-              </tr>
-              <tr>
-                <th scope="row">60–64</th>
-                <td>30</td>
-                <td>0,001424 ETH</td>
-                <td>0,95 ETH</td>
-              </tr>
-              <tr>
-                <th scope="row">65–69</th>
-                <td>13</td>
-                <td>0,001939 ETH</td>
-                <td>1,00 ETH</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div>
-          <ul>
-            <li>* Anzahl der pro Serie 2021 geprägten NFTs</li>
-            <li>** Mindest erwartete tägliche Belohnung je NFT</li>
+      <div class="col-lg-5">
+        <div class="kasu-nft__card kasu-nft__card--highlight">
+          <h3 class="kasu-nft__card-title">Highlights der Kollektion</h3>
+          <ul class="kasu-nft__list">
+            <li>Limitierte Ausgabe nach Altersbereichen.</li>
+            <li>Metadaten mit Belohnungsanteilen.</li>
+            <li>Lizenzgebühren fließen zurück in den KASU-Fonds.</li>
           </ul>
         </div>
-        <br>
       </div>
-      <br>
     </div>
   </div>
 </section>
 
-<!-- ***** Produkte / Kaufen ***** -->
-<section class="section colored" id="Kaufen-de" aria-labelledby="title-belohnungspolitik-de">
+<section class="kasu-nft__section kasu-nft__section--muted" id="kasu-nft-steps" aria-labelledby="kasu-nft-steps-title">
   <div class="container">
-    <div class="row">
-      <div class="col-lg-6 col-md-12 col-sm-12 align-self-center mobile-top-fix">
-        <br>
-        <a href="https://opensea.io/collection/kasunft" target="_blank" rel="noopener noreferrer" aria-label="Zur KASU NFT Kollektion auf OpenSea">
-          <img
-            id="fideicomiso"
-            src="/assets/images/funcionamiento.png"
-            class="rounded img-fluid d-block mx-auto"
-            alt="Leitfaden zum Kauf der KASU NFT Kollektion"
-            style="width:85%;"
-            loading="lazy"
-            decoding="async"
-            width="1200"
-            height="900">
-        </a>
-      </div>
-
-      <div class="col-lg-1"></div>
-
-      <div class="col-lg-5 col-md-12 col-sm-12 align-self-lef" data-scroll-reveal="enter left move 30px over 0.6s after 0.4s">
-        <br><br>
-        <div class="center-heading">
-          <h2 id="title-belohnungspolitik-de" class="section-title">BELOHNUNGSPOLITIK</h2>
-        </div>
-
-        <div class="left-heading">
-          <p>Investitionen erfolgen über Börseninstrumente und Kryptowährungs-<em>Staking</em>.</p>
-          <br>
-          <p>Das <em>Staking</em> erzeugt tägliche Erträge, die gemäß den in den NFT-Metadaten angegebenen Prozentsätzen der Inhaberin/dem Inhaber zugewiesen werden.</p>
-          <br>
-          <p>Ausschüttungen aus Börseninstrumenten erfolgen jeweils am „Geburtstag“ des NFTs an die Adresse der Inhaberin/des Inhabers.</p>
-        </div>
-      </div>
+    <div class="kasu-nft__section-header">
+      <p class="kasu-nft__eyebrow">Prozess</p>
+      <h2 id="kasu-nft-steps-title" class="kasu-nft__section-title">So funktionieren die Belohnungen</h2>
+      <p class="kasu-nft__lead">Vier klare Schritte, um die Ausschüttungen zu verstehen.</p>
     </div>
-    <br><br>
+    <div class="kasu-nft__steps">
+      <article class="kasu-nft__step">
+        <span class="kasu-nft__step-number">01</span>
+        <h3 class="kasu-nft__step-title">NFT erwerben</h3>
+        <p>Auf OpenSea kaufen und die Wallet verbinden, die die Belohnungen erhält.</p>
+      </article>
+      <article class="kasu-nft__step">
+        <span class="kasu-nft__step-number">02</span>
+        <h3 class="kasu-nft__step-title">Kapital im Einsatz</h3>
+        <p>Das Kapital fließt in den KASU-Fonds und in Staking-Strategien.</p>
+      </article>
+      <article class="kasu-nft__step">
+        <span class="kasu-nft__step-number">03</span>
+        <h3 class="kasu-nft__step-title">Tägliche Verteilung</h3>
+        <p>Belohnungen werden gemäß den Metadaten an die NFT-Adresse verteilt.</p>
+      </article>
+      <article class="kasu-nft__step">
+        <span class="kasu-nft__step-number">04</span>
+        <h3 class="kasu-nft__step-title">Ausschüttung zum Jubiläum</h3>
+        <p>Am Geburtstag des NFTs erfolgen zusätzliche Ausschüttungen aus dem Fonds.</p>
+      </article>
+    </div>
   </div>
 </section>
 
-<!-- ***** Kollektionen ***** -->
-<section class="section" id="Kollektionen-de" style="display:none" aria-labelledby="title-kollektionen-de">
+<section class="kasu-nft__section" id="kasu-nft-ranges" aria-labelledby="kasu-nft-ranges-title">
   <div class="container">
-    <br><br>
-    <div class="row">
-      <div class="offset-lg-3 col-lg-6">
-        <div class="center-heading">
-          <h3 id="title-kollektionen-de">Entdecken Sie die Kollektionen von <strong>KASU NFT</strong></h3>
-          <br>
+    <div class="kasu-nft__section-header">
+      <p class="kasu-nft__eyebrow">Bereiche</p>
+      <h2 id="kasu-nft-ranges-title" class="kasu-nft__section-title">Bereiche und Belohnungen</h2>
+      <p class="kasu-nft__lead">Übersicht über Stückzahlen, geschätzte Belohnungen und Startpreis nach Altersbereich.</p>
+    </div>
+
+    <div class="kasu-nft__table-wrapper">
+      <table class="kasu-nft__table" aria-describedby="kasu-nft-table-desc">
+        <caption id="kasu-nft-table-desc" class="sr-only">Übersicht: Stückzahl, tägliche Belohnung und Startpreis je NFT-Altersbereich</caption>
+        <thead>
+          <tr>
+            <th scope="col">NFT-Alter</th>
+            <th scope="col">Anzahl*</th>
+            <th scope="col">Tägliche Belohnung**</th>
+            <th scope="col">Start</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">02–29</th>
+            <td>131</td>
+            <td>0,000245 ETH</td>
+            <td>0.16 ETH</td>
+          </tr>
+          <tr>
+            <th scope="row">30–49</th>
+            <td>162</td>
+            <td>0,000417 ETH</td>
+            <td>0.28 ETH</td>
+          </tr>
+          <tr>
+            <th scope="row">50–54</th>
+            <td>46</td>
+            <td>0,000712 ETH</td>
+            <td>0.47 ETH</td>
+          </tr>
+          <tr>
+            <th scope="row">55–59</th>
+            <td>46</td>
+            <td>0,000982 ETH</td>
+            <td>0.65 ETH</td>
+          </tr>
+          <tr>
+            <th scope="row">60–64</th>
+            <td>30</td>
+            <td>0,001424 ETH</td>
+            <td>0.95 ETH</td>
+          </tr>
+          <tr>
+            <th scope="row">65–69</th>
+            <td>13</td>
+            <td>0,001939 ETH</td>
+            <td>1.00 ETH</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="kasu-nft__range-cards">
+      <article class="kasu-nft__range-card">
+        <h3>02–29</h3>
+        <p><strong>Anzahl:</strong> 131</p>
+        <p><strong>Tägliche Belohnung:</strong> 0,000245 ETH</p>
+        <p><strong>Start:</strong> 0.16 ETH</p>
+      </article>
+      <article class="kasu-nft__range-card">
+        <h3>30–49</h3>
+        <p><strong>Anzahl:</strong> 162</p>
+        <p><strong>Tägliche Belohnung:</strong> 0,000417 ETH</p>
+        <p><strong>Start:</strong> 0.28 ETH</p>
+      </article>
+      <article class="kasu-nft__range-card">
+        <h3>50–54</h3>
+        <p><strong>Anzahl:</strong> 46</p>
+        <p><strong>Tägliche Belohnung:</strong> 0,000712 ETH</p>
+        <p><strong>Start:</strong> 0.47 ETH</p>
+      </article>
+      <article class="kasu-nft__range-card">
+        <h3>55–59</h3>
+        <p><strong>Anzahl:</strong> 46</p>
+        <p><strong>Tägliche Belohnung:</strong> 0,000982 ETH</p>
+        <p><strong>Start:</strong> 0.65 ETH</p>
+      </article>
+      <article class="kasu-nft__range-card">
+        <h3>60–64</h3>
+        <p><strong>Anzahl:</strong> 30</p>
+        <p><strong>Tägliche Belohnung:</strong> 0,001424 ETH</p>
+        <p><strong>Start:</strong> 0.95 ETH</p>
+      </article>
+      <article class="kasu-nft__range-card">
+        <h3>65–69</h3>
+        <p><strong>Anzahl:</strong> 13</p>
+        <p><strong>Tägliche Belohnung:</strong> 0,001939 ETH</p>
+        <p><strong>Start:</strong> 1.00 ETH</p>
+      </article>
+    </div>
+
+    <ul class="kasu-nft__footnotes">
+      <li>* Anzahl der pro Serie 2021 geprägten NFTs.</li>
+      <li>** Mindest erwartete tägliche Belohnung je NFT.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="kasu-nft__section kasu-nft__section--muted" id="kasu-nft-collections" aria-labelledby="kasu-nft-collections-title">
+  <div class="container">
+    <div class="kasu-nft__section-header">
+      <p class="kasu-nft__eyebrow">Kollektionen</p>
+      <h2 id="kasu-nft-collections-title" class="kasu-nft__section-title">KASU NFT Kollektionen</h2>
+      <p class="kasu-nft__lead">Direkter Zugang zur OpenSea-Kollektion mit Details pro Jahrgang.</p>
+    </div>
+
+    <div class="kasu-nft__collections">
+      <a class="kasu-nft__collection-card" href="https://opensea.io/collection/kasunft" target="_blank" rel="noopener noreferrer" aria-label="KASU NFT Kollektion 2021 auf OpenSea öffnen">
+        <div class="kasu-nft__collection-header">
+          <span class="kasu-nft__collection-year">2021</span>
+          <span class="kasu-nft__badge">428 NFTs</span>
+        </div>
+        <img src="/assets/images/nft2.gif" alt="KASU NFT Kollektion 2021" loading="lazy" decoding="async" width="512" height="512">
+        <p>Kundinnen und Kunden, die seit 2017 registriert sind, bilden die erste Serie.</p>
+        <span class="kasu-nft__collection-link">Auf OpenSea öffnen</span>
+      </a>
+
+      <a class="kasu-nft__collection-card" href="https://opensea.io/collection/kasunft" target="_blank" rel="noopener noreferrer" aria-label="KASU NFT Kollektion 2022 auf OpenSea öffnen">
+        <div class="kasu-nft__collection-header">
+          <span class="kasu-nft__collection-year">2022</span>
+          <span class="kasu-nft__badge">120 NFTs</span>
+        </div>
+        <img src="/assets/images/nft2.gif" alt="KASU NFT Kollektion 2022" loading="lazy" decoding="async" width="512" height="512">
+        <p>Kundinnen und Kunden, die sich im Jahr 2022 registriert haben.</p>
+        <span class="kasu-nft__collection-link">Auf OpenSea öffnen</span>
+      </a>
+
+      <a class="kasu-nft__collection-card" href="https://opensea.io/collection/kasunft" target="_blank" rel="noopener noreferrer" aria-label="KASU NFT Kollektion 2023 auf OpenSea öffnen">
+        <div class="kasu-nft__collection-header">
+          <span class="kasu-nft__collection-year">2023</span>
+          <span class="kasu-nft__badge kasu-nft__badge--muted">Demnächst / In Vorbereitung</span>
+        </div>
+        <img src="/assets/images/nft2.gif" alt="KASU NFT Kollektion 2023" loading="lazy" decoding="async" width="512" height="512">
+        <p>Serie in Vorbereitung für Kundinnen und Kunden aus 2023.</p>
+        <span class="kasu-nft__collection-link">Auf OpenSea öffnen</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="kasu-nft__section" id="kasu-nft-policy" aria-labelledby="kasu-nft-policy-title">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-6">
+        <div class="kasu-nft__section-header kasu-nft__section-header--left">
+          <p class="kasu-nft__eyebrow">Politik</p>
+          <h2 id="kasu-nft-policy-title" class="kasu-nft__section-title">Belohnungspolitik</h2>
+        </div>
+        <div class="kasu-nft__prose">
+          <p>Investitionen erfolgen über Börseninstrumente und Kryptowährungs-Staking. Ziel ist es, nachhaltige Erträge für den Fonds und die NFT-Inhabenden zu erzielen.</p>
+        </div>
+        <ul class="kasu-nft__list">
+          <li>Tägliche Erträge werden gemäß den NFT-Metadaten verteilt.</li>
+          <li>Überschüsse werden in den KASU-Investmentfonds reinvestiert.</li>
+          <li>Börsenausschüttungen erfolgen am NFT-Geburtstag.</li>
+        </ul>
+      </div>
+      <div class="col-lg-6">
+        <div class="kasu-nft__media-card">
+          <a href="https://opensea.io/collection/kasunft" target="_blank" rel="noopener noreferrer" aria-label="Funktionsübersicht der KASU NFT Kollektion">
+            <img src="/assets/images/funcionamiento.png" alt="Funktionsübersicht der KASU NFT Kollektion" loading="lazy" decoding="async" width="1200" height="900">
+          </a>
         </div>
       </div>
     </div>
+  </div>
+</section>
 
-    <div class="row">
-      <!-- Kollektion 2021 -->
-      <div class="col-lg-4 col-md-6 col-sm-12">
-        <a href="https://opensea.io/collection/kasunft" target="_blank" rel="noopener noreferrer" aria-label="KASU NFT Kollektion 2021 auf OpenSea öffnen">
-          <div class="team-item">
-            <div class="team-content">
-              <i>
-                <img src="/assets/images/nft2.gif" alt="KASU NFT Kollektion 2021" style="width:35%;" loading="lazy" decoding="async" width="512" height="512">
-              </i>
-              <br>
-              <h3>Kollektion 2021</h3>
-              <p>Kundinnen und Kunden, die sich seit 2017 registriert haben, werden in dieser ersten NFT-Kollektion geprägt.</p>
-              <p><strong>428 Produkte</strong></p>
-            </div>
-          </div>
-        </a>
-      </div>
-
-      <!-- Kollektion 2022 -->
-      <div class="col-lg-4 col-md-6 col-sm-12">
-        <a href="https://opensea.io/collection/kasunft" target="_blank" rel="noopener noreferrer" aria-label="KASU NFT Kollektion 2022 auf OpenSea öffnen">
-          <div class="team-item">
-            <div class="team-content">
-              <i>
-                <img src="/assets/images/nft2.gif" alt="KASU NFT Kollektion 2022" style="width:35%;" loading="lazy" decoding="async" width="512" height="512">
-              </i>
-              <br>
-              <h3>Kollektion 2022</h3>
-              <p>Kundinnen und Kunden, die sich im Jahr 2022 registriert haben, werden in dieser Kollektion geprägt.</p>
-              <p><strong>120 Produkte</strong></p>
-            </div>
-          </div>
-        </a>
-      </div>
-
-      <!-- Kollektion 2023 -->
-      <div class="col-lg-4 col-md-6 col-sm-12">
-        <a href="https://opensea.io/collection/kasunft" target="_blank" rel="noopener noreferrer" aria-label="KASU NFT Kollektion 2023 auf OpenSea öffnen">
-          <div class="team-item">
-            <div class="team-content">
-              <i>
-                <img src="/assets/images/nft2.gif" alt="KASU NFT Kollektion 2023" style="width:35%;" loading="lazy" decoding="async" width="512" height="512">
-              </i>
-              <br>
-              <h3>Kollektion 2023</h3>
-              <p>Kundinnen und Kunden, die sich im Jahr 2023 registriert haben, werden in dieser Kollektion geprägt.</p>
-              <p><strong>xxx Produkte</strong></p>
-            </div>
-          </div>
-        </a>
-      </div>
+<section class="kasu-nft__section kasu-nft__section--muted" id="kasu-nft-faq" aria-labelledby="kasu-nft-faq-title">
+  <div class="container">
+    <div class="kasu-nft__section-header">
+      <p class="kasu-nft__eyebrow">FAQ</p>
+      <h2 id="kasu-nft-faq-title" class="kasu-nft__section-title">Risiken und Hinweise</h2>
+      <p class="kasu-nft__lead">Kurze Antworten für fundierte Entscheidungen.</p>
     </div>
-    <br>
+
+    <div class="kasu-nft__faq">
+      <details>
+        <summary>Brauche ich eine Wallet, um teilzunehmen?</summary>
+        <p>Ja. Die Belohnungen werden direkt an die NFT-Adresse ausgezahlt, daher brauchst du eine kompatible Wallet.</p>
+      </details>
+      <details>
+        <summary>Sind Belohnungen garantiert?</summary>
+        <p>Nein. Die Belohnungen können je nach Fonds-Performance, Marktbedingungen und Staking-Ergebnissen variieren.</p>
+      </details>
+      <details>
+        <summary>Was passiert, wenn ich mein NFT verkaufe?</summary>
+        <p>Die Rechte an den Belohnungen gehen automatisch auf die neue Inhaberin bzw. den neuen Inhaber über.</p>
+      </details>
+      <details>
+        <summary>Verwahrt KASU meine Gelder?</summary>
+        <p>Nein. KASU hat keinen Zugriff auf deine Wallet; die Ausschüttungen gehen an die NFT-Adresse.</p>
+      </details>
+      <details>
+        <summary>Wo kann ich die Kollektion prüfen?</summary>
+        <p>Die Kollektion ist auf OpenSea verfügbar. Dort kannst du Eigenschaften, Historie und Preise einsehen.</p>
+      </details>
+      <details>
+        <summary>Ist das Finanzberatung?</summary>
+        <p>Nein. Diese Seite dient nur der Information und stellt keine Finanzberatung dar. Bewerte Risiken und ziehe bei Bedarf Fachleute hinzu.</p>
+      </details>
+    </div>
   </div>
 </section>

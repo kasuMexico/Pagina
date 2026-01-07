@@ -87,11 +87,11 @@ if ($qsMsg !== null) {
     <link rel="apple-touch-icon" sizes="128x128" href="https://kasu.com.mx/login/assets/img/icon-128x128.jpeg">
 
     <!-- CSS -->
-    <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css?v=<? echo $VerCache;?>">
-    <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css?v=<? echo $VerCache;?>">
-    <link rel="stylesheet" type="text/css" href="/assets/css/kasu-menu.css?v=<? echo $VerCache;?>">
-    <link rel="stylesheet" type="text/css" href="/assets/css/index-home.css?v=<? echo $VerCache;?>">
-    <link rel="stylesheet" type="text/css" href="/assets/css/kasu-chat.css?v=<? echo $VerCache;?>">
+    <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css?v=<?php echo $VerCache;?>">
+    <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css?v=<?php echo $VerCache;?>">
+    <link rel="stylesheet" type="text/css" href="/assets/css/kasu-menu.css?v=<?php echo $VerCache;?>">
+    <link rel="stylesheet" type="text/css" href="/assets/css/index-home.css?v=<?php echo $VerCache;?>">
+    <link rel="stylesheet" type="text/css" href="/assets/css/kasu-chat.css?v=<?php echo $VerCache;?>">
 
     <!-- JS propio -->
     <script src="/eia/javascript/Registro.js" defer></script>

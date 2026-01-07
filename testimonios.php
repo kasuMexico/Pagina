@@ -53,11 +53,11 @@ if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
   <link rel="icon" href="/assets/images/kasu_logo.jpeg">
 
   <!-- CSS -->
-  <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css?v=<? echo $VerCache;?>">
-  <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css?v=<? echo $VerCache;?>">
-  <link rel="stylesheet" type="text/css" href="/assets/css/kasu-menu.css?v=<? echo $VerCache;?>">
-  <link rel="stylesheet" type="text/css" href="/assets/css/index-home.css?v=<? echo $VerCache;?>">
-  <link rel="stylesheet" type="text/css" href="/assets/css/testimonios.css?v=<? echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css?v=<?php echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css?v=<?php echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/kasu-menu.css?v=<?php echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/index-home.css?v=<?php echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/testimonios.css?v=<?php echo $VerCache;?>">
 
   <!-- Schema WebPage -->
   <script type="application/ld+json">

@@ -15,8 +15,9 @@
 session_start();
 require_once __DIR__ . '/eia/analytics_bootstrap.php';
 require_once __DIR__ . '/eia/librerias.php';
-// Se establecen el número de contacto
-$tel = '7208177632';
+// Se establece el número de contacto según horario
+require_once __DIR__ . '/eia/php/Telcto.php';
+$tel = isset($tel) && $tel !== '' ? $tel : '7208177632';
 
 /* ---------- 1) Entrada segura ---------- */
 $artId = filter_input(INPUT_GET, 'Art', FILTER_VALIDATE_INT, [
@@ -190,11 +191,12 @@ if($Reg['Producto'] === 'Policias') {
   <link rel="icon" href="/assets/images/kasu_logo.jpeg">
 
   <!-- CSS/JS con rutas absolutas -->
-  <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css?v=<? echo $VerCache;?>">
-  <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css?v=<? echo $VerCache;?>">
-  <link rel="stylesheet" type="text/css" href="/assets/css/kasu-menu.css?v=<? echo $VerCache;?>">
-  <link rel="stylesheet" type="text/css" href="/assets/css/index-home.css?v=<? echo $VerCache;?>">
-  <link rel="stylesheet" type="text/css" href="/assets/css/productos.css?v=<? echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css?v=<?php echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css?v=<?php echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/kasu-menu.css?v=<?php echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/index-home.css?v=<?php echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/productos.css?v=<?php echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/kasu-chat.css?v=<?php echo $VerCache;?>">
   <script src="/assets/js/js_productos.js" defer></script>
 </head>
 <body class="kasu-ui">
@@ -428,5 +430,155 @@ if($Reg['Producto'] === 'Policias') {
 <script src="/assets/js/imgfix.min.js"></script>
 <script src="/assets/js/custom.js"></script>
 <script async src="https://d335luupugsy2.cloudfront.net/js/loader-scripts/28dd2782-ee7d-4b25-82b1-f5993b27764a-loader.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var fabButton = document.getElementById('kasu-fab');
+  var fabPanel = document.getElementById('kasu-fab-panel');
+  var chatOpen = document.getElementById('kasu-chat-open');
+  var chatOverlay = document.getElementById('kasu-chat-overlay');
+  var chatClose = document.getElementById('kasu-chat-close');
+  var chatForm = document.getElementById('kasu-chat-form');
+  var chatInput = document.getElementById('kasu-chat-input');
+  var chatBody = document.getElementById('kasu-chat-messages');
+
+  var hideFabPanel = function () {
+    if (fabPanel) {
+      fabPanel.setAttribute('hidden', 'hidden');
+    }
+    if (fabButton) {
+      fabButton.setAttribute('aria-expanded', 'false');
+    }
+  };
+
+  var showFabPanel = function () {
+    if (fabPanel) {
+      fabPanel.removeAttribute('hidden');
+    }
+    if (fabButton) {
+      fabButton.setAttribute('aria-expanded', 'true');
+    }
+  };
+
+  var openChat = function () {
+    if (!chatOverlay) return;
+    chatOverlay.removeAttribute('hidden');
+    if (chatOpen) chatOpen.setAttribute('aria-expanded', 'true');
+    if (chatInput) chatInput.focus();
+    hideFabPanel();
+  };
+
+  var closeChat = function () {
+    if (!chatOverlay) return;
+    chatOverlay.setAttribute('hidden', 'hidden');
+    if (chatOpen) chatOpen.setAttribute('aria-expanded', 'false');
+    showFabPanel();
+  };
+
+  if (fabButton && fabPanel) {
+    fabButton.addEventListener('click', function () {
+      var chatOpenNow = chatOverlay && !chatOverlay.hasAttribute('hidden');
+      if (chatOpenNow) {
+        closeChat();
+        showFabPanel();
+        return;
+      }
+
+      var expanded = fabButton.getAttribute('aria-expanded') === 'true';
+      fabButton.setAttribute('aria-expanded', String(!expanded));
+      if (expanded) {
+        fabPanel.setAttribute('hidden', 'hidden');
+      } else {
+        fabPanel.removeAttribute('hidden');
+      }
+    });
+  }
+
+  if (chatOpen) {
+    chatOpen.addEventListener('click', function () {
+      var isOpen = chatOverlay && !chatOverlay.hasAttribute('hidden');
+      if (isOpen) {
+        closeChat();
+      } else {
+        openChat();
+      }
+    });
+  }
+
+  if (chatClose) {
+    chatClose.addEventListener('click', closeChat);
+  }
+
+  if (chatForm && chatInput && chatBody) {
+    chatForm.addEventListener('submit', function (event) {
+      event.preventDefault();
+      var message = chatInput.value.trim();
+      if (!message) return;
+
+      var wrapper = document.createElement('div');
+      wrapper.className = 'kasu-chat-message kasu-chat-message--user';
+      var bubble = document.createElement('div');
+      bubble.className = 'kasu-chat-bubble';
+      bubble.textContent = message;
+      wrapper.appendChild(bubble);
+      chatBody.appendChild(wrapper);
+      chatBody.scrollTop = chatBody.scrollHeight;
+      chatInput.value = '';
+    });
+  }
+});
+</script>
+
+<div class="kasu-fab-wrap" aria-live="polite">
+  <div class="kasu-fab-panel" id="kasu-fab-panel" hidden>
+    <a href="tel:<?php echo isset($tel) ? htmlspecialchars($tel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : ''; ?>" class="kasu-fab-action kasu-fab-action--call" aria-label="Llamar a KASU">
+      <span class="kasu-fab-icon" aria-hidden="true">📞</span>
+      Llamar a KASU
+    </a>
+    <a href="https://wa.me/<?php echo preg_replace('/\\D/', '', $tel ?? ''); ?>?text=Hola,%20requiero%20atención%20inmediata%20de%20KASU" class="kasu-fab-action kasu-fab-action--whats" target="_blank" rel="noopener" aria-label="Enviar WhatsApp a KASU">
+      <span class="kasu-fab-icon" aria-hidden="true">💬</span>
+      Enviar WhatsApp
+    </a>
+    <button type="button" class="kasu-fab-action kasu-fab-action--chat" id="kasu-chat-open" aria-expanded="false" aria-controls="kasu-chat-overlay">
+      <span class="kasu-fab-icon" aria-hidden="true">🗨️</span>
+      Hablar con alguien
+    </button>
+  </div>
+  <button type="button" class="kasu-fab" id="kasu-fab" aria-expanded="false" aria-controls="kasu-fab-panel">
+    <img src="/assets/images/flor_redonda.svg" alt="" width="34" height="34" loading="lazy" decoding="async">
+    Atención al cliente
+  </button>
+</div>
+
+<section class="kasu-chat-overlay" id="kasu-chat-overlay" aria-live="polite" hidden>
+  <div class="kasu-chat-panel">
+    <header class="kasu-chat-panel__header">
+      <div class="kasu-chat-panel__brand">
+        <img src="/assets/images/flor_redonda.svg" alt="KASU" width="28" height="28" loading="lazy" decoding="async">
+        <div>
+          <p class="kasu-chat-panel__title">Chat KASU</p>
+          <span class="kasu-chat-panel__status">En linea</span>
+        </div>
+      </div>
+      <div class="kasu-chat-panel__actions">
+        <span class="kasu-chat-panel__pill">Vista 360</span>
+        <button type="button" class="kasu-chat-panel__close" id="kasu-chat-close" aria-label="Cerrar chat">×</button>
+      </div>
+    </header>
+
+    <div class="kasu-chat-panel__messages" id="kasu-chat-messages">
+      <div class="kasu-chat-message kasu-chat-message--bot">
+        <img src="/assets/images/flor_redonda.svg" alt="KASU" class="kasu-chat-avatar" width="26" height="26" loading="lazy" decoding="async">
+        <div class="kasu-chat-bubble">
+          Hola, soy la asistente virtual de KASU. en que puedo ayudarte hoy?
+        </div>
+      </div>
+    </div>
+
+    <form class="kasu-chat-panel__form" id="kasu-chat-form" autocomplete="off">
+      <input type="text" id="kasu-chat-input" name="kasu-chat-input" placeholder="Escribe tu mensaje">
+      <button type="submit">Enviar</button>
+    </form>
+  </div>
+</section>
 </body>
 </html>

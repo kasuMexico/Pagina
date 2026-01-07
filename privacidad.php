@@ -67,11 +67,11 @@ require_once __DIR__ . '/eia/librerias.php';
   <link rel="icon" href="/assets/images/kasu_logo.jpeg">
 
   <!-- CSS existentes -->
-  <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css?v=<? echo $VerCache;?>">
-  <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css?v=<? echo $VerCache;?>">
-  <link rel="stylesheet" type="text/css" href="/assets/css/kasu-menu.css?v=<? echo $VerCache;?>">
-  <link rel="stylesheet" type="text/css" href="/assets/css/index-home.css?v=<? echo $VerCache;?>">
-  <link rel="stylesheet" type="text/css" href="/assets/css/privacidad.css?v=<? echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css?v=<?php echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css?v=<?php echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/kasu-menu.css?v=<?php echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/index-home.css?v=<?php echo $VerCache;?>">
+  <link rel="stylesheet" type="text/css" href="/assets/css/privacidad.css?v=<?php echo $VerCache;?>">
 </head>
 
 <body class="kasu-ui">

@@ -18,7 +18,7 @@
   align-items: center;
   gap: 10px;
   background: #ef6937;
-  color: #ffffff;
+  color: #14161a;
   border: none;
   border-radius: 999px;
   padding: 10px 14px;
@@ -61,7 +61,7 @@
   height: 42px;
   border-radius: 10px;
   border: 1px solid #ffffff;
-  color: #ffffff;
+  color: #14161a;
   font-weight: 600;
   text-decoration: none;
   background: rgba(255, 255, 255, 0.18);
@@ -92,18 +92,19 @@
 
 .kasu-fab-action--whats {
   background: #ef6937;
-  color: #ffffff;
+  color: #14161a;
 }
 
 .kasu-fab-action--whats:hover,
 .kasu-fab-action--whats:focus {
-  color: #ffffff;
+  color: #14161a;
   background: #f07b4c;
 }
 
 .kasu-fab-action--chat,
 button.kasu-fab-action--chat,
-a.kasu-fab-action--chat {
+a.kasu-fab-action--chat,
+.kasu-fab-action.kasu-fab-action--chat {
   border-color: rgba(0, 0, 0, 0.15);
   color: #14161a;
   background: rgba(255, 255, 255, 0.35);

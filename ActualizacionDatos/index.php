@@ -38,8 +38,8 @@ function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES,
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet">
 
   <!-- CSS existentes -->
-  <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
-  <link rel="stylesheet" href="../assets/css/font-awesome.css">
+  <link rel="stylesheet" href="../assets/css/bootstrap.min.css?v=<?php echo $VerCache; ?>">
+  <link rel="stylesheet" href="../assets/css/font-awesome.css?v=<?php echo $VerCache; ?>">
   <link rel="stylesheet" href="../assets/css/kasu-menu.css?v=<?php echo $VerCache; ?>">
   <link rel="stylesheet" href="../assets/css/actualizacion-datos.css?v=<?php echo $VerCache; ?>">
 </head>

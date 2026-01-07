@@ -66,10 +66,10 @@ function e_html(?string $v): string {
   <link href="https://fonts.googleapis.com/css?family=Raleway:100,300,400,500,700,900&display=swap" rel="stylesheet">
 
   <link rel="icon" href="assets/images/kasu_logo.jpeg">
-  <link rel="stylesheet" href="assets/css/bootstrap.min.css">
-  <link rel="stylesheet" href="assets/css/font-awesome.css">
-  <link rel="stylesheet" href="assets/css/templatemo-softy-pinko.css">
-  <link rel="stylesheet" href="assets/css/patrocinios.css">
+  <link rel="stylesheet" href="assets/css/bootstrap.min.css?v=<? echo $VerCache;?>">
+  <link rel="stylesheet" href="assets/css/font-awesome.css?v=<? echo $VerCache;?>">
+  <link rel="stylesheet" href="assets/css/kasu-ui.css?v=<? echo $VerCache;?>">
+  <link rel="stylesheet" href="assets/css/patrocinios.css?v=<? echo $VerCache;?>">
   <!-- Bootstrap Icons CDN -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 

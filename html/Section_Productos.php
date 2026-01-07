@@ -3,6 +3,7 @@
  * Listado de productos con URL canónica, accesibilidad y microdatos.
  * Fecha: 2025-11-03
  * Revisado por: JCCM
+ * Archivo: html/Section_Productos.php
  */
 
 // Validación mínima de conexión
@@ -85,9 +86,6 @@ $res = $stmt->get_result();
 
     <div class="team-item product-card">
       <a href="<?= $proUrl ?>" class="product-card-link" itemprop="url" aria-label="Conocer más sobre <?= $proName ?>">
-        <h3 class="product-card-title" itemprop="name">
-          <strong><?= $proName ?></strong>
-        </h3>
         <div class="product-card-image">
           <img src="<?= $proImg ?>"
                alt="<?= $proName ?> — <?= $proDesc ?>"
@@ -95,16 +93,14 @@ $res = $stmt->get_result();
                decoding="async"
                itemprop="image">
           <span class="product-card-cta">CONOCER MÁS</span>
-          <!-- Logo KASU en esquina inferior derecha 
-          <span class="product-card-logo">
-            <img src="/assets/images/Index/florkasu.png"
-                 alt="KASU">
-          </span>
-          -->
         </div>
 
         <!-- Descripción solo para microdatos / SEO -->
         <meta itemprop="description" content="<?= $proDesc ?>">
+        <h3 class="product-card-title" itemprop="name">
+          <strong><?= $proName ?></strong>
+        </h3>
+        <p class="product-card-desc"><?= $proDesc ?></p>
       </a>
     </div>
   </div>

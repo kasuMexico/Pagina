@@ -53,7 +53,7 @@ $tel_digits = digits_only($tel ?? '');
   <link href="https://fonts.googleapis.com/css?family=Raleway:100,300,400,500,700,900" rel="stylesheet">
   <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
   <link rel="stylesheet" href="/assets/css/font-awesome.css">
-  <link rel="stylesheet" href="/assets/css/templatemo-softy-pinko.css">
+  <link rel="stylesheet" href="/assets/css/kasu-ui.css">
 </head>
 <body>
   <!-- SDK de Facebook (chat) — opcional -->

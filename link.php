@@ -55,7 +55,6 @@ require_once __DIR__ . '/eia/analytics_bootstrap.php';
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap">
   <link rel="stylesheet" href="assets/css/bootstrap.min.css">
-  <link rel="stylesheet" href="assets/css/templatemo-softy-pinko.css">
   <!-- Cargar ambos por si el archivo se llamó con o sin typo -->
   <link rel="stylesheet" href="assets/css/instragram.css">
   <link rel="stylesheet" href="assets/css/instagram.css">

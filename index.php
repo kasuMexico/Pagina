@@ -3,6 +3,7 @@
  * Qué hace: Página principal. Muestra landing, cotizador por CURP y gestiona baja de newsletter por GET.
  * Fecha: 15/11/2025
  * Revisado por: JCCM
+ * Archivo: index.php
  *******************************************************************************************************/
 
 session_start();
@@ -86,10 +87,10 @@ if ($qsMsg !== null) {
     <link rel="apple-touch-icon" sizes="128x128" href="https://kasu.com.mx/login/assets/img/icon-128x128.jpeg">
 
     <!-- CSS -->
-    <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css">
-    <link rel="stylesheet" href="/assets/css/templatemo-softy-pinko.css?v=3">
-    <link rel="stylesheet" href="/assets/css/EstilosIndex.css?v=28">
+    <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css?v=<? echo $VerCache;?>">
+    <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css?v=<? echo $VerCache;?>">
+    <link rel="stylesheet" type="text/css" href="/assets/css/kasu-menu.css?v=<? echo $VerCache;?>">
+    <link rel="stylesheet" type="text/css" href="/assets/css/index-home.css?v=<? echo $VerCache;?>">
 
     <!-- JS propio -->
     <script src="/eia/javascript/Registro.js" defer></script>
@@ -135,7 +136,7 @@ if ($qsMsg !== null) {
     </script>
 </head>
 
-<body>
+<body class="kasu-ui home-page">
     <?php require_once __DIR__ . '/html/MenuPrincipal.php'; ?>
     
     <!-- Portada -->
@@ -145,17 +146,15 @@ if ($qsMsg !== null) {
         <!-- Slider de fondo -->
         <div class="banner-bg-slider">
             <!-- Agrega aquí UNA fila por imagen que tengas en assets/images/Sliders -->
-            <div class="banner-bg" data-bg="/assets/images/Sliders/Protege_1.png"></div>
-            <div class="banner-bg" data-bg="/assets/images/Sliders/Protege_2.png"></div>
-            <div class="banner-bg" data-bg="/assets/images/Sliders/Protege_3.png"></div>
+            <div class="banner-bg" data-bg="/assets/images/Sliders/Protege_1.png?v=<?php echo $VerCache; ?>"></div>
+            <div class="banner-bg" data-bg="/assets/images/Sliders/Protege_2.png?v=<?php echo $VerCache; ?>"></div>
+            <div class="banner-bg" data-bg="/assets/images/Sliders/Protege_3.png?v=<?php echo $VerCache; ?>"></div>
             <!-- Duplica/ajusta estas líneas con los nombres reales de tus archivos -->
         </div>
 
         <!-- Contenido encima del fondo -->
         <div class="main-banner-content">
-            <h1 style="color: hsla(0, 0%, 100%, 0.00);">
-                KASU | Servicios funerarios a futuro en México
-            </h1>
+            <h1 class="sr-only">KASU | Servicios funerarios a futuro en Mexico</h1>
             <div class="container">
                 <div class="row" itemscope itemtype="https://schema.org/Service">
                     <meta itemprop="serviceType" content="Servicios funerarios a futuro">
@@ -165,22 +164,59 @@ if ($qsMsg !== null) {
                                 data-scroll-reveal="enter left move 50px over 0.6s after 0.4s">
                                 <div class="left-content header-text wow fadeInLeft"
                                     data-wow-duration="1s" data-wow-delay="1s">
-                                    <h6>
-                                    <img src="/assets/images/flor_redonda.svg"
-                                        style="width: 10vh;"
-                                        alt="Flor KASU"
-                                        loading="lazy" decoding="async">
-                                    </h6>
-                                    <h2>Servicios <em>de Gastos <span>Funerarios</span> y mucho</em> más</h2>
-                                    <p>La Visión de <strong>KASU</strong> es lograr una cobertura universal para las familias mexicanas en lo que se refiere a servicios funerarios.</p>
-                                    <div class="form" role="search" aria-label="Cotizador por CURP">
-                                        <input id="curp" type="text" class="text"
-                                            placeholder="Ingresa tu CURP"
-                                            autocomplete="on" inputmode="latin"
-                                            aria-label="Ingresa tu CURP" required>
-                                        <button type="button" id="form-submit" class="main-button"
-                                                onclick="consultaModal()"
-                                                aria-label="Consultar CURP">CONSULTAR</button>
+                                    <div class="hero-card">
+                                        <h6 class="hero-eyebrow">
+                                            <img src="/assets/images/flor_redonda.svg"
+                                                class="hero-icon"
+                                                width="36"
+                                                height="36"
+                                                alt="Flor KASU"
+                                                loading="lazy" decoding="async">
+                                            Servicios a futuro
+                                        </h6>
+                                        <h2>Servicios de <span>Gastos Funerarios</span> y mucho</em> mas</h2>
+                                        <p>La vision de <strong>KASU</strong> es lograr una cobertura universal para las familias mexicanas en lo que se refiere a servicios funerarios.</p>
+                                        <div class="hero-consulta" id="hero-consulta">
+                                            <div class="hero-consulta-form" role="search" aria-label="Consulta por CURP">
+                                                <div class="input-group mb-3">
+                                                    <label class="sr-only" for="curp">Ingresa tu CURP</label>
+                                                    <input id="curp" type="text" class="form-control kasu-input"
+                                                        placeholder="Consulta tu poliza con CURP"
+                                                        autocomplete="on" inputmode="latin"
+                                                        aria-label="Consulta tu poliza con CURP" required>
+                                                    <div class="input-group-append">
+                                                        <button type="button" id="form-submit" class="btn kasu-btn"
+                                                                onclick="consultaModal()"
+                                                                aria-label="Consultar CURP">Consultar</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="hero-actions">
+                                            <button type="button" class="btn btn-outline-dark" id="hero-quote-toggle"
+                                                    aria-expanded="false" aria-controls="hero-quote">
+                                                Cotiza con tu CURP
+                                            </button>
+                                        </div>
+                                        <div class="hero-quote" id="hero-quote" hidden>
+                                            <form method="POST" action="/login/php/Registro_Prospectos.php"
+                                                  class="hero-quote-form" aria-label="Cotizador rapido">
+                                                <div data-fingerprint-slot></div>
+                                                <div class="hero-field">
+                                                    <label for="CURP_Hero">Ingresar CURP</label>
+                                                    <input id="CURP_Hero" name="CURP" type="text" class="kasu-input" autocomplete="on"
+                                                           placeholder="Ingresar CURP" required>
+                                                </div>
+                                                <div class="hero-field">
+                                                    <label for="Email_Hero">Correo electronico</label>
+                                                    <input type="email" name="Email" id="Email_Hero" class="kasu-input" autocomplete="email"
+                                                           placeholder="Correo electronico">
+                                                </div>
+                                                <button type="submit" name="FormCotizar" class="kasu-btn kasu-btn-block">
+                                                    Cotizar servicio
+                                                </button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -194,6 +230,50 @@ if ($qsMsg !== null) {
         </div><!-- .main-banner-content -->
     </div><!-- .main-banner -->
 
+        <!-- Opiniones -->
+    <section class="section colored" id="testimonials">
+        <div class="container">
+            <div class="opiniones-header">
+                <p>En KASU no inventamos reseñas; conoce las <strong><a target="_blank" rel="noopener" href="/testimonios.php">Opiniones Reales</a></strong> de nuestros clientes.</p>
+            </div>
+        </div>
+        <?php
+        $opinionesHtml = '';
+        $SqlArti = "SELECT Nombre, Servicio, Opinion, foto FROM opiniones ORDER BY id DESC";
+        if ($ResArti = $mysqli->query($SqlArti)) {
+            while ($art = $ResArti->fetch_assoc()) {
+                $foto   = htmlspecialchars($art['foto'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                $nombre = htmlspecialchars($art['Nombre'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                $op     = htmlspecialchars($art['Opinion'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                $serv   = htmlspecialchars($art['Servicio'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
+                $opinionesHtml .= "
+                <div class='opinion-card' itemprop='review' itemscope itemtype='https://schema.org/Review'>
+                    <div class='opinion-avatar'>
+                        <img src='{$foto}' alt='{$nombre}' loading='lazy' decoding='async'>
+                    </div>
+                    <div class='opinion-name' itemprop='author'>{$nombre}</div>
+                    <div class='opinion-service' itemprop='itemReviewed'>{$serv}</div>
+                    <p class='opinion-text' itemprop='reviewBody'>{$op}</p>
+                </div>
+                ";
+            }
+        }
+        ?>
+        <div class="opiniones-marquee" aria-label="Opiniones de clientes">
+            <div class="opiniones-track">
+                <?php
+                if ($opinionesHtml !== '') {
+                    echo $opinionesHtml;
+                    echo $opinionesHtml;
+                } else {
+                    echo "<p class='opiniones-empty'>Aun no hay opiniones disponibles.</p>";
+                }
+                ?>
+            </div>
+        </div>
+    </section>
+
     <!-- Productos -->
     <section class="Productos-Index"> 
         <div class="container" itemscope itemtype="https://schema.org/CollectionPage">
@@ -202,133 +282,69 @@ if ($qsMsg !== null) {
         </div>
     </section>
 
-    <!-- Llamada -->
-    <div class="section colored">
-        <div class="LlamadaKASU">
-            <div class="row">
-                <div class="col-md-4 col-md-12 col-sm-12 align-self-center">
-                    <h2>LÍNEA DE ATENCIÓN INMEDIATA</h2>
-                    <br>
-                    <a href="tel:<?php echo isset($tel) ? htmlspecialchars($tel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : ''; ?>" class="btn btn-dark btn-lg" style="margin-bottom: 10px;"   aria-label="Llamar a emergencia funeraria KASU">
-                        📞 EMERGENCIA FUNERARIA
-                    </a>
-                    <br>
-                    <a href="https://wa.me/<?php echo preg_replace('/\D/', '', $tel ?? ''); ?>?text=Hola,%20requiero%20atención%20inmediata%20de%20KASU"  class="btn btn-success btn-lg" target="_blank" rel="noopener" aria-label="Abrir WhatsApp de atención inmediata KASU">
-                        💬 WhatsApp Inmediato
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Clientes -->
-    <section class="section colored padding-top-70" id="Datos">
+    <!-- Clientes y cotizaciones -->
+    <section class="section colored" id="Datos">
+        <br>
         <div class="container">
-            <div class="row">
-                <div class="col-lg-5 col-md-12 col-sm-12 align-self-center" data-scroll-reveal="enter left move 30px over 0.6s after 0.4s">
-                    <div class="center-heading">
-                        <p><strong>La Visión</strong> de <strong>KASU</strong> es lograr una cobertura universal para las familias mexicanas en lo que se refiere a servicios funerarios.</p>
-                        <br>
-                        <div class="count-item decoration-bottom" itemprop="provider">
-                            <h2 class="section-title">
-                                <strong>1<?php echo number_format($basicas->MaxDat($mysqli, "Id", "Venta"), 0, ".", ","); ?></strong><span> Clientes Activos</span>
-                            </h2>
-                        </div>
-                        <p><strong>KASU</strong> es una empresa que ofrece servicios funerarios a bajo costo en México, los cuales <strong>se pagan una sola vez en la vida</strong> y no requieren renovación o pagos adicionales, una <strong>característica única</strong> frente a alternativas del mercado.</p>
-                        <br>
-                        <p>
-                            Este enfoque en ayudar a las personas es el factor más importante a comunicar,
-                            destacando la importancia de apoyar a las comunidades locales y brindar una solución eficaz a un problema común.
-                            Además, el hecho de que <strong>KASU</strong> se haya concretado en un <strong>fideicomiso</strong> permite brindar un <strong>servicio funerario digno</strong> en el momento que más lo necesitas.
-                        </p>
-                        <br><br>
+            <div class="clients-grid">
+                <div class="clients-info" data-scroll-reveal="enter left move 30px over 0.6s after 0.4s">
+                    <p class="clients-eyebrow">Clientes y cotizaciones</p>
+                    <h2 class="clients-title">Cobertura universal para las familias mexicanas</h2>
+                    <p class="clients-copy"><strong>KASU</strong> es una empresa que ofrece servicios funerarios a bajo costo en México, los cuales <strong>se pagan una sola vez en la vida</strong> y no requieren renovación o pagos adicionales, una <strong>característica única</strong> frente a alternativas del mercado.</p>
+                    <div class="clients-count" itemprop="provider">
+                        <span class="clients-count-number">1<?php echo number_format($basicas->MaxDat($mysqli, "Id", "Venta"), 0, ".", ","); ?></span>
+                        <span class="clients-count-label">Clientes Activos</span>
                     </div>
+                    <div class="clients-count" itemprop="provider">
+                        <span class="clients-count-number"><?php echo number_format(783, 0, ".", ","); ?></span>
+                        <span class="clients-count-label">Servicios Realizados</span>
+                    </div>
+                    <p class="clients-copy">Este enfoque en ayudar a las personas es el factor más importante a comunicar, destacando la importancia de apoyar a las comunidades locales y brindar una solución eficaz a un problema común. Además, el hecho de que <strong>KASU</strong> se haya concretado en un <strong>fideicomiso</strong> permite brindar un <strong>servicio funerario digno</strong> en el momento que más lo necesitas.</p>
                 </div>
-                <div class="col-lg-2 col-md-12 col-sm-12 align-self-center"></div>
-                <div class="col-lg-5 col-md-12 col-sm-12 align-self-center" data-scroll-reveal="enter right move 300px over 0.6s after 1.0s" id="Clientes">
-                    <div class="features-small-item">
-                        <div class="descri">
-                            <div class="icon">
-                                <i><img src="/assets/images/Index/florkasu.png" name="Logo" alt="KASU Logo" loading="lazy" decoding="async"></i>
-                            </div>
+                <div class="clients-card" data-scroll-reveal="enter right move 30px over 0.6s after 0.6s" id="Clientes">
+                    <div class="clients-card-header">
+                        <div class="clients-card-logo">
+                            <img src="/assets/images/Index/florkasu.png" name="Logo" alt="KASU Logo" loading="lazy" decoding="async">
                         </div>
-                        <h2 class="features-title"><strong>Cotiza</strong></h2>
-                        <p>Cotiza tu servicio, solo requieres tu clave CURP.</p>
-                        <div class="consulta">
-                            <div class="form-group">
-                                <form method="POST" id="Cotizar" action="/login/php/Registro_Prospectos.php">
-                                    <div data-fingerprint-slot></div> <!-- DIV que lanza el Finger Print -->
-                                    <input name="CURP" id="CURP" class="form-control" placeholder="Ingresar CURP" autocomplete="on" aria-label="Ingresar CURP">
-                                    <br>
-                                    <input type="email" name="Email" id="Email" class="form-control" placeholder="Correo electrónico" autocomplete="email" aria-label="Ingresar correo electrónico">
-                                    <br>
-                                    <button type="submit" name="FormCotizar" id="FormCotizar" class="main-button" data-toggle="modal" aria-label="Cotizar servicio funerario">Cotizar Servicio</button>
-                                    <br>
-                                </form>
-                            </div>
+                        <div>
+                            <p class="clients-card-eyebrow">Servicios a futuro</p>
+                            <h3 class="clients-card-title">Cotiza</h3>
+                            <p class="clients-card-sub">Cotiza tu servicio, solo requieres tu clave CURP.</p>
                         </div>
                     </div>
+                    <form method="POST" id="Cotizar" action="/login/php/Registro_Prospectos.php" class="clients-form">
+                        <div data-fingerprint-slot></div>
+                        <div class="hero-field">
+                            <label for="CURP">Ingresar CURP</label>
+                            <input name="CURP" id="CURP" class="kasu-input" placeholder="Ingresar CURP" autocomplete="on" aria-label="Ingresar CURP">
+                        </div>
+                        <div class="hero-field">
+                            <label for="Email">Correo electronico</label>
+                            <input type="email" name="Email" id="Email" class="kasu-input" placeholder="Correo electronico" autocomplete="email" aria-label="Ingresar correo electronico">
+                        </div>
+                        <button type="submit" name="FormCotizar" id="FormCotizar" class="kasu-btn kasu-btn-block" data-toggle="modal" aria-label="Cotizar servicio funerario">Cotizar servicio</button>
+                    </form>
                 </div>
             </div>
         </div>
     </section>
-    <!-- Articulos de Blog -->
-
-    <!-- Opiniones -->
-    <section class="section colored" id="testimonials" >
+    <!-- Inicio - Articulos de Blog -->
+    <section class="blog-section" id="Blog">
         <div class="container">
-            <br><br>
-            <div class="row">
-                <div class="offset-lg-3 col-lg-6">
-                    <div class="center-heading">
-                        <p>En KASU no inventamos reseñas; conoce las <strong><a target="_blank" rel="noopener" href="/testimonios.php">Opiniones Reales</a></strong> de nuestros clientes.</p>
-                        <br>
-                    </div>
-                </div>
+            <div class="blog-header">
+                <p class="blog-eyebrow">Blog KASU</p>
+                <h2 class="blog-title">Articulos recientes</h2>
+                <p class="blog-sub">Explora contenido util y actual sobre servicios funerarios, previsión y bienestar familiar.</p>
             </div>
-            <div class="row">
-                <?php
-                $cont = 1;
-                $Max = (int)$basicas->MaxDat($mysqli, "id", "opiniones");
-                $Arts = rand($cont, max($cont, $Max));
-                $ks = $Max - 1;
-                if ($Arts >= $ks) { $Arts = 1; }
-                $Arts2 = $Arts + 2;
-                while ($Arts <= $Arts2) {
-                    $SqlArti = "SELECT * FROM opiniones WHERE id =" . (int)$Arts;
-                    if ($ResArti = $mysqli->query($SqlArti)) {
-                        if ($art = $ResArti->fetch_assoc()) {
-                            $foto   = htmlspecialchars($art['foto'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-                            $nombre = htmlspecialchars($art['Nombre'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-                            $op     = htmlspecialchars($art['Opinion'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-                            $serv   = htmlspecialchars($art['Servicio'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-
-                            echo "
-                            <div class='col-lg-4 col-md-6 col-sm-12'>
-                                <div class='team-item' itemprop='review' itemscope itemtype='https://schema.org/Review'>
-                                    <div class='team-content'>
-                                        <div class='team-info'>
-                                             <br>
-                                             <img src='{$foto}' alt='{$nombre}' loading='lazy' decoding='async'>
-                                             <p itemprop='reviewBody'>{$op}</p>
-                                             <h3 class='user-name' itemprop='author'>{$nombre}</h3>
-                                             <span itemprop='itemReviewed'>{$serv}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            ";
-                        }
-                    }
-                    $Arts++;
-                }
-                ?>
-            </div>
+            <div class="blog-grid" id="blog-cards" aria-live="polite"></div>
+            <p class="blog-status" id="blog-status">Cargando articulos...</p>
         </div>
     </section>
+
+    <!-- Final - Articulos de Blog -->
 
     <!-- Footer -->
-    <footer>
+    <footer class="site-footer">
         <?php require_once __DIR__ . '/html/footer.php'; ?>
     </footer>
 
@@ -339,13 +355,141 @@ if ($qsMsg !== null) {
     <script src="/assets/js/jquery-2.1.0.min.js" defer></script>  <!-- si usas Bootstrap 3 -->
     <script src="/assets/js/bootstrap.min.js" defer></script>
     <!-- Scripts que imprime el finger print -->
-    <script src="/login/Javascript/finger.js?v=3"></script>
+    <script src="/login/Javascript/finger.js?v=<? echo $VerCache;?>"></script>
 
     <script src="/assets/js/scrollreveal.min.js" defer></script>
     <script src="/assets/js/custom.js" defer></script>
     <script src="/eia/javascript/consulta_modal.js" defer></script>
     <script>
 document.addEventListener('DOMContentLoaded', function () {
+    var heroToggle = document.getElementById('hero-quote-toggle');
+    var heroQuote = document.getElementById('hero-quote');
+    var heroConsulta = document.getElementById('hero-consulta');
+
+    if (heroToggle && heroQuote && heroConsulta) {
+        heroToggle.addEventListener('click', function () {
+            var showingQuote = !heroQuote.hasAttribute('hidden');
+
+            if (showingQuote) {
+                heroQuote.setAttribute('hidden', 'hidden');
+                heroConsulta.removeAttribute('hidden');
+                heroToggle.setAttribute('aria-expanded', 'false');
+                heroToggle.textContent = 'Cotiza con tu CURP';
+                var consultaInput = heroConsulta.querySelector('input');
+                if (consultaInput) {
+                    consultaInput.focus();
+                }
+            } else {
+                heroConsulta.setAttribute('hidden', 'hidden');
+                heroQuote.removeAttribute('hidden');
+                heroToggle.setAttribute('aria-expanded', 'true');
+                heroToggle.textContent = 'Buscar mi poliza de cliente';
+                var firstInput = heroQuote.querySelector('input, select, textarea');
+                if (firstInput) {
+                    firstInput.focus();
+                }
+            }
+        });
+    }
+
+    var blogContainer = document.getElementById('blog-cards');
+    var blogStatus = document.getElementById('blog-status');
+    if (blogContainer && blogStatus) {
+        var blogEndpoint = 'https://kasu.com.mx/blog/wp-json/wp/v2/posts?per_page=12&_embed=1';
+        var stripHtml = function (html) {
+            var temp = document.createElement('div');
+            temp.innerHTML = html || '';
+            return (temp.textContent || temp.innerText || '').trim();
+        };
+        var truncateText = function (text, max) {
+            if (text.length <= max) return text;
+            return text.slice(0, max).trim() + '...';
+        };
+        var pickRandom = function (items, count) {
+            var copy = items.slice();
+            var picked = [];
+            while (copy.length && picked.length < count) {
+                var index = Math.floor(Math.random() * copy.length);
+                picked.push(copy.splice(index, 1)[0]);
+            }
+            return picked;
+        };
+
+        fetch(blogEndpoint)
+            .then(function (response) {
+                if (!response.ok) throw new Error('Blog fetch failed');
+                return response.json();
+            })
+            .then(function (posts) {
+                if (!Array.isArray(posts) || posts.length === 0) {
+                    blogStatus.textContent = 'Aun no hay articulos disponibles.';
+                    return;
+                }
+
+                blogContainer.innerHTML = '';
+                var selected = pickRandom(posts, 3);
+                selected.forEach(function (post) {
+                    var title = stripHtml(post.title && post.title.rendered ? post.title.rendered : '');
+                    var rawExcerpt = post.excerpt && post.excerpt.rendered ? post.excerpt.rendered : (post.content && post.content.rendered ? post.content.rendered : '');
+                    var excerpt = truncateText(stripHtml(rawExcerpt), 140);
+                    var imageUrl = '';
+                    var media = post._embedded && post._embedded['wp:featuredmedia'] ? post._embedded['wp:featuredmedia'][0] : null;
+                    if (media) {
+                        if (media.media_details && media.media_details.sizes) {
+                            imageUrl = (media.media_details.sizes.medium_large && media.media_details.sizes.medium_large.source_url) ||
+                                (media.media_details.sizes.large && media.media_details.sizes.large.source_url) ||
+                                media.source_url || '';
+                        } else {
+                            imageUrl = media.source_url || '';
+                        }
+                    }
+
+                    var card = document.createElement('article');
+                    card.className = 'blog-card';
+
+                    var link = document.createElement('a');
+                    link.className = 'blog-card-link';
+                    link.href = post.link;
+                    link.setAttribute('aria-label', title || 'Ver articulo');
+
+                    var mediaWrap = document.createElement('div');
+                    mediaWrap.className = 'blog-card-media';
+                    if (imageUrl) {
+                        var img = document.createElement('img');
+                        img.src = imageUrl;
+                        img.alt = title || 'Articulo de blog';
+                        img.loading = 'lazy';
+                        img.decoding = 'async';
+                        mediaWrap.appendChild(img);
+                    }
+
+                    var body = document.createElement('div');
+                    body.className = 'blog-card-body';
+
+                    var titleEl = document.createElement('h3');
+                    titleEl.className = 'blog-card-title';
+                    titleEl.textContent = title || 'Articulo KASU';
+
+                    var textEl = document.createElement('p');
+                    textEl.className = 'blog-card-text';
+                    textEl.textContent = excerpt || 'Descubre mas en nuestro blog.';
+
+                    body.appendChild(titleEl);
+                    body.appendChild(textEl);
+                    link.appendChild(mediaWrap);
+                    link.appendChild(body);
+                    card.appendChild(link);
+                    blogContainer.appendChild(card);
+                });
+
+                blogStatus.textContent = '';
+                blogStatus.style.display = 'none';
+            })
+            .catch(function () {
+                blogStatus.textContent = 'No se pudieron cargar los articulos del blog.';
+            });
+    }
+
     var banner = document.querySelector('.main-banner');
     if (!banner) return;
 
@@ -370,8 +514,39 @@ document.addEventListener('DOMContentLoaded', function () {
         current = (current + 1) % slides.length;
         slides[current].classList.add('is-active');
     }, intervalMs);
+
+    var fabButton = document.getElementById('kasu-fab');
+    var fabPanel = document.getElementById('kasu-fab-panel');
+    if (fabButton && fabPanel) {
+        fabButton.addEventListener('click', function () {
+            var expanded = fabButton.getAttribute('aria-expanded') === 'true';
+            fabButton.setAttribute('aria-expanded', String(!expanded));
+            if (expanded) {
+                fabPanel.setAttribute('hidden', 'hidden');
+            } else {
+                fabPanel.removeAttribute('hidden');
+            }
+        });
+    }
 });
 </script>
+
+<div class="kasu-fab-wrap" aria-live="polite">
+    <div class="kasu-fab-panel" id="kasu-fab-panel" hidden>
+        <a href="tel:<?php echo isset($tel) ? htmlspecialchars($tel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : ''; ?>" class="kasu-fab-action kasu-fab-action--call" aria-label="Llamar a KASU">
+            <span class="kasu-fab-icon" aria-hidden="true">📞</span>
+            Llamar a KASU
+        </a>
+        <a href="https://wa.me/<?php echo preg_replace('/\D/', '', $tel ?? ''); ?>?text=Hola,%20requiero%20atención%20inmediata%20de%20KASU" class="kasu-fab-action kasu-fab-action--whats" target="_blank" rel="noopener" aria-label="Enviar WhatsApp a KASU">
+            <span class="kasu-fab-icon" aria-hidden="true">💬</span>
+            Enviar WhatsApp
+        </a>
+    </div>
+    <button type="button" class="kasu-fab" id="kasu-fab" aria-expanded="false" aria-controls="kasu-fab-panel">
+        <img src="/assets/images/flor_redonda.svg" alt="" width="34" height="34" loading="lazy" decoding="async">
+        Atención inmediata
+    </button>
+</div>
 
 </body>
 </html>

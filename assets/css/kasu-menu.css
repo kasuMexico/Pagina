@@ -1,0 +1,208 @@
+/* KASU Menu (index) - clean, institutional */
+:root {
+  --kasu-accent: #8e1f63;
+  --kasu-text: #14161a;
+  --kasu-muted: #5f6b7a;
+  --kasu-border: #e6e9ee;
+  --kasu-header-height: 72px;
+  --kasu-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+}
+
+.kasu-ui .header-area {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: #fff;
+  border-bottom: 1px solid var(--kasu-border);
+  box-shadow: var(--kasu-shadow);
+}
+
+.kasu-ui .header-area .main-nav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  height: var(--kasu-header-height);
+  padding: 0 16px;
+}
+
+.kasu-ui .header-area .logo {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+}
+
+.kasu-ui .header-area .logo img {
+  height: 42px;
+  width: auto;
+  display: block;
+}
+
+.kasu-ui .header-area .nav {
+  display: flex;
+  align-items: stretch;
+  gap: 22px;
+  margin: 0 0 0 auto;
+  padding: 0;
+  list-style: none;
+  height: var(--kasu-header-height);
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.kasu-ui .header-area .nav li {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.kasu-ui .header-area .nav li.nav-cta {
+  margin-left: auto;
+}
+
+.kasu-ui .header-area .nav li.nav-secondary {
+  position: relative;
+  padding-left: 18px;
+}
+
+.kasu-ui .header-area .nav li.nav-secondary::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 24px;
+  background: var(--kasu-border);
+}
+
+.kasu-ui .header-area .nav li a {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 2px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--kasu-text);
+  text-decoration: none;
+  position: relative;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  transition: color 0.2s ease;
+}
+
+.kasu-ui .header-area .nav li a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: transparent;
+  transition: background 0.2s ease;
+}
+
+.kasu-ui .header-area .nav li a:hover,
+.kasu-ui .header-area .nav li a:focus,
+.kasu-ui .header-area .nav li a.active {
+  color: var(--kasu-accent);
+}
+
+.kasu-ui .header-area .nav li a:hover::after,
+.kasu-ui .header-area .nav li a:focus::after,
+.kasu-ui .header-area .nav li a.active::after {
+  background: var(--kasu-accent);
+}
+
+.kasu-ui .header-area .nav li.nav-cta a,
+.kasu-ui .header-area .nav li.nav-secondary a {
+  color: var(--kasu-accent);
+}
+
+.kasu-ui .menu-trigger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--kasu-border);
+  background: #fff;
+  border-radius: 6px;
+  padding: 0;
+}
+
+.kasu-ui .menu-trigger span,
+.kasu-ui .menu-trigger span::before,
+.kasu-ui .menu-trigger span::after {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--kasu-text);
+  position: absolute;
+  content: "";
+}
+
+.kasu-ui .menu-trigger span {
+  position: relative;
+}
+
+.kasu-ui .menu-trigger span::before {
+  top: -6px;
+}
+
+.kasu-ui .menu-trigger span::after {
+  top: 6px;
+}
+
+@media (max-width: 991px) {
+  .kasu-ui .header-area .main-nav {
+    justify-content: space-between;
+  }
+
+  .kasu-ui .menu-trigger {
+    display: inline-flex;
+  }
+
+  .kasu-ui .header-area .nav {
+    position: absolute;
+    top: var(--kasu-header-height);
+    left: 0;
+    right: 0;
+    height: auto;
+    flex-direction: column;
+    background: #fff;
+    border-bottom: 1px solid var(--kasu-border);
+    display: none;
+  }
+
+  .kasu-ui .header-area .nav li {
+    height: auto;
+    border-top: 1px solid #f1f3f6;
+  }
+
+  .kasu-ui .header-area .nav li a {
+    height: 52px;
+    padding: 0 24px;
+  }
+
+  .kasu-ui .header-area .nav li a::after {
+    display: none;
+  }
+
+  .kasu-ui .header-area .nav li.nav-cta {
+    margin-left: 0;
+  }
+
+  .kasu-ui .header-area .nav li.nav-secondary {
+    padding-left: 0;
+  }
+
+  .kasu-ui .header-area .nav li.nav-secondary::before {
+    display: none;
+  }
+}

@@ -12,9 +12,11 @@
 <style>
   /* El card que genera Consulta.php ocupa el ancho del modal y sin márgenes extra */
   #curpModalBody > .card{
-    max-width: 500px !important;   /* antes venía con 420px */
-    margin: 24px auto !important;  /* centrado con margen cómodo */
-    box-shadow: 0 6px 18px rgba(0,0,0,.08);
+    max-width: 520px !important;
+    margin: 24px auto !important;
+    box-shadow: var(--shadow-md, 0 12px 28px rgba(16,24,40,.12));
+    border-radius: var(--radius-md, 14px);
+    border: 1px solid var(--color-border, #e2e5ea);
   }
 
   /* Opcional: compactar márgenes internos */

@@ -37,7 +37,6 @@ function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES,
   <!-- CSS existentes -->
   <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
   <link rel="stylesheet" href="../assets/css/font-awesome.css">
-  <link rel="stylesheet" href="../assets/css/templatemo-softy-pinko.css">
 
   <!-- Fix layout: evita encimados -->
   <style>

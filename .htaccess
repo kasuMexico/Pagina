@@ -19,7 +19,7 @@ RewriteRule ^ https://kasu.com.mx%{REQUEST_URI} [R=308,L]
 # -----------------------------------------
 # 1) NO CACHE global para HTML/PHP:
 #    Descomenta la siguiente línea para desactivar caché de páginas
-SetEnv NO_CACHE 1
+# SetEnv NO_CACHE 1
 #
 # 2) CACHE NORMAL:
 #    Deja comentada la línea anterior.
@@ -86,11 +86,11 @@ ErrorDocument 404 /error.php
   ExpiresByType image/png  "access plus 90 days"
   ExpiresByType image/gif   "access plus 90 days"
   ExpiresByType image/svg+xml "access plus 90 days"
-  ExpiresByType text/css "access plus 30 days"
-  ExpiresByType application/javascript "access plus 30 days"
-  ExpiresByType application/json "access plus 1 day"
-  ExpiresByType application/manifest+json "access plus 1 day"
-  ExpiresByType application/font-woff2 "access plus 180 days"
+  #ExpiresByType text/css "access plus 30 days"
+  #ExpiresByType application/javascript "access plus 30 days"
+  #ExpiresByType application/json "access plus 1 day"
+  #ExpiresByType application/manifest+json "access plus 1 day"
+  #ExpiresByType application/font-woff2 "access plus 180 days"
 </IfModule>
 
 # === HEADERS ===
@@ -107,6 +107,8 @@ ErrorDocument 404 /error.php
     Header set Pragma "no-cache" env=NO_CACHE
     Header set Expires "0" env=NO_CACHE
   </FilesMatch>
+
+  # Cache normal para CSS/JS (sin override de desarrollo)
 </IfModule>
 # Archivo de .Env para mercado pago
 <Files ".env">

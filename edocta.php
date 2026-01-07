@@ -95,7 +95,6 @@ function e(?string $s): string {
     <title>Estado de cuenta</title>
     <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="assets/css/font-awesome.css">
-    <link rel="stylesheet" href="assets/css/templatemo-softy-pinko.css">
     <link rel="stylesheet" href="login/assets/css/styles.min.css">
     <style>
         /* Bloque: estilos mínimos de página — 03/11/2025 – Revisado por JCCM */

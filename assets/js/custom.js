@@ -10,6 +10,9 @@
 		$(".menu-trigger").on('click', function() {
 			$(this).toggleClass('active');
 			$('.header-area .nav').slideToggle(200);
+			var expanded = $(this).attr('aria-expanded') === 'true';
+			$(this).attr('aria-expanded', String(!expanded));
+			$('#primary-nav').attr('aria-hidden', String(expanded));
 		});
 	}
 	// Menu elevator animation
@@ -22,6 +25,8 @@
 				if(width < 991) {
 					$('.menu-trigger').removeClass('active');
 					$('.header-area .nav').slideUp(200);
+					$('.menu-trigger').attr('aria-expanded', 'false');
+					$('#primary-nav').attr('aria-hidden', 'true');
 				}
 				$('html,body').animate({
 					scrollTop: (target.offset().top) - 130
@@ -38,9 +43,9 @@
 	        e.preventDefault();
 	        $(document).off("scroll");
 
-	        $('a').each(function () {
+	        $('.header-area .nav a').each(function () {
 	            $(this).removeClass('active');
-	        })
+	        });
 	        $(this).addClass('active');
 
 	        var target = this.hash,
@@ -56,14 +61,20 @@
 	});
 	function onScroll(event){
 	    var scrollPos = $(document).scrollTop();
-	    $('.nav a').each(function () {
+	    $('.header-area .nav a').each(function () {
 	        var currLink = $(this);
-	        var refElement = $(currLink.attr("href"));
-	        if (refElement.position().top <= scrollPos && refElement.position().top + refElement.height() > scrollPos) {
-	            $('.nav ul li a').removeClass("active");
-	            currLink.addClass("active");
+	        var href = currLink.attr("href") || "";
+	        if (href.charAt(0) !== '#') {
+	            return;
 	        }
-	        else{
+	        var refElement = $(href);
+	        if (!refElement.length) {
+	            return;
+	        }
+	        if (refElement.position().top <= scrollPos && refElement.position().top + refElement.height() > scrollPos) {
+	            $('.header-area .nav a').removeClass("active");
+	            currLink.addClass("active");
+	        } else {
 	            currLink.removeClass("active");
 	        }
 	    });
@@ -102,6 +113,14 @@
 	// Window Resize Mobile Menu Fix
 	function mobileNav() {
 		var width = $(window).width();
+		if (width < 992) {
+			var isActive = $('.menu-trigger').hasClass('active');
+			$('#primary-nav').attr('aria-hidden', String(!isActive));
+		} else {
+			$('#primary-nav').attr('aria-hidden', 'false');
+			$('.menu-trigger').attr('aria-expanded', 'false').removeClass('active');
+			$('.header-area .nav').removeAttr('style');
+		}
 		$('.submenu').on('click', function() {
 			if(width < 992) {
 				$('.submenu ul').removeClass('active');

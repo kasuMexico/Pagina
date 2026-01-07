@@ -190,7 +190,7 @@ if($Reg['Producto'] === 'Policias') {
   <!-- CSS/JS con rutas absolutas -->
   <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
   <link rel="stylesheet" href="/assets/css/font-awesome.css">
-  <link rel="stylesheet" href="/assets/css/templatemo-softy-pinko.css??v=2">
+  <link rel="stylesheet" href="/assets/css/kasu-ui.css">
   <link rel="stylesheet" href="/assets/css/productos.css?v=2">
   <script src="/assets/js/js_productos.js" defer></script>
 </head>

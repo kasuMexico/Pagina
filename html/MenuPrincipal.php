@@ -2,11 +2,11 @@
 //Revisado por Jose Carlos Cabrera Monroy 1 de Noviembre del 2025
 // html/MenuPrincipal.php 
 ?>
-<header class="header-area header-sticky">
+<header class="header-area kasu-header">
   <div class="container">
     <div class="row">
       <div class="col-12">
-        <nav class="main-nav" style="color:black;" itemscope itemtype="https://schema.org/SiteNavigationElement" aria-label="Navegación principal">
+        <nav class="main-nav" itemscope itemtype="https://schema.org/SiteNavigationElement" aria-label="Navegacion principal">
           <!-- Logo -->
           <a href="/" class="logo" itemprop="url" aria-label="Inicio KASU">
             <img src="/assets/images/Index/ksulogo.png"
@@ -24,27 +24,31 @@
           ?>
 
           <!-- Menú -->
-          <ul class="nav" role="menubar">
+          <ul class="nav" id="primary-nav" role="menubar">
             <?php
             // Mostrar "+ Información" en todas menos en la home
             if ($uri_norm !== '/') {
-              echo '<li role="none"><a style="color:black;" href="/prospectos" class="comprar" role="menuitem" itemprop="url"><span itemprop="name"><strong>+ Información</strong></span></a></li>';
+              echo '<li role="none"><a href="/prospectos" role="menuitem" itemprop="url"><span itemprop="name"><strong>+ Informacion</strong></span></a></li>';
             }
             ?>
             <li role="none">
-              <a style="color:black;" href="/blog" role="menuitem" itemprop="url"><span itemprop="name">Blog</span></a>
+              <a href="/blog" role="menuitem" itemprop="url"><span itemprop="name">Blog</span></a>
             </li>
             <li role="none">
-              <a style="color:black;" href="/nft" role="menuitem" itemprop="url"><span itemprop="name">NFT</span></a>
+              <a href="/nft" role="menuitem" itemprop="url"><span itemprop="name">NFT</span></a>
             </li>
             <?php
             if ($uri_norm !== '/fundacion') {
-              echo '<li role="none"><a style="color:black;" href="/fundacion" role="menuitem" itemprop="url"><span itemprop="name">Fundación</span></a></li>';
+              echo '<li role="none"><a href="/fundacion" role="menuitem" itemprop="url"><span itemprop="name">Fundacion</span></a></li>';
             }
             if ($uri_norm === '/') {
               echo '
-              <li role="none"><a style="font-weight: bold; color: purple;" href="#Clientes" class="comprar" role="menuitem" itemprop="url"><span itemprop="name">Comprar</span></a></li>
-              <li role="none"><a style="font-weight: bold; color: orange;" href="/ActualizacionDatos" class="comprar" role="menuitem" itemprop="url"><span itemprop="name">Mi Cuenta</span></a></li>
+              <li role="none" class="nav-cta"><a href="#Clientes" role="menuitem" itemprop="url"><span itemprop="name">Cotizar</span></a></li>
+              <li role="none" class="nav-secondary"><a href="/ActualizacionDatos" role="menuitem" itemprop="url"><span itemprop="name">Mi cuenta</span></a></li>
+              ';
+            } else {
+              echo '
+              <li role="none" class="nav-cta"><a href="/funerarias.php" role="menuitem" itemprop="url"><span itemprop="name">Registro funerarias</span></a></li>
               ';
             }
             ?>
@@ -52,7 +56,9 @@
           </ul>
 
           <!-- Botón hamburguesa -->
-          <a class="menu-trigger" aria-label="Abrir menú" role="button"><span>Menú</span></a>
+          <button class="menu-trigger" type="button" aria-label="Abrir menu" aria-controls="primary-nav" aria-expanded="false">
+            <span aria-hidden="true"></span>
+          </button>
         </nav>
       </div>
     </div>

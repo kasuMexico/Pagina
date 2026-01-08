@@ -17,6 +17,7 @@ $rawValue = $_GET['value'] ?? '';
 $curp     = ($rawValue !== '') ? (string)base64_decode($rawValue, true) : '';
 $curp     = is_string($curp) ? strtoupper(trim($curp)) : '';
 
+require_once __DIR__ . '/../eia/analytics_bootstrap.php';
 require_once '../eia/librerias.php';
 // Se establecen el número de contacto
 require_once  '../eia/php/Telcto.php';

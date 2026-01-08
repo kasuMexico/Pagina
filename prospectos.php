@@ -85,6 +85,73 @@ foreach ($catalogOrder as $id) {
   ];
 }
 
+/* ===== Copy segmentado (si viene producto preseleccionado) ===== */
+$copyByServicio = [
+  'FUNERARIO' => [
+    'title' => 'Recibe informacion de Gastos Funerarios',
+    'copy'  => 'Dejanos tus datos y un asesor KASU te explicara como funciona el plan funerario con pago unico y cobertura nacional.',
+    'lead'  => 'Guia completa para contratar un servicio funerario',
+  ],
+  'RETIRO' => [
+    'title' => 'Recibe informacion de Retiro',
+    'copy'  => 'Dejanos tus datos y un asesor KASU te explicara el plan de retiro y sus beneficios.',
+    'lead'  => 'Informacion completa del plan de retiro KASU',
+  ],
+  'SEGURIDAD' => [
+    'title' => 'Planes Funerarios para oficiales de seguridad',
+    'copy'  => 'Comparte tus datos y te explicamos el plan para oficiales de seguridad publica.',
+    'lead'  => 'Informacion completa para seguridad publica',
+  ],
+  'TRANSPORTE' => [
+    'title' => 'Planes Funerarios para taxistas',
+    'copy'  => 'Dejanos tus datos y te explicamos el plan para taxistas y transportistas.',
+    'lead'  => 'Informacion completa para taxistas',
+  ],
+  'MATERNIDAD' => [
+    'title' => 'KASU Maternidad',
+    'copy'  => 'Dejanos tus datos para recibir informacion del plan de maternidad y la red KASU.',
+    'lead'  => 'Informacion completa de KASU Maternidad',
+  ],
+  'UNIVERSIDAD' => [
+    'title' => 'KASU Futuro 18',
+    'copy'  => 'Dejanos tus datos para recibir informacion del plan de universidad y emprendimiento.',
+    'lead'  => 'Informacion completa de KASU Futuro 18',
+  ],
+  'DISTRIBUIDOR' => [
+    'title' => 'Conviértete en distribuidor KASU',
+    'copy'  => 'Dejanos tus datos para conocer el programa de distribuidores y sus beneficios.',
+    'lead'  => 'Informacion completa para distribuidores KASU',
+  ],
+];
+$defaultCopy = [
+  'title' => 'Registrate para recibir informacion',
+  'copy'  => 'Dejanos tus datos para que un asesor KASU pueda contactarte y explicarte como funcionan nuestros servicios funerarios, maternidad, universidad y planes de retiro.',
+  'lead'  => 'Llena tus datos para recibir informacion de nuestros servicios',
+];
+$heroCopy = $servicioFromQuery !== '' && isset($copyByServicio[$servicioFromQuery])
+  ? $copyByServicio[$servicioFromQuery]
+  : $defaultCopy;
+
+/* ===== Guia por producto ===== */
+$guideMap = [
+  'FUNERARIO'   => 'guiafuneraria.png',
+  'TRANSPORTE'  => 'guiafuneraria.png',
+  'UNIVERSIDAD' => 'guiauniversidad.png',
+  'MATERNIDAD'  => 'guiaembarazo.png',
+  'SEGURIDAD'   => 'guiaoficiales.png',
+  'DISTRIBUIDOR'=> 'guiadistribuidor.png',
+];
+$guideImage = $guideMap[$servicioFromQuery] ?? 'guiafuneraria.png';
+
+/* ===== Opiniones (prueba social) ===== */
+$opiniones = [];
+if ($resOpin = $mysqli->query("SELECT Nombre, Opinion, Servicio, foto FROM opiniones ORDER BY id DESC LIMIT 3")) {
+  while ($row = $resOpin->fetch_assoc()) {
+    $opiniones[] = $row;
+  }
+  $resOpin->free();
+}
+
 /* ===== CSRF (mismo esquema que el modal de prospectos) ===== */
 $csrf = $_SESSION['csrf_auth'] ?? ($_SESSION['csrf'] ?? null);
 if (!$csrf) {
@@ -98,8 +165,9 @@ $metodoStr  = 'WEB'; // identificador de origen desde sitio público
 $metodoSafe = htmlspecialchars($metodoStr, ENT_QUOTES, 'UTF-8');
 
 /* ===== Mensaje opcional vía ?Msg= ===== */
+$msgFromQuery = '';
 if (isset($_GET['Msg'])) {
-  echo "<script>alert('".htmlspecialchars((string)$_GET['Msg'], ENT_QUOTES, 'UTF-8')."');</script>";
+  $msgFromQuery = htmlspecialchars((string)$_GET['Msg'], ENT_QUOTES, 'UTF-8');
 }
 ?>
 <!DOCTYPE html>
@@ -144,8 +212,12 @@ if (isset($_GET['Msg'])) {
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 
   <style>
+    html, body {
+      height:auto;
+    }
     body {
       background:#f5f5f5;
+      overflow:auto;
     }
     .ProspectoWrap {
       max-width: 900px;
@@ -178,6 +250,26 @@ if (isset($_GET['Msg'])) {
     .ProspectoForm {
       padding:30px 30px 24px;
     }
+    .ProspectoMsg {
+      display:none;
+      margin-bottom:12px;
+      padding:10px 12px;
+      border-radius:8px;
+      font-size:13px;
+      background:#f8fafc;
+      border:1px solid #e5e7eb;
+      color:#374151;
+    }
+    .ProspectoMsg.ok {
+      background:#ecfdf3;
+      border:1px solid #a7f3d0;
+      color:#065f46;
+    }
+    .ProspectoMsg.err {
+      background:#fef2f2;
+      border:1px solid #fecaca;
+      color:#991b1b;
+    }
     .ProspectoForm h2 {
       font-size:20px;
       margin-top:0;
@@ -194,10 +286,14 @@ if (isset($_GET['Msg'])) {
       box-sizing:border-box;
       min-width:0;
     }
+    #AgendaWrap {
+      margin-top:10px;
+    }
     .ProspectoProductos {
       display:flex;
       flex-wrap:wrap;
       gap:12px;
+      justify-content:flex-start;
     }
     .ProdCard {
       display:flex;
@@ -208,11 +304,11 @@ if (isset($_GET['Msg'])) {
       border:1px solid #d6dbdf;
       border-radius:12px;
       cursor:pointer;
-      width:160px;
+      width:140px;
       background:#fff;
     }
     .ProdCard img {
-      width:96px;
+      width:76px;
       height:auto;
       border-radius:8px;
     }
@@ -243,6 +339,59 @@ if (isset($_GET['Msg'])) {
       font-size:12px;
       color:#777;
     }
+    .ProspectoAgendaLead {
+      margin-bottom:12px;
+      font-size:14px;
+      font-weight:600;
+      color:#1f2937;
+    }
+    .ProspectoSocial {
+      margin-top:16px;
+      border-top:1px solid #e5e7eb;
+      padding-top:12px;
+    }
+    .ProspectoSocial h3 {
+      margin:0 0 10px;
+      font-size:15px;
+      font-weight:700;
+    }
+    .ProspectoSocialList {
+      display:grid;
+      grid-template-columns:repeat(1, minmax(0, 1fr));
+      gap:10px;
+    }
+    .ProspectoSocialCard {
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      padding:10px;
+      border:1px solid #e5e7eb;
+      border-radius:10px;
+      background:#fff;
+    }
+    .ProspectoSocialCard img {
+      width:42px;
+      height:42px;
+      border-radius:50%;
+      object-fit:cover;
+      background:#f3f4f6;
+    }
+    .ProspectoSocialCard p {
+      margin:0;
+      font-size:12px;
+      color:#374151;
+    }
+    .ProspectoSocialCard span {
+      display:block;
+      margin-top:6px;
+      font-size:11px;
+      color:#6b7280;
+    }
+    .ProspectoHint {
+      font-size:12px;
+      color:#6b7280;
+      margin-top:6px;
+    }
     @media (max-width: 767px) {
       .ProspectoWrap {
         margin:10px;
@@ -253,56 +402,32 @@ if (isset($_GET['Msg'])) {
       .ProspectoForm {
         padding:20px 15px 18px;
       }
+      .ProspectoProductos {
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:12px;
+      }
+      .ProdCard { width:100%; }
+      .ProdCard img { width:64px; }
     }
   </style>
 </head>
 <body>
-
-<!-- Modal Geolocalización (mismo que en página de compra) -->
-<div class="modal fade" id="geoModal" tabindex="-1" role="dialog" aria-labelledby="geoModalLabel">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content" style="border-radius:8px">
-      <div class="modal-header" style="border-bottom:none">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
-          <span aria-hidden="true">&times;</span>
-        </button>
-        <h4 class="modal-title" id="geoModalLabel">Permitir ubicación</h4>
-      </div>
-      <div class="modal-body">
-        <p style="font-size:15px; line-height:1.5;">
-          Por disposición oficial debes permitir que <strong>KASU Servicios a Futuro</strong> registre tu ubicación.
-          Activa los servicios de localización y otorga permiso al navegador para continuar.
-        </p>
-        <p id="geoModalHint" style="color:#777; margin-top:10px; display:none;"></p>
-      </div>
-      <div class="modal-footer" style="border-top:none">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Entendido</button>
-        <button type="button" class="btn btn-primary" id="btnGeoRetry">Permitir ahora</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <div class="ProspectoWrap">
   <div class="row no-gutter">
     <!-- LADO IZQUIERDO: texto + guía -->
     <div class="col-sm-5">
       <div class="ProspectoImg">
-        <h1>Regístrate para recibir información</h1>
-        <p>
-          Déjanos tus datos para que un asesor KASU pueda contactarte y explicarte
-          como funcionan nuestros servicios funerarios, maternidad, universidad y planes de retiro.
-        </p>
+        <h1><?= htmlspecialchars($heroCopy['title'], ENT_QUOTES, 'UTF-8') ?></h1>
+        <p><?= htmlspecialchars($heroCopy['copy'], ENT_QUOTES, 'UTF-8') ?></p>
       </div>
 
       <div class="ProspectoGuia">
-        <p>
-          Llena tus datos para recibir la
-          <strong>Guía completa para contratar un servicio funerario</strong>.
-        </p>
+        <p><?= htmlspecialchars($heroCopy['lead'], ENT_QUOTES, 'UTF-8') ?></p>
         <img
-          src="assets/images/guiafuneraria.jpeg"
-          alt="Guía completa para contratar un servicio funerario"
+          src="assets/images/<?= htmlspecialchars($guideImage, ENT_QUOTES, 'UTF-8') ?>"
+          alt="Guia informativa KASU"
           class="GuiaImg">
       </div>
     </div>
@@ -312,7 +437,10 @@ if (isset($_GET['Msg'])) {
       <div class="ProspectoForm">
         <h2>Datos de contacto</h2>
 
-        <form action="https://kasu.com.mx/login/php/Registro_Prospectos.php" method="post" autocomplete="off">
+        <?php $msgDisplay = $msgFromQuery !== '' ? ' style="display:block;"' : ''; ?>
+        <div id="ProspectoMsg" class="ProspectoMsg" role="status" aria-live="polite"<?= $msgDisplay ?>><?= $msgFromQuery ?></div>
+
+        <form id="ProspectoForm" action="https://kasu.com.mx/login/php/Registro_Prospectos.php" method="post" autocomplete="off">
           <!-- Slots de GPS y Fingerprint -->
           <div id="Gps" style="display:none;"></div>
           <div data-fingerprint-slot></div>
@@ -327,8 +455,11 @@ if (isset($_GET['Msg'])) {
           <input type="hidden" name="csrf"      value="<?= $csrfSafe ?>">
           <!-- Origen fijado a WEB (puedes cambiarlo en el backend si lo requieres) -->
           <input type="hidden" name="Origen" value="<?= $metodoSafe ?>">
+          <input type="hidden" name="prospectoNvo" value="1" id="ProspectoNvoInput">
+          <input type="hidden" name="Cita" value="1" id="CitaInput" disabled>
+          <input type="hidden" name="IdProspecto" value="" id="IdProspectoInput">
 
-          <div class="form-group" id="CurpGroup">
+          <div class="form-group ProspectoHideOnAgenda" id="CurpGroup">
             <label>Registra tu CURP </label>
             <input class="form-control text-uppercase"
                    type="text"
@@ -347,7 +478,7 @@ if (isset($_GET['Msg'])) {
             </button>
           </div>
 
-          <div class="form-group" id="NombreProspectoGroup" style="display:none;">
+          <div class="form-group ProspectoHideOnAgenda" id="NombreProspectoGroup" style="display:none;">
             <label>Registra tu nombre completo</label>
             <input class="form-control text-uppercase"
                    type="text"
@@ -362,7 +493,7 @@ if (isset($_GET['Msg'])) {
             </button>
           </div>
 
-          <div class="form-group">
+          <div class="form-group ProspectoHideOnAgenda">
             <label>Tu E-mail</label>
             <input class="form-control"
                    type="email"
@@ -373,7 +504,7 @@ if (isset($_GET['Msg'])) {
                    autocomplete="email">
           </div>
 
-          <div class="form-group">
+          <div class="form-group ProspectoHideOnAgenda">
             <label>Registra tu teléfono</label>
             <input class="form-control"
                    type="tel"
@@ -387,28 +518,10 @@ if (isset($_GET['Msg'])) {
                    autocomplete="tel">
           </div>
 
-          <div class="form-group">
-            <label>Selecciona una fecha en la cual podamos llamarte</label>
-            <input class="form-control"
-                   type="date"
-                   name="FechaLlamada"
-                   id="FechaLlamadaInput"
-                   required
-                   autocomplete="off">
-          </div>
-
-          <div class="form-group">
-            <label>Hora para llamada</label>
-            <select class="form-control" name="HoraLlamada" id="HoraLlamadaInput" disabled required>
-              <option value="">Selecciona una hora</option>
-            </select>
-            <small id="HoraLlamadaHint">Lunes a viernes 9:00 a 18:00, sabados 10:00 a 14:00.</small>
-          </div>
-
           <?php if ($servicioFromQuery !== ''): ?>
             <input type="hidden" name="Servicio" value="<?= htmlspecialchars($servicioFromQuery, ENT_QUOTES, 'UTF-8') ?>">
           <?php else: ?>
-            <div class="form-group">
+            <div class="form-group ProspectoHideOnAgenda">
               <label>Estoy interesado en</label>
               <div class="ProspectoProductos">
                 <?php foreach ($catalog as $item):
@@ -431,24 +544,71 @@ if (isset($_GET['Msg'])) {
             </div>
           <?php endif; ?>
 
+          <div id="AgendaWrap" style="display:none;">
+            <div class="ProspectoAgendaLead" id="ProspectoAgendaLead"></div>
+            <div class="form-group">
+              <label>Que dia podemos llamarte para platicarte de KASU</label>
+              <input class="form-control"
+                     type="date"
+                     name="FechaCita"
+                     id="FechaCitaInput"
+                     disabled
+                     required
+                     autocomplete="off">
+            </div>
+
+            <div class="form-group">
+              <label>Hora para llamada</label>
+              <select class="form-control" name="HoraCita" id="HoraCitaInput" disabled required>
+                <option value="">Selecciona una hora</option>
+              </select>
+              <small id="HoraLlamadaHint">Lunes a viernes 9:00 a 18:00, sabados 10:00 a 14:00.</small>
+            </div>
+          </div>
+
           <input type="hidden" name="OrigenVisible" id="OrigenVisibleInput" value="otro">
 
-          <button type="submit" name="prospectoNvo">Registrar mis datos</button>
+          <button type="submit" id="ProspectoSubmit">Registrar mis datos</button>
+
+          <div class="ProspectoHint">Te contactamos en horario laboral. Si prefieres WhatsApp, indicalo al asesor.</div>
 
           <div class="ProspectoLegal">
-            KASU Servicios a Futuro utilizará tus datos únicamente para contactarte y
-            brindarte información sobre nuestros servicios, conforme a nuestro Aviso de Privacidad.
+            KASU Servicios a Futuro utilizara tus datos unicamente para contactarte y
+            brindarte informacion sobre nuestros servicios, conforme a nuestro
+            <a href="/privacidad.php" target="_blank" rel="noopener">Aviso de Privacidad</a>.
           </div>
+
+          <?php if (!empty($opiniones)): ?>
+            <div class="ProspectoSocial" aria-label="Opiniones de clientes">
+              <h3>Opiniones reales</h3>
+              <div class="ProspectoSocialList">
+                <?php foreach ($opiniones as $op):
+                  $opNombre = htmlspecialchars((string)($op['Nombre'] ?? 'Cliente'), ENT_QUOTES, 'UTF-8');
+                  $opServ   = htmlspecialchars((string)($op['Servicio'] ?? ''), ENT_QUOTES, 'UTF-8');
+                  $opTexto  = htmlspecialchars((string)($op['Opinion'] ?? ''), ENT_QUOTES, 'UTF-8');
+                  $opFoto   = htmlspecialchars((string)($op['foto'] ?? '/assets/images/kasu_logo.jpeg'), ENT_QUOTES, 'UTF-8');
+                ?>
+                  <div class="ProspectoSocialCard">
+                    <img src="<?= $opFoto ?>" alt="<?= $opNombre ?>">
+                    <div>
+                      <p><?= $opTexto ?></p>
+                      <span><?= $opNombre ?><?= $opServ !== '' ? ' · ' . $opServ : '' ?></span>
+                    </div>
+                  </div>
+                <?php endforeach; ?>
+              </div>
+            </div>
+          <?php endif; ?>
         </form>
       </div>
     </div>
   </div>
 </div>
 
+<script src="assets/js/jquery-2.1.0.min.js"></script>
 <!-- JS: GPS (igual lógica que en la página de compra) -->
 <script>
 (function(){
-  var gpsDiv = document.getElementById('Gps');
   var origenInput = document.getElementById('OrigenVisibleInput');
   var curpGroup = document.getElementById('CurpGroup');
   var curpInput = document.getElementById('CurpInput');
@@ -456,9 +616,18 @@ if (isset($_GET['Msg'])) {
   var nombreInput = document.getElementById('FullNameInput');
   var toggleCurpBtn = document.getElementById('toggleCurpBtn');
   var toggleCurpBackBtn = document.getElementById('toggleCurpBackBtn');
-  var fechaLlamadaInput = document.getElementById('FechaLlamadaInput');
-  var horaLlamadaInput = document.getElementById('HoraLlamadaInput');
+  var fechaInput = document.getElementById('FechaLlamadaInput') || document.getElementById('FechaCitaInput');
+  var horaInput = document.getElementById('HoraLlamadaInput') || document.getElementById('HoraCitaInput');
   var horaLlamadaHint = document.getElementById('HoraLlamadaHint');
+  var form = document.getElementById('ProspectoForm');
+  var agendaWrap = document.getElementById('AgendaWrap');
+  var msgBox = document.getElementById('ProspectoMsg');
+  var submitBtn = document.getElementById('ProspectoSubmit');
+  var prospectoNvoInput = document.getElementById('ProspectoNvoInput');
+  var citaInput = document.getElementById('CitaInput');
+  var prospectoIdInput = document.getElementById('IdProspectoInput');
+  var agendaLead = document.getElementById('ProspectoAgendaLead');
+  var agendaActive = false;
 
   function setCurpMode(useNombre){
     if (useNombre) {
@@ -497,14 +666,14 @@ if (isset($_GET['Msg'])) {
   }
 
   function updateHoraOptions(){
-    if (!fechaLlamadaInput || !horaLlamadaInput) return;
-    var fechaVal = fechaLlamadaInput.value;
-    horaLlamadaInput.innerHTML = '<option value="">Selecciona una hora</option>';
+    if (!fechaInput || !horaInput) return;
+    var fechaVal = fechaInput.value;
+    horaInput.innerHTML = '<option value="">Selecciona una hora</option>';
     if (!fechaVal) {
-      horaLlamadaInput.disabled = true;
-      horaLlamadaInput.required = false;
-      if (fechaLlamadaInput.setCustomValidity) {
-        fechaLlamadaInput.setCustomValidity('');
+      horaInput.disabled = true;
+      horaInput.required = false;
+      if (fechaInput.setCustomValidity) {
+        fechaInput.setCustomValidity('');
       }
       if (horaLlamadaHint) {
         horaLlamadaHint.textContent = 'Lunes a viernes 9:00 a 18:00, sabados 10:00 a 14:00.';
@@ -523,10 +692,10 @@ if (isset($_GET['Msg'])) {
       startMin = 10 * 60;
       endMin = 14 * 60;
     } else {
-      horaLlamadaInput.disabled = true;
-      horaLlamadaInput.required = false;
-      if (fechaLlamadaInput.setCustomValidity) {
-        fechaLlamadaInput.setCustomValidity('Domingos no hay citas disponibles.');
+      horaInput.disabled = true;
+      horaInput.required = false;
+      if (fechaInput.setCustomValidity) {
+        fechaInput.setCustomValidity('Domingos no hay citas disponibles.');
       }
       if (horaLlamadaHint) horaLlamadaHint.textContent = 'Domingos no hay citas disponibles.';
       return;
@@ -537,20 +706,78 @@ if (isset($_GET['Msg'])) {
       var opt = document.createElement('option');
       opt.value = hora + ':00';
       opt.textContent = hora;
-      horaLlamadaInput.appendChild(opt);
+      horaInput.appendChild(opt);
     }
-    horaLlamadaInput.disabled = false;
-    horaLlamadaInput.required = true;
-    if (fechaLlamadaInput.setCustomValidity) {
-      fechaLlamadaInput.setCustomValidity('');
+    horaInput.disabled = false;
+    horaInput.required = true;
+    if (fechaInput.setCustomValidity) {
+      fechaInput.setCustomValidity('');
     }
     if (horaLlamadaHint) {
       horaLlamadaHint.textContent = 'Lunes a viernes 9:00 a 18:00, sabados 10:00 a 14:00.';
     }
   }
 
-  if (fechaLlamadaInput) {
-    fechaLlamadaInput.addEventListener('change', updateHoraOptions);
+  if (fechaInput) {
+    fechaInput.addEventListener('change', updateHoraOptions);
+    updateHoraOptions();
+  }
+
+  function setMsg(text, isError) {
+    if (!msgBox) return;
+    msgBox.textContent = text || '';
+    msgBox.classList.remove('ok', 'err');
+    if (text) {
+      msgBox.classList.add(isError ? 'err' : 'ok');
+      msgBox.style.display = 'block';
+    } else {
+      msgBox.style.display = 'none';
+    }
+  }
+
+  function showAgenda() {
+    agendaActive = true;
+    if (agendaWrap) agendaWrap.style.display = '';
+    if (agendaLead) {
+      var fullNameRaw = '';
+      if (nombreInput && nombreInput.value) {
+        fullNameRaw = nombreInput.value;
+      }
+      if (!fullNameRaw && curpInput && curpInput.value) {
+        fullNameRaw = '';
+      }
+      if (!fullNameRaw) {
+        var hiddenName = document.querySelector('input[name="nombre"]');
+        if (hiddenName && hiddenName.value) {
+          fullNameRaw = hiddenName.value;
+        }
+      }
+      var namePart = '';
+      if (fullNameRaw) {
+        var parts = fullNameRaw.trim().split(/\s+/);
+        namePart = parts[0] || '';
+      }
+      if (namePart) {
+        namePart = namePart.charAt(0).toUpperCase() + namePart.slice(1).toLowerCase();
+      }
+      var leadText = namePart ? ('Excelente ' + namePart + '. Ahora solo dinos que dia te podemos llamar.') : 'Excelente. Ahora solo dinos que dia te podemos llamar.';
+      agendaLead.textContent = leadText;
+    }
+    setMsg('', false);
+    document.querySelectorAll('.ProspectoHideOnAgenda').forEach(function(el){
+      el.style.display = 'none';
+    });
+    if (prospectoNvoInput) prospectoNvoInput.disabled = true;
+    if (citaInput) citaInput.disabled = false;
+    if (fechaInput) {
+      fechaInput.disabled = false;
+      fechaInput.required = true;
+    }
+    if (horaInput) {
+      horaInput.disabled = true;
+      horaInput.required = true;
+    }
+    if (submitBtn) submitBtn.textContent = 'Agendar llamada';
     updateHoraOptions();
   }
 
@@ -600,93 +827,85 @@ if (isset($_GET['Msg'])) {
     return 'otro';
   }
 
-  function injectGPS(pos){
-    if(!gpsDiv) return;
-    var latitude = pos.coords.latitude;
-    var longitud = pos.coords.longitude;
-    var accuracy = pos.coords.accuracy;
-    var ts  = Date.now();
+  setOrigenVisible(detectOrigenVisible());
 
-    gpsDiv.innerHTML =
-      "<input type='hidden' name='latitud' value='"+latitude+"'>" +
-      "<input type='hidden' name='longitud' value='"+longitud+"'>" +
-      "<input type='hidden' name='accuracy' value='"+accuracy+"'>" +
-      "<input type='hidden' name='GeoTS' value='"+ts+"'>";
-  }
-
-  function showGeoMessage(hint){
-    var useModal = (window.jQuery && typeof jQuery.fn.modal === 'function');
-    if (useModal) {
-      if (hint) {
-        var p = document.getElementById('geoModalHint');
-        if (p){ p.textContent = hint; p.style.display='block'; }
+  if (window.jQuery && form) {
+    window.jQuery(form).on('submit', function(e){
+      e.preventDefault();
+      if (form.checkValidity && !form.checkValidity()) {
+        if (form.reportValidity) form.reportValidity();
+        return;
       }
-      jQuery('#geoModal').modal('show');
-    } else {
-      alert("Por disposición oficial debes permitir que KASU rastree tu ubicación.\n\n" + (hint || ""));
-    }
-  }
 
-  function geoError(err){
-    var hint = "";
-    if (err && typeof err.code !== 'undefined') {
-      if (err.code === 1) hint = "Permiso denegado. Habilita la ubicación en la configuración del navegador.";
-      if (err.code === 2) hint = "Ubicación no disponible. Activa el GPS/Ubicación del dispositivo e inténtalo de nuevo.";
-      if (err.code === 3) hint = "Tiempo de espera agotado. Intenta nuevamente con mejor señal.";
-    }
-    showGeoMessage(hint);
-  }
+      var $form = window.jQuery(form);
+      var keepDisabled = false;
+      var data = $form.serialize();
+      data += (data ? '&' : '') + 'ajax=1';
 
-  function requestGeo(){
-    if (!navigator.geolocation) {
-      showGeoMessage("Tu navegador no soporta geolocalización. Por favor usa un navegador actualizado.");
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(injectGPS, geoError, {
-      enableHighAccuracy: true,
-      maximumAge: 0,
-      timeout: 10000
+      if (!agendaActive) {
+        if (submitBtn) submitBtn.disabled = true;
+        setMsg('Registrando tus datos...', false);
+        window.jQuery.ajax({
+          url: form.action,
+          method: 'POST',
+          data: data,
+          dataType: 'json'
+        }).done(function(res){
+          if (res && res.ok && res.prospectoId) {
+            if (prospectoIdInput) prospectoIdInput.value = res.prospectoId;
+            setMsg('Listo. Ahora agenda tu llamada.', false);
+            showAgenda();
+          } else {
+            setMsg((res && res.msg) ? res.msg : 'No se pudo registrar el prospecto.', true);
+          }
+        }).fail(function(){
+          setMsg('No se pudo registrar el prospecto. Intenta de nuevo.', true);
+        }).always(function(){
+          if (submitBtn) submitBtn.disabled = false;
+        });
+        return;
+      }
+
+      if (!prospectoIdInput || !prospectoIdInput.value) {
+        setMsg('Falta el folio del prospecto. Intenta de nuevo.', true);
+        return;
+      }
+
+      var fechaVal = fechaInput ? fechaInput.value : '';
+      var horaVal = horaInput ? horaInput.value : '';
+      if (!fechaVal || !horaVal) {
+        setMsg('Completa la fecha y hora para agendar la llamada.', true);
+        return;
+      }
+      data += '&Cita=1';
+      data += '&IdProspecto=' + encodeURIComponent(prospectoIdInput.value);
+      data += '&FechaCita=' + encodeURIComponent(fechaVal);
+      data += '&HoraCita=' + encodeURIComponent(horaVal);
+
+      if (submitBtn) submitBtn.disabled = true;
+      setMsg('Agendando llamada...', false);
+      window.jQuery.ajax({
+        url: form.action,
+        method: 'POST',
+        data: data,
+        dataType: 'json'
+      }).done(function(res){
+        if (res && res.ok) {
+          if (res.send_url) {
+            window.jQuery.get(res.send_url);
+          }
+          setMsg(res.msg ? res.msg : 'Tu llamada quedo agendada y te enviamos la guia.', false);
+          keepDisabled = true;
+        } else {
+          setMsg((res && res.msg) ? res.msg : 'No se pudo agendar la llamada.', true);
+        }
+      }).fail(function(){
+        setMsg('No se pudo agendar la llamada. Intenta de nuevo.', true);
+      }).always(function(){
+        if (!keepDisabled && submitBtn) submitBtn.disabled = false;
+      });
     });
   }
-
-  document.addEventListener('click', function(e){
-    if (e.target && e.target.id === 'btnGeoRetry') {
-      requestGeo();
-    }
-  });
-
-  function initGeo(){
-    if (!navigator.geolocation) { showGeoMessage(); return; }
-
-    if (navigator.permissions && navigator.permissions.query) {
-      navigator.permissions.query({ name: 'geolocation' }).then(function(status){
-        if (status.state === 'granted') {
-          requestGeo();
-        } else if (status.state === 'denied') {
-          showGeoMessage("La geolocalización está bloqueada. Debes habilitarla en la configuración del navegador.");
-        } else {
-          navigator.geolocation.getCurrentPosition(injectGPS, function(err){
-            geoError(err || {code:1});
-          }, { enableHighAccuracy:true, maximumAge:0, timeout:10000 });
-        }
-        status.onchange = function(){
-          if (status.state === 'granted') requestGeo();
-        };
-      }).catch(function(){
-        requestGeo();
-      });
-    } else {
-      requestGeo();
-    }
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initGeo);
-  } else {
-    initGeo();
-  }
-
-  setOrigenVisible(detectOrigenVisible());
 })();
 </script>
 

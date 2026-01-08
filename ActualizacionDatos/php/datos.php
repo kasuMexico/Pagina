@@ -13,6 +13,7 @@ date_default_timezone_set('America/Mexico_City');
 header_remove('X-Powered-By');
 
 session_start();
+require_once __DIR__ . '/../../eia/analytics_bootstrap.php';
 require_once '../../eia/librerias.php';
 if (!isset($mysqli) || !($mysqli instanceof mysqli)) { http_response_code(500); exit('Error de conexión.'); }
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);

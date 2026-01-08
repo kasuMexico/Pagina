@@ -86,6 +86,16 @@ function s_choice($v, array $allowed): ?string {
   $x = strtoupper(trim((string)$v));
   return in_array($x, $allowed, true) ? $x : null;
 }
+function is_ajax_request(): bool {
+  if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower((string)$_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+    return true;
+  }
+  if (array_key_exists('ajax', $_POST)) {
+    $val = strtolower(trim((string)$_POST['ajax']));
+    return $val !== '' && $val !== '0' && $val !== 'false' && $val !== 'no';
+  }
+  return false;
+}
 function table_exists(mysqli $db, string $table): bool {
   $sql = "SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ? LIMIT 1";
   $stmt = $db->prepare($sql);
@@ -206,6 +216,19 @@ function redirect303(string $url): never {
   header('Location: '.$url, true, 303);
   exit;
 }
+function json_response(array $payload): never {
+  header('Content-Type: application/json; charset=UTF-8');
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+  exit;
+}
+
+$isAjax = is_ajax_request();
+$hostFromPost = s_str($_POST['Host'] ?? '');
+if (!$isAjax && $hostFromPost && stripos($hostFromPost, 'prospectos') !== false) {
+  if (isset($_POST['prospectoNvo']) || isset($_POST['Cita'])) {
+    $isAjax = true;
+  }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['agenda_slots'])) {
   $fecha = s_date($_GET['fecha'] ?? null);
@@ -238,6 +261,13 @@ $Rastreo      = s_str(p_get('Rastreo')) ?? $OrigenVisible;
 $MotivoBaja   = s_str(p_get('MotivoBaja'));
 $NvoVend      = s_int(p_get('NvoVend'));
 
+if ($isAjax && isset($_POST['Cita']) && (!$IdProspecto || !$FechaCita)) {
+  json_response([
+    'ok' => false,
+    'msg' => 'Completa la fecha y hora para agendar la llamada.',
+  ]);
+}
+
 /* =========================================================================
    BLOQUE: Registra un nuevo prospecto
    ========================================================================= */
@@ -265,6 +295,7 @@ if (isset($_POST['prospectoNvo'])) {
   $ValidacionProducto = '';
   $FullNameToSave = null;
   $FechaNacSave = $FechaNac;
+  $prospectoId = 0;
 
   // Duplicados en BD de prospectos
   $CurpValid = $basicas->BuscarCampos($pros,   'Id', 'prospectos', 'Curp', $Curp);
@@ -378,13 +409,26 @@ if (isset($_POST['prospectoNvo'])) {
     }
   }
 
-  if (($prospectoId ?? 0) > 0 && $Email !== null) {
+  if ($isAjax) {
+    json_response([
+      'ok' => $prospectoId > 0,
+      'msg' => $Msg,
+      'prospectoId' => $prospectoId,
+      'servicio' => $Servicio_Interes ?? null,
+    ]);
+  }
+
+  if (($prospectoId ?? 0) > 0 && $Email !== null && !$isAjax) {
     $_SESSION['mail_token'] = bin2hex(random_bytes(32));
+    $redirAgenda = 'https://kasu.com.mx/prospectos.php?step=agenda&IdProspecto=' . (int)$prospectoId;
+    if (!empty($Servicio_Interes)) {
+      $redirAgenda .= '&producto=' . rawurlencode((string)$Servicio_Interes);
+    }
     $params = [
       'EnviarGuia'  => 1,
       'IdProspecto' => $prospectoId,
       'mail_token'  => $_SESSION['mail_token'],
-      'Redireccion' => 'https://kasu.com.mx/',
+      'Redireccion' => $redirAgenda,
       'MsgBase'     => $Msg,
     ];
     header('Location: https://kasu.com.mx/eia/EnviarCorreo.php?' . http_build_query($params), true, 303);
@@ -540,6 +584,7 @@ if (isset($_POST['Autom']) && $IdProspecto) {
    BLOQUE: Registrar cita con prospecto (proveniente de correo)
    ========================================================================= */
 if (isset($_POST['Cita']) && $IdProspecto && $FechaCita) {
+  $Msg = 'Tu llamada quedo agendada. En breve recibiras la guia en tu correo.';
   $CitaReg = [
     'IdProspecto'   => $IdProspecto,
     'Telefono'      => $Telefono,
@@ -550,6 +595,8 @@ if (isset($_POST['Cita']) && $IdProspecto && $FechaCita) {
   ];
   if (table_exists($pros, 'citas')) {
     $basicas->InsertCampo($pros, 'citas', $CitaReg);
+  } else {
+    $Msg = 'Tu llamada quedo registrada, pero falta la tabla de citas.';
   }
 
   $DatEventos = [
@@ -565,6 +612,24 @@ if (isset($_POST['Cita']) && $IdProspecto && $FechaCita) {
   ];
   $basicas->InsertCampo($mysqli, 'Eventos', $DatEventos);
   // Sin redirect explícito aquí por consistencia con tu flujo actual
+
+  $sendUrl = '';
+  if ($IdProspecto > 0) {
+    $_SESSION['mail_token'] = bin2hex(random_bytes(32));
+    $params = [
+      'EnviarGuia'  => 1,
+      'IdProspecto' => $IdProspecto,
+      'mail_token'  => $_SESSION['mail_token'],
+      'Redireccion' => 'https://kasu.com.mx' . ($Host ?: '/prospectos.php'),
+      'MsgBase'     => $Msg,
+    ];
+    $sendUrl = 'https://kasu.com.mx/eia/EnviarCorreo.php?' . http_build_query($params);
+  }
+  json_response([
+    'ok' => true,
+    'msg' => $Msg,
+    'send_url' => $sendUrl,
+  ]);
 }
 
 /* =========================================================================
@@ -765,5 +830,8 @@ if (isset($_POST['FormCotizar'])) {
 }
 
 /* Si no se activó ningún bloque, devolver 400 */
+if ($isAjax) {
+  json_response(['ok' => false, 'msg' => 'Solicitud no válida.']);
+}
 http_response_code(400);
 echo 'Solicitud no válida.';

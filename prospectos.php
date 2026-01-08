@@ -29,6 +29,62 @@ $nombreSafe  = htmlspecialchars((string)$nombre,   ENT_QUOTES, 'UTF-8');
 $selfSafe    = htmlspecialchars((string)($_SERVER['PHP_SELF'] ?? ''), ENT_QUOTES, 'UTF-8');
 $productoSafe= htmlspecialchars($productoRaw, ENT_QUOTES, 'UTF-8');
 
+/* ===== Mapeo de servicio para prospectos ===== */
+function map_servicio_interes(string $productoRaw): string {
+  $key = strtolower(trim($productoRaw));
+  $map = [
+    'funerario'  => 'FUNERARIO',
+    'retiro'     => 'RETIRO',
+    'policias'   => 'SEGURIDAD',
+    'seguridad'  => 'SEGURIDAD',
+    'transporte' => 'TRANSPORTE',
+    'maternidad' => 'MATERNIDAD',
+    'universidad'=> 'UNIVERSIDAD',
+  ];
+  if (isset($map[$key])) return $map[$key];
+  $upper = strtoupper($productoRaw);
+  $allowed = ['FUNERARIO','RETIRO','SEGURIDAD','TRANSPORTE','MATERNIDAD','UNIVERSIDAD','DISTRIBUIDOR'];
+  return in_array($upper, $allowed, true) ? $upper : '';
+}
+$servicioFromQuery = map_servicio_interes($productoRaw);
+
+/* ===== Catalogo de productos (iconos desde ContProd.Image_Desc) ===== */
+$catalogOrder = [1, 2, 3, 6, 7, 8];
+$catalogMeta = [
+  1 => ['value' => 'FUNERARIO',  'fallback_name' => 'Funerario',   'fallback_icon' => '/assets/images/Index/funer.png'],
+  2 => ['value' => 'RETIRO',     'fallback_name' => 'Retiro',      'fallback_icon' => '/assets/images/Index/retiro.png'],
+  3 => ['value' => 'SEGURIDAD',  'fallback_name' => 'Seguridad',   'fallback_icon' => '/assets/images/Index/funer.png'],
+  6 => ['value' => 'TRANSPORTE', 'fallback_name' => 'Transporte',  'fallback_icon' => '/assets/images/Index/funer.png'],
+  7 => ['value' => 'MATERNIDAD', 'fallback_name' => 'Maternidad',  'fallback_icon' => '/assets/images/Index/funer.png'],
+  8 => ['value' => 'UNIVERSIDAD','fallback_name' => 'Universidad', 'fallback_icon' => '/assets/images/Index/retiro.png'],
+];
+$catalogRows = [];
+$catalog = [];
+$sqlCatalog = "SELECT Id, Producto, Nombre, Image_Desc, Imagen_index FROM ContProd WHERE Id IN (1,2,3,6,7,8)";
+if ($resCatalog = $mysqli->query($sqlCatalog)) {
+  while ($row = $resCatalog->fetch_assoc()) {
+    $catalogRows[(int)$row['Id']] = $row;
+  }
+  $resCatalog->free();
+}
+foreach ($catalogOrder as $id) {
+  $meta = $catalogMeta[$id];
+  $row = $catalogRows[$id] ?? [];
+  $label = (string)($row['Nombre'] ?? $meta['fallback_name']);
+  $icon = (string)($row['Image_Desc'] ?? '');
+  if ($icon === '') {
+    $icon = (string)($row['Imagen_index'] ?? $meta['fallback_icon']);
+  }
+  if ($icon === '') {
+    $icon = '/assets/images/kasu_logo.jpeg';
+  }
+  $catalog[] = [
+    'value' => $meta['value'],
+    'label' => $label,
+    'icon'  => $icon,
+  ];
+}
+
 /* ===== CSRF (mismo esquema que el modal de prospectos) ===== */
 $csrf = $_SESSION['csrf_auth'] ?? ($_SESSION['csrf'] ?? null);
 if (!$csrf) {
@@ -60,7 +116,7 @@ if (isset($_GET['Msg'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <!-- SEO básico -->
-  <meta name="description" content="Regístrate como prospecto KASU para recibir información sobre servicios funerarios y planes de retiro.">
+  <meta name="description" content="Regístrate como prospecto KASU para recibir informacion sobre servicios funerarios, maternidad, universidad y planes de retiro.">
   <meta name="author" content="Erendida Itzel Castro Marquez; Jose Carlos Cabrera Monroy">
   <meta name="robots" content="index,follow,max-image-preview:large">
 
@@ -138,6 +194,33 @@ if (isset($_GET['Msg'])) {
       box-sizing:border-box;
       min-width:0;
     }
+    .ProspectoProductos {
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+    }
+    .ProdCard {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:8px;
+      padding:12px;
+      border:1px solid #d6dbdf;
+      border-radius:12px;
+      cursor:pointer;
+      width:160px;
+      background:#fff;
+    }
+    .ProdCard img {
+      width:96px;
+      height:auto;
+      border-radius:8px;
+    }
+    .ProdCard input[type="radio"] { display:none; }
+    .ProdCard.active {
+      border-color:#012F91;
+      box-shadow:0 0 0 2px rgba(1,47,145,.15);
+    }
     .ProspectoForm small {
       color:#777;
     }
@@ -208,7 +291,7 @@ if (isset($_GET['Msg'])) {
         <h1>Regístrate para recibir información</h1>
         <p>
           Déjanos tus datos para que un asesor KASU pueda contactarte y explicarte
-          cómo funcionan nuestros servicios de gastos funerarios y planes de retiro.
+          como funcionan nuestros servicios funerarios, maternidad, universidad y planes de retiro.
         </p>
       </div>
 
@@ -322,19 +405,29 @@ if (isset($_GET['Msg'])) {
             <small id="HoraLlamadaHint">Lunes a viernes 9:00 a 18:00, sabados 10:00 a 14:00.</small>
           </div>
 
-          <?php if ($productoRaw !== ''): ?>
-            <input type="hidden" name="Servicio" value="<?= $productoSafe ?>">
+          <?php if ($servicioFromQuery !== ''): ?>
+            <input type="hidden" name="Servicio" value="<?= htmlspecialchars($servicioFromQuery, ENT_QUOTES, 'UTF-8') ?>">
           <?php else: ?>
             <div class="form-group">
               <label>Estoy interesado en</label>
-              <select class="form-control" name="Servicio" required>
-                <option value="">Selecciona una opción</option>
-                <option value="FUNERARIO">Gastos funerarios</option>
-                <option value="RETIRO">Ahorro para el retiro</option>
-                <option value="SEGURIDAD">Gastos funerarios oficiales</option>
-                <option value="TRANSPORTE">Servicio de traslado</option>
-                <option value="DISTRIBUIDOR">Ser distribuidor</option>
-              </select>
+              <div class="ProspectoProductos">
+                <?php foreach ($catalog as $item):
+                  $valueSafe = htmlspecialchars($item['value'], ENT_QUOTES, 'UTF-8');
+                  $labelSafe = htmlspecialchars($item['label'], ENT_QUOTES, 'UTF-8');
+                  $iconSafe  = htmlspecialchars($item['icon'], ENT_QUOTES, 'UTF-8');
+                ?>
+                  <label class="ProdCard">
+                    <input type="radio" name="Servicio" value="<?= $valueSafe ?>" required>
+                    <img src="<?= $iconSafe ?>" alt="<?= $labelSafe ?>">
+                    <div class="PTitle"><?= $labelSafe ?></div>
+                  </label>
+                <?php endforeach; ?>
+                <label class="ProdCard">
+                  <input type="radio" name="Servicio" value="DISTRIBUIDOR" required>
+                  <img src="/assets/images/kasu_logo.jpeg" alt="Distribuidor">
+                  <div class="PTitle">Distribuidor</div>
+                </label>
+              </div>
             </div>
           <?php endif; ?>
 
@@ -387,6 +480,15 @@ if (isset($_GET['Msg'])) {
   if (toggleCurpBackBtn) {
     toggleCurpBackBtn.addEventListener('click', function(){ setCurpMode(false); });
   }
+
+  document.addEventListener('click', function(e){
+    var card = e.target.closest('.ProdCard');
+    if (!card) return;
+    document.querySelectorAll('.ProdCard').forEach(function(el){ el.classList.remove('active'); });
+    card.classList.add('active');
+    var r = card.querySelector('input[type="radio"]');
+    if (r) r.checked = true;
+  });
 
   function formatHora(mins){
     var h = Math.floor(mins / 60);

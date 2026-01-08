@@ -49,29 +49,29 @@ if ($qsMsg !== null) {
 <head>
     <meta charset="utf-8">
     <!-- SEO básico -->
-    <title>Gastos funerarios a futuro | KASU</title>
-    <meta name="description" content="KASU ofrece servicios funerarios a futuro en México: pago único, sin renovaciones, cobertura nacional y atención inmediata. Cotiza con tu CURP.">
+    <title>Planes funerarios y servicios funerarios | KASU</title>
+    <meta name="description" content="Planes funerarios y servicios funerarios en Mexico. Plan Servicios funerarios y planes de prevision con red de funeraria y pago unico. Cotiza con tu CURP.">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="canonical" href="https://www.kasu.com.mx/index.php">
+    <link rel="canonical" href="https://kasu.com.mx/">
     <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
     <meta name="author" content="Jose Carlos Cabrera Monroy">
 
     <!-- Hreflang -->
-    <link rel="alternate" href="https://www.kasu.com.mx/index.php" hreflang="es-MX">
-    <link rel="alternate" href="https://www.kasu.com.mx/index.php" hreflang="x-default">
+    <link rel="alternate" href="https://kasu.com.mx/" hreflang="es-MX">
+    <link rel="alternate" href="https://kasu.com.mx/" hreflang="x-default">
 
     <!-- Social (Open Graph / Twitter) -->
     <meta property="og:type" content="website">
     <meta property="og:locale" content="es_MX">
     <meta property="og:site_name" content="KASU">
-    <meta property="og:title" content="Gastos funerarios a futuro | KASU">
-    <meta property="og:description" content="Pago único de por vida, sin cargos ocultos. Cobertura en toda la República Mexicana. Cotiza con tu CURP.">
-    <meta property="og:url" content="https://www.kasu.com.mx/index.php">
+    <meta property="og:title" content="Planes funerarios y servicios funerarios | KASU">
+    <meta property="og:description" content="Planes funerarios y servicios funerarios con Plan Servicios funerarios y planes de prevision. Cobertura nacional y red de funeraria.">
+    <meta property="og:url" content="https://kasu.com.mx/">
     <meta property="og:image" content="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
     <meta property="og:image:alt" content="Logotipo KASU">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Gastos funerarios a futuro | KASU">
-    <meta name="twitter:description" content="Servicios funerarios a futuro con un pago unico. Atencion inmediata 24/7.">
+    <meta name="twitter:title" content="Planes funerarios y servicios funerarios | KASU">
+    <meta name="twitter:description" content="Planes funerarios y servicios funerarios con Plan Servicios funerarios y planes de prevision. Atencion inmediata 24/7.">
     <meta name="twitter:image" content="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
 
     <!-- PWA/Branding menor -->
@@ -104,7 +104,7 @@ if ($qsMsg !== null) {
         {
           "@type": "Organization",
           "name": "KASU",
-          "url": "https://www.kasu.com.mx/",
+          "url": "https://kasu.com.mx/",
           "logo": "https://kasu.com.mx/assets/images/kasu_logo.jpeg",
           "brand": "KASU",
           "sameAs": [
@@ -124,11 +124,11 @@ if ($qsMsg !== null) {
         {
           "@type": "WebSite",
           "name": "KASU",
-          "url": "https://www.kasu.com.mx/",
+          "url": "https://kasu.com.mx/",
           "inLanguage": "es-MX",
           "potentialAction": {
             "@type": "SearchAction",
-            "target": "https://www.kasu.com.mx/index.php?q={search_term_string}",
+            "target": "https://kasu.com.mx/?q={search_term_string}",
             "query-input": "required name=search_term_string"
           }
         }
@@ -155,7 +155,7 @@ if ($qsMsg !== null) {
 
         <!-- Contenido encima del fondo -->
         <div class="main-banner-content">
-            <h1 class="sr-only">KASU | Servicios funerarios a futuro en Mexico</h1>
+            <h1 class="sr-only">KASU | Planes funerarios y servicios funerarios en Mexico</h1>
             <div class="container">
                 <div class="row" itemscope itemtype="https://schema.org/Service">
                     <meta itemprop="serviceType" content="Servicios funerarios a futuro">
@@ -175,8 +175,8 @@ if ($qsMsg !== null) {
                                                 loading="lazy" decoding="async">
                                             Servicios a futuro
                                         </h6>
-                                        <h2>Servicios de <span>Gastos Funerarios</span> y mucho</em> mas</h2>
-                                        <p>La vision de <strong>KASU</strong> es lograr una cobertura universal para las familias mexicanas en lo que se refiere a servicios funerarios.</p>
+                                        <h2>Planes funerarios y <span>servicios funerarios</span> para tu familia</h2>
+                                        <p>La vision de <strong>KASU</strong> es lograr una cobertura universal para las familias mexicanas, con planes de prevision y una red de funeraria lista para atenderte.</p>
                                         <div class="hero-consulta" id="hero-consulta">
                                             <div class="hero-consulta-form" role="search" aria-label="Consulta por CURP">
                                                 <div class="input-group mb-3">

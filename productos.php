@@ -75,14 +75,54 @@ function slugify($text) {
   $text = preg_replace('~[^-a-z0-9]+~', '', $text);
   return $text ?: 'producto';
 }
-$slug      = slugify($Reg['Nombre'] ?? ('producto-'.$artId));
+
+// Slugs canónicos fijos para evitar cambios por nombre
+$slugMap = [
+  1 => 'gastos-funerarios',
+  2 => 'plan-privado-de-retiro',
+  3 => 'gastos-funerarios-policias',
+  6 => 'gastos-funerarios-taxistas',
+  7 => 'kasu-maternidad',
+  8 => 'kasu-futuro-18',
+];
+$slug      = $slugMap[$artId] ?? slugify($Reg['Nombre'] ?? ('producto-'.$artId));
 $canonical = 'https://kasu.com.mx/productos/' . $slug;
 
-$seoTitle = 'KASU | ' . htmlspecialchars($Reg['Nombre'] ?? 'Producto', ENT_QUOTES, 'UTF-8');
-$rawDesc  = $Reg['DesIni_Producto'] ?? ($Reg['Descripcion_Producto'] ?? ($Reg['Nombre'] ?? ''));
-$seoDesc  = htmlspecialchars(mb_substr(trim(strip_tags((string)$rawDesc)), 0, 160), ENT_QUOTES, 'UTF-8');
+$rawProdName = $Reg['Nombre'] ?? 'Producto';
+$rawProdCat  = $Reg['Producto'] ?? 'Servicios';
+$rawDesc     = $Reg['DesIni_Producto'] ?? ($Reg['Descripcion_Producto'] ?? $rawProdName);
+
+$seoTitleRaw = 'KASU | ' . $rawProdName;
+$seoDescRaw  = mb_substr(trim(strip_tags((string)$rawDesc)), 0, 160);
+$seoKeywordsRaw = 'KASU, Servicio funerario, Servicio universitario, Servicio retiro, Proteccion familiar, ' . $rawProdCat;
+
+if ($artId === 1) {
+  $seoTitleRaw = 'Planes funerarios y servicios funerarios | KASU';
+  $seoDescRaw  = 'Planes funerarios y servicios funerarios con Plan Servicios funerarios y planes de prevision. Cobertura nacional y red de funeraria en Mexico.';
+  $seoKeywordsRaw = 'planes funerarios, servicios funerarios, plan de servicios funerarios, planes de prevision, funeraria, KASU';
+} elseif ($artId === 3) {
+  $seoTitleRaw = 'Planes funerarios para policias | KASU';
+  $seoDescRaw  = 'Planes funerarios para policias y personal de seguridad publica. Servicios funerarios con pago unico y cobertura nacional.';
+  $seoKeywordsRaw = 'planes funerarios para policias, servicios funerarios, seguridad publica, KASU';
+} elseif ($artId === 6) {
+  $seoTitleRaw = 'Planes funerarios para taxistas | KASU';
+  $seoDescRaw  = 'Planes funerarios para taxistas y transportistas. Servicios funerarios con pago unico y cobertura nacional en Mexico.';
+  $seoKeywordsRaw = 'planes funerarios para taxistas, servicios funerarios, transportistas, KASU';
+} elseif ($artId === 7) {
+  $seoTitleRaw = 'KASU Maternidad | Prevision de parto y cesarea';
+  $seoDescRaw  = 'Prevision para maternidad con parto o cesarea en red KASU. Plan a plazos o pago unico, ligado a CURP.';
+  $seoKeywordsRaw = 'kasu maternidad, plan maternidad, prevision maternidad, parto, cesarea, red kasu';
+} elseif ($artId === 8) {
+  $seoTitleRaw = 'KASU Futuro 18 | Universidad y emprendimiento';
+  $seoDescRaw  = 'Plan para capital a los 18: universidad, emprendimiento o certificaciones. Aportaciones en fondo conservador.';
+  $seoKeywordsRaw = 'kasu futuro 18, plan universidad, capital emprendimiento, ahorro 18 años, fondo kasu';
+}
+
+$seoTitle = htmlspecialchars($seoTitleRaw, ENT_QUOTES, 'UTF-8');
+$seoDesc  = htmlspecialchars($seoDescRaw, ENT_QUOTES, 'UTF-8');
 $seoImage = htmlspecialchars($Reg['Imagen_Producto'] ?? 'https://kasu.com.mx/assets/images/kasu_logo.jpeg', ENT_QUOTES, 'UTF-8');
-$prodCat  = htmlspecialchars($Reg['Producto'] ?? 'Servicios', ENT_QUOTES, 'UTF-8');
+$prodCat  = htmlspecialchars($rawProdCat, ENT_QUOTES, 'UTF-8');
+$seoKeywords = htmlspecialchars($seoKeywordsRaw, ENT_QUOTES, 'UTF-8');
 
 /* ---------- 6) Descuento por tarjeta (una sola vez) ---------- */
 $Desc = null;
@@ -140,7 +180,7 @@ if($Reg['Producto'] === 'Policias') {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="author" content="KASU Servicios a Futuro">
   <meta name="robots" content="index,follow,max-image-preview:large">
-  <meta name="keywords" content="KASU, Servicio funerario, Servicio universitario, Servicio retiro, Protección familiar, <?= $prodCat ?>">
+  <meta name="keywords" content="<?= $seoKeywords ?>">
   <meta name="theme-color" content="#F1F1FC">
 
   <!-- Canonical limpia -->
@@ -289,13 +329,7 @@ if($Reg['Producto'] === 'Policias') {
             } elseif (!empty($preference)) {
               // Enlace directo a Mercado Pago: no se anexa idp
               echo '<a href="' . htmlspecialchars($preference, ENT_QUOTES) . '" class="kasu-btn product-btn"><strong>Comprar</strong></a>';
-            } elseif($Reg['Producto'] !== 'Funerario') {
-                $buyUrl = url_with_idp('/registro.php?pro=' . $dat, $idp);
-                //Construimos el numero de telefono
-                $dest = preg_replace('/\D+/', '', $tel ?? '');
-                //Imprimimos el boton
-                echo '<a href="https://wa.me/'.$dest.'?text='.$Mensaje.'" class="kasu-btn product-btn"><strong>Contactar un Agente</strong></a>';
-              } else {
+            } else {
                 $buyUrl = url_with_idp('/registro.php?pro=' . $dat, $idp);
                 echo '<a href="' . htmlspecialchars($buyUrl, ENT_QUOTES) . '" class="kasu-btn product-btn"><strong>Comprar Ahora</strong></a>';
               }
@@ -325,15 +359,9 @@ if($Reg['Producto'] === 'Policias') {
                 echo '<a href="' . htmlspecialchars($buyUrl, ENT_QUOTES) . '" class="kasu-btn product-btn"><strong>Descuento hoy $ ' . number_format((float)$Desc, 2) . '</strong></a>';
               } elseif (!empty($preference)) {
                 echo '<a href="' . htmlspecialchars($preference, ENT_QUOTES) . '" class="kasu-btn product-btn"><strong>Comprar</strong></a>';
-              } elseif($Reg['Producto'] !== 'Funerario') {
-                $buyUrl = url_with_idp('/registro.php?pro=' . $dat, $idp);
-                //Construimos el numero de telefono
-                $dest = preg_replace('/\D+/', '', $tel ?? '');
-                //Imprimimos el boton
-                echo '<a href="https://wa.me/'.$dest.'?text='.$Mensaje.'" class="kasu-btn product-btn"><strong>Contactar un Agente</strong></a>';
               } else {
                 $buyUrl = url_with_idp('/registro.php?pro=' . $dat, $idp);
-                echo '<a href="' . htmlspecialchars($buyUrl, ENT_QUOTES) . '" class="kasu-btn product-btn"><strong>Contratar a un agente</strong></a>';
+                echo '<a href="' . htmlspecialchars($buyUrl, ENT_QUOTES) . '" class="kasu-btn product-btn"><strong>Comprar Ahora</strong></a>';
               }
             ?>
 

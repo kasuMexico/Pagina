@@ -50,6 +50,9 @@ $slugMap = [
   1 => 'gastos-funerarios',
   2 => 'plan-privado-de-retiro',
   3 => 'gastos-funerarios-policias',
+  6 => 'gastos-funerarios-taxistas',
+  7 => 'kasu-maternidad',
+  8 => 'kasu-futuro-18',
 ];
 
 // Cargar todos los productos excepto el actual

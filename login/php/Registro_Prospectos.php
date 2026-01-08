@@ -243,7 +243,7 @@ $NvoVend      = s_int(p_get('NvoVend'));
    ========================================================================= */
 if (isset($_POST['prospectoNvo'])) {
 
-  $SERV_ALLOWED = ['FUNERARIO','SEGURIDAD','TRANSPORTE','RETIRO','DISTRIBUIDOR'];
+  $SERV_ALLOWED = ['FUNERARIO','SEGURIDAD','TRANSPORTE','RETIRO','MATERNIDAD','UNIVERSIDAD','DISTRIBUIDOR'];
 
   $Curp             = s_curp(p_get('Curp') ?? p_get('CURP'));
   $FullNameInput    = s_str(p_get('FullName') ?? p_get('NombreCompleto') ?? p_get('Nombre'));
@@ -613,7 +613,7 @@ if (isset($_POST['CamDat']) && $IdProspecto) {
   $NoTel           = s_phone10(p_get('NoTel') ?? p_get('Telefono'));
   $Email           = s_email(p_get('Email'));
   $Direccion       = s_str(p_get('Direccion'));
-  $Servicio_Interes= s_choice(p_get('Servicio_Interes') ?? p_get('Servicio'), ['FUNERARIO','SEGURIDAD','TRANSPORTE','RETIRO','DISTRIBUIDOR']);
+  $Servicio_Interes= s_choice(p_get('Servicio_Interes') ?? p_get('Servicio'), ['FUNERARIO','SEGURIDAD','TRANSPORTE','RETIRO','MATERNIDAD','UNIVERSIDAD','DISTRIBUIDOR']);
 
   $stmt = $pros->prepare('SELECT * FROM prospectos WHERE Id = ? LIMIT 1');
   $stmt->bind_param('i', $IdProspecto);

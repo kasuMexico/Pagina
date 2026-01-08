@@ -56,7 +56,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'price_quote') {
 
   $curp = strtoupper(preg_replace('/[^A-Z0-9]/', '', (string)($_GET['curp'] ?? '')));
   $producto = trim((string)($_GET['producto'] ?? ''));
-  if (strlen($curp)!==18 || !is_curp($curp) || !in_array($producto, ['Funerario','Retiro'], true)) {
+  $prodAllow = ['Funerario','Retiro','Seguridad','Transporte','Maternidad','Universidad'];
+  if (strlen($curp)!==18 || !is_curp($curp) || !in_array($producto, $prodAllow, true)) {
     http_response_code(400);
     echo json_encode(['ok'=>false,'error'=>'Parámetros inválidos'], JSON_UNESCAPED_UNICODE);
     exit;
@@ -64,7 +65,17 @@ if (isset($_GET['action']) && $_GET['action'] === 'price_quote') {
 
   try {
     $edad = (int)$basicas->ObtenerEdad($curp);
-    $prodTarifa = ($producto === 'Retiro') ? 'Retiro' : $basicas->ProdFune($edad);
+    if ($producto === 'Retiro') {
+      $prodTarifa = 'Retiro';
+    } elseif ($producto === 'Seguridad') {
+      $prodTarifa = $basicas->ProdPli($edad);
+    } elseif ($producto === 'Transporte') {
+      $prodTarifa = $basicas->ProdTrans($edad);
+    } else {
+      $prodTarifa = ($producto === 'Maternidad' || $producto === 'Universidad')
+        ? $producto
+        : $basicas->ProdFune($edad);
+    }
     $costo = (float)$basicas->BuscarCampos($mysqli, 'Costo', 'Productos', 'Producto', $prodTarifa);
     $tasaAnual = (float)$basicas->BuscarCampos($mysqli, 'TasaAnual', 'Productos', 'Producto', $prodTarifa);
     //Valida el descuento
@@ -88,6 +99,12 @@ if (isset($_GET['action']) && $_GET['action'] === 'price_quote') {
     if ($producto === 'Retiro') {
       $pago = ['CONTADO' => 'CONTADO'];
       $plazos = [];
+    } elseif ($producto === 'Maternidad') {
+      $pago = ['CREDITO' => 'CRÉDITO', 'CONTADO' => 'CONTADO'];
+      $plazos = ['24'=>'24 Meses','36'=>'36 Meses'];
+    } elseif ($producto === 'Universidad') {
+      $pago = ['CREDITO' => 'CRÉDITO', 'CONTADO' => 'CONTADO'];
+      $plazos = ['120'=>'120 Meses'];
     } else {
       $pago = ['CREDITO' => 'CRÉDITO', 'CONTADO' => 'CONTADO'];
       $plazos = ['3'=>'3 Meses','6'=>'6 Meses','9'=>'9 Meses'];
@@ -118,8 +135,53 @@ $csrf = $_SESSION['csrf_reg'];
 
 /* ===== Preselección por ?pro= ===== */
 $pro      = filter_input(INPUT_GET, 'pro', FILTER_VALIDATE_INT) ?: 0;
-$proMap   = [1 => 'Funerario', 2 => 'Retiro', 3 => 'Seguridad'];
+$proMap   = [1 => 'Funerario', 2 => 'Retiro', 3 => 'Seguridad', 6 => 'Transporte', 7 => 'Maternidad', 8 => 'Universidad'];
 $proName  = $proMap[$pro] ?? '';
+$prodValues = array_values($proMap);
+$defaultProducto = in_array($proName, $prodValues, true) ? $proName : 'Funerario';
+
+/* ===== Catalogo de productos (iconos desde ContProd.Image_Desc) ===== */
+$catalogOrder = [1, 2, 3, 6, 7, 8];
+$catalogMeta = [
+  1 => ['value' => 'Funerario',  'fallback_name' => 'Funerario',   'fallback_icon' => '/assets/images/Index/funer.png'],
+  2 => ['value' => 'Retiro',     'fallback_name' => 'Retiro',      'fallback_icon' => '/assets/images/Index/retiro.png'],
+  3 => ['value' => 'Seguridad',  'fallback_name' => 'Seguridad',   'fallback_icon' => '/assets/images/Index/funer.png'],
+  6 => ['value' => 'Transporte', 'fallback_name' => 'Transporte',  'fallback_icon' => '/assets/images/Index/funer.png'],
+  7 => ['value' => 'Maternidad', 'fallback_name' => 'Maternidad',  'fallback_icon' => '/assets/images/Index/funer.png'],
+  8 => ['value' => 'Universidad','fallback_name' => 'Universidad', 'fallback_icon' => '/assets/images/Index/retiro.png'],
+];
+$catalogRows = [];
+$catalog = [];
+$sqlCatalog = "SELECT Id, Producto, Nombre, Image_Desc, Imagen_index FROM ContProd WHERE Id IN (1,2,3,6,7,8)";
+if ($resCatalog = $mysqli->query($sqlCatalog)) {
+  while ($row = $resCatalog->fetch_assoc()) {
+    $catalogRows[(int)$row['Id']] = $row;
+  }
+  $resCatalog->free();
+}
+foreach ($catalogOrder as $id) {
+  $meta = $catalogMeta[$id];
+  $row = $catalogRows[$id] ?? [];
+  $label = (string)($row['Nombre'] ?? $meta['fallback_name']);
+  $icon = (string)($row['Image_Desc'] ?? '');
+  if ($icon === '') {
+    $icon = (string)($row['Imagen_index'] ?? $meta['fallback_icon']);
+  }
+  if ($icon === '') {
+    $icon = '/assets/images/kasu_logo.jpeg';
+  }
+  $catalog[] = [
+    'value' => $meta['value'],
+    'label' => $label,
+    'icon'  => $icon,
+  ];
+}
+$preselectedProduct = in_array($proName, $prodValues, true) ? $proName : '';
+$catalogToShow = $preselectedProduct !== ''
+  ? array_values(array_filter($catalog, function($item) use ($preselectedProduct) {
+      return $item['value'] === $preselectedProduct;
+    }))
+  : $catalog;
 
 /* ===== Cupón (opcional) ===== */
 $Producto  = $_SESSION['Producto'] ?? ($proName ?: null);
@@ -328,17 +390,18 @@ if (isset($_GET['Msg'])) {
 
         <!-- Selección de producto -->
         <div class="Botones" style="margin:10px 0">
-          <label class="ProdCard <?= $proName==='Funerario' ? 'active' : '' ?>">
-            <input type="radio" name="Producto" value="Funerario" <?= $proName==='Funerario' ? 'checked' : '' ?> required>
-            <img src="assets/images/Index/funer.png" alt="Servicio Funerario KASU" style="width:60%">
-            <div class="PTitle">Funerario</div>
-          </label>
-
-          <label class="ProdCard <?= $proName==='Retiro' ? 'active' : '' ?>">
-            <input type="radio" name="Producto" value="Retiro" <?= $proName==='Retiro' ? 'checked' : '' ?> required>
-            <img src="assets/images/Index/retiro.png" alt="Plan Retiro KASU" style="width:60%">
-            <div class="PTitle">Retiro</div>
-          </label>
+          <?php foreach ($catalogToShow as $item):
+            $isActive = ($defaultProducto === $item['value']);
+            $valueSafe = htmlspecialchars($item['value'], ENT_QUOTES, 'UTF-8');
+            $labelSafe = htmlspecialchars($item['label'], ENT_QUOTES, 'UTF-8');
+            $iconSafe  = htmlspecialchars($item['icon'], ENT_QUOTES, 'UTF-8');
+          ?>
+            <label class="ProdCard <?= $isActive ? 'active' : '' ?>">
+              <input type="radio" name="Producto" value="<?= $valueSafe ?>" <?= $isActive ? 'checked' : '' ?> required>
+              <img src="<?= $iconSafe ?>" alt="<?= $labelSafe ?>" style="width:60%">
+              <div class="PTitle"><?= $labelSafe ?></div>
+            </label>
+          <?php endforeach; ?>
         </div>
 
         <!-- Tipo de servicio (solo Funerario) -->

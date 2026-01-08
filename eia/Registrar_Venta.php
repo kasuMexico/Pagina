@@ -3,6 +3,7 @@
  * ESTE ARCHIVO REALIZA LOS REGISTROS DE VENTA - 
  * 15 de noviembre 2025 - 
  * Jose Carlos Cabrera Monroy 
+ * Archivo: Registrar_Venta.php
  ********************************************************************************************************************************************/
 
 session_start();

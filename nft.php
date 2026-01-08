@@ -346,11 +346,10 @@ function some_function3($VAr) {
     }
 
     if (chatForm && chatInput && chatBody) {
-      chatForm.addEventListener('submit', function (event) {
-        event.preventDefault();
-        var message = chatInput.value.trim();
-        if (!message) return;
+      var endpoint = '/eia/Vista-360/kasu_chat_publico.php';
+      var typingNode = null;
 
+      var appendUserMessage = function (message) {
         var wrapper = document.createElement('div');
         wrapper.className = 'kasu-chat-message kasu-chat-message--user';
         var bubble = document.createElement('div');
@@ -358,8 +357,103 @@ function some_function3($VAr) {
         bubble.textContent = message;
         wrapper.appendChild(bubble);
         chatBody.appendChild(wrapper);
+      };
+
+      var appendBotMessage = function (html) {
+        var wrapper = document.createElement('div');
+        wrapper.className = 'kasu-chat-message kasu-chat-message--bot';
+        var avatar = document.createElement('img');
+        avatar.src = '/assets/images/flor_redonda.svg';
+        avatar.alt = 'KASU';
+        avatar.className = 'kasu-chat-avatar';
+        avatar.width = 26;
+        avatar.height = 26;
+        avatar.loading = 'lazy';
+        avatar.decoding = 'async';
+        var bubble = document.createElement('div');
+        bubble.className = 'kasu-chat-bubble';
+        bubble.innerHTML = html;
+        wrapper.appendChild(avatar);
+        wrapper.appendChild(bubble);
+        chatBody.appendChild(wrapper);
+      };
+
+      var showTyping = function () {
+        if (typingNode) return;
+        typingNode = document.createElement('div');
+        typingNode.className = 'kasu-chat-message kasu-chat-message--bot';
+        var avatar = document.createElement('img');
+        avatar.src = '/assets/images/flor_redonda.svg';
+        avatar.alt = 'KASU';
+        avatar.className = 'kasu-chat-avatar';
+        avatar.width = 26;
+        avatar.height = 26;
+        avatar.loading = 'lazy';
+        avatar.decoding = 'async';
+        var bubble = document.createElement('div');
+        bubble.className = 'kasu-chat-bubble';
+        bubble.textContent = 'Escribiendo...';
+        typingNode.appendChild(avatar);
+        typingNode.appendChild(bubble);
+        chatBody.appendChild(typingNode);
+      };
+
+      var hideTyping = function () {
+        if (!typingNode) return;
+        typingNode.remove();
+        typingNode = null;
+      };
+
+      chatForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        var message = chatInput.value.trim();
+        if (!message) return;
+
+        appendUserMessage(message);
         chatBody.scrollTop = chatBody.scrollHeight;
         chatInput.value = '';
+        chatInput.disabled = true;
+        showTyping();
+
+        var chatToken = localStorage.getItem('kasu_chat_token');
+        if (!chatToken) {
+          if (window.crypto && window.crypto.randomUUID) {
+            chatToken = window.crypto.randomUUID();
+          } else {
+            chatToken = 'kasu_' + Date.now() + '_' + Math.random().toString(16).slice(2);
+          }
+          localStorage.setItem('kasu_chat_token', chatToken);
+        }
+
+        fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            mensaje: message,
+            source: window.location.pathname,
+            chat_token: chatToken
+          })
+        })
+        .then(function (resp) { return resp.json(); })
+        .then(function (data) {
+          hideTyping();
+          chatInput.disabled = false;
+          if (data && data.chat_token) {
+            localStorage.setItem('kasu_chat_token', data.chat_token);
+          }
+          if (data && data.ok && data.html) {
+            appendBotMessage(data.html);
+          } else {
+            appendBotMessage('No pude procesar tu solicitud. Intenta de nuevo.');
+          }
+          chatBody.scrollTop = chatBody.scrollHeight;
+        })
+        .catch(function () {
+          hideTyping();
+          chatInput.disabled = false;
+          appendBotMessage('No pude conectar con el chat. Intenta mas tarde.');
+          chatBody.scrollTop = chatBody.scrollHeight;
+        });
       });
     }
   });

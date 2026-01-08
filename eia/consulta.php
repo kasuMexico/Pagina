@@ -4,6 +4,7 @@
  * Compatibilizado con PHP 8.2. Conserva la lógica existente.
  * Fecha: 2025-11-03
  * Revisado por: JCCM
+ * Archivo: consulta.php
  */
 
 require_once '../eia/librerias.php';

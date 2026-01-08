@@ -1,1 +1,0 @@
-/Users/macbook/Documents/GitHub/Pagina/login/php/buscarCliente.php

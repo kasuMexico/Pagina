@@ -326,8 +326,18 @@ a.kasu-fab-action--chat,
   background: #ffffff;
   border: 1px solid var(--home-border, #e3e7ee);
   font-size: 13px;
+  font-weight: 400;
   color: var(--home-text, #151821);
   line-height: 1.4;
+}
+
+.kasu-chat-bubble p {
+  margin: 0 0 6px;
+  font-weight: 400;
+}
+
+.kasu-chat-bubble p:last-child {
+  margin-bottom: 0;
 }
 
 .kasu-chat-panel__form {

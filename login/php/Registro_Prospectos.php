@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__, 2) . '/eia/session.php';
 kasu_session_start();
+ob_start();
 require_once __DIR__ . '/../../eia/librerias.php';
 kasu_apply_error_settings(); // 2025-11-18: Log centralizado para Registro de Prospectos
 date_default_timezone_set('America/Mexico_City');
@@ -106,6 +107,44 @@ function table_exists(mysqli $db, string $table): bool {
   $ok = $res && $res->fetch_row();
   $stmt->close();
   return (bool)$ok;
+}
+function table_columns(mysqli $db, string $table): array {
+  static $cache = [];
+  if (isset($cache[$table])) return $cache[$table];
+  $cols = [];
+  $stmt = $db->prepare("SELECT column_name FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ?");
+  if ($stmt) {
+    $stmt->bind_param('s', $table);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    while ($res && ($row = $res->fetch_assoc())) {
+      $col = strtolower((string)($row['column_name'] ?? ''));
+      if ($col !== '') {
+        $cols[$col] = true;
+      }
+    }
+    $stmt->close();
+  }
+  $cache[$table] = $cols;
+  return $cols;
+}
+function filter_table_fields(mysqli $db, string $table, array $data): array {
+  $cols = table_columns($db, $table);
+  $out = [];
+  foreach ($data as $key => $val) {
+    if (isset($cols[strtolower((string)$key)])) {
+      $out[$key] = $val;
+    }
+  }
+  return $out;
+}
+function safe_insert_event(mysqli $db, $basicas, array $data): void {
+  if (empty($data)) return;
+  try {
+    $basicas->InsertCampo($db, 'Eventos', $data);
+  } catch (Throwable $e) {
+    error_log('Eventos insert fail: ' . $e->getMessage());
+  }
 }
 function agenda_fetch_slots(mysqli $db, ?string $fecha, int $limit): array {
   $limit = max(1, min($limit, 200));
@@ -217,6 +256,9 @@ function redirect303(string $url): never {
   exit;
 }
 function json_response(array $payload): never {
+  if (ob_get_length()) {
+    ob_clean();
+  }
   header('Content-Type: application/json; charset=UTF-8');
   echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
   exit;
@@ -574,7 +616,14 @@ if (isset($_POST['Autom']) && $IdProspecto) {
     'Cupon'         => $Cupon,
     'FechaRegistro' => $hoy.' '.$HoraActual,
   ];
-  $basicas->InsertCampo($mysqli, 'Eventos', $DatEventos);
+  if (!isset($DatEventos['IdUsr']) && isset($DatEventos['Us'])) {
+    $DatEventos['IdUsr'] = $DatEventos['Us'];
+  }
+  unset($DatEventos['Us']);
+  $DatEventos = filter_table_fields($mysqli, 'Eventos', $DatEventos);
+  if (!empty($DatEventos)) {
+    safe_insert_event($mysqli, $basicas, $DatEventos);
+  }
   $basicas->ActCampo($pros, 'prospectos', 'Automatico', 1, $IdProspecto);
 
   redirect303('https://kasu.com.mx'.$Host.'?Ml=5'.($name ? '&name='.rawurlencode($name) : ''));
@@ -610,10 +659,18 @@ if (isset($_POST['Cita']) && $IdProspecto && $FechaCita) {
     'Cupon'         => $Cupon,
     'FechaRegistro' => $hoy.' '.$HoraActual,
   ];
-  $basicas->InsertCampo($mysqli, 'Eventos', $DatEventos);
+  if (!isset($DatEventos['IdUsr']) && isset($DatEventos['Us'])) {
+    $DatEventos['IdUsr'] = $DatEventos['Us'];
+  }
+  unset($DatEventos['Us']);
+  $DatEventos = filter_table_fields($mysqli, 'Eventos', $DatEventos);
+  if (!empty($DatEventos)) {
+    safe_insert_event($mysqli, $basicas, $DatEventos);
+  }
   // Sin redirect explícito aquí por consistencia con tu flujo actual
 
   $sendUrl = '';
+  $sendDone = false;
   if ($IdProspecto > 0) {
     $_SESSION['mail_token'] = bin2hex(random_bytes(32));
     $params = [
@@ -624,11 +681,16 @@ if (isset($_POST['Cita']) && $IdProspecto && $FechaCita) {
       'MsgBase'     => $Msg,
     ];
     $sendUrl = 'https://kasu.com.mx/eia/EnviarCorreo.php?' . http_build_query($params);
+    if ($sendUrl !== '') {
+      $sendRes = @file_get_contents($sendUrl);
+      $sendDone = $sendRes !== false;
+    }
   }
   json_response([
     'ok' => true,
     'msg' => $Msg,
-    'send_url' => $sendUrl,
+    'send_url' => $sendDone ? '' : $sendUrl,
+    'send_done' => $sendDone,
   ]);
 }
 

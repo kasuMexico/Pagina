@@ -170,6 +170,18 @@ if($Reg['Producto'] === 'Policias') {
 }else {
   $Mensaje = 'Estoy%20interesado%20en%20informaci%C3%B3n%20de%20KASU%20para%gastos%funerarios';
 }
+
+// URL de prospectos para el CTA principal
+$prospectoMap = [
+  1 => 'FUNERARIO',
+  2 => 'RETIRO',
+  3 => 'SEGURIDAD',
+  6 => 'TRANSPORTE',
+  7 => 'MATERNIDAD',
+  8 => 'UNIVERSIDAD',
+];
+$prospectoProducto = $prospectoMap[$artId] ?? strtoupper((string)($Reg['Producto'] ?? ''));
+$prospectoUrl = '/prospectos.php?producto=' . rawurlencode($prospectoProducto);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -324,15 +336,12 @@ if($Reg['Producto'] === 'Policias') {
             if (!empty($Desc)) {
               $imgCupon = $basicas->BuscarCampos($mysqli, "Img", "PostSociales", "Id", $_SESSION["tarjeta"]);
               echo '<img class="img-thumbnail product-coupon" src="/assets/images/cupones/' . htmlspecialchars($imgCupon, ENT_QUOTES) . '" alt="Cupón de descuento">';
-              $buyUrl = url_with_idp('/registro.php?pro=' . $dat, $idp);
-              echo '<a href="' . htmlspecialchars($buyUrl, ENT_QUOTES) . '" class="kasu-btn product-btn"><strong>Descuento hoy $ ' . number_format((float)$Desc, 2) . '</strong></a>';
+              echo '<a href="' . htmlspecialchars($prospectoUrl, ENT_QUOTES) . '" class="kasu-btn product-btn"><strong>Descuento hoy $ ' . number_format((float)$Desc, 2) . '</strong></a>';
             } elseif (!empty($preference)) {
-              // Enlace directo a Mercado Pago: no se anexa idp
-              echo '<a href="' . htmlspecialchars($preference, ENT_QUOTES) . '" class="kasu-btn product-btn"><strong>Comprar</strong></a>';
+              echo '<a href="' . htmlspecialchars($prospectoUrl, ENT_QUOTES) . '" class="kasu-btn product-btn"><strong>Comprar</strong></a>';
             } else {
-                $buyUrl = url_with_idp('/registro.php?pro=' . $dat, $idp);
-                echo '<a href="' . htmlspecialchars($buyUrl, ENT_QUOTES) . '" class="kasu-btn product-btn"><strong>Comprar Ahora</strong></a>';
-              }
+              echo '<a href="' . htmlspecialchars($prospectoUrl, ENT_QUOTES) . '" class="kasu-btn product-btn"><strong>Comprar Ahora</strong></a>';
+            }
           ?>
           </div>
         </div>

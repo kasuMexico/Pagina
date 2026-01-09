@@ -899,7 +899,35 @@ if (isset($_GET['Msg'])) {
         } else {
           setMsg((res && res.msg) ? res.msg : 'No se pudo agendar la llamada.', true);
         }
-      }).fail(function(){
+      }).fail(function(jqXHR){
+        var raw = (jqXHR && jqXHR.responseText) ? jqXHR.responseText.trim() : '';
+        var parsed = null;
+        if (raw) {
+          try {
+            parsed = JSON.parse(raw);
+          } catch (err) {
+            var startOk = raw.lastIndexOf('{"ok"');
+            if (startOk === -1) startOk = raw.lastIndexOf('{"ok":');
+            if (startOk === -1) startOk = raw.lastIndexOf('"ok":');
+            var start = startOk !== -1 ? startOk : raw.indexOf('{');
+            var end = raw.lastIndexOf('}');
+            if (start !== -1 && end > start) {
+              var candidate = raw.slice(start, end + 1);
+              if (candidate.charAt(0) !== '{') {
+                candidate = '{' + candidate;
+              }
+              try { parsed = JSON.parse(candidate); } catch (err2) {}
+            }
+          }
+        }
+        if (parsed && parsed.ok) {
+          if (parsed.send_url) {
+            window.jQuery.get(parsed.send_url);
+          }
+          setMsg(parsed.msg ? parsed.msg : 'Tu llamada quedo agendada y te enviamos la guia.', false);
+          keepDisabled = true;
+          return;
+        }
         setMsg('No se pudo agendar la llamada. Intenta de nuevo.', true);
       }).always(function(){
         if (!keepDisabled && submitBtn) submitBtn.disabled = false;

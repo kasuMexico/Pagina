@@ -109,9 +109,12 @@ if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
                     <img src='{$foto}' alt='Foto de {$nombre}' loading='lazy' decoding='async' itemprop='image'>
                   </div>
                   <p class='opinion-text' itemprop='reviewBody'>{$opinion}</p>
-                  <div class='opinion-name' itemprop='author'>{$nombre}</div>
-                  <div class='opinion-service' itemprop='itemReviewed' itemscope itemtype='https://schema.org/Thing'>
-                    <meta itemprop='name' content='{$servicio}'>{$servicio}
+                  <div class='opinion-name' itemprop='author' itemscope itemtype='https://schema.org/Person'>
+                    <span itemprop='name'>{$nombre}</span>
+                  </div>
+                  <div class='opinion-service' itemprop='itemReviewed' itemscope itemtype='https://schema.org/Product'>
+                    <meta itemprop='brand' content='KASU'>
+                    <span itemprop='name'>{$servicio}</span>
                   </div>
                 </article>
               ";

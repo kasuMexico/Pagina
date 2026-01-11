@@ -27,6 +27,9 @@ RewriteRule ^fundacion\.php$ /fundacion [R=301,L]
 RewriteCond %{THE_REQUEST} \s/+testimonios\.php[?\s] [NC]
 RewriteRule ^testimonios\.php$ /testimonios [R=301,L]
 
+RewriteCond %{THE_REQUEST} \s/+funerarias\.php[?\s] [NC]
+RewriteRule ^funerarias\.php$ /funerarias [R=301,L]
+
 RewriteCond %{THE_REQUEST} \s/+terminos-y-condiciones\.php[?\s] [NC]
 RewriteRule ^terminos-y-condiciones\.php$ /terminos-y-condiciones [R=301,L]
 
@@ -89,6 +92,7 @@ RewriteRule ^productos/kasu-futuro-18/?$             /productos.php?Art=8 [QSA,L
 
 # === Páginas canónicas mapeadas (evita 404) ===
 RewriteRule ^testimonios/?$              /testimonios.php            [QSA,L]
+RewriteRule ^funerarias/?$               /funerarias.php             [QSA,L]
 RewriteRule ^terminos-y-condiciones/?$   /terminos-y-condiciones.php [QSA,L]
 RewriteRule ^privacidad/?$               /privacidad.php             [QSA,L]
 RewriteRule ^prospectos/?$               /prospectos.php             [QSA,L]

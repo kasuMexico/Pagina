@@ -83,9 +83,8 @@ $res = $stmt->get_result();
   <div class="col-lg-4 col-md-6 col-sm-12"
        role="listitem"
        itemscope
-       itemtype="https://schema.org/Product">
-    <meta itemprop="brand" content="KASU">
-    <meta itemprop="category" content="Previsión funeraria">
+       itemtype="https://schema.org/Service">
+    <meta itemprop="serviceType" content="Previsión funeraria">
 
     <div class="team-item product-card">
       <a href="<?= $proUrl ?>" class="product-card-link" itemprop="url" aria-label="Conocer más sobre <?= $proName ?>">

@@ -253,8 +253,13 @@ if ($qsMsg !== null) {
                     <div class='opinion-avatar'>
                         <img src='{$foto}' alt='{$nombre}' loading='lazy' decoding='async'>
                     </div>
-                    <div class='opinion-name' itemprop='author'>{$nombre}</div>
-                    <div class='opinion-service' itemprop='itemReviewed'>{$serv}</div>
+                    <div class='opinion-name' itemprop='author' itemscope itemtype='https://schema.org/Person'>
+                        <span itemprop='name'>{$nombre}</span>
+                    </div>
+                    <div class='opinion-service' itemprop='itemReviewed' itemscope itemtype='https://schema.org/Product'>
+                        <meta itemprop='brand' content='KASU'>
+                        <span itemprop='name'>{$serv}</span>
+                    </div>
                     <p class='opinion-text' itemprop='reviewBody'>{$op}</p>
                 </div>
                 ";

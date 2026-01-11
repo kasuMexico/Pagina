@@ -120,9 +120,83 @@ if ($artId === 1) {
 
 $seoTitle = htmlspecialchars($seoTitleRaw, ENT_QUOTES, 'UTF-8');
 $seoDesc  = htmlspecialchars($seoDescRaw, ENT_QUOTES, 'UTF-8');
-$seoImage = htmlspecialchars($Reg['Imagen_Producto'] ?? 'https://kasu.com.mx/assets/images/kasu_logo.jpeg', ENT_QUOTES, 'UTF-8');
+$seoImageRaw = $Reg['Imagen_Producto'] ?? 'https://kasu.com.mx/assets/images/kasu_logo.jpeg';
+$seoImage = htmlspecialchars($seoImageRaw, ENT_QUOTES, 'UTF-8');
 $prodCat  = htmlspecialchars($rawProdCat, ENT_QUOTES, 'UTF-8');
 $seoKeywords = htmlspecialchars($seoKeywordsRaw, ENT_QUOTES, 'UTF-8');
+
+/* ---------- 5.1) Ofertas para datos estructurados ---------- */
+function format_price($value): string {
+  return number_format((float)$value, 2, '.', '');
+}
+
+$paymentTermsText = 'Hasta 12 meses de credito';
+
+$offerMap = [
+  1 => ['type' => 'aggregate', 'low' => 3000,  'high' => 8500,   'count' => 6], // Gastos Funerarios
+  2 => ['type' => 'aggregate', 'low' => 40000, 'high' => 100000, 'count' => 3], // Mi Retiro
+  3 => ['type' => 'aggregate', 'low' => 6800,  'high' => 20500,  'count' => 6], // Oficiales de seguridad
+  6 => ['type' => 'aggregate', 'low' => 6800,  'high' => 20500,  'count' => 6], // Taxistas
+  7 => ['type' => 'aggregate', 'low' => 39900, 'high' => 44900,  'count' => 2], // Plan Bebe en Ruta
+  8 => [
+    'type' => 'monthly',
+    'price' => 3000,
+    'total' => 360000,
+    'term_years' => 10,
+  ], // Arranque Joven
+];
+
+$offerSchema = null;
+if (isset($offerMap[$artId])) {
+  $range = $offerMap[$artId];
+  if ($range['type'] === 'monthly') {
+    $priceMonthly = format_price($range['price']);
+    $totalAmount = format_price($range['total']);
+    $offerSchema = [
+      '@type' => 'Offer',
+      'price' => $priceMonthly,
+      'priceCurrency' => 'MXN',
+      'availability' => 'https://schema.org/InStock',
+      'url' => $canonical,
+      'paymentTerms' => $paymentTermsText,
+      'description' => 'Pago mensual por ' . (int)$range['term_years'] . ' anos (total ' . $totalAmount . ' MXN).',
+      'priceSpecification' => [
+        '@type' => 'UnitPriceSpecification',
+        'price' => $priceMonthly,
+        'priceCurrency' => 'MXN',
+        'billingDuration' => 1,
+        'unitText' => 'MONTH',
+        'name' => 'Pago mensual',
+      ],
+    ];
+  } else {
+    $offerSchema = [
+      '@type' => 'AggregateOffer',
+      'priceCurrency' => 'MXN',
+      'lowPrice' => format_price($range['low']),
+      'highPrice' => format_price($range['high']),
+      'offerCount' => $range['count'],
+      'availability' => 'https://schema.org/InStock',
+      'url' => $canonical,
+      'paymentTerms' => $paymentTermsText,
+    ];
+  }
+}
+
+$productSchema = [
+  '@context' => 'https://schema.org',
+  '@type' => 'Product',
+  'name' => $rawProdName,
+  'image' => $seoImageRaw,
+  'url' => $canonical,
+  'brand' => ['@type' => 'Brand', 'name' => 'KASU'],
+  'category' => $rawProdCat,
+  'description' => $seoDescRaw,
+  'sku' => (string)$artId,
+];
+if ($offerSchema) {
+  $productSchema['offers'] = $offerSchema;
+}
 
 /* ---------- 6) Descuento por tarjeta (una sola vez) ---------- */
 $Desc = null;
@@ -224,16 +298,7 @@ $prospectoUrl = '/prospectos.php?producto=' . rawurlencode($prospectoProducto);
   }
   </script>
   <script type="application/ld+json">
-  {
-    "@context":"https://schema.org",
-    "@type":"Product",
-    "name":"<?= htmlspecialchars($Reg['Nombre'] ?? 'Producto', ENT_QUOTES) ?>",
-    "image":"<?= $seoImage ?>",
-    "url":"<?= htmlspecialchars($canonical, ENT_QUOTES, 'UTF-8') ?>",
-    "brand":{"@type":"Brand","name":"KASU"},
-    "category":"<?= $prodCat ?>",
-    "description":"<?= $seoDesc ?>"
-  }
+  <?= json_encode($productSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?>
   </script>
 
   <!-- Fuentes + Favicon -->

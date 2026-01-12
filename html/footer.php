@@ -15,7 +15,7 @@
   <div class="container">
     <div class="footer-grid" itemscope itemtype="https://schema.org/Organization">
       <div class="footer-col footer-brand">
-        <img src="/assets/images/logo-kasu.png" alt="KASU" class="footer-logo" loading="lazy" decoding="async" itemprop="logo">
+        <img src="/assets/images/logo-kasu.png" alt="KASU" class="footer-logo" loading="lazy" decoding="async" width="100" height="58" itemprop="logo">
         <p class="footer-title" itemprop="description">Contactanos</p>
         <p class="footer-text">Establecer un contacto personal es muy importante para nosotros.</p>
         <ul class="footer-social" role="list" aria-label="Redes sociales de KASU">

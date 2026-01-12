@@ -9,10 +9,14 @@
         <nav class="main-nav" itemscope itemtype="https://schema.org/SiteNavigationElement" aria-label="Navegacion principal">
           <!-- Logo -->
           <a href="/" class="logo" itemprop="url" aria-label="Inicio KASU">
-            <img src="/assets/images/Index/ksulogo.png"
+            <img src="/assets/images/Index/ksulogo-128.png"
+                 srcset="/assets/images/Index/ksulogo-128.png 128w, /assets/images/Index/ksulogo-256.png 256w, /assets/images/Index/ksulogo.png 400w"
+                 sizes="128px"
                  alt="KASU — inicio"
                  loading="eager"
                  decoding="async"
+                 width="128"
+                 height="74"
                  itemprop="image" />
           </a>
 

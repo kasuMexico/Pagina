@@ -125,6 +125,102 @@ $seoImage = htmlspecialchars($seoImageRaw, ENT_QUOTES, 'UTF-8');
 $prodCat  = htmlspecialchars($rawProdCat, ENT_QUOTES, 'UTF-8');
 $seoKeywords = htmlspecialchars($seoKeywordsRaw, ENT_QUOTES, 'UTF-8');
 
+/* ---------- 5.0) Helpers de imagen ---------- */
+function local_image_size(string $src, string $baseDir): array {
+  $path = '';
+  if ($src !== '') {
+    if (preg_match('/^https?:\\/\\//i', $src)) {
+      $parts = parse_url($src);
+      $path = $parts['path'] ?? '';
+    } else {
+      $path = $src;
+    }
+  }
+  if ($path !== '' && $path[0] !== '/') {
+    $path = '/' . $path;
+  }
+  $file = rtrim($baseDir, '/') . $path;
+  if ($path !== '' && is_file($file)) {
+    $size = @getimagesize($file);
+    if (is_array($size) && isset($size[0], $size[1])) {
+      return [(int)$size[0], (int)$size[1]];
+    }
+  }
+  return [0, 0];
+}
+
+function image_variant_url(string $src, string $suffix, string $baseDir): string {
+  if ($src === '') return '';
+  $parts = parse_url($src);
+  $path = $parts['path'] ?? '';
+  if ($path === '') return '';
+  $info = pathinfo($path);
+  if (empty($info['dirname']) || empty($info['filename']) || empty($info['extension'])) return '';
+  $variantPath = rtrim($info['dirname'], '/') . '/' . $info['filename'] . $suffix . '.' . $info['extension'];
+  $file = rtrim($baseDir, '/') . $variantPath;
+  if (!is_file($file)) return '';
+  if (!empty($parts['host'])) {
+    $scheme = $parts['scheme'] ?? 'https';
+    return $scheme . '://' . $parts['host'] . $variantPath;
+  }
+  return $variantPath;
+}
+
+function image_variant_info(string $src, string $suffix, string $baseDir): array {
+  $url = image_variant_url($src, $suffix, $baseDir);
+  if ($url === '') return ['', 0, 0];
+  [$w, $h] = local_image_size($url, $baseDir);
+  return [$url, $w, $h];
+}
+
+function image_srcset(string $src, string $baseDir, array $variants, int $originalWidth): string {
+  $srcset = [];
+  foreach ($variants as $suffix => $width) {
+    $url = image_variant_url($src, $suffix, $baseDir);
+    if ($url !== '') {
+      $srcset[] = $url . ' ' . (int)$width . 'w';
+    }
+  }
+  if ($src !== '' && $originalWidth > 0) {
+    $srcset[] = $src . ' ' . (int)$originalWidth . 'w';
+  }
+  return implode(', ', $srcset);
+}
+
+$heroImageRaw = (string)($Reg['Imagen_Producto'] ?? '');
+[$heroImageW, $heroImageH] = local_image_size($heroImageRaw, __DIR__);
+$heroImageW = $heroImageW ?: 1080;
+$heroImageH = $heroImageH ?: 1080;
+[$heroVariantUrl, $heroVariantW, $heroVariantH] = image_variant_info($heroImageRaw, '-800', __DIR__);
+$heroImageSrc = $heroVariantUrl !== '' ? $heroVariantUrl : $heroImageRaw;
+$heroImageSrcW = $heroVariantW ?: $heroImageW;
+$heroImageSrcH = $heroVariantH ?: $heroImageH;
+$heroImageSrcset = image_srcset($heroImageRaw, __DIR__, [
+  '-400' => 400,
+  '-800' => 800,
+], $heroImageW);
+$heroImageSizes = '(max-width: 991px) 90vw, 520px';
+$heroImageAttrs = $heroImageSrcset !== ''
+  ? ' srcset="' . htmlspecialchars($heroImageSrcset, ENT_QUOTES) . '" sizes="' . htmlspecialchars($heroImageSizes, ENT_QUOTES) . '"'
+  : '';
+
+$includesImageRaw = (string)($Reg['Image_Desc'] ?? '');
+[$includesImageW, $includesImageH] = local_image_size($includesImageRaw, __DIR__);
+$includesImageW = $includesImageW ?: 400;
+$includesImageH = $includesImageH ?: 400;
+[$includesVariantUrl, $includesVariantW, $includesVariantH] = image_variant_info($includesImageRaw, '-128', __DIR__);
+$includesImageSrc = $includesVariantUrl !== '' ? $includesVariantUrl : $includesImageRaw;
+$includesImageSrcW = $includesVariantW ?: $includesImageW;
+$includesImageSrcH = $includesVariantH ?: $includesImageH;
+$includesImageSrcset = image_srcset($includesImageRaw, __DIR__, [
+  '-128' => 128,
+  '-256' => 256,
+], $includesImageW);
+$includesImageSizes = '112px';
+$includesImageAttrs = $includesImageSrcset !== ''
+  ? ' srcset="' . htmlspecialchars($includesImageSrcset, ENT_QUOTES) . '" sizes="' . htmlspecialchars($includesImageSizes, ENT_QUOTES) . '"'
+  : '';
+
 /* ---------- 5.1) Ofertas para datos estructurados ---------- */
 function format_price($value): string {
   return number_format((float)$value, 2, '.', '');
@@ -302,18 +398,23 @@ $prospectoUrl = '/prospectos.php?producto=' . rawurlencode($prospectoProducto);
   </script>
 
   <!-- Fuentes + Favicon -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/assets/css/fonts.css?v=<?php echo $VerCache;?>">
   <link rel="icon" href="/assets/images/kasu_logo.jpeg">
 
   <!-- CSS/JS con rutas absolutas -->
   <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css?v=<?php echo $VerCache;?>">
-  <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css?v=<?php echo $VerCache;?>">
   <link rel="stylesheet" type="text/css" href="/assets/css/kasu-menu.css?v=<?php echo $VerCache;?>">
-  <link rel="stylesheet" type="text/css" href="/assets/css/index-home.css?v=<?php echo $VerCache;?>">
   <link rel="stylesheet" type="text/css" href="/assets/css/productos.css?v=<?php echo $VerCache;?>">
-  <link rel="stylesheet" type="text/css" href="/assets/css/kasu-chat.css?v=<?php echo $VerCache;?>">
+  <link rel="preload" href="/assets/css/index-home.css?v=<?php echo $VerCache;?>" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/assets/css/index-home.css?v=<?php echo $VerCache;?>"></noscript>
+  <?php if (!empty($heroImageSrc)): ?>
+    <link rel="preload" as="image" href="<?= htmlspecialchars($heroImageSrc, ENT_QUOTES) ?>"
+      <?= $heroImageSrcset !== '' ? 'imagesrcset="' . htmlspecialchars($heroImageSrcset, ENT_QUOTES) . '" imagesizes="' . htmlspecialchars($heroImageSizes, ENT_QUOTES) . '"' : '' ?>>
+  <?php endif; ?>
+  <link rel="preload" href="/assets/css/font-awesome.css?v=<?php echo $VerCache;?>" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/assets/css/font-awesome.css?v=<?php echo $VerCache;?>"></noscript>
+  <link rel="preload" href="/assets/css/kasu-chat.css?v=<?php echo $VerCache;?>" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/assets/css/kasu-chat.css?v=<?php echo $VerCache;?>"></noscript>
   <script src="/assets/js/js_productos.js" defer></script>
 </head>
 <body class="kasu-ui">
@@ -373,9 +474,15 @@ $prospectoUrl = '/prospectos.php?producto=' . rawurlencode($prospectoProducto);
   <div class="container">
     <div class="row product-hero-grid">
       <div class="col-lg-5 col-md-12 col-sm-12 align-self-center" data-scroll-reveal="enter left move 30px over 0.6s after 0.4s">
-        <img src="<?= htmlspecialchars($Reg['Imagen_Producto'] ?? '', ENT_QUOTES) ?>"
+        <img src="<?= htmlspecialchars($heroImageSrc, ENT_QUOTES) ?>"
+             <?= $heroImageAttrs ?>
              class="product-hero-image img-fluid d-block mx-auto"
-             alt="<?= htmlspecialchars($Reg['Nombre'] ?? 'Producto KASU', ENT_QUOTES) ?>">
+             alt="<?= htmlspecialchars($Reg['Nombre'] ?? 'Producto KASU', ENT_QUOTES) ?>"
+             width="<?= (int)$heroImageSrcW ?>"
+             height="<?= (int)$heroImageSrcH ?>"
+             loading="eager"
+             decoding="async"
+             fetchpriority="high">
       </div>
       <div class="col-lg-1"></div>
       <div class="col-lg-6 col-md-12 col-sm-12 align-self-center product-hero-content">
@@ -421,7 +528,7 @@ $prospectoUrl = '/prospectos.php?producto=' . rawurlencode($prospectoProducto);
       <div class="col-lg-5 col-md-12 col-sm-12 align-self-center" data-scroll-reveal="enter right move 30px over 0.6s after 0.4s">
         <div class="pricing-item product-price-card">
           <div class="pricing-body product-price-body">
-            <i><img class="product-price-icon" src="/assets/images/icon/credit-card.png" alt="Producto Kasu"></i>
+            <i><img class="product-price-icon" src="/assets/images/icon/credit-card-128.png" srcset="/assets/images/icon/credit-card-128.png 128w, /assets/images/icon/credit-card-256.png 256w" sizes="64px" alt="Producto Kasu" width="128" height="128" loading="lazy" decoding="async"></i>
             <h2 class="product-price-title">¿Cuánto cuesta el producto?</h2>
             <div class="product-price-table"><?= $Reg['Precios_Producto'] ?? '' ?></div>
 
@@ -448,7 +555,14 @@ $prospectoUrl = '/prospectos.php?producto=' . rawurlencode($prospectoProducto);
           <div class="product-includes-body">
             <div class="product-includes-header">
               <i>
-                <img class="product-includes-icon" src="<?= htmlspecialchars($Reg['Image_Desc'] ?? '', ENT_QUOTES) ?>" alt="Producto Kasu">
+                <img class="product-includes-icon"
+                     src="<?= htmlspecialchars($includesImageSrc, ENT_QUOTES) ?>"
+                     <?= $includesImageAttrs ?>
+                     alt="Producto Kasu"
+                     width="<?= (int)$includesImageSrcW ?>"
+                     height="<?= (int)$includesImageSrcH ?>"
+                     loading="lazy"
+                     decoding="async">
               </i>
               <h2 class="product-includes-title">
                 <strong>¿Qué incluye, el servicio <?= htmlspecialchars($Reg['Nombre'] ?? 'este producto', ENT_QUOTES) ?>?</strong>

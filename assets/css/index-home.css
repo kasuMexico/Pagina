@@ -47,6 +47,10 @@
   transition: opacity 0.9s ease;
 }
 
+.banner-bg:first-child {
+  opacity: 1;
+}
+
 .banner-bg.is-active {
   opacity: 1;
 }
@@ -791,6 +795,14 @@
 @media (max-width: 767px) {
   .main-banner {
     min-height: auto;
+  }
+
+  .banner-bg-slider {
+    display: none;
+  }
+
+  .banner-bg {
+    background-image: none !important;
   }
 
   .hero-consulta-form .input-group {

@@ -208,6 +208,7 @@ if (isset($_GET['Msg'])) {
   <link rel="apple-touch-icon" sizes="180x180" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
 
   <!-- CSS externo + local -->
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<?php echo $VerCache; ?>">
   <link rel="stylesheet" href="assets/css/Compra.css?v=6">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 

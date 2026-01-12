@@ -119,10 +119,8 @@ if (isset($_GET['Msg'])) {
   <!-- Icono -->
   <link rel="icon" href="https://kasu.com.mx/assets/images/Index/florkasu.png">
 
-  <!-- Performance: preconnect y fuentes -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css?family=Raleway:100,300,400,500,700,900&display=swap" rel="stylesheet">
+  <!-- Fuentes -->
+  <link rel="stylesheet" type="text/css" href="/assets/css/fonts.css">
 
   <!-- CSS externo + local -->
   <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/bootstrap.min.css">

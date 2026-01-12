@@ -130,8 +130,7 @@ function some_function3($VAr) {
 
   <!-- Fuentes + Favicon -->
   <link rel="icon" href="/assets/images/kasu_logo.jpeg">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Serif:wght@400;500;600&display=swap">
-  <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons'>
+  <link rel="stylesheet" type="text/css" href="/assets/css/fonts.css?v=<?php echo $VerCache;?>">
 
     <!-- CSS -->
     <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css?v=<?php echo $VerCache;?>">

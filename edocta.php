@@ -55,6 +55,7 @@ if (!$Reg) {
         <meta charset="utf-8">
         <title>Estado de cuenta | No encontrado</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="assets/css/fonts.css">
         <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css">
     </head>
     <body class="p-4">
@@ -93,6 +94,7 @@ function e(?string $s): string {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>Estado de cuenta</title>
+    <link rel="stylesheet" type="text/css" href="assets/css/fonts.css">
     <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="assets/css/font-awesome.css">
     <link rel="stylesheet" href="login/assets/css/styles.min.css">

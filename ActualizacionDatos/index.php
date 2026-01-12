@@ -34,9 +34,7 @@ function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES,
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Actualiza los datos de tu servicio de gastos funerarios de KASU">
   <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/fonts.css?v=<?php echo $VerCache; ?>">
 
   <!-- CSS existentes -->
   <link rel="stylesheet" href="../assets/css/bootstrap.min.css?v=<?php echo $VerCache; ?>">

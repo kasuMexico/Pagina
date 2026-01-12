@@ -45,6 +45,7 @@ if (isset($_GET['Msg'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Integra tu funeraria a la red KASU. Registro de convenios, requisitos y estandares de servicio.">
   <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
+  <link rel="stylesheet" type="text/css" href="/assets/css/fonts.css?v=<?php echo $verCache; ?>">
   <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css?v=<?php echo $verCache; ?>">
   <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css?v=<?php echo $verCache; ?>">
   <link rel="stylesheet" type="text/css" href="/assets/css/kasu-menu.css?v=<?php echo $verCache; ?>">

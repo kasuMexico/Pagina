@@ -10,6 +10,7 @@
   <title>KASU | Error 404</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="../assets/images/kasu_logo.jpeg">
+  <link rel="stylesheet" href="/assets/css/fonts.css">
 
   <!-- Bloque: SEO y control de indexación -->
   <!-- 03/11/2025 – Revisado por JCCM -->
@@ -26,7 +27,7 @@
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      font-family: "Montserrat", "Segoe UI", system-ui, sans-serif;
       display: grid;
       min-height: 100dvh;
       place-items: center;

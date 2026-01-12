@@ -29,8 +29,9 @@ $TOKEN_URL = $BASE_URL . '/Token_Full.php'; // ajusta si tu ruta real es distint
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>API Market KASU - Validate_Mexico</title>
+  <link rel="stylesheet" type="text/css" href="/assets/css/fonts.css">
   <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;margin:0;background:#f6f8fb;color:#0f172a}
+    body{font-family:"Montserrat","Segoe UI",system-ui,sans-serif;margin:0;background:#f6f8fb;color:#0f172a}
     .wrap{max-width:1100px;margin:0 auto;padding:24px}
     .card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:18px 18px;margin:12px 0;box-shadow:0 1px 2px rgba(0,0,0,.04)}
     h1{font-size:22px;margin:0 0 10px}

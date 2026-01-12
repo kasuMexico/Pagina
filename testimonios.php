@@ -45,11 +45,8 @@ if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
   <meta name="twitter:card" content="summary_large_image">
 
   <!-- Perf -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
   <!-- Fuentes e ícono -->
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/assets/css/fonts.css?v=<?php echo $VerCache;?>">
   <link rel="icon" href="/assets/images/kasu_logo.jpeg">
 
   <!-- CSS -->
@@ -104,18 +101,13 @@ if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
               echo '<meta itemprop="position" content="'.(int)$pos.'">';
 
               echo "
-                <article class='opinion-card testimonials-card' itemscope itemtype='https://schema.org/Review'>
+                <article class='opinion-card testimonials-card'>
                   <div class='opinion-avatar'>
-                    <img src='{$foto}' alt='Foto de {$nombre}' loading='lazy' decoding='async' itemprop='image'>
+                    <img src='{$foto}' alt='Foto de {$nombre}' loading='lazy' decoding='async'>
                   </div>
-                  <p class='opinion-text' itemprop='reviewBody'>{$opinion}</p>
-                  <div class='opinion-name' itemprop='author' itemscope itemtype='https://schema.org/Person'>
-                    <span itemprop='name'>{$nombre}</span>
-                  </div>
-                  <div class='opinion-service' itemprop='itemReviewed' itemscope itemtype='https://schema.org/Product'>
-                    <meta itemprop='brand' content='KASU'>
-                    <span itemprop='name'>{$servicio}</span>
-                  </div>
+                  <p class='opinion-text'>{$opinion}</p>
+                  <div class='opinion-name'>{$nombre}</div>
+                  <div class='opinion-service'>{$servicio}</div>
                 </article>
               ";
               echo '</div>';

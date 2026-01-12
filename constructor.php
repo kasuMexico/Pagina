@@ -114,6 +114,7 @@ $isBot = (bool)preg_match('/facebookexternalhit|twitterbot|linkedinbot|slackbot|
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="/assets/images/kasu_logo.jpeg">
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<?php echo $VerCache; ?>">
 
   <!-- OG / Twitter -->
   <meta property="og:url" content="<?= htmlspecialchars($self,ENT_QUOTES) ?>">
@@ -130,7 +131,7 @@ $isBot = (bool)preg_match('/facebookexternalhit|twitterbot|linkedinbot|slackbot|
 
   <style>
     :root{color-scheme:light dark}
-    body{margin:0;background:#0b0b12;color:#eaeaf2;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif}
+    body{margin:0;background:#0b0b12;color:#eaeaf2;font-family:"Montserrat","Segoe UI",system-ui,sans-serif}
     .wrap{min-height:100dvh;display:grid;place-items:center;padding:12px}
     .card{width:min(900px,96%);background:#141428;border-radius:16px;box-shadow:0 10px 28px rgba(0,0,0,.45);overflow:hidden}
     .img{width:100%;aspect-ratio:1200/630;object-fit:cover;background:#111;display:block}

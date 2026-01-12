@@ -172,9 +172,10 @@ $Metodo = 'Vtas';
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
   <!-- CSS -->
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<?= htmlspecialchars($VerCache, ENT_QUOTES) ?>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   <link rel="stylesheet" href="/login/assets/css/styles.min.css?v=<?= htmlspecialchars($VerCache, ENT_QUOTES) ?>">
   <link rel="stylesheet" href="/login/assets/css/Menu_Superior.css?v=<?= htmlspecialchars($VerCache, ENT_QUOTES) ?>">
   <link rel="stylesheet" href="/login/assets/css/pwa-core.css?v=<?= htmlspecialchars($VerCache, ENT_QUOTES) ?>">

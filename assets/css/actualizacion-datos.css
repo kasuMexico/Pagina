@@ -5,7 +5,7 @@
   --kasu-auth-surface: #ffffff;
   --kasu-auth-border: #dfe4ec;
   --kasu-auth-shadow: 0 22px 48px rgba(12, 23, 38, 0.18);
-  font-family: "IBM Plex Sans", "Roboto", sans-serif;
+  font-family: "Montserrat", "Segoe UI", system-ui, sans-serif;
   background: #0b1320;
 }
 
@@ -69,7 +69,7 @@
 .kasu-auth__card .features-title {
   text-align: center;
   margin: 0.5rem 0 0.4rem;
-  font-family: "IBM Plex Serif", serif;
+  font-family: "Montserrat", "Segoe UI", system-ui, sans-serif;
   font-size: clamp(1.45rem, 2.4vw, 1.8rem);
   color: var(--kasu-auth-ink);
 }

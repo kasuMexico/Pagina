@@ -61,9 +61,7 @@ require_once __DIR__ . '/eia/librerias.php';
   </script>
 
   <!-- Fuentes + Favicon -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/assets/css/fonts.css?v=<?php echo $VerCache;?>">
   <link rel="icon" href="/assets/images/kasu_logo.jpeg">
 
   <!-- CSS existentes -->

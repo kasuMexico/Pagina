@@ -137,6 +137,7 @@ $VerCache = $VerCache ?? time();
   <!-- =================== CSS ===================
        Qué hace: Estilos base de la PWA
        Fecha: 05/11/2025 | Revisado por: JCCM -->
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<?= h((string)$VerCache) ?>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">

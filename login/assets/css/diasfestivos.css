@@ -31,7 +31,7 @@ input[type=date] {
     border-radius: 8px;
     cursor: pointer;
     font-size: 18px;
-    font-family: "Raleway", sans-serif;
+    font-family: "Montserrat", "Segoe UI", system-ui, sans-serif;
 }
     th,
     td {
@@ -49,7 +49,7 @@ input[type=date] {
         border-radius: 8px;
         cursor: pointer;
         font-size: 16px;
-        font-family: "Raleway", sans-serif;
+        font-family: "Montserrat", "Segoe UI", system-ui, sans-serif;
     }
 
     a.eli {
@@ -61,7 +61,7 @@ input[type=date] {
         border-radius: 8px;
         cursor: pointer;
         font-size: 16px;
-        font-family: "Raleway", sans-serif;
+        font-family: "Montserrat", "Segoe UI", system-ui, sans-serif;
     }
 
 @media only screen and (max-width: 800px) {
@@ -93,7 +93,7 @@ input[type=date] {
         border-radius: 8px;
         cursor: pointer;
         font-size: 18px;
-        font-family: "Raleway", sans-serif;
+        font-family: "Montserrat", "Segoe UI", system-ui, sans-serif;
     }
 
     a.eli {
@@ -105,6 +105,6 @@ input[type=date] {
         border-radius: 8px;
         cursor: pointer;
         font-size: 18px;
-        font-family: "Raleway", sans-serif;
+        font-family: "Montserrat", "Segoe UI", system-ui, sans-serif;
     }
 }

@@ -67,6 +67,7 @@ if (!$venta) {
   <meta name="theme-color" content="#F3F4F6">
   <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
   <title>Estado de Cuenta</title>
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<?= h((string)$VerCache) ?>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -158,6 +159,7 @@ $VerCache   = $VerCache ?? '1';
    <title>Estado de Cuenta</title>
    <link rel="shortcut icon" href="../assets/images/logokasu.ico">
    <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
+   <link rel="stylesheet" href="/assets/css/fonts.css?v=<?= h($VerCache) ?>">
    <link rel="manifest" href="/login/manifest.webmanifest">
    <link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png">
    <meta name="apple-mobile-web-app-capable" content="yes">

@@ -78,20 +78,31 @@ if ($qsMsg !== null) {
     <meta name="theme-color" content="#F1F1FC">
 
     <!-- Conexiones rápidas -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="//kasu.com.mx">
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
+    <link rel="preconnect" href="https://www.google-analytics.com" crossorigin>
+    <link rel="preload" as="image" href="/assets/images/Sliders/Protege_1.png?v=<?php echo $VerCache; ?>" fetchpriority="high" media="(min-width: 768px)">
 
     <!-- Iconos -->
     <link rel="icon" href="https://kasu.com.mx/login/assets/img/FlorKasu.png">
     <link rel="apple-touch-icon" sizes="128x128" href="https://kasu.com.mx/login/assets/img/icon-128x128.jpeg">
 
     <!-- CSS -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/fonts.css?v=<?php echo $VerCache;?>">
     <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css?v=<?php echo $VerCache;?>">
-    <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css?v=<?php echo $VerCache;?>">
     <link rel="stylesheet" type="text/css" href="/assets/css/kasu-menu.css?v=<?php echo $VerCache;?>">
     <link rel="stylesheet" type="text/css" href="/assets/css/index-home.css?v=<?php echo $VerCache;?>">
-    <link rel="stylesheet" type="text/css" href="/assets/css/kasu-chat.css?v=<?php echo $VerCache;?>">
+    <link rel="preload" href="/assets/css/font-awesome.css?v=<?php echo $VerCache;?>" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/assets/css/font-awesome.css?v=<?php echo $VerCache;?>"></noscript>
+    <link rel="preload" href="/assets/css/kasu-chat.css?v=<?php echo $VerCache;?>" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/assets/css/kasu-chat.css?v=<?php echo $VerCache;?>"></noscript>
+    <style>
+      @media (min-width: 768px) {
+        .banner-bg:first-child {
+          background-image: url('/assets/images/Sliders/Protege_1.png?v=<?php echo $VerCache; ?>');
+        }
+      }
+    </style>
 
     <!-- JS propio -->
     <script src="/eia/javascript/Registro.js" defer></script>
@@ -249,18 +260,13 @@ if ($qsMsg !== null) {
                 $serv   = htmlspecialchars($art['Servicio'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
                 $opinionesHtml .= "
-                <div class='opinion-card' itemprop='review' itemscope itemtype='https://schema.org/Review'>
+                <div class='opinion-card'>
                     <div class='opinion-avatar'>
                         <img src='{$foto}' alt='{$nombre}' loading='lazy' decoding='async'>
                     </div>
-                    <div class='opinion-name' itemprop='author' itemscope itemtype='https://schema.org/Person'>
-                        <span itemprop='name'>{$nombre}</span>
-                    </div>
-                    <div class='opinion-service' itemprop='itemReviewed' itemscope itemtype='https://schema.org/Product'>
-                        <meta itemprop='brand' content='KASU'>
-                        <span itemprop='name'>{$serv}</span>
-                    </div>
-                    <p class='opinion-text' itemprop='reviewBody'>{$op}</p>
+                    <div class='opinion-name'>{$nombre}</div>
+                    <div class='opinion-service'>{$serv}</div>
+                    <p class='opinion-text'>{$op}</p>
                 </div>
                 ";
             }
@@ -277,14 +283,6 @@ if ($qsMsg !== null) {
                 }
                 ?>
             </div>
-        </div>
-    </section>
-
-    <!-- Productos -->
-    <section class="Productos-Index"> 
-        <div class="container" itemscope itemtype="https://schema.org/CollectionPage">
-            <!-- Productos -->
-            <?php require_once __DIR__ . '/html/Section_Productos.php'; ?>
         </div>
     </section>
 
@@ -334,6 +332,18 @@ if ($qsMsg !== null) {
             </div>
         </div>
     </section>
+
+    <!-- Productos -->
+    <section class="Productos-Index"> 
+        <div class="container" itemscope itemtype="https://schema.org/CollectionPage">
+            <p class="clients-eyebrow">Productos</p>
+            <h2 class="clients-title">Conoce toda la gama de servicios que KASU tiene para ti </h2>
+            <br>
+            <!-- Productos -->
+            <?php require_once __DIR__ . '/html/Section_Productos.php'; ?>
+        </div>
+    </section>
+
     <!-- Inicio - Articulos de Blog -->
     <section class="blog-section" id="Blog">
         <div class="container">
@@ -349,6 +359,7 @@ if ($qsMsg !== null) {
 
     <!-- Final - Articulos de Blog -->
 
+
     <!-- Footer -->
     <footer class="site-footer">
         <?php require_once __DIR__ . '/html/footer.php'; ?>
@@ -360,8 +371,45 @@ if ($qsMsg !== null) {
     <!-- Scripts al final -->
     <script src="/assets/js/jquery-2.1.0.min.js" defer></script>  <!-- si usas Bootstrap 3 -->
     <script src="/assets/js/bootstrap.min.js" defer></script>
-    <!-- Scripts que imprime el finger print -->
-    <script src="/login/Javascript/finger.js?v=<? echo $VerCache;?>"></script>
+    <!-- Fingerprint bajo interaccion -->
+    <script>
+    (function () {
+        var fpLoading = false;
+        function loadFingerprint() {
+            if (fpLoading || window.Fingerprint) return;
+            fpLoading = true;
+            var s = document.createElement('script');
+            s.src = '/login/Javascript/finger.js?v=<?php echo $VerCache; ?>';
+            s.defer = true;
+            s.onload = function () { fpLoading = false; };
+            s.onerror = function () { fpLoading = false; };
+            document.head.appendChild(s);
+        }
+
+        var triggerSelectors = ['#CURP_Hero', '#curp', '#form-submit', '#hero-quote-toggle'];
+        triggerSelectors.forEach(function (sel) {
+            var el = document.querySelector(sel);
+            if (!el) return;
+            ['focus', 'click', 'keydown', 'input'].forEach(function (evt) {
+                el.addEventListener(evt, loadFingerprint, { once: true, passive: true });
+            });
+        });
+
+        var form = document.querySelector('.hero-quote-form');
+        if (form) {
+            form.addEventListener('submit', loadFingerprint);
+        }
+
+        document.addEventListener('pointerdown', function () {
+            if (window.Fingerprint) return;
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(loadFingerprint, { timeout: 2000 });
+            } else {
+                setTimeout(loadFingerprint, 1200);
+            }
+        }, { once: true, passive: true });
+    })();
+    </script>
 
     <script src="/assets/js/scrollreveal.min.js" defer></script>
     <script src="/assets/js/custom.js" defer></script>
@@ -434,6 +482,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 blogContainer.innerHTML = '';
                 var selected = pickRandom(posts, 3);
+                var getYoastImage = function (post) {
+                    if (!post || !post.yoast_head_json) return '';
+                    var og = post.yoast_head_json.og_image;
+                    if (Array.isArray(og) && og.length && og[0] && og[0].url) return og[0].url;
+                    if (post.yoast_head_json.twitter_image) return post.yoast_head_json.twitter_image;
+                    return '';
+                };
+                var getFirstContentImage = function (post) {
+                    if (!post || !post.content || !post.content.rendered) return '';
+                    var temp = document.createElement('div');
+                    temp.innerHTML = post.content.rendered;
+                    var img = temp.querySelector('img');
+                    if (!img) return '';
+                    return img.getAttribute('src') ||
+                        img.getAttribute('data-src') ||
+                        img.getAttribute('data-lazy-src') || '';
+                };
+
                 selected.forEach(function (post) {
                     var title = stripHtml(post.title && post.title.rendered ? post.title.rendered : '');
                     var rawExcerpt = post.excerpt && post.excerpt.rendered ? post.excerpt.rendered : (post.content && post.content.rendered ? post.content.rendered : '');
@@ -448,6 +514,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         } else {
                             imageUrl = media.source_url || '';
                         }
+                    }
+                    if (!imageUrl) {
+                        imageUrl = getYoastImage(post) || getFirstContentImage(post);
                     }
 
                     var card = document.createElement('article');
@@ -501,6 +570,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var slides = banner.querySelectorAll('.banner-bg');
     if (!slides.length) return;
+    if (!window.matchMedia('(min-width: 768px)').matches) return;
 
     // Asignar la imagen de fondo a cada slide desde data-bg
     slides.forEach(function (slide) {

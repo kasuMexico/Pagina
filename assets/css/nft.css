@@ -10,7 +10,7 @@
   --kasu-nft-border: #e1e6ef;
   --kasu-nft-shadow: 0 18px 40px rgba(13, 22, 40, 0.08);
   --kasu-nft-shadow-soft: 0 10px 26px rgba(13, 22, 40, 0.06);
-  font-family: "IBM Plex Sans", "Roboto", sans-serif;
+  font-family: "Montserrat", "Segoe UI", system-ui, sans-serif;
   color: var(--kasu-nft-ink);
   background: var(--kasu-nft-bg);
 }
@@ -87,7 +87,7 @@
 }
 
 .kasu-nft__title {
-  font-family: "IBM Plex Serif", serif;
+  font-family: "Montserrat", "Segoe UI", system-ui, sans-serif;
   font-size: clamp(2.4rem, 4vw, 3.6rem);
   margin-bottom: 0.6rem;
 }
@@ -196,7 +196,7 @@
 }
 
 .kasu-nft__section-title {
-  font-family: "IBM Plex Serif", serif;
+  font-family: "Montserrat", "Segoe UI", system-ui, sans-serif;
   font-size: clamp(1.8rem, 3vw, 2.6rem);
   margin-bottom: 0.9rem;
 }

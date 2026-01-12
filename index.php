@@ -189,7 +189,7 @@ if ($qsMsg !== null) {
                                                 loading="lazy" decoding="async">
                                             Servicios a futuro
                                         </h6>
-                                        <h2>Planes funerarios y <span>servicios funerarios</span> para tu familia</h2>
+                                        <h2>Planes funerarios y <span>servicios a futuro</span> para tu familia</h2>
                                         <p>La vision de <strong>KASU</strong> es lograr una cobertura universal para las familias mexicanas, con planes de prevision y una red de funeraria lista para atenderte.</p>
                                         <div class="hero-consulta" id="hero-consulta">
                                             <div class="hero-consulta-form" role="search" aria-label="Consulta por CURP">

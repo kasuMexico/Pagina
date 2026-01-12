@@ -3,6 +3,7 @@
  * Qué hace: Formulario de registro y APIs auxiliares (lookup CURP y cotización). Envía a /eia/Registrar_Venta.php.
  * Fecha: 03/11/2025
  * Revisado por: JCCM
+ * Archivo registro.php
  */
 
 // registro.php

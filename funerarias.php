@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 $verCache = null;
+require_once __DIR__ . '/eia/analytics_bootstrap.php';
 if (is_file(__DIR__ . '/eia/librerias.php')) {
   require_once __DIR__ . '/eia/librerias.php';
   $verCache = $VerCache ?? null;

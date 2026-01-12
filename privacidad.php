@@ -34,18 +34,18 @@ require_once __DIR__ . '/eia/librerias.php';
     $absUrl = 'https://kasu.com.mx' . strtok($reqUri, ' ');
   ?>
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="KASU">
+  <meta property="og:site_name" content="Guía funeraria KASU">
   <meta property="og:url" content="<?php echo htmlspecialchars($absUrl, ENT_QUOTES, 'UTF-8'); ?>">
   <meta property="og:title" content="Aviso de Privacidad | KASU">
   <meta property="og:description" content="Transparencia y cumplimiento: conoce nuestro aviso de privacidad y uso de datos">
-  <meta property="og:image" content="https://kasu.com.mx/assets/images/kasu_og_default.jpg">
-  <meta property="og:image:alt" content="KASU">
+  <meta property="og:image" content="https://kasu.com.mx/assets/images/guiafuneraria.png">
+  <meta property="og:image:alt" content="Guía funeraria KASU">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Aviso de Privacidad | KASU">
   <meta name="twitter:description" content="Transparencia y cumplimiento: conoce nuestro aviso de privacidad y uso de datos">
-  <meta name="twitter:image" content="https://kasu.com.mx/assets/images/kasu_og_default.jpg">
+  <meta name="twitter:image" content="https://kasu.com.mx/assets/images/guiafuneraria.png">
 
   <!-- JSON-LD WebPage -->
   <script type="application/ld+json">
@@ -62,7 +62,11 @@ require_once __DIR__ . '/eia/librerias.php';
 
   <!-- Fuentes + Favicon -->
   <link rel="stylesheet" type="text/css" href="/assets/css/fonts.css?v=<?php echo $VerCache;?>">
-  <link rel="icon" href="/assets/images/kasu_logo.jpeg">
+  <link rel="icon" type="image/png" sizes="48x48" href="/assets/images/Index/florkasu-48.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="/assets/images/Index/florkasu-96.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/Index/florkasu-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/assets/images/Index/florkasu-512.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/Index/florkasu-180.png">
 
   <!-- CSS existentes -->
   <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css?v=<?php echo $VerCache;?>">

@@ -25,18 +25,18 @@ require_once __DIR__ . '/eia/analytics_bootstrap.php';
 
   <!-- Open Graph -->
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="KASU">
+  <meta property="og:site_name" content="Guía funeraria KASU">
   <meta property="og:url" content="https://kasu.com.mx/linktree">
   <meta property="og:title" content="Link in Bio de KASU | Enlaces y artículos">
   <meta property="og:description" content="Accede a nuestros contenidos: educación, retiro, finanzas y más.">
-  <meta property="og:image" content="https://kasu.com.mx/assets/images/Index/ksulogo.png">
-  <meta property="og:image:alt" content="Logotipo de KASU">
+  <meta property="og:image" content="https://kasu.com.mx/assets/images/guiafuneraria.png">
+  <meta property="og:image:alt" content="Guía funeraria KASU">
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Link in Bio de KASU | Enlaces y artículos">
   <meta name="twitter:description" content="Selecciona tu tema y abre el artículo correspondiente.">
-  <meta name="twitter:image" content="https://kasu.com.mx/assets/images/Index/ksulogo.png">
+  <meta name="twitter:image" content="https://kasu.com.mx/assets/images/guiafuneraria.png">
 
   <!-- JSON-LD -->
   <script type="application/ld+json">
@@ -50,7 +50,11 @@ require_once __DIR__ . '/eia/analytics_bootstrap.php';
   }
   </script>
 
-  <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
+  <link rel="icon" type="image/png" sizes="48x48" href="/assets/images/Index/florkasu-48.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="/assets/images/Index/florkasu-96.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/Index/florkasu-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/assets/images/Index/florkasu-512.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/Index/florkasu-180.png">
   <link rel="stylesheet" href="assets/css/fonts.css">
   <link rel="stylesheet" href="assets/css/bootstrap.min.css">
   <!-- Cargar ambos por si el archivo se llamó con o sin typo -->

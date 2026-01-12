@@ -301,7 +301,7 @@ for ($i=0; $i<6; $i++) {
   <meta charset="UTF-8">
   <title>KASU | Mi cuenta KASU</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
+  <link rel="icon" href="/assets/images/Index/florkasu.png">
   <link rel="stylesheet" href="../../assets/css/bootstrap.min.css">
   <link rel="stylesheet" href="../../assets/css/font-awesome.css">
   <link rel="stylesheet" href="../assets/estadocta.css?v=1">
@@ -323,7 +323,7 @@ for ($i=0; $i<6; $i++) {
     <!-- ASIDE -->
       <aside class="aside" id="aside">
         <h5 class="d-flex align-items-center" style="margin:6px 10px 14px;">
-        <img src="https://kasu.com.mx/assets/images/kasu_logo.jpeg"
+        <img src="/assets/images/Index/florkasu.png"
             alt="KASU"
             width="24" height="24"
             loading="lazy" decoding="async"

@@ -107,7 +107,7 @@ $VerCache = time();
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#F1F7FC">
-<link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
+<link rel="icon" href="/assets/images/Index/florkasu.png">
 <title>Mesa Herramientas</title>
 
 <!-- =================== PWA / iOS ===================

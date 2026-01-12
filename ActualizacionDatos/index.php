@@ -33,7 +33,7 @@ function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES,
   <title>KASU | Actualizar datos de póliza</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Actualiza los datos de tu servicio de gastos funerarios de KASU">
-  <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
+  <link rel="icon" href="/assets/images/Index/florkasu.png">
   <link rel="stylesheet" href="../assets/css/fonts.css?v=<?php echo $VerCache; ?>">
 
   <!-- CSS existentes -->

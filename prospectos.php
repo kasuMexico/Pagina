@@ -194,18 +194,21 @@ if (isset($_GET['Msg'])) {
   <meta property="og:title" content="KASU | Regístrate para recibir información">
   <meta property="og:description" content="Déjanos tus datos para que un asesor KASU te brinde toda la información que necesitas.">
   <meta property="og:url" content="https://kasu.com.mx/prospectos.php">
-  <meta property="og:image" content="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
+  <meta property="og:image" content="https://kasu.com.mx/assets/images/guiafuneraria.png">
   <meta property="og:locale" content="es_MX">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="KASU | Regístrate para recibir información">
   <meta name="twitter:description" content="Déjanos tus datos para que un asesor KASU te brinde toda la información que necesitas.">
-  <meta name="twitter:image" content="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
+  <meta name="twitter:image" content="https://kasu.com.mx/assets/images/guiafuneraria.png">
 
   <!-- Iconos -->
-  <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
-  <link rel="apple-touch-icon" sizes="180x180" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
+  <link rel="icon" type="image/png" sizes="48x48" href="/assets/images/Index/florkasu-48.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="/assets/images/Index/florkasu-96.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/Index/florkasu-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/assets/images/Index/florkasu-512.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/Index/florkasu-180.png">
 
   <!-- CSS externo + local -->
   <link rel="stylesheet" href="/assets/css/fonts.css?v=<?php echo $VerCache; ?>">

@@ -65,7 +65,7 @@ if (!$venta) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#F3F4F6">
-  <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
+  <link rel="icon" href="/assets/images/Index/florkasu.png">
   <title>Estado de Cuenta</title>
   <link rel="stylesheet" href="/assets/css/fonts.css?v=<?= h((string)$VerCache) ?>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
@@ -158,7 +158,7 @@ $VerCache   = $VerCache ?? '1';
    <meta name="theme-color" content="#F3F4F6">
    <title>Estado de Cuenta</title>
    <link rel="shortcut icon" href="../assets/images/logokasu.ico">
-   <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
+   <link rel="icon" href="/assets/images/Index/florkasu.png">
    <link rel="stylesheet" href="/assets/css/fonts.css?v=<?= h($VerCache) ?>">
    <link rel="manifest" href="/login/manifest.webmanifest">
    <link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png">

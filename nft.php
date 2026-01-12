@@ -129,7 +129,11 @@ function some_function3($VAr) {
   </script>
 
   <!-- Fuentes + Favicon -->
-  <link rel="icon" href="/assets/images/kasu_logo.jpeg">
+  <link rel="icon" type="image/png" sizes="48x48" href="/assets/images/Index/florkasu-48.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="/assets/images/Index/florkasu-96.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/Index/florkasu-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/assets/images/Index/florkasu-512.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/Index/florkasu-180.png">
   <link rel="stylesheet" type="text/css" href="/assets/css/fonts.css?v=<?php echo $VerCache;?>">
 
     <!-- CSS -->

@@ -67,12 +67,12 @@ if ($qsMsg !== null) {
     <meta property="og:title" content="Planes funerarios y servicios funerarios | KASU">
     <meta property="og:description" content="Planes funerarios y servicios funerarios con Plan Servicios funerarios y planes de prevision. Cobertura nacional y red de funeraria.">
     <meta property="og:url" content="https://kasu.com.mx/">
-    <meta property="og:image" content="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
-    <meta property="og:image:alt" content="Logotipo KASU">
+    <meta property="og:image" content="https://kasu.com.mx/assets/images/guiafuneraria.png">
+    <meta property="og:image:alt" content="Guía funeraria KASU">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Planes funerarios y servicios funerarios | KASU">
     <meta name="twitter:description" content="Planes funerarios y servicios funerarios con Plan Servicios funerarios y planes de prevision. Atencion inmediata 24/7.">
-    <meta name="twitter:image" content="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
+    <meta name="twitter:image" content="https://kasu.com.mx/assets/images/guiafuneraria.png">
 
     <!-- PWA/Branding menor -->
     <meta name="theme-color" content="#F1F1FC">
@@ -84,8 +84,11 @@ if ($qsMsg !== null) {
     <link rel="preload" as="image" href="/assets/images/Sliders/Protege_1.png?v=<?php echo $VerCache; ?>" fetchpriority="high" media="(min-width: 768px)">
 
     <!-- Iconos -->
-    <link rel="icon" href="https://kasu.com.mx/login/assets/img/FlorKasu.png">
-    <link rel="apple-touch-icon" sizes="128x128" href="https://kasu.com.mx/login/assets/img/icon-128x128.jpeg">
+    <link rel="icon" type="image/png" sizes="48x48" href="/assets/images/Index/florkasu-48.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/assets/images/Index/florkasu-96.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/Index/florkasu-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/assets/images/Index/florkasu-512.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/Index/florkasu-180.png">
 
     <!-- CSS -->
     <link rel="stylesheet" type="text/css" href="/assets/css/fonts.css?v=<?php echo $VerCache;?>">
@@ -116,7 +119,7 @@ if ($qsMsg !== null) {
           "@type": "Organization",
           "name": "KASU",
           "url": "https://kasu.com.mx/",
-          "logo": "https://kasu.com.mx/assets/images/kasu_logo.jpeg",
+          "logo": "/assets/images/Index/florkasu.png",
           "brand": "KASU",
           "sameAs": [
             "https://www.facebook.com/KasuMexico",

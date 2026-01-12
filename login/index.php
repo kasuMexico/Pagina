@@ -102,7 +102,7 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>KASU | Ventas</title>
 
-<link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
+<link rel="icon" href="/assets/images/Index/florkasu.png">
 <link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png">
 <link rel="manifest" href="/login/manifest.webmanifest">
 

@@ -113,7 +113,11 @@ $isBot = (bool)preg_match('/facebookexternalhit|twitterbot|linkedinbot|slackbot|
   <title><?= $titulo ?></title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
-  <link rel="icon" href="/assets/images/kasu_logo.jpeg">
+  <link rel="icon" type="image/png" sizes="48x48" href="/assets/images/Index/florkasu-48.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="/assets/images/Index/florkasu-96.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/Index/florkasu-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/assets/images/Index/florkasu-512.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/Index/florkasu-180.png">
   <link rel="stylesheet" href="/assets/css/fonts.css?v=<?php echo $VerCache; ?>">
 
   <!-- OG / Twitter -->

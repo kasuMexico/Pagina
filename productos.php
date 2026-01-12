@@ -120,7 +120,7 @@ if ($artId === 1) {
 
 $seoTitle = htmlspecialchars($seoTitleRaw, ENT_QUOTES, 'UTF-8');
 $seoDesc  = htmlspecialchars($seoDescRaw, ENT_QUOTES, 'UTF-8');
-$seoImageRaw = $Reg['Imagen_Producto'] ?? 'https://kasu.com.mx/assets/images/kasu_logo.jpeg';
+$seoImageRaw = $Reg['Imagen_Producto'] ?? '/assets/images/Index/florkasu.png';
 $seoImage = htmlspecialchars($seoImageRaw, ENT_QUOTES, 'UTF-8');
 $prodCat  = htmlspecialchars($rawProdCat, ENT_QUOTES, 'UTF-8');
 $seoKeywords = htmlspecialchars($seoKeywordsRaw, ENT_QUOTES, 'UTF-8');
@@ -399,7 +399,11 @@ $prospectoUrl = '/prospectos.php?producto=' . rawurlencode($prospectoProducto);
 
   <!-- Fuentes + Favicon -->
   <link rel="stylesheet" type="text/css" href="/assets/css/fonts.css?v=<?php echo $VerCache;?>">
-  <link rel="icon" href="/assets/images/kasu_logo.jpeg">
+  <link rel="icon" type="image/png" sizes="48x48" href="/assets/images/Index/florkasu-48.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="/assets/images/Index/florkasu-96.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/Index/florkasu-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/assets/images/Index/florkasu-512.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/Index/florkasu-180.png">
 
   <!-- CSS/JS con rutas absolutas -->
   <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css?v=<?php echo $VerCache;?>">

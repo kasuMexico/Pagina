@@ -44,7 +44,11 @@ if (isset($_GET['Msg'])) {
   <title>Red KASU | Registro de funerarias</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Integra tu funeraria a la red KASU. Registro de convenios, requisitos y estandares de servicio.">
-  <link rel="icon" href="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
+  <link rel="icon" type="image/png" sizes="48x48" href="/assets/images/Index/florkasu-48.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="/assets/images/Index/florkasu-96.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/Index/florkasu-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/assets/images/Index/florkasu-512.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/Index/florkasu-180.png">
   <link rel="stylesheet" type="text/css" href="/assets/css/fonts.css?v=<?php echo $verCache; ?>">
   <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css?v=<?php echo $verCache; ?>">
   <link rel="stylesheet" type="text/css" href="/assets/css/font-awesome.css?v=<?php echo $verCache; ?>">

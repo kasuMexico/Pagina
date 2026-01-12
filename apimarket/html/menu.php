@@ -6,7 +6,7 @@
         <nav class="main-nav">
           <!-- ***** Logo Start ***** -->
           <a href="https://kasu.com.mx/" class="logo">
-            <img src="https://kasu.com.mx/assets/images/kasu_logo.jpeg" alt="Logo Kasu" />
+            <img src="/assets/images/Index/florkasu.png" alt="Logo Kasu" />
           </a>
           <!-- ***** Logo End ***** -->
           <!-- ***** Menu Start ***** -->

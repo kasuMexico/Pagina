@@ -141,7 +141,7 @@ if (isset($_GET['Msg'])) {
         "@type": "Organization",
         "name": "KASU",
         "url": "https://kasu.com.mx/",
-        "logo": "https://kasu.com.mx/assets/images/kasu_logo.jpeg",
+        "logo": "/assets/images/Index/florkasu.png",
         "sameAs": [
           "https://www.facebook.com/kasu.mx",
           "https://www.linkedin.com/company/kasu-mx"
@@ -192,7 +192,7 @@ if (isset($_GET['Msg'])) {
           <nav class="main-nav" aria-label="Principal">
             <!-- Logo -->
             <a href="https://kasu.com.mx/" class="logo" aria-label="KASU inicio">
-              <img src="https://kasu.com.mx/assets/images/kasu_logo.jpeg" alt="KASU" loading="eager" decoding="async"/>
+              <img src="/assets/images/Index/florkasu.png" alt="KASU" loading="eager" decoding="async"/>
             </a>
             <!-- Menu -->
             <ul class="nav">

@@ -39,15 +39,19 @@ if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
   <meta property="og:title" content="KASU | Opiniones de clientes">
   <meta property="og:description" content="Lee testimonios auténticos de nuestros clientes. Descubre por qué confían en KASU.">
   <meta property="og:url" content="https://kasu.com.mx/testimonios.php">
-  <meta property="og:site_name" content="KASU">
-  <meta property="og:image" content="https://kasu.com.mx/assets/images/kasu_logo.jpeg">
-  <meta property="og:image:alt" content="Logotipo KASU">
+  <meta property="og:site_name" content="Guía funeraria KASU">
+  <meta property="og:image" content="https://kasu.com.mx/assets/images/guiafuneraria.png">
+  <meta property="og:image:alt" content="Guía funeraria KASU">
   <meta name="twitter:card" content="summary_large_image">
 
   <!-- Perf -->
   <!-- Fuentes e ícono -->
   <link rel="stylesheet" type="text/css" href="/assets/css/fonts.css?v=<?php echo $VerCache;?>">
-  <link rel="icon" href="/assets/images/kasu_logo.jpeg">
+  <link rel="icon" type="image/png" sizes="48x48" href="/assets/images/Index/florkasu-48.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="/assets/images/Index/florkasu-96.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/Index/florkasu-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/assets/images/Index/florkasu-512.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/Index/florkasu-180.png">
 
   <!-- CSS -->
   <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css?v=<?php echo $VerCache;?>">

@@ -9,7 +9,11 @@
   <meta charset="utf-8">
   <title>KASU | Error 404</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="../assets/images/kasu_logo.jpeg">
+  <link rel="icon" type="image/png" sizes="48x48" href="/assets/images/Index/florkasu-48.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="/assets/images/Index/florkasu-96.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/Index/florkasu-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/assets/images/Index/florkasu-512.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/Index/florkasu-180.png">
   <link rel="stylesheet" href="/assets/css/fonts.css">
 
   <!-- Bloque: SEO y control de indexación -->
@@ -110,7 +114,7 @@
 
     <section class="panel">
       <div class="logo" aria-hidden="true">
-        <img src="https://kasu.com.mx/assets/images/kasu_logo.jpeg" alt="KASU">
+        <img src="/assets/images/Index/florkasu.png" alt="KASU">
       </div>
 
       <h1 id="title-404">Esto es embarazoso</h1>

@@ -44,6 +44,7 @@ $funcionesDir = __DIR__ . '/Funciones';
 require_once $funcionesDir . '/Funciones_Basicas.php';
 require_once $funcionesDir . '/Funciones_Seguridad.php';
 require_once $funcionesDir . '/Funciones_API.php';
+require_once $funcionesDir . '/Funciones_ApiAccess.php';
 require_once $funcionesDir . '/FunctionUsageTracker.php';
 
 // Timezone / locales (solo si aquí también los necesitas)

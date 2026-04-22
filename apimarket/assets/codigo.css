@@ -1,9 +1,10 @@
 .code-window {
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  background-color: #f8f8f8;
-  margin: 2em;
-  margin-left: 0; /* Agregar esta línea para establecer el margen izquierdo a cero */
+  background-color: #111827;
+  border: 1px solid #243047;
+  border-radius: 8px;
+  box-shadow: 0 14px 30px rgba(17, 24, 39, 0.12);
+  margin: 0;
+  overflow: hidden;
   position: relative;
 }
 
@@ -29,25 +30,27 @@
 
 /* Cambiar el color del fondo del bloque de código */
 #codecopi {
-  background: #1c1c1c;
-  color: #ffffff;
-  font-family: monospace;
-  margin: 1em 0;
+  background: #111827;
+  color: #e5e7eb;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  line-height: 1.65;
+  margin: 0;
   overflow-x: auto;
-  padding: 1em;
-  line-height: 1;
-  text-align: left; /* Agregar esta línea para centrar horizontalmente el código */
+  padding: 16px;
+  text-align: left;
 }
 /* Cambiar el color del fondo del bloque de código */
 #codecopindex {
-  background: #1c1c1c;
-  color: #ffffff;
-  font-family: monospace;
-  margin: 1em 0;
+  background: #111827;
+  color: #e5e7eb;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  line-height: 1.65;
+  margin: 0;
   overflow-x: auto;
-  padding: 1em;
-  line-height: 2;
-  text-align: left; /* Agregar esta línea para centrar horizontalmente el código */
+  padding: 16px;
+  text-align: left;
 }
 	/* Cambiar el color de los diferentes tipos de palabras clave */
 	#codecopi code .keyword {

@@ -48,7 +48,7 @@ try {
     <meta name="keywords" content="Cobros">
     <link rel="canonical" href="https://kasu.com.mx">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Registra, modifica y borra registros de clientes">
+    <meta name="description" content="Documentación API_ACCOUNTS V1 para registrar servicios KASU, generar póliza y liga de pago.">
     <meta name="author" content="Jose Carlos Cabrera Monroy">
     <link rel="stylesheet" type="text/css" href="/assets/css/fonts.css">
     <link rel="icon" href="https://kasu.com.mx/assets/images/Index/florkasu.png">
@@ -58,9 +58,10 @@ try {
     <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/font-awesome.css">
     <link rel="stylesheet" href="https://kasu.com.mx/assets/css/index.css">
+    <link rel="stylesheet" href="../assets/index.css">
     <link rel="stylesheet" href="../assets/codigo.css">
 </head>
-<body>
+<body class="doc-page">
 <?php
     require_once __DIR__ . '/../html/menu.php';        // Menú principal
     require_once __DIR__ . '/../html/Inf_general.php'; // Información general
@@ -68,13 +69,12 @@ try {
     require_once __DIR__ . '/../html/Sandbox.php';     // Sandbox
 ?>
 <!-- ***** CODIGOS GENERALES ***** -->
-<section class="section padding-top-70 " id="">
+<section class="doc-section" id="codigos">
     <div class="container">
-        <div class="Consulta">
-            <h2 class="titulos"><strong>CÓDIGOS GENERALES</strong></h2>
-            <br>
-            <p>Estos son los códigos generales generados por <strong>API_REGISTRO</strong> y las claves para envío de datos.</p>
-            <br>
+        <div class="doc-heading">
+            <span class="api-kicker">API_ACCOUNTS</span>
+            <h2>Códigos, funciones y productos</h2>
+            <p>Estos son los códigos generales generados por <strong>API_ACCOUNTS</strong>, la función <strong>new_service</strong> y los productos habilitados para alta desde <strong>/api/Accounts_V1</strong>.</p>
         </div>
         <div class="row">
             <div class="col-lg-5 col-md-12 col-sm-12 align-self-center" data-scroll-reveal="enter left move 30px over 0.6s after 0.4s">
@@ -107,7 +107,7 @@ try {
                         </tr>
                         <tr><td>token_full</td><td style="text-align: justify;">Genera un token de autorización de uso con vigencia de 10 minutos.</td></tr>
                         <tr><td>new_service</td><td style="text-align: justify;">Registra un cliente <strong>KASU</strong>.</td></tr>
-                        <tr><td>modify_record</td><td style="text-align: justify;">Obtiene el precio de un producto <strong>KASU</strong>.</td></tr>
+                        <tr><td>account_status</td><td style="text-align: justify;">Consulta el estado de cuenta desde <strong>API_PAYMENTS</strong>.</td></tr>
                     </table>
                 </div>
 
@@ -129,13 +129,11 @@ try {
 </section>
 
 <!-- ***** REGISTRAR EL SERVICIO ***** -->
-<section class="section padding-top-70" id="">
+<section class="doc-section doc-section--muted" id="new-service">
     <div class="container">
-        <div class="Consulta">
-            <h2 class="titulos"><strong>REGISTRAR SERVICIO</strong></h2>
-            <br>
-            <p>Reemplaza los valores de ejemplo por datos reales del cliente y producto. Algunos parámetros son opcionales según el caso.</p>
-            <br>
+        <div class="doc-heading">
+            <h2>Registrar servicio</h2>
+            <p>Reemplaza los valores de ejemplo por datos reales del cliente y producto. Las aceptaciones legales admiten <strong>acepto</strong> o <strong>accept</strong>.</p>
         </div>
         <div class="row">
             <div class="col-lg-6 col-md-12 col-sm-12 align-self-center" data-scroll-reveal="enter left move 30px over 0.6s after 0.4s">
@@ -149,19 +147,21 @@ try {
                         <tr><td>tipo_peticion</td><td style="text-align: justify;">Tipo de petición según tablas de acceso.</td></tr>
                         <tr><td>YOUR_APPUSER</td><td style="text-align: justify;">Usuario registrado en KASU.</td></tr>
                         <tr><td>CURP_CODE</td><td style="text-align: justify;">CURP del cliente.</td></tr>
-                        <tr><td>Mail</td><td style="text-align: justify;">Correo del cliente.</td></tr>
-                        <tr><td>Telefono</td><td style="text-align: justify;">Teléfono del cliente.</td></tr>
-                        <tr><td>Producto</td><td style="text-align: justify;">Producto permitido según acceso.</td></tr>
-                        <tr><td>NumeroPagos</td><td style="text-align: justify;">Número de pagos elegidos.</td></tr>
-                        <tr><td>Terminos</td><td style="text-align: justify;">Aceptación de <a href="https://kasu.com.mx/terminos-y-condiciones.php"><strong>Términos y Condiciones</strong></a>.</td></tr>
-                        <tr><td>Aviso</td><td style="text-align: justify;">Aceptación del <a href="https://kasu.com.mx/terminos-y-condiciones.php"><strong>Aviso de Privacidad</strong></a>.</td></tr>
-                        <tr><td>Fideicomiso</td><td style="text-align: justify;">Ingreso al <a href="https://kasu.com.mx/Fideicomiso_F0003.pdf"><strong>Fideicomiso F/0003</strong></a>.</td></tr>
-                        <tr><td>Calle</td><td style="text-align: justify;">Calle del cliente.</td></tr>
-                        <tr><td>Numero</td><td style="text-align: justify;">Número de casa.</td></tr>
-                        <tr><td>Colonia</td><td style="text-align: justify;">Colonia.</td></tr>
-                        <tr><td>Municipio</td><td style="text-align: justify;">Municipio.</td></tr>
-                        <tr><td>Codigo_Postal</td><td style="text-align: justify;">Código Postal.</td></tr>
-                        <tr><td>Estado</td><td style="text-align: justify;">Estado.</td></tr>
+                        <tr><td>mail</td><td style="text-align: justify;">Correo del cliente.</td></tr>
+                        <tr><td>telefono</td><td style="text-align: justify;">Teléfono del cliente, 10 dígitos MX.</td></tr>
+                        <tr><td>producto</td><td style="text-align: justify;">Producto solicitado: <strong>Funerario</strong> o <strong>Retiro</strong>, sujeto a edad y catálogo.</td></tr>
+                        <tr><td>numero_pagos</td><td style="text-align: justify;">Número de pagos elegidos. Si es mayor a 1 se calcula crédito.</td></tr>
+                        <tr><td>dia_pago</td><td style="text-align: justify;">Día de pago mensual permitido: <strong>1</strong> o <strong>15</strong>. En contado se registra como 0.</td></tr>
+                        <tr><td>tipo_servicio</td><td style="text-align: justify;">Tipo de servicio KASU. Si no se envía, se usa <strong>Ecologico</strong>.</td></tr>
+                        <tr><td>terminos</td><td style="text-align: justify;">Aceptación de <a href="https://kasu.com.mx/terminos-y-condiciones.php"><strong>Términos y Condiciones</strong></a>. Valores: <strong>acepto</strong> o <strong>accept</strong>.</td></tr>
+                        <tr><td>aviso</td><td style="text-align: justify;">Aceptación del <a href="https://kasu.com.mx/terminos-y-condiciones.php"><strong>Aviso de Privacidad</strong></a>. Valores: <strong>acepto</strong> o <strong>accept</strong>.</td></tr>
+                        <tr><td>fideicomiso</td><td style="text-align: justify;">Ingreso al <a href="https://kasu.com.mx/Fideicomiso_F0003.pdf"><strong>Fideicomiso F/0003</strong></a>. Valores: <strong>acepto</strong> o <strong>accept</strong>.</td></tr>
+                        <tr><td>direccion.calle</td><td style="text-align: justify;">Calle del cliente.</td></tr>
+                        <tr><td>direccion.numero</td><td style="text-align: justify;">Número de casa.</td></tr>
+                        <tr><td>direccion.colonia</td><td style="text-align: justify;">Colonia.</td></tr>
+                        <tr><td>direccion.municipio</td><td style="text-align: justify;">Municipio.</td></tr>
+                        <tr><td>direccion.codigo_postal</td><td style="text-align: justify;">Código Postal.</td></tr>
+                        <tr><td>direccion.estado</td><td style="text-align: justify;">Estado.</td></tr>
                         <tr><td>TIMESTAMP</td><td style="text-align: justify;">Tiempo de generación del token de acceso.</td></tr>
                         <tr><td>EXPIRE_IN</td><td style="text-align: justify;">Segundos de vigencia del token.</td></tr>
                     </table>
@@ -172,13 +172,13 @@ try {
                 <div class="code-window">
 					<pre id="codecopi" class="userContent" style="white-space: pre-wrap;">
 						<code>
-							POST https://apimarket.kasu.com.mx/api/Registro_V1
+							POST https://apimarket.kasu.com.mx/api/Accounts_V1
 
 							Headers:
 							Authorization: Bearer API_KEY_AQUI
 
 							Content-Type: application/json
-							User-Agent: Your-Application-Name/1.0
+							User-Agent: SECRET_KEY_USUARIO_SECRET_KEY_ID
 
 							{
 							"tipo_peticion": "new_service",
@@ -188,9 +188,11 @@ try {
 							"telefono": TELEFONO,
 							"producto": "PRODUCTO",
 							"numero_pagos": NUMERO_PAGOS,
-							"terminos": "ACCEPT",
-							"aviso": "ACCEPT",
-							"fideicomiso": "ACCEPT",
+							"dia_pago": 1,
+							"tipo_servicio": "Ecologico",
+							"terminos": "acepto",
+							"aviso": "acepto",
+							"fideicomiso": "acepto",
 							"direccion": {
 								"calle": "CALLE",
 								"numero": NUMERO,
@@ -215,13 +217,11 @@ try {
 </section>
 
 <!-- ***** REGISTRO DE DATOS DE REGISTRAR EL SERVICIO ***** -->
-<section class="section padding-top-70 colored" id="">
+<section class="doc-section" id="respuesta">
     <div class="container">
-        <div class="Consulta">
-            <h2 class="titulos"><strong>REGISTRO DE DATOS DE REGISTRAR EL SERVICIO</strong></h2>
-            <br>
-            <p>La API retorna códigos de error cuando no resuelve correctamente la solicitud. Usa estas guías para decidir la función a ejecutar.</p>
-            <br>
+        <div class="doc-heading">
+            <h2>Respuesta de new_service</h2>
+            <p>La API retorna códigos de error cuando no resuelve correctamente la solicitud y una respuesta <strong>201</strong> cuando crea la venta en estatus <strong>PREVENTA</strong>.</p>
         </div>
         <div class="row">
             <div class="col-lg-5 col-md-12 col-sm-12 align-self-center" data-scroll-reveal="enter left move 30px over 0.6s after 0.4s">
@@ -231,7 +231,7 @@ try {
                             <td><strong>CLAVE</strong></td>
                             <td><strong>DESCRIPCIÓN DE CLAVES DE FUNCIONES</strong></td>
                         </tr>
-                        <tr><td>registro_servicio</td><td style="text-align: justify;">Registra un cliente <strong>KASU</strong>.</td></tr>
+                        <tr><td>new_service</td><td style="text-align: justify;">Registra un cliente <strong>KASU</strong>.</td></tr>
                     </table>
                 </div>
 
@@ -260,17 +260,21 @@ try {
                             <td><strong>RESPUESTA POSITIVA</strong></td>
                         </tr>
                         <tr><td>mensaje</td><td style="text-align: justify;">Mensaje de éxito con el <strong>SERVICIO</strong>.</td></tr>
-                        <tr><td>nombre</td><td style="text-align: justify;">Nombre del cliente según <strong>RENAPO</strong>.</td></tr>
-                        <tr><td>CURP</td><td style="text-align: justify;">CURP ligada al servicio <strong>KASU</strong>.</td></tr>
-                        <tr><td>mail</td><td style="text-align: justify;">Correo para <strong>API_COBROS</strong>.</td></tr>
-                        <tr><td>poliza</td><td style="text-align: justify;"><strong>TOKEN</strong> único del servicio.</td></tr>
-                        <tr><td>Status</td><td style="text-align: justify;">Estatus del servicio para <strong>API_COBROS</strong>.</td></tr>
-                        <tr><td>Costo</td><td style="text-align: justify;">Costo del servicio para <strong>API_COBROS</strong>.</td></tr>
+                        <tr><td>datos_compra.id_venta</td><td style="text-align: justify;">Identificador de la venta creada.</td></tr>
+                        <tr><td>datos_compra.id_contacto</td><td style="text-align: justify;">Identificador del contacto creado.</td></tr>
+                        <tr><td>datos_compra.nombre</td><td style="text-align: justify;">Nombre del cliente según validación CURP.</td></tr>
+                        <tr><td>datos_compra.CURP</td><td style="text-align: justify;">CURP ligada al servicio <strong>KASU</strong>.</td></tr>
+                        <tr><td>datos_compra.mail</td><td style="text-align: justify;">Correo ligado al servicio.</td></tr>
+                        <tr><td>datos_compra.poliza</td><td style="text-align: justify;">Póliza única del servicio.</td></tr>
+                        <tr><td>datos_compra.status</td><td style="text-align: justify;">Estatus inicial del servicio: <strong>PREVENTA</strong>.</td></tr>
+                        <tr><td>datos_compra.subtotal</td><td style="text-align: justify;">Total de la venta o crédito.</td></tr>
+                        <tr><td>datos_compra.amount</td><td style="text-align: justify;">Monto inicial a cobrar.</td></tr>
+                        <tr><td>datos_compra.pago_link</td><td style="text-align: justify;">Liga para generar o continuar el pago.</td></tr>
                     </table>
 
                     <div class="Consulta">
                         <br>
-                        <p>Si no tienes acceso a <strong>API_COBROS</strong>, no se retornan datos de cobro y el sistema enviará un correo automático al cliente.</p>
+                        <p>La respuesta incluye los datos mínimos para continuar cobranza con <strong>API_PAYMENTS</strong> o con la liga de pago.</p>
                         <br>
                     </div>
                 </div>
@@ -280,7 +284,7 @@ try {
 </section>
 
 <!-- ***** Features Small Start ***** -->
-<section class="section padding-top-70" id="otros">
+<section class="doc-section doc-section--muted" id="otros">
     <div class="container">
         <div class="row">
             <div class="col-lg-12">

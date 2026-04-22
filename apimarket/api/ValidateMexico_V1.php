@@ -41,9 +41,9 @@ declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
 
-require_once __DIR__ . '/../librerias_api.php'; // -> define $mysqli_api, $basicas, $seguridad
-$mysqli = $mysqli_api; // alias de compatibilidad si tus includes esperan $mysqli
+require_once __DIR__ . '/../librerias_api.php'; // -> define $mysqli, $mysqli_api, $basicas, $seguridad
 global $mysqli_api;
+$mysqli_api = api_require_db($mysqli_api ?? null, 'apimarket');
 
 // -------------------- Helpers --------------------
 function jout(array $data, int $code = 200): never {
@@ -384,7 +384,8 @@ try {
   if (get_bearer_token() === '') {
     jout(['ok'=>false,'error'=>'Falta Authorization: Bearer'], 401);
   }
-  require_once __DIR__ . '/../Validador_Token.php';
+  $api_required_product = 'Validate_Mexico';
+  require_once __DIR__ . '/Validador_Token.php';
 
   // Resolver método
   $metodo = (string)($data['metodo'] ?? ($data['request'] ?? ''));

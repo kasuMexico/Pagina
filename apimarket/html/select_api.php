@@ -19,29 +19,33 @@ $docs = [
     [
         'title' => 'API_CUSTOMER',
         'badge' => 'PREPAGO',
-        'icon'  => '&#128100;',
-        'desc'  => 'Comparte y valida datos de clientes con consultas rápidas y seguras.',
+        'icon'  => 'https://kasu.com.mx/assets/images/Index/florkasu.png',
+        'endpoint' => '/api/Customer_V1',
+        'desc'  => 'Consulta catálogo, cliente, producto viable y ventas por CURP/póliza con autorización válida.',
         'href'  => $docPrefix . 'doc_customer.php',
     ],
     [
         'title' => 'API_PAYMENTS',
         'badge' => 'POSPAGO',
-        'icon'  => '&#128179;',
-        'desc'  => 'Cobros en tiempo real con conciliación y comisiones integradas.',
+        'icon'  => 'https://kasu.com.mx/assets/images/Index/florkasu.png',
+        'endpoint' => '/api/Payments_V1',
+        'desc'  => 'Consulta estado de cuenta y registra pagos PSD2 con saldo, mora y transición de estatus.',
         'href'  => $docPrefix . 'doc_payments.php',
     ],
     [
         'title' => 'API_ACCOUNTS',
         'badge' => 'GRATIS',
-        'icon'  => '&#128188;',
-        'desc'  => 'Apertura de servicios KASU desde tu plataforma y comisiones por venta.',
+        'icon'  => 'https://kasu.com.mx/assets/images/Index/florkasu.png',
+        'endpoint' => '/api/Accounts_V1',
+        'desc'  => 'Registra servicios KASU con venta, póliza, liga de pago y datos legales aceptados.',
         'href'  => $docPrefix . 'doc_accounts.php',
     ],
     [
         'title' => 'Validate_Mexico',
         'badge' => 'CURP/RFC',
-        'icon'  => '&#128270;',
-        'desc'  => 'Validación de identidad con caché y modelo prepago para CURP y RFC.',
+        'icon'  => 'https://kasu.com.mx/assets/images/Index/florkasu.png',
+        'endpoint' => '/api/ValidateMexico_V1',
+        'desc'  => 'Valida CURP/RFC con caché, wallet prepago y consultas upstream controladas.',
         'href'  => $docPrefix . 'doc_validatemexico.php',
     ],
 ];
@@ -54,9 +58,12 @@ $docs = [
           <div class="section-title">
             <span class="badge badge-pill api-card__badge"><?php echo htmlspecialchars($doc['badge'], ENT_QUOTES, 'UTF-8'); ?></span>
             <h2 class="api-card__title">
-              <span class="api-card__icon" aria-hidden="true"><?php echo $doc['icon']; ?></span>
+              <span class="api-card__icon" aria-hidden="true">
+                <img src="<?php echo htmlspecialchars($doc['icon'], ENT_QUOTES, 'UTF-8'); ?>" alt="" loading="lazy" decoding="async">
+              </span>
               <strong><?php echo htmlspecialchars($doc['title'], ENT_QUOTES, 'UTF-8'); ?></strong>
             </h2>
+            <code class="api-card__endpoint"><?php echo htmlspecialchars($doc['endpoint'], ENT_QUOTES, 'UTF-8'); ?></code>
           </div>
           <br>
           <p class="api-card__desc"><?php echo htmlspecialchars($doc['desc'], ENT_QUOTES, 'UTF-8'); ?></p>

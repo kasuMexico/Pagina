@@ -8,6 +8,11 @@
 
 require_once __DIR__ . '/FunctionUsageTracker.php';
 
+// No imprimir reportes cuando este archivo se cargue por accidente desde un endpoint API.
+if (realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) !== __FILE__) {
+    return;
+}
+
 // Lee y agrega el histórico desde el archivo persistente
 $hist = FunctionUsageTracker::readPersistent(__DIR__ . '/usage_log.txt');
 

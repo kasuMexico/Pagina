@@ -305,6 +305,19 @@ $VerCache = time();
       <?php endif; ?>
 
       <?php if ((int)$Vende <= 2): ?>
+      <section class="tool-section tool-span-4">
+        <header>
+          <strong>API Market</strong>
+          <small>Accesos, tokens y wallet</small>
+        </header>
+        <div class="tool-section-body">
+          <p class="small mb-3">Revisa solicitudes de acceso, aprueba o rechaza APIs, genera credenciales y agrega saldo para <strong>Validate_Mexico</strong>.</p>
+          <a class="btn btn-primary btn-block" href="Mesa_ApiMarket.php">Administrar API Market</a>
+        </div>
+      </section>
+      <?php endif; ?>
+
+      <?php if ((int)$Vende <= 2): ?>
       <!-- SECCION: Asignacion de Metas-->
       <section class="tool-section tool-span-2">
         <header><strong>Metas y normalidad</strong></header>

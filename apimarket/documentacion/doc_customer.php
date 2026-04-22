@@ -53,7 +53,7 @@ if (isset($mysqli) && ($mysqli instanceof mysqli)) {
     <meta name="keywords" content="Cobros">
     <link rel="canonical" href="https://kasu.com.mx<?php echo htmlspecialchars(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/', ENT_QUOTES, 'UTF-8'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="Consulta los datos de clientes y productos">
+    <meta name="description" content="Documentación API_CUSTOMER V1 para consultar clientes, catálogo de productos y ventas autorizadas.">
     <meta name="author" content="Jose Carlos Cabrera Monroy">
     <link rel="stylesheet" type="text/css" href="/assets/css/fonts.css">
     <link rel="icon" href="https://kasu.com.mx/assets/images/Index/florkasu.png">
@@ -63,9 +63,10 @@ if (isset($mysqli) && ($mysqli instanceof mysqli)) {
     <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/font-awesome.css">
     <link rel="stylesheet" href="https://kasu.com.mx/assets/css/index.css">
+    <link rel="stylesheet" href="../assets/index.css">
     <link rel="stylesheet" href="../assets/codigo.css">
 </head>
-<body>
+<body class="doc-page">
     <!-- La ventana emergente debe de estar fuera del div que lo lanza -->
     <?php
     require_once __DIR__ . '/../html/menu.php';        // Menú principal
@@ -77,13 +78,12 @@ if (isset($mysqli) && ($mysqli instanceof mysqli)) {
     <?php require_once __DIR__ . '/../html/Sandbox.php'; ?>
 
     <!-- *****     CÓDIGOS GENERALES     ***** -->
-    <section class="section padding-top-70 colored" id="">
+    <section class="doc-section doc-section--muted" id="codigos">
         <div class="container">
-            <div class="Consulta">
-                <h2 class="titulos"><strong>CODIGOS GENERALES</strong></h2>
-                <br>
-                <p>Estos son los códigos generales generados por <strong>API_CUSTOMER</strong>, y las claves para envío de datos.</p>
-                <br>
+            <div class="doc-heading">
+                <span class="api-kicker">API_CUSTOMER</span>
+                <h2>Códigos y funciones disponibles</h2>
+                <p>Estos son los códigos generales generados por <strong>API_CUSTOMER</strong> y las claves admitidas por el endpoint <strong>/api/Customer_V1</strong>.</p>
             </div>
             <div class="row">
                 <div class="col-lg-5 col-md-12 col-sm-12 align-self-center" data-scroll-reveal="enter left move 30px over 0.6s after 0.4s">
@@ -135,8 +135,12 @@ if (isset($mysqli) && ($mysqli instanceof mysqli)) {
     </section>
 
     <!-- *****  CONSULTA BASE ***** -->
-    <section class="section padding-top-70" id="">
+    <section class="doc-section" id="consulta-base">
         <div class="container">
+            <div class="doc-heading">
+                <h2>Consulta base</h2>
+                <p>Envía el token Bearer, el usuario API, la CURP ligada al token y la estructura <strong>token_data</strong> recibida desde <strong>Token_Full</strong>.</p>
+            </div>
             <div class="row">
                 <div class="col-lg-5 col-md-12 col-sm-12 align-self-center" data-scroll-reveal="enter left move 30px over 0.6s after 0.4s">
                     <div class="row">
@@ -188,7 +192,7 @@ if (isset($mysqli) && ($mysqli instanceof mysqli)) {
 								Headers:
 								Authorization: Bearer API_KEY_AQUI
 								Content-Type: application/json
-								User-Agent: YourApplicationName/1.0
+								User-Agent: SECRET_KEY_USUARIO_SECRET_KEY_ID
 
 								{
 									"tipo_peticion": "request",
@@ -208,8 +212,61 @@ if (isset($mysqli) && ($mysqli instanceof mysqli)) {
         </div>
     </section>
 
+    <section class="doc-section doc-section--muted" id="ejemplos">
+        <div class="container">
+            <div class="doc-heading">
+                <h2>Ejemplos frecuentes</h2>
+                <p><strong>request</strong> lista claves disponibles, <strong>individual_request</strong> devuelve un campo puntual y <strong>request_block</strong> devuelve bloques completos.</p>
+            </div>
+            <div class="doc-grid">
+                <div class="doc-panel">
+                    <span class="doc-pill">request_block</span>
+                    <h3>Datos completos del cliente</h3>
+                    <div class="code-window">
+                        <pre id="codecopindex" class="userContent" style="white-space: pre-wrap;"><code>POST https://apimarket.kasu.com.mx/api/Customer_V1
+Authorization: Bearer API_KEY_AQUI
+Content-Type: application/json
+User-Agent: SECRET_KEY_USUARIO_SECRET_KEY_ID
+
+{
+  "tipo_peticion": "request_block",
+  "nombre_de_usuario": "YOUR_APPUSER",
+  "request": "cliente",
+  "curp_en_uso": "CURP_CODE",
+  "token_data": {
+    "timestamp": TIMESTAMP,
+    "expires_in": EXPIRE_IN
+  }
+}</code></pre>
+                    </div>
+                </div>
+                <div class="doc-panel">
+                    <span class="doc-pill">individual_request</span>
+                    <h3>Campo de venta</h3>
+                    <div class="code-window">
+                        <pre id="codecopi2" class="userContent" style="white-space: pre-wrap;"><code>POST https://apimarket.kasu.com.mx/api/Customer_V1
+Authorization: Bearer API_KEY_AQUI
+Content-Type: application/json
+User-Agent: SECRET_KEY_USUARIO_SECRET_KEY_ID
+
+{
+  "tipo_peticion": "individual_request",
+  "nombre_de_usuario": "YOUR_APPUSER",
+  "request": "IdFIrma",
+  "curp_en_uso": "CURP_CODE",
+  "token_data": {
+    "timestamp": TIMESTAMP,
+    "expires_in": EXPIRE_IN
+  }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- ***** Otras APIs ***** -->
-    <section class="section padding-top-70 colored" id="otros">
+    <section class="doc-section" id="otros">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">

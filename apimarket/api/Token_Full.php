@@ -1,64 +1,68 @@
 <?php
-//creamos una variable general para las funciones
-$basicas = new Basicas();
-$seguridad = new Seguridad();
-//La peticion debe ser por metodo POST y el cuerpo de la solicitud
-//debe estar en formato (Content-Type: application/json)
-//y debe contener los siguientes parámetros:
-//Tipo_Peticion	    Especifica el tipo de petición, debe ser establecido segun las tablas de acceso
-//nombre_de_usuario	Especifica tu nombre de usuario registrado en la aplicación KASU.
-//Firma_KEY	        Firma la clave CURP de tu cliente con tu Secret KEY mediante el algoritmo criptográfico HMAC.
-//curp_en_uso	      La clave CURP para generar la firma HMAC que este cifrada en BASE64.
-if ($data['tipo_peticion'] == 'token_full') {
+declare(strict_types=1);
 
-    // Verificar que los datos necesarios estén presentes
-    if (!isset($data['nombre_de_usuario'], $data['firma_KEY'], $data['curp_en_uso'])) {
-        header('HTTP/1.1 400 Bad Request');
-        exit;
-    }
-    // Verificar las credenciales del usuario
-    if ($Usr_Agent = $seguridad->ValidarUsrAPI($mysqli,$data['nombre_de_usuario'],$_SERVER['HTTP_USER_AGENT'])) {
-      //Descargamos la contraseña de el usuario
-      $password_usuario = $basicas->BuscarCampos($mysqli,"Pass","Empleados","IdUsuario",$data['nombre_de_usuario']);
-      //Buscamos los datos para gener el Secret_KEY
-      $Secret_KEY = hash_hmac('sha256',$Usr_Agent,$password_usuario);
-      //Enviamos a la funcion de validacion de curp
-        $ArrayRes =  $seguridad->peticion_get($data['curp_en_uso']);
+if (!function_exists('api_token_full_handle')) {
+    function api_token_full_handle(mysqli $db, array $data, Seguridad $seguridad): void
+    {
+        if (($data['tipo_peticion'] ?? '') !== 'token_full') {
+            api_error(404, 'Peticion desconocida');
+        }
 
-      if ($ArrayRes["Response"] == "Error" || $ArrayRes["StatusCurp"] == "BD") {
-          header('HTTP/1.1 417 Bad Request');
-          exit;
-      }
-      // Verificar la FIRMA_KEY
-      $firma_key_sha = hash_hmac('sha256',$data['curp_en_uso'],$Secret_KEY);
-      //Validamos que los hashsean el mismo
-      if ($data['firma_KEY'] != $firma_key_sha) {
-          header('HTTP/1.1 401 Unauthorized');
-          exit;
-      }
-        //como el tiempo de expiración y los datos del usuario
-        $token_data = array(
-            "timestamp"   => time(),
-            "expires_in"  => 6000, // 10 minutos de duracion por Token 600
-        );
-        //Convertir los datos en formato JSON.
-        $token_data_json = json_encode($token_data);
-        //Generar un hash HMAC de los datos JSON utilizando la clave segura generada en el paso 2.
-        $token = hash_hmac('sha256', $token_data_json, $firma_key_sha); //Este es el token que contiene todos los datos de uso
-        // Enviar la respuesta en formato JSON
-        header('HTTP/1.1 200 OK');
-        header('Content-Type: application/json');
-        echo json_encode(
-          array(
-            'token'      => $token,
-            'nombre'     => $ArrayRes["Nombre"]." ".$ArrayRes["Paterno"]." ".$ArrayRes["Materno"],
-            'token_data' => $token_data
-          )
-        );
-        exit;
-    }else{
-        // Devolver un mensaje de error si las credenciales son inválidas 401
-        header('HTTP/1.1 403 Unauthorized');
-        exit;
+        $user = trim((string)($data['nombre_de_usuario'] ?? ''));
+        $firmaKey = trim((string)($data['firma_KEY'] ?? ''));
+        $curp = api_norm_curp((string)($data['curp_en_uso'] ?? ''));
+
+        if ($user === '' || $firmaKey === '' || $curp === '') {
+            api_error(400, 'Faltan nombre_de_usuario, firma_KEY o curp_en_uso');
+        }
+
+        $agent = (string)($_SERVER['HTTP_USER_AGENT'] ?? '');
+        $usrAgentKey = api_validar_usr_api($db, $user, $agent);
+        if (!$usrAgentKey) {
+            api_error(403, 'Credenciales API invalidas');
+        }
+
+        $password = (string)(api_value($db, 'SELECT Pass FROM Empleados WHERE IdUsuario = ? LIMIT 1', 's', [$user]) ?? '');
+        if ($password === '') {
+            api_error(403, 'Usuario API no existe');
+        }
+
+        $secretKey = hash_hmac('sha256', (string)$usrAgentKey, $password);
+        $datosCurp = $seguridad->peticion_get($curp);
+        if (!is_array($datosCurp)
+            || strcasecmp((string)($datosCurp['Response'] ?? ''), 'correct') !== 0
+            || strtoupper((string)($datosCurp['StatusCurp'] ?? '')) === 'BD') {
+            api_error(417, 'CURP no valida o no elegible');
+        }
+
+        $expectedFirma = hash_hmac('sha256', $curp, $secretKey);
+        if (!hash_equals($expectedFirma, $firmaKey)) {
+            api_error(401, 'Firma invalida');
+        }
+
+        $tokenData = [
+            'timestamp' => time(),
+            'expires_in' => 600,
+        ];
+        $tokenJson = json_encode($tokenData, JSON_UNESCAPED_UNICODE);
+        $token = hash_hmac('sha256', (string)$tokenJson, $expectedFirma);
+
+        api_json([
+            'ok' => true,
+            'token' => $token,
+            'nombre' => trim(
+                (string)($datosCurp['Nombre'] ?? '') . ' ' .
+                (string)($datosCurp['Paterno'] ?? '') . ' ' .
+                (string)($datosCurp['Materno'] ?? '')
+            ),
+            'token_data' => $tokenData,
+        ]);
     }
+}
+
+if (realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) {
+    require_once __DIR__ . '/../librerias_api.php';
+    $db = api_require_db($mysqli ?? null, 'ventas');
+    $data = api_read_json();
+    api_token_full_handle($db, $data, $seguridad);
 }

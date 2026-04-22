@@ -23,7 +23,7 @@ if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
 
 /* ===== Contexto básico ===== */
 $nombre      = $_GET['nombre']   ?? '';
-$producto    = $_GET['producto'] ?? ''; // opcional
+$producto    = $_GET['producto'] ?? 'FUNERARIO'; // Por defecto FUNERARIO si no viene
 $productoRaw = trim((string)$producto);
 $nombreSafe  = htmlspecialchars((string)$nombre,   ENT_QUOTES, 'UTF-8');
 $selfSafe    = htmlspecialchars((string)($_SERVER['PHP_SELF'] ?? ''), ENT_QUOTES, 'UTF-8');
@@ -141,7 +141,9 @@ $guideMap = [
   'SEGURIDAD'   => 'guiaoficiales.png',
   'DISTRIBUIDOR'=> 'guiadistribuidor.png',
 ];
-$guideImage = $guideMap[$servicioFromQuery] ?? 'guiafuneraria.png';
+// Variable modificable para la imagen por defecto
+$defaultGuideImage = 'guiafuneraria.png'; // Puedes cambiar esta línea por cualquier otro nombre de archivo
+$guideImage = $guideMap[$servicioFromQuery] ?? $defaultGuideImage;
 
 /* ===== Opiniones (prueba social) ===== */
 $opiniones = [];

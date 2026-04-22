@@ -70,6 +70,7 @@ $isSocial = ($CoMn === 'Pwa_Sociales.php');
 
 $isMesaMarketing = ($CoMn === 'Mesa_Marketing.php');
 $isMesaFinanzas  = ($CoMn === 'Mesa_Finanzas.php');
+$isMesaApiMarket = ($CoMn === 'Mesa_ApiMarket.php');
 
 /* Grupos */
 $isMesaGroup = (strncmp($CoMn, 'Mesa_', 5) === 0);
@@ -113,6 +114,18 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
           'assets/img/Iconos_menu/Finanzas.png',
           $isMesaFinanzas,
           $anchorDisabled,
+        );
+      }
+
+      // Mesa API Market (solo niveles 1 y 2)
+      if ($canSeeMesaMF) {
+        btnIcon(
+          'Mesa_ApiMarket.php',
+          'assets/img/Iconos_menu/kasu_black.png',
+          'assets/img/kasu_logo.jpeg',
+          $isMesaApiMarket,
+          $anchorDisabled,
+          'API'
         );
       }
 
@@ -213,6 +226,16 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
           'assets/img/Iconos_menu/Finanzas.png',
           $isMesaFinanzas,
           $anchorDisabled,
+        );
+
+        // Mesa API Market
+        btnIcon(
+          'Mesa_ApiMarket.php',
+          'assets/img/Iconos_menu/kasu_black.png',
+          'assets/img/kasu_logo.jpeg',
+          $isMesaApiMarket,
+          $anchorDisabled,
+          'API'
         );
       }
 

@@ -87,7 +87,7 @@ if (isset($_GET['Msg'])) {
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <title>API Market de KASU | Open banking y servicios fintech integrables</title>
+  <title>API Market KASU V1 | Cuentas, pagos, clientes y validación</title>
 
   <!-- Canonical y hreflang -->
   <link rel="canonical" href="https://kasu.com.mx/apimarket/">
@@ -97,15 +97,15 @@ if (isset($_GET['Msg'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
   <!-- SEO básico -->
-  <meta name="description" content="Integra el API Market de KASU a tu app web o móvil. Cobros, cuentas, clientes y remesas mediante APIs seguras, documentación y soporte.">
+  <meta name="description" content="Integra API Market KASU V1 a tu app web o móvil. Accounts, Payments, Customer y Validate_Mexico con autenticación Bearer y respuestas JSON.">
   <meta name="author" content="Erendida Itzel Castro Marquez; Jose Carlos Cabrera Monroy">
   <meta name="robots" content="index,follow,max-image-preview:large">
 
   <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="KASU">
-  <meta property="og:title" content="API Market de KASU | Open banking y servicios fintech integrables">
-  <meta property="og:description" content="Conecta tu plataforma al API Market de KASU. Pagos, cuentas y clientes con seguridad y soporte.">
+  <meta property="og:title" content="API Market KASU V1 | APIs de cuentas, pagos, clientes y validación">
+  <meta property="og:description" content="Conecta tu plataforma a API_ACCOUNTS, API_PAYMENTS, API_CUSTOMER y Validate_Mexico con seguridad y soporte.">
   <meta property="og:url" content="https://kasu.com.mx/apimarket/">
   <meta property="og:image" content="https://kasu.com.mx/assets/images/og/kasu-apimarket.png">
   <meta property="og:locale" content="es_MX">
@@ -113,7 +113,7 @@ if (isset($_GET['Msg'])) {
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="API Market de KASU | Open banking y servicios fintech integrables">
-  <meta name="twitter:description" content="Integra pagos, cuentas y clientes a tu app con las APIs de KASU.">
+  <meta name="twitter:description" content="Integra cuentas, pagos, clientes y validaciones CURP/RFC a tu app con APIs KASU V1.">
   <meta name="twitter:image" content="https://kasu.com.mx/assets/images/og/kasu-apimarket.png">
 
   <!-- Icono -->
@@ -192,12 +192,14 @@ if (isset($_GET['Msg'])) {
           <nav class="main-nav" aria-label="Principal">
             <!-- Logo -->
             <a href="https://kasu.com.mx/" class="logo" aria-label="KASU inicio">
-              <img src="/assets/images/Index/florkasu.png" alt="KASU" loading="eager" decoding="async"/>
+              <img src="https://kasu.com.mx/assets/images/Index/florkasu.png" alt="KASU" loading="eager" decoding="async"/>
             </a>
             <!-- Menu -->
             <ul class="nav">
               <li><a style="color: black;" href="https://kasu.com.mx/" class="comprar">KASU</a></li>
-              <li><a style="color: black;" href="#apikasu">Documentación</a></li>
+              <li><a style="color: black;" href="#Ventajas">APIs V1</a></li>
+              <li><a style="color: black;" href="#Autentica">Autenticación</a></li>
+              <li><a style="color: black;" href="acceso.php">Solicitar acceso</a></li>
               <li><a style="color: black;" href="#contact-us">Contáctanos</a></li>
             </ul>
             <a class="menu-trigger" aria-label="Abrir menú">
@@ -212,28 +214,55 @@ if (isset($_GET['Msg'])) {
   <div class="welcome-area apimarket-hero">
     <div class="header-text apimarket-hero__text">
       <div class="container">
-        <?php
-        $heroFile = $assetFsPrefix . 'img/hero_apimarket.svg';
-        $heroUrl = $assetPrefix . 'img/hero_apimarket.svg';
-        ?>
         <div class="row align-items-center">
           <div class="col-lg-6 col-md-12 col-sm-12">
-            <h1 class="apimarket-hero__title">Todas las oportunidades del open insurance a tu alcance <strong>Apimarket_KASU</strong></h1>
-            <p class="apimarket-hero__lead">Integra cobros, cuentas y validaciones con APIs seguras, documentación clara y soporte directo.</p>
-            <a class="main-button-slider apimarket-hero__cta" href="<?php echo htmlspecialchars($docPrefix . 'doc_customer.php', ENT_QUOTES, 'UTF-8'); ?>">Documentación</a>
+            <span class="api-kicker">API Market KASU V1</span>
+            <h1 class="apimarket-hero__title">APIs para registrar servicios, cobrar, consultar clientes y validar identidad.</h1>
+            <p class="apimarket-hero__lead">Integra <strong>API_ACCOUNTS</strong>, <strong>API_PAYMENTS</strong>, <strong>API_CUSTOMER</strong> y <strong>Validate_Mexico</strong> con autenticación <strong>Token_Full</strong>, Bearer token y respuestas JSON consistentes.</p>
+            <div class="api-action-row">
+              <a class="api-button" href="<?php echo htmlspecialchars($docPrefix . 'doc_accounts.php', ENT_QUOTES, 'UTF-8'); ?>">Ver APIs V1</a>
+              <a class="api-button api-button--secondary" href="#Autentica">Autenticación</a>
+              <a class="api-button api-button--secondary" href="acceso.php">Solicitar acceso</a>
+            </div>
+            <div class="apimarket-stats">
+              <div class="apimarket-stat">
+                <strong>4</strong>
+                <span>APIs V1 públicas</span>
+              </div>
+              <div class="apimarket-stat">
+                <strong>JSON</strong>
+                <span>Errores y respuestas</span>
+              </div>
+              <div class="apimarket-stat">
+                <strong>Bearer</strong>
+                <span>Autorización</span>
+              </div>
+            </div>
           </div>
           <div class="col-lg-6 col-md-12 col-sm-12">
-            <?php if (is_file($heroFile)) { ?>
-              <img src="<?php echo htmlspecialchars($heroUrl, ENT_QUOTES, 'UTF-8'); ?>" alt="API Market KASU" class="img-fluid apimarket-hero__img" loading="lazy" decoding="async">
-            <?php } else { ?>
-              <div class="features-small-item" style="margin-top: 20px;">
-                <div class="section-title">
-                  <h2><strong>Documenta y lanza en minutos</strong></h2>
-                </div>
-                <p>Activa endpoints, valida identidad y escala tu producto con un flujo simple de autenticación.</p>
-                <a class="btn btn-info" href="<?php echo htmlspecialchars($docPrefix . 'doc_customer.php', ENT_QUOTES, 'UTF-8'); ?>">Documentación</a>
+            <div class="apimarket-hero__panel" aria-label="Ejemplo de consumo API Market KASU">
+              <div class="apimarket-hero__panel-head">
+                <span>Contrato público vigente</span>
+                <span>V1</span>
               </div>
-            <?php } ?>
+              <pre><code>POST https://apimarket.kasu.com.mx/api/Accounts_V1
+Authorization: Bearer API_KEY_AQUI
+Content-Type: application/json
+
+{
+  "tipo_peticion": "new_service",
+  "nombre_de_usuario": "YOUR_APPUSER",
+  "curp_en_uso": "CURP_CODE",
+  "producto": "Funerario",
+  "terminos": "acepto",
+  "aviso": "acepto",
+  "fideicomiso": "acepto",
+  "token_data": {
+    "timestamp": 1760000000,
+    "expires_in": 600
+  }
+}</code></pre>
+            </div>
           </div>
         </div>
       </div>
@@ -257,20 +286,18 @@ if (isset($_GET['Msg'])) {
                 <span> Clientes Activos</span>
               </h2>
             </div>
-            <p style="text-align: justify;"><strong>KASU</strong> es una plataforma que cuenta con un entorno de gestión robusto que permite a los usuarios realizar la compra de pequeñas partes de fideicomisos que sirven como ahorro para afrontar situaciones difíciles en su vida, tales como gastos funerarios, enviar a sus hijos a la universidad, crear fondos para el retiro y envío y recepción de remesas.</p>
+            <p style="text-align: justify;"><strong>API Market KASU</strong> expone los flujos transaccionales de la plataforma para aliados: alta de servicios, consulta de clientes, cobranza y validación de identidad. El contrato público vigente usa endpoints <strong>V1</strong> y autenticación <strong>Token_Full</strong>.</p>
           </div>
         </div>
         <div class="col-lg-2 col-md-12 col-sm-12 align-self-center"></div>
         <div class="col-lg-4 col-md-12 col-sm-12 align-self-center" data-scroll-reveal="enter right move 30px over 0.6s after 0.4s">
           <div class="row">
-            <div class="features-small-item">
-              <div class="center-heading">
-                <h2 class="section-title">Usa el entorno KASU</h2>
-              </div>
-              <div class="center-text" id="apikasu">
-                <p style="text-align: justify;"><strong>1.- </strong>Comercializa nuestros servicios y recibe interesantes comisiones por ello.</p>
-                <p style="text-align: justify;"><strong>2.- </strong>Recibe los pagos que nuestros clientes tienen que hacer sobre los servicios de KASU y obtén una comisión por cada peso que cobres.</p>
-                <p style="text-align: justify;"><strong>3.- </strong>Realiza validaciones de datos de clientes con los datos de los clientes de KASU.</p>
+            <div class="doc-panel" id="apikasu">
+              <span class="api-kicker">Casos de uso</span>
+              <h2 class="section-title">Opera servicios KASU desde tu plataforma</h2>
+              <p style="text-align: justify;">Registra ventas, consulta datos autorizados, cobra parcialidades y valida CURP/RFC usando respuestas JSON estables para integración web, móvil o backoffice.</p>
+              <div class="api-action-row">
+                <a class="api-button api-button--secondary" href="<?php echo htmlspecialchars($docPrefix . 'doc_accounts.php', ENT_QUOTES, 'UTF-8'); ?>">Empezar con Accounts</a>
               </div>
             </div>
           </div>
@@ -284,7 +311,8 @@ if (isset($_GET['Msg'])) {
     <div class="col-lg-12">
       <div class="center-heading">
         <br><br>
-        <h2 class="section-title">Selecciona la <strong>API's</strong> que mejor se adapte a tus necesidades</h2>
+        <span class="api-kicker">Documentación</span>
+        <h2 class="section-title">Selecciona la API que necesitas integrar</h2>
       </div>
     </div>
     <br>
@@ -297,40 +325,30 @@ if (isset($_GET['Msg'])) {
       <div class="Consulta">
         <h2 class="titulos"><strong>USABILIDAD GENERAL</strong></h2>
         <br>
-        <p>Las <strong>API</strong> que hemos desarrollado para ti cuentan con una usabilidad formada por bloques que pueden comunicarse entre sí o intercambiar información generada en un bloque para interactuar en cualquier otro.</p>
-        <br>
-        <p>Solo recuerda que debes tener permisos para cada una de nuestras <strong>API</strong> verticales.</p>
+        <p>Las APIs V1 comparten autenticación, errores JSON y datos de token. Cada token se liga al usuario, a la CURP de operación y a los permisos habilitados para tu integración.</p>
         <br>
       </div>
-      <div class="table-container">
-        <table class="table api-table">
-          <tbody>
-            <tr>
-              <td class="blue">
-                <h2><strong>API_CUSTOMER</strong></h2>
-                <br><p>Modelo <strong>PREPAGO</strong> para consultas de datos de clientes.</p>
-              </td>
-              <td class="red">
-                <h2><strong>API_PAYMENTS</strong></h2>
-                <br><p>Modelo <strong>POSPAGO</strong> para cobros y conciliación mensual.</p>
-              </td>
-              <td class="purple">
-                <h2><strong>API_ACCOUNTS</strong></h2>
-                <br><p>Alta de servicios KASU y comisiones por venta desde tu plataforma.</p>
-              </td>
-              <td class="teal">
-                <h2><strong>Validate_Mexico</strong></h2>
-                <br><p>Validación de identidad <strong>CURP/RFC</strong> con caché y prepago.</p>
-              </td>
-            </tr>
-            <tr>
-              <td colspan="4" class="green">
-                <h2><strong>token_full</strong></h2>
-                <p>Token de acceso para las APIs de KASU. Los detalles y ejemplos se encuentran en cada documentación.</p>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="api-flow">
+        <div class="api-flow__item">
+          <strong>1. Token_Full</strong>
+          <span>Genera el Bearer token con firma HMAC y vigencia de 10 minutos.</span>
+        </div>
+        <div class="api-flow__item">
+          <strong>2. Accounts</strong>
+          <span>Crea contacto, usuario, legal, venta y liga de pago.</span>
+        </div>
+        <div class="api-flow__item">
+          <strong>3. Customer</strong>
+          <span>Consulta datos autorizados, catálogo y ventas por CURP.</span>
+        </div>
+        <div class="api-flow__item">
+          <strong>4. Payments</strong>
+          <span>Consulta estado de cuenta y registra pagos con mora si aplica.</span>
+        </div>
+        <div class="api-flow__item">
+          <strong>5. Validate_Mexico</strong>
+          <span>Valida CURP/RFC con caché y wallet prepago.</span>
+        </div>
       </div>
     </div>
   </section>

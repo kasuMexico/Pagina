@@ -89,8 +89,13 @@ foreach ($rows as $r) {
     . '</tr>';
 }
 ?>
-<section class="section padding-top-70 colored" id="historial-versiones">
+<section class="doc-section doc-section--muted" id="historial-versiones">
   <div class="container">
+    <div class="doc-heading">
+      <span class="api-kicker">Versiones</span>
+      <h2>Historial de documentación</h2>
+      <p>Consulta la versión vigente del contrato y las revisiones publicadas para esta API.</p>
+    </div>
     <div class="row">
 
       <!-- Columna izquierda: tabla de evolución -->
@@ -117,9 +122,9 @@ foreach ($rows as $r) {
 
       <!-- Columna derecha: panel con descripción de la ÚLTIMA versión -->
       <div class="col-lg-4 col-md-12 col-sm-12 align-self-center" data-scroll-reveal="enter left move 30px over 0.6s after 0.4s">
-        <div class="features-small-item">
+        <div class="doc-panel">
           <div class="Consulta">
-            <h2 class="titulos"><strong>HISTORIAL DE VERSIONES</strong></h2>
+            <h3><strong>Última versión</strong></h3>
             <p><small><strong>Última versión:</strong> <?= $ver ?> — <strong>Fecha:</strong> <?= $release ?></small></p>
             <hr>
             <!-- Descripción de la última versión (puede traer HTML) -->

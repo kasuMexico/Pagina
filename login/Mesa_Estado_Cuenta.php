@@ -171,6 +171,31 @@ $VerCache   = $VerCache ?? '1';
    <link rel="stylesheet" href="/login/assets/css/pwa-core.css?v=<?= h($VerCache) ?>">
    <link rel="stylesheet" href="/login/assets/css/pwa-components.css?v=<?= h($VerCache) ?>">
    <link rel="stylesheet" href="/login/assets/css/vistas.css?v=<?= h((string)$VerCache ?? time()) ?>">
+   <style>
+     .statement-table{
+       width:100%;
+       table-layout:fixed;
+       border-collapse:collapse;
+     }
+     .statement-table col.col-date{width:14%;}
+     .statement-table col.col-concept{width:46%;}
+     .statement-table col.col-balance{width:14%;}
+     .statement-table col.col-debit{width:13%;}
+     .statement-table col.col-credit{width:13%;}
+     .statement-table td{
+       overflow-wrap:break-word;
+     }
+     .statement-table .concept-cell{
+       white-space:normal;
+     }
+     .statement-table .text-right{
+       text-align:right;
+       white-space:nowrap;
+     }
+     .table-panel .table-responsive{
+       width:100%;
+     }
+   </style>
 </head>
 <body onload="localize()">
     <!-- TOP BAR Mesa_Estado_Cuenta.php-->
@@ -352,11 +377,18 @@ $VerCache   = $VerCache ?? '1';
           <p class="panel-title">Histórico de movimientos</p>
         </header>
         <div class="table-responsive">
-          <table class="table table-sm align-middle">
+          <table class="table table-sm align-middle statement-table">
+            <colgroup>
+              <col class="col-date">
+              <col class="col-concept">
+              <col class="col-balance">
+              <col class="col-debit">
+              <col class="col-credit">
+            </colgroup>
             <thead>
               <tr>
                 <th>Fecha</th>
-                <th>Concepto</th>
+                <th class="concept-cell">Concepto</th>
                 <th class="text-right">Saldo</th>
                 <th class="text-right">Debe</th>
                 <th class="text-right">Haber</th>
@@ -365,7 +397,7 @@ $VerCache   = $VerCache ?? '1';
             <tbody>
               <tr>
                 <td><?= h(substr((string)$venta['FechaRegistro'], 0, 10)); ?></td>
-                <td>Contratación del servicio <?= h($venta['Producto'] ?? ''); ?></td>
+                <td class="concept-cell">Contratación del servicio <?= h($venta['Producto'] ?? ''); ?></td>
                 <td class="text-right"><?= number_format((float)($venta['CostoVenta'] ?? 0), 2); ?></td>
                 <td class="text-right">-</td>
                 <td class="text-right">-</td>
@@ -383,7 +415,7 @@ $VerCache   = $VerCache ?? '1';
                       echo <<<HTML
                           <tr>
                               <td>{$fec}</td>
-                              <td>{$sts} de servicio {$prd}</td>
+                              <td class="concept-cell">{$sts} de servicio {$prd}</td>
                               <td class="text-right">-</td>
                               <td class="text-right">{$cant}</td>
                               <td class="text-right">$ 0.00</td>

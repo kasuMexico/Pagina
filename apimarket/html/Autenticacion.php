@@ -1,29 +1,31 @@
 <!-- ***** AUTENTICACION ***** -->
-<section class="section padding-top-70" id="Autentica">
+<section class="doc-section" id="Autentica">
   <div class="container">
-    <div class="Consulta">
-        <h2 class="titulos"><strong>AUTENTICACION</strong></h2>
-        <p class="auth-subtitle"><strong>token_full</strong></p>
-        <br>
-        <p class="auth-lead">Flujo de autenticación: firma <strong>HMAC</strong> &rarr; <strong>token_full</strong> &rarr; consumo con <strong>Authorization: Bearer</strong>.</p>
-        <p class="auth-lead">Los ejemplos específicos de consumo están en la documentación de cada API.</p>
-        <br>
+    <div class="doc-heading">
+        <span class="api-kicker">Autenticación</span>
+        <h2>Token_Full y Bearer token</h2>
+        <p>Flujo de autenticación: firma <strong>HMAC</strong>, generación de <strong>token_full</strong> y consumo de APIs V1 con <strong>Authorization: Bearer</strong>. Los ejemplos específicos de consumo están en la documentación de cada API.</p>
     </div>
     <div class="row">
       <div class="col-lg-5 col-md-12 col-sm-12 align-self-center" data-scroll-reveal="enter left move 30px over 0.6s after 0.4s">
         <div class="row">
           <div class="Consulta">
-            <p style="text-align: justify;">La peticion debe ser por metodo <strong>POST</strong> y el cuerpo de la solicitud debe estar en formato <strong>(Content-Type: application/json)</strong> y debe contener los siguientes parámetros:</p>
+            <p style="text-align: justify;">La petición debe ser por método <strong>POST</strong>; el cuerpo debe enviarse como <strong>Content-Type: application/json</strong>.</p>
             <br>
           </div>
+          <div class="doc-table">
           <table class="table table-responsive justify">
             <tr>
               <td><strong>Parámetro</strong></td>
               <td><strong>Descripción</strong></td>
             </tr>
             <tr>
-              <td>Tipo_Peticion</td>
-              <td style="text-align: justify;">Especifica el tipo de petición, debe ser establecido segun las tablas de acceso</td>
+              <td>tipo_peticion</td>
+              <td style="text-align: justify;">Debe enviarse como <strong>token_full</strong>.</td>
+            </tr>
+            <tr>
+              <td>User-Agent</td>
+              <td style="text-align: justify;">Identificador técnico asignado en <strong>Secret_KEY</strong>, con formato <strong>USUARIO_ID</strong>.</td>
             </tr>
             <tr>
               <td>YOUR_APPUSER</td>
@@ -31,13 +33,14 @@
             </tr>
             <tr>
               <td>Firma_KEY</td>
-              <td style="text-align: justify;">Firma la clave CURP de tu cliente con tu <strong>PRIVATE_KEY</strong> mediante el algoritmo criptográfico HMAC.</td>
+              <td style="text-align: justify;">Firma la CURP de tu cliente con tu <strong>PRIVATE_KEY</strong> mediante HMAC SHA-256.</td>
             </tr>
             <tr>
               <td>curp_en_uso</td>
-              <td style="text-align: justify;">La clave CURP de el cliente con el que interactuaras se liga a la peticion.</td>
+              <td style="text-align: justify;">CURP que quedará ligada al token y a la petición.</td>
             </tr>
           </table>
+          </div>
         </div>
       </div>
       <div class="col-lg-1 col-md-12 col-sm-12 align-self-center" ></div>
@@ -46,11 +49,11 @@
         <div class="code-window">
           <pre id="codecopindex" class="userContent" style="white-space: pre-wrap;">
             <code>
-POST https://apimarket.kasu.com.mx/api/Registro_V1
+POST https://apimarket.kasu.com.mx/api/Token_Full
 
   Headers:
   Content-Type: application/json
-  User-Agent: Your-Application-Name/1.0
+  User-Agent: SECRET_KEY_USUARIO_SECRET_KEY_ID
   Body:
   {
     "tipo_peticion"     : "token_full",
@@ -66,34 +69,35 @@ POST https://apimarket.kasu.com.mx/api/Registro_V1
   </div>
 </section>
 <!-- ***** REGISTRO DE DATOS DE AUTENTICACION ***** -->
-<section class="section padding-top-70 colored" id="">
+<section class="doc-section doc-section--muted" id="">
   <div class="container">
-    <div class="Consulta">
-        <h2 class="titulos"><strong>REGISTRO DE DATOS DE AUTENTICACION</strong></h2>
-        <br>
-        <p>Resuelve los datos de las peticiones con codigos de error cuando no resuelve correctamente la <strong>API_REGISTRO</strong>, y requiere intrucciones que le indiquen que funcion ejecutar, aqui podras encontrar aambas para que puedas determinar el mejor funcionamiento de tu implementacion</p>
-        <br>
+    <div class="doc-heading">
+        <h2>Respuesta y errores de autenticación</h2>
+        <p><strong>Token_Full</strong> resuelve la credencial de API Market V1 y retorna errores JSON cuando no puede generar el token.</p>
     </div>
     <div class="row">
       <div class="col-lg-5 col-md-12 col-sm-12 align-self-center" data-scroll-reveal="enter left move 30px over 0.6s after 0.4s">
         <!-- ***** REGISTRAR EL CODIGO DE ENVIO DE EL TOKEN INICIAL  ***** -->
         <div class="row">
+          <div class="doc-table">
           <table class="table table-responsive justify">
             <tr>
-              <td><strong>PETICION</strong></td>
-              <td><strong>DESCRIPCION</strong></td>
+              <td><strong>PETICIÓN</strong></td>
+              <td><strong>DESCRIPCIÓN</strong></td>
             </tr>
             <tr>
               <td>token_full</td>
-              <td style="text-align: justify;">Solicita la generacion de un token de autorizacion de usuo con una vigencia de 10 munitos.</td>
+              <td style="text-align: justify;">Solicita la generación de un token de autorización con vigencia de 10 minutos.</td>
             </tr>
             <tr>
               <td></td>
               <td></td>
             </tr>
           </table>
+          </div>
         </div>
         <div class="row">
+          <div class="doc-table" style="margin-top:16px;">
           <table class="table table-responsive justify">
             <tr>
               <td><strong>CODIGO</strong></td>
@@ -101,9 +105,14 @@ POST https://apimarket.kasu.com.mx/api/Registro_V1
             </tr>
             <tr>
               <td>403</td>
-              <td style="text-align: justify;">Las credenciales son inválidas, o el usuario no existe</td>
+              <td style="text-align: justify;">Credenciales inválidas, firma incorrecta o usuario inexistente.</td>
+            </tr>
+            <tr>
+              <td>417</td>
+              <td style="text-align: justify;">CURP inválida o no elegible.</td>
             </tr>
           </table>
+          </div>
         </div>
       </div>
       <div class="col-lg-1 col-md-12 col-sm-12 align-self-center" ></div>
@@ -111,17 +120,18 @@ POST https://apimarket.kasu.com.mx/api/Registro_V1
         <!-- ***** REGISTRAR EL CODIGO DE ENVIO DE EL TOKEN INICIAL  ***** -->
         <div class="row">
           <div class="Consulta">
-            <p style="text-align: justify;">Cuando la <strong>API_REGISTRO</strong> retorna una respuesta positiva retorna los siguientes valores:</p>
+            <p style="text-align: justify;">Cuando <strong>Token_Full</strong> retorna una respuesta positiva entrega los siguientes valores:</p>
             <br>
           </div>
+          <div class="doc-table">
           <table class="table table-responsive justify">
             <tr>
               <td><strong>LLAVE</strong></td>
-              <td><strong>DESCRIPCION</strong></td>
+              <td><strong>DESCRIPCIÓN</strong></td>
             </tr>
             <tr>
               <td>token</td>
-              <td style="text-align: justify;"><strong>TOKEN</strong> generado por la <strong>API_REGISTRO</strong>.</td>
+              <td style="text-align: justify;"><strong>TOKEN</strong> generado por API Market V1.</td>
             </tr>
             <tr>
               <td>nombre</td>
@@ -136,6 +146,7 @@ POST https://apimarket.kasu.com.mx/api/Registro_V1
               <td style="text-align: justify;">Dentro de <strong>token_data</strong> vigencia del <strong>TOKEN</strong> generado</td>
             </tr>
           </table>
+          </div>
         </div>
       </div>
     </div>

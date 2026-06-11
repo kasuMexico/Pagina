@@ -20,6 +20,7 @@ if (is_file($vendorAutoload)) {
 }
 
 require_once 'librerias.php';
+require_once __DIR__ . '/../login/php/mesa_helpers.php';
 $Seguridad = $seguridad;
 
 // ======================================================================
@@ -37,6 +38,15 @@ $TipoServicio     = isset($_POST['TipoServicio'])    ? $mysqli->real_escape_stri
 $Referencia_KASU  = isset($_POST['Referencia_KASU']) ? $mysqli->real_escape_string($_POST['Referencia_KASU']) : '';
 // NUEVO: día de pago (1 o 15) para créditos
 $DiaPagoRaw       = isset($_POST['DiaPago'])         ? (int)$_POST['DiaPago']                                 : 0;
+$IdProspecto      = isset($_POST['IdPros'])          ? (int)$_POST['IdPros']                                  : 0;
+
+if (
+    (parse_url($Host, PHP_URL_PATH) ?: '') === '/login/Mesa_Prospectos.php'
+    && !kasu_marketing_can_manage_prospect($mysqli, $pros, (string)($_SESSION['Vendedor'] ?? ''), $IdProspecto)
+) {
+    http_response_code(403);
+    exit('No tienes permisos para registrar una venta sobre este prospecto.');
+}
 
 // Normalizas los datos legales
 $TerminosRaw    = isset($_POST['Terminos'])    ? $mysqli->real_escape_string($_POST['Terminos'])    : '';

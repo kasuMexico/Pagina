@@ -24,6 +24,11 @@ if (empty($_SESSION["Vendedor"])) {
   header('Location: https://kasu.com.mx/login');
   exit;
 }
+$nivelSesion = (int)$basicas->BuscarCampos($mysqli, 'Nivel', 'Empleados', 'IdUsuario', $_SESSION['Vendedor']);
+if (!kasu_can_access_finance($mysqli, $nivelSesion)) {
+  http_response_code(403);
+  exit('No tienes permisos para administrar Finanzas.');
+}
 
 // =================== Utilidades ===================
 if (!function_exists('h')) {

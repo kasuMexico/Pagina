@@ -16,6 +16,9 @@ declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
 
+$lockName = '';
+$lockAcquired = false;
+
 try {
     // -----------------------------------------------------------------------
     // Sesión KASU
@@ -48,6 +51,7 @@ try {
     // $pros    -> BD prospectos (u557645733_prospectos)
     // $basicas -> helpers genéricos
     require_once dirname(__DIR__) . '/librerias.php';
+    require_once __DIR__ . '/ia_role_profiles.php';
 
     // Funciones financieras (usa $basicas, $mysqli, etc.)
     require_once dirname(__DIR__) . '/Funciones/Funciones_Financieras.php';
@@ -83,8 +87,6 @@ try {
     // -----------------------------------------------------------------------
     // Datos básicos del usuario / nivel
     // -----------------------------------------------------------------------
-    $vendEsc = $mysqli->real_escape_string($idUsuario);
-
     $nombreVendedor = (string)$basicas->BuscarCampos(
         $mysqli, 'Nombre', 'Empleados', 'IdUsuario', $idUsuario
     );
@@ -101,46 +103,39 @@ try {
         $mysqli, 'NombreNivel', 'Nivel', 'Id', $nivel
     );
 
-    // Mapeo de nivel → rol funcional
-    $rolDescripcion = 'Rol no identificado';
-    $tieneVentasPropias = false;
-    $enfasisCobranza    = false;
-    $enfasisEquipo      = false;
-    $enfasisEmpresa     = false;
+    $perfilIa = kasu_ia_role_profile($nombreNivel, $nivel);
+    $rolDescripcion = (string)$perfilIa['descripcion'];
+    $fechaRecomendacion = date('Y-m-d');
+    $puestoIa = (string)$perfilIa['titulo'];
+    $alcanceIa = (string)$perfilIa['alcance'];
 
-    switch ($nivel) {
-        case 7:
-            $rolDescripcion    = 'Agente Externo: ejecutivo de ventas externo que vende productos KASU.';
-            $tieneVentasPropias = true;
-            break;
-        case 6:
-            $rolDescripcion    = 'Ejecutivo de Ventas interno: empleado de tiempo completo con metas de ventas claras.';
-            $tieneVentasPropias = true;
-            break;
-        case 5:
-            $rolDescripcion = 'Ejecutivo de Cobranza: se enfoca en recuperar pagos; no genera ventas nuevas.';
-            $enfasisCobranza = true;
-            break;
-        case 4:
-            $rolDescripcion = 'Coordinador: tiene vendedores y gestores de cobranza a cargo; supervisa un equipo.';
-            $enfasisEquipo  = true;
-            break;
-        case 3:
-            $rolDescripcion = 'Gerente de Ruta: responsable de la operación completa de una sucursal.';
-            $enfasisEquipo  = true;
-            break;
-        case 2:
-            $rolDescripcion = 'Mesa de Control: unidad centralizada de análisis, control y toma de decisiones.';
-            $enfasisEmpresa = true;
-            break;
-        case 1:
-            $rolDescripcion = 'Director general / Directores: visión global de la empresa.';
-            $enfasisEmpresa = true;
-            break;
-        default:
-            $rolDescripcion = 'Colaborador KASU con nivel no mapeado.';
-            break;
+    // Caché persistente estricto: una recomendación por usuario y fecha calendario.
+    $stmtDaily = $mysqli->prepare(
+        'SELECT Recomendacion, FechaCreacion, Fuente
+         FROM IA_Recomendacion_Diaria
+         WHERE IdUsuario = ? AND Fecha = ?
+         LIMIT 1'
+    );
+    $stmtDaily->bind_param('ss', $idUsuario, $fechaRecomendacion);
+    $stmtDaily->execute();
+    $dailyRow = $stmtDaily->get_result()->fetch_assoc();
+    $stmtDaily->close();
+    if (!empty($dailyRow['Recomendacion'])) {
+        echo json_encode([
+            'ok' => true,
+            'html' => (string)$dailyRow['Recomendacion'],
+            'cached' => true,
+            'cache_scope' => 'daily_database',
+            'generated_at' => (string)($dailyRow['FechaCreacion'] ?? ''),
+            'source' => (string)($dailyRow['Fuente'] ?? 'openai'),
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
     }
+
+    $scope = kasu_ia_employee_scope($mysqli, $idUsuario, $perfilIa);
+    $usuariosSql = kasu_ia_sql_string_list($mysqli, $scope['user_ids']);
+    $empleadosSql = kasu_ia_sql_int_list($scope['employee_ids']);
+    $instruccionRolIa = kasu_ia_role_instruction($perfilIa);
 
     // -----------------------------------------------------------------------
     // RESUMEN DE VENTAS (BD: u557645733_web, tabla Venta)
@@ -162,7 +157,7 @@ try {
         SELECT COUNT(*) AS ventas_mes,
                COALESCE(SUM(CostoVenta), 0) AS importe_mes
         FROM Venta
-        WHERE Usuario = '$vendEsc'
+        WHERE Usuario IN ($usuariosSql)
           AND FechaRegistro >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
     ";
     if ($res = $mysqli->query($sqlMes)) {
@@ -178,7 +173,7 @@ try {
         SELECT Status, COUNT(*) AS total,
                COALESCE(SUM(CostoVenta), 0) AS importe
         FROM Venta
-        WHERE Usuario = '$vendEsc'
+        WHERE Usuario IN ($usuariosSql)
         GROUP BY Status
     ";
     if ($res = $mysqli->query($sqlStatus)) {
@@ -196,7 +191,7 @@ try {
     $sqlMora = "
         SELECT Id, Status
         FROM Venta
-        WHERE Usuario = '$vendEsc'
+        WHERE Usuario IN ($usuariosSql)
           AND Status IN ('COBRANZA','ACTIVACION','ACTIVO')
         ORDER BY FechaRegistro DESC
         LIMIT 30
@@ -236,7 +231,7 @@ try {
           SUM(CASE WHEN status <> 'Mora' AND status <> 'APROBADO'
                    THEN Cantidad ELSE 0 END) AS imp_pend
         FROM Pagos
-        WHERE Usuario = '$vendEsc'
+        WHERE Usuario IN ($usuariosSql)
     ";
     if ($res = $mysqli->query($sqlPagos)) {
         if ($row = $res->fetch_assoc()) {
@@ -250,8 +245,6 @@ try {
     // -----------------------------------------------------------------------
     // RESUMEN DE PROSPECTOS (BD: u557645733_prospectos)
     // -----------------------------------------------------------------------
-    $vendEscPros = $pros->real_escape_string($idUsuario);
-
     $prospectosResumen = [
         'total'        => 0,
         'por_etapa'    => [],  // ej. [ "Prospeccion#N1" => 3, ... ]
@@ -265,7 +258,7 @@ try {
                p.PosPapeline,
                COUNT(*) AS total
         FROM prospectos p
-        WHERE p.Asignado = '$vendEscPros'
+        WHERE p.Asignado IN ($empleadosSql)
         GROUP BY p.Papeline, p.PosPapeline
         ORDER BY p.Papeline, p.PosPapeline
     ";
@@ -295,7 +288,7 @@ try {
         LEFT JOIN Papeline pa
           ON pa.Pipeline = 'Prospeccion'
          AND pa.Nivel = p.PosPapeline
-        WHERE p.Asignado = '$vendEscPros'
+        WHERE p.Asignado IN ($empleadosSql)
         ORDER BY pa.Nivel DESC, p.Alta DESC
         LIMIT 5
     ";
@@ -320,7 +313,7 @@ try {
     $sqlSinContacto = "
         SELECT COUNT(*) AS total
         FROM prospectos
-        WHERE Asignado = '$vendEscPros'
+        WHERE Asignado IN ($empleadosSql)
           AND (Papeline = '' OR PosPapeline = 0)
     ";
     if ($res = $pros->query($sqlSinContacto)) {
@@ -330,34 +323,29 @@ try {
         $res->close();
     }
 
-    // -----------------------------------------------------------------------
-    // Construir JSON de contexto para la IA
-    // -----------------------------------------------------------------------
+    // Contexto mínimo de decisión: evita enviar datos personales y estructura redundante.
     $contexto = [
-        'vendedor' => [
-            'id_usuario'   => $idUsuario,
-            'nombre'       => $nombreVendedor,
-            'nivel'        => $nivel,
-            'nombre_nivel' => $nombreNivel,
-            'sucursal'     => $nombreSucursal,
-            'rol'          => [
-                'descripcion'          => $rolDescripcion,
-                'tiene_ventas_propias' => $tieneVentasPropias,
-                'enfasis_cobranza'     => $enfasisCobranza,
-                'enfasis_equipo'       => $enfasisEquipo,
-                'enfasis_empresa'      => $enfasisEmpresa,
-            ],
+        'puesto' => $puestoIa,
+        'alcance' => $alcanceIa,
+        'sucursal' => $nombreSucursal,
+        'periodo' => date('Y-m'),
+        'ventas_mes' => $resumenVentasMes,
+        'ventas_por_status' => $ventasPorStatus,
+        'pagos' => $resumenPagos,
+        'riesgo_cartera' => $ventasMora,
+        'prospectos' => [
+            'total' => $prospectosResumen['total'],
+            'por_etapa' => $prospectosResumen['por_etapa'],
+            'sin_contacto' => $prospectosResumen['sin_contacto'],
+            'cercanos_cierre' => array_map(
+                static fn(array $p): array => [
+                    'etapa' => $p['etapa'] ?? '',
+                    'servicio' => $p['servicio'] ?? '',
+                ],
+                array_slice($prospectosResumen['cerrables'], 0, 3)
+            ),
         ],
-        'fecha' => [
-            'hoy'        => date('Y-m-d'),
-            'mes_actual' => date('Y-m'),
-        ],
-        'resumen_ventas_mes' => $resumenVentasMes,
-        'ventas_por_status'  => $ventasPorStatus,
-        'pagos'              => $resumenPagos,
-        'riesgo_cartera'     => $ventasMora,
-        'prospectos'         => $prospectosResumen,
-        'nota_extra'         => $notaExtra,
+        'nota' => mb_substr($notaExtra, 0, 180, 'UTF-8'),
     ];
 
     $contextJson = json_encode($contexto, JSON_UNESCAPED_UNICODE);
@@ -366,107 +354,133 @@ try {
         throw new RuntimeException('No se pudo codificar JSON de contexto para IA.');
     }
 
-    // -----------------------------------------------------------------------
-    // Cache de respuesta para evitar llamadas repetidas con el mismo contexto
-    // -----------------------------------------------------------------------
-    $cacheKey = hash('sha256', $contextJson);
-    $now      = time();
-    $ttl      = 86400; // 24 horas (recomendación diaria)
+    $contextHash = hash('sha256', 'role-aware-v3|' . $instruccionRolIa . '|' . $contextJson);
 
-    if (!isset($_SESSION['vista360_cache'])) {
-        $_SESSION['vista360_cache'] = [];
+    // Evita dos llamadas simultáneas si el navegador dispara solicitudes paralelas.
+    $lockName = 'kasu_ia_daily_' . hash('sha256', $idUsuario . '|' . $fechaRecomendacion);
+    $stmtLock = $mysqli->prepare('SELECT GET_LOCK(?, 8) AS acquired');
+    $stmtLock->bind_param('s', $lockName);
+    $stmtLock->execute();
+    $lockAcquired = (int)($stmtLock->get_result()->fetch_assoc()['acquired'] ?? 0) === 1;
+    $stmtLock->close();
+    if (!$lockAcquired) {
+        throw new RuntimeException('La recomendación diaria se está generando. Intenta nuevamente en unos segundos.');
     }
 
-    if (isset($_SESSION['vista360_cache'][$cacheKey])) {
-        $cached = $_SESSION['vista360_cache'][$cacheKey];
-        if (!empty($cached['html']) && ($now - ($cached['time'] ?? 0)) < $ttl) {
-            echo json_encode([
-                'ok'        => true,
-                'html'      => (string)$cached['html'],
-                'cached'    => true,
-                'cache_age' => $now - (int)$cached['time'],
-            ], JSON_UNESCAPED_UNICODE);
-            exit;
-        }
+    // Otro proceso pudo terminar mientras esta solicitud esperaba el bloqueo.
+    $stmtDaily = $mysqli->prepare(
+        'SELECT Recomendacion, FechaCreacion, Fuente
+         FROM IA_Recomendacion_Diaria
+         WHERE IdUsuario = ? AND Fecha = ?
+         LIMIT 1'
+    );
+    $stmtDaily->bind_param('ss', $idUsuario, $fechaRecomendacion);
+    $stmtDaily->execute();
+    $dailyRow = $stmtDaily->get_result()->fetch_assoc();
+    $stmtDaily->close();
+    if (!empty($dailyRow['Recomendacion'])) {
+        $stmtRelease = $mysqli->prepare('SELECT RELEASE_LOCK(?)');
+        $stmtRelease->bind_param('s', $lockName);
+        $stmtRelease->execute();
+        $stmtRelease->close();
+        echo json_encode([
+            'ok' => true,
+            'html' => (string)$dailyRow['Recomendacion'],
+            'cached' => true,
+            'cache_scope' => 'daily_database',
+            'generated_at' => (string)($dailyRow['FechaCreacion'] ?? ''),
+            'source' => (string)($dailyRow['Fuente'] ?? 'openai'),
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
     }
 
     // -----------------------------------------------------------------------
     // Prompt para GPT-5.1 (ahora considerando el rol/nivel)
     // -----------------------------------------------------------------------
     $prompt = <<<PROMPT
-Eres la IA comercial de KASU, una plataforma de servicios funerarios a futuro.
+Eres asesor de gestión de KASU.
+PUESTO: {$instruccionRolIa}
 
-Recibirás un JSON con datos reales del usuario y su contexto:
-- Datos del usuario: id, nombre, sucursal, nivel y rol funcional.
-- Resumen de ventas del mes y por estatus (PREVENTA, COBRANZA, ACTIVO, etc.).
-- Resumen de pagos (pendientes, en mora).
-- Resumen de prospectos por etapas de pipeline y una lista corta de los más cercanos a cierre.
-- Resumen de riesgo de cartera (ventas en mora y monto pendiente).
+Genera la mejor recomendación diaria usando solo las métricas proporcionadas.
+Prioriza el mayor impacto: una decisión o riesgo principal y 2-3 acciones propias del puesto.
+No asignes tareas de otro nivel ni critiques ventas personales si no corresponden al rol.
 
-INTERPRETACIÓN DEL ROL (vendedor.rol):
-- Si tiene_ventas_propias = true (niveles 6 y 7: ejecutivos de ventas internos o externos),
-  enfócate en su cartera personal: a quién llamar, a quién cerrar, cómo llegar a su meta.
-- Si enfasis_cobranza = true (nivel 5: Ejecutivo Cobranza),
-  enfócate en pagos vencidos, promesas, priorizar cuentas en mora y estrategias de recuperación.
-- Si enfasis_equipo = true (niveles 3 y 4: Gerente de Ruta / Coordinador),
-  habla en términos de EQUIPO: ventas y cobranza agregadas, qué tipo de colaboradores atender,
-  qué pipeline reforzar o limpiar.
-- Si enfasis_empresa = true (niveles 1 y 2: Dirección / Mesa de Control),
-  da una visión GLOBAL: tendencias, focos rojos, áreas de oportunidad por cartera y pipeline.
-- No critiques al usuario por tener ventas = 0 cuando su rol NO tiene ventas propias.
-
-OBJETIVO:
-Genera una RECOMENDACIÓN CORTA y ACCIONABLE adaptada al rol, priorizando:
-1) Qué acciones debe realizar HOY (contactos, cobros, decisiones).
-2) Qué riesgos debe atender (mora, pipeline saturado, pocos prospectos, etc.).
-3) Un mensaje motivador alineado a su nivel de responsabilidad.
-
-REGLAS DE ESTILO:
-- Responde en ESPAÑOL neutro.
-- Máximo 6 líneas de contenido en total.
-- Usa un párrafo inicial muy corto (1–2 frases) y después una lista de 2–4 bullets con acciones específicas.
-- Adapta el mensaje a los datos del JSON (cantidades, etapas, nivel); no des siempre el mismo texto.
-- Si hay poca información, da recomendaciones generales pero útiles para prospección, seguimiento o análisis.
-
-IMPORTANTE:
-- Devuelve ÚNICAMENTE HTML válido para incrustar dentro de un <div>, por ejemplo:
-  <p>Texto breve...</p>
-  <ul><li>Acción 1...</li><li>Acción 2...</li></ul>
-- NO incluyas etiquetas <html>, <head> ni <body>.
-- No inventes datos; usa solo lo que venga en el JSON.
-
-AQUÍ ESTÁ EL JSON CON LOS DATOS DEL USUARIO:
-
-{$contextJson}
+Salida: solo HTML <p><ul><li><strong>, español, máximo 75 palabras. Sé específico y accionable.
+MÉTRICAS: {$contextJson}
 PROMPT;
 
     // -----------------------------------------------------------------------
     // Llamada a OpenAI
     // -----------------------------------------------------------------------
-    $texto = openai_simple_text($prompt, 450);
-
-    // Sanitización básica: permitimos solo etiquetas simples
-    $allowed = '<p><ul><ol><li><strong><b><em><i><br>';
-    $html    = trim(strip_tags($texto, $allowed));
-
-    if ($html === '') {
-        throw new RuntimeException('La respuesta de IA llegó vacía.');
+    $fuenteRecomendacion = 'openai';
+    $errorRecomendacion = null;
+    try {
+        $texto = openai_simple_text($prompt, 260);
+        $allowed = '<p><ul><ol><li><strong><b><em><i><br>';
+        $html = trim(strip_tags($texto, $allowed));
+        if ($html === '') {
+            throw new RuntimeException('La respuesta de IA llegó vacía.');
+        }
+    } catch (Throwable $aiError) {
+        $fuenteRecomendacion = 'local_fallback';
+        $errorRecomendacion = mb_substr($aiError->getMessage(), 0, 500, 'UTF-8');
+        $accionesFallback = array_slice((array)($perfilIa['acciones'] ?? []), 0, 3);
+        $html = '<p><strong>Prioridad diaria para ' . htmlspecialchars($puestoIa, ENT_QUOTES, 'UTF-8') . '</strong></p><ul>';
+        foreach ($accionesFallback as $accionFallback) {
+            $html .= '<li>' . htmlspecialchars(ucfirst((string)$accionFallback), ENT_QUOTES, 'UTF-8') . '.</li>';
+        }
+        $html .= '</ul>';
     }
 
-    // Guardar en cache de sesión
-    $_SESSION['vista360_cache'][$cacheKey] = [
-        'html' => $html,
-        'time' => $now,
-    ];
+    $modeloIa = defined('OPENAI_MODEL') ? (string)OPENAI_MODEL : '';
+    $stmtSave = $mysqli->prepare(
+        'INSERT INTO IA_Recomendacion_Diaria
+            (IdUsuario, Fecha, Nivel, Puesto, Alcance, Recomendacion, ContextoHash, Modelo, Fuente, ErrorMsg)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE Recomendacion = Recomendacion'
+    );
+    $stmtSave->bind_param(
+        'ssisssssss',
+        $idUsuario,
+        $fechaRecomendacion,
+        $nivel,
+        $puestoIa,
+        $alcanceIa,
+        $html,
+        $contextHash,
+        $modeloIa,
+        $fuenteRecomendacion,
+        $errorRecomendacion
+    );
+    $stmtSave->execute();
+    $stmtSave->close();
+
+    $stmtRelease = $mysqli->prepare('SELECT RELEASE_LOCK(?)');
+    $stmtRelease->bind_param('s', $lockName);
+    $stmtRelease->execute();
+    $stmtRelease->close();
+    $lockAcquired = false;
 
     echo json_encode([
         'ok'     => true,
         'html'   => $html,
         'cached' => false,
+        'cache_scope' => 'daily_database',
+        'source' => $fuenteRecomendacion,
     ], JSON_UNESCAPED_UNICODE);
     exit;
 
 } catch (Throwable $e) {
+    if ($lockAcquired && $lockName !== '' && isset($mysqli) && $mysqli instanceof mysqli) {
+        try {
+            $stmtRelease = $mysqli->prepare('SELECT RELEASE_LOCK(?)');
+            $stmtRelease->bind_param('s', $lockName);
+            $stmtRelease->execute();
+            $stmtRelease->close();
+        } catch (Throwable $releaseError) {
+            error_log('[Vista360 IA] No se pudo liberar bloqueo diario: ' . $releaseError->getMessage());
+        }
+    }
     error_log('[Vista360 IA] ' . $e->getMessage());
 
     http_response_code(500);

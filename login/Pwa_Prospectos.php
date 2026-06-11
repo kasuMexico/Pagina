@@ -12,6 +12,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/eia/session.php';
 kasu_session_start();
 require_once __DIR__ . '/../eia/librerias.php';
+require_once __DIR__ . '/php/mesa_helpers.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 // sesión
@@ -26,6 +27,7 @@ $VerCache = (string) time();
 // ids / nivel (el nivel se usa en el menú)
 $IdAsignacion = (int) ($basicas->BuscarCampos($mysqli, 'Id', 'Empleados', 'IdUsuario', $_SESSION['Vendedor']) ?? 0);
 $Niv          = (int) ($basicas->BuscarCampos($mysqli, 'Nivel', 'Empleados', 'IdUsuario', $_SESSION['Vendedor']) ?? 0);
+$hasGlobalCommercialScope = kasu_director_role_key($mysqli, $Niv) === 'general';
 
 // lanzadores de modales
 $Ventana = '';   // Ventana1..Ventana6
@@ -300,7 +302,7 @@ $renderProsForm = function(array $fila, string $extraLabel = '', ?string $idVend
     ";
 };
 
-if ($Niv >= 5) {
+if ($Niv >= 5 && !$hasGlobalCommercialScope) {
   // Mis prospectos
   $VendeId = (int) ($basicas->BuscarCampos($mysqli, 'Id', 'Empleados', 'IdUsuario', $_SESSION['Vendedor']) ?? 0);
 
@@ -313,7 +315,7 @@ if ($Niv >= 5) {
   }
   $st->close();
 
-} elseif ($Niv <= 4 && $Niv >= 2) {
+} elseif ($Niv <= 4 && $Niv >= 2 && !$hasGlobalCommercialScope) {
   // Mi sucursal, niveles >= Niv
   $IdSuc  = (int) ($basicas->BuscarCampos($mysqli, 'Sucursal', 'Empleados', 'IdUsuario', $_SESSION['Vendedor']) ?? 0);
   $NomSuc = (string) ($basicas->BuscarCampos($mysqli, 'NombreSucursal', 'Sucursal', 'Id', $IdSuc) ?? '');
@@ -339,8 +341,7 @@ if ($Niv >= 5) {
 
 } else { // Niv == 1
   // Todos
-  $stEmp = $mysqli->prepare("SELECT Id, IdUsuario, Sucursal FROM Empleados WHERE Nombre <> 'Vacante' AND Nivel >= ?");
-  $stEmp->bind_param('i', $Niv);
+  $stEmp = $mysqli->prepare("SELECT Id, IdUsuario, Sucursal FROM Empleados WHERE Nombre <> 'Vacante'");
   $stEmp->execute();
   $resEmp = $stEmp->get_result();
 

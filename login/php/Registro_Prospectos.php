@@ -11,6 +11,7 @@ require_once dirname(__DIR__, 2) . '/eia/session.php';
 kasu_session_start();
 ob_start();
 require_once __DIR__ . '/../../eia/librerias.php';
+require_once __DIR__ . '/mesa_helpers.php';
 kasu_apply_error_settings(); // 2025-11-18: Log centralizado para Registro de Prospectos
 date_default_timezone_set('America/Mexico_City');
 
@@ -717,6 +718,38 @@ if (isset($_POST['BajaEmp']) && $IdProspecto && $MotivoBaja) {
    BLOQUE: Asignación de prospecto a vendedor
    ========================================================================= */
 if (isset($_POST['AsigVende']) && $IdProspecto && $NvoVend) {
+  $usuarioSesion = (string)($_SESSION['Vendedor'] ?? '');
+  $nivelSesion = (int)$basicas->BuscarCampos($mysqli, 'Nivel', 'Empleados', 'IdUsuario', $usuarioSesion);
+  $empleadoSesion = (int)$basicas->BuscarCampos($mysqli, 'Id', 'Empleados', 'IdUsuario', $usuarioSesion);
+  $marketingRole = kasu_marketing_role_key($mysqli, $nivelSesion);
+
+  if ($marketingRole !== '') {
+    [$empleadosMap, $empleadosChildren] = kasu_load_empleados_tree($mysqli);
+    $scopeUsers = kasu_scope_user_ids($nivelSesion, $empleadoSesion, $empleadosMap, $empleadosChildren) ?? [];
+    $scopeSet = array_fill_keys(array_map('strtoupper', $scopeUsers), true);
+    $stmtAssigned = $pros->prepare('SELECT Asignado FROM prospectos WHERE Id = ? LIMIT 1');
+    $stmtAssigned->bind_param('i', $IdProspecto);
+    $stmtAssigned->execute();
+    $assignedRow = $stmtAssigned->get_result()->fetch_assoc();
+    $stmtAssigned->close();
+    $assignedId = (int)($assignedRow['Asignado'] ?? 0);
+    $assignedUser = strtoupper(trim((string)($empleadosMap[$assignedId]['IdUsuario'] ?? '')));
+    $allowedTargets = kasu_marketing_assignment_ids(
+      $marketingRole,
+      $empleadoSesion,
+      $empleadosMap,
+      $empleadosChildren
+    ) ?? [];
+
+    if (
+      $assignedUser === ''
+      || !isset($scopeSet[$assignedUser])
+      || !in_array($NvoVend, $allowedTargets, true)
+    ) {
+      http_response_code(403);
+      exit('No tienes permisos para reasignar este prospecto.');
+    }
+  }
   
   // Auditoría
   $ids = $seguridad->auditoria_registrar(

@@ -40,6 +40,7 @@ try {
     }
 
     require_once __DIR__ . '/../librerias.php'; // $mysqli, $pros, $basicas
+    require_once __DIR__ . '/ia_role_profiles.php';
 
     global $mysqli, $pros, $basicas;
 
@@ -78,19 +79,11 @@ try {
     $suc    = (string)$basicas->BuscarCampos($mysqli, 'nombreSucursal','Sucursal',  'Id',        $idSuc);
     $nomNiv = (string)$basicas->BuscarCampos($mysqli, 'NombreNivel',   'Nivel',     'Id',        $nivel);
 
-    // Rol descriptivo (igual lógica que ya usamos en Vista-360)
-    $rolDescripcion = 'Rol no identificado';
-    switch ($nivel) {
-        case 7: $rolDescripcion = 'Agente Externo (ejecutivo de ventas externo)'; break;
-        case 6: $rolDescripcion = 'Ejecutivo de Ventas (interno)'; break;
-        case 5: $rolDescripcion = 'Ejecutivo de Cobranza'; break;
-        case 4: $rolDescripcion = 'Coordinador (equipo de ventas/cobranza)'; break;
-        case 3: $rolDescripcion = 'Gerente de Ruta (sucursal)'; break;
-        case 2: $rolDescripcion = 'Mesa de Control (análisis centralizado)'; break;
-        case 1: $rolDescripcion = 'Dirección / CEO'; break;
-    }
-
-    $vendEsc = $mysqli->real_escape_string($idUsuario);
+    $perfilIa = kasu_ia_role_profile($nomNiv, $nivel);
+    $rolDescripcion = (string)$perfilIa['descripcion'];
+    $scope = kasu_ia_employee_scope($mysqli, $idUsuario, $perfilIa);
+    $usuariosSql = kasu_ia_sql_string_list($mysqli, $scope['user_ids']);
+    $empleadosSql = kasu_ia_sql_int_list($scope['employee_ids']);
 
     /* =================== Ventas del mes =================== */
     $ventasMes = [
@@ -104,12 +97,12 @@ try {
           COUNT(*)                          AS n_ventas,
           COALESCE(SUM(CostoVenta), 0)      AS imp_total
         FROM Venta
-        WHERE Usuario = ?
+        WHERE Usuario IN ({$usuariosSql})
           AND FechaRegistro BETWEEN ? AND ?
     ";
     $stmt = $mysqli->prepare($sqlVentas);
     if (!$stmt) throw new RuntimeException('No se pudo preparar consulta de ventas.');
-    $stmt->bind_param('sss', $vendEsc, $inicio, $fin);
+    $stmt->bind_param('ss', $inicio, $fin);
     $stmt->execute();
     $row = $stmt->get_result()->fetch_assoc() ?: [];
     $stmt->close();
@@ -121,13 +114,13 @@ try {
     $sqlVStatus = "
         SELECT Status, COUNT(*) AS total, COALESCE(SUM(CostoVenta), 0) AS importe
         FROM Venta
-        WHERE Usuario = ?
+        WHERE Usuario IN ({$usuariosSql})
           AND FechaRegistro BETWEEN ? AND ?
         GROUP BY Status
     ";
     $stmt = $mysqli->prepare($sqlVStatus);
     if (!$stmt) throw new RuntimeException('No se pudo preparar consulta de ventas por status.');
-    $stmt->bind_param('sss', $vendEsc, $inicio, $fin);
+    $stmt->bind_param('ss', $inicio, $fin);
     $stmt->execute();
     $res = $stmt->get_result();
     while ($r = $res->fetch_assoc()) {
@@ -154,12 +147,12 @@ try {
           SUM(CASE WHEN status = 'Mora' THEN Cantidad ELSE 0 END) AS imp_mora,
           SUM(CASE WHEN status <> 'Mora' AND status <> 'APROBADO' THEN Cantidad ELSE 0 END) AS imp_pend
         FROM Pagos
-        WHERE Usuario = ?
+        WHERE Usuario IN ({$usuariosSql})
           AND FechaRegistro BETWEEN ? AND ?
     ";
     $stmt = $mysqli->prepare($sqlPagos);
     if (!$stmt) throw new RuntimeException('No se pudo preparar consulta de pagos.');
-    $stmt->bind_param('sss', $vendEsc, $inicio, $fin);
+    $stmt->bind_param('ss', $inicio, $fin);
     $stmt->execute();
     $row = $stmt->get_result()->fetch_assoc() ?: [];
     $stmt->close();
@@ -170,8 +163,6 @@ try {
     $pagosMes['importe_pendiente'] = (float)($row['imp_pend'] ?? 0);
 
     /* =================== Prospectos del mes =================== */
-    $prosEsc = $pros->real_escape_string($idUsuario);
-
     $prospectosMes = [
         'total'     => 0,
         'por_etapa' => [],   // "Prospeccion#N1" => n
@@ -184,13 +175,13 @@ try {
           PosPapeline,
           COUNT(*) AS total
         FROM prospectos
-        WHERE Asignado = ?
+        WHERE Asignado IN ({$empleadosSql})
           AND Alta BETWEEN ? AND ?
         GROUP BY Papeline, PosPapeline
     ";
     $stmt = $pros->prepare($sqlPros);
     if (!$stmt) throw new RuntimeException('No se pudo preparar consulta de prospectos.');
-    $stmt->bind_param('sss', $prosEsc, $inicio, $fin);
+    $stmt->bind_param('ss', $inicio, $fin);
     $stmt->execute();
     $res = $stmt->get_result();
 
@@ -211,6 +202,8 @@ try {
             'nombre_nivel' => $nomNiv,
             'sucursal'     => $suc,
             'rol'          => $rolDescripcion,
+            'perfil_ia'    => $perfilIa,
+            'alcance_datos' => $perfilIa['alcance'],
         ],
         'rango_fechas' => [
             'inicio' => $inicio,

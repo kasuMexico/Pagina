@@ -13,6 +13,7 @@
 require_once dirname(__DIR__) . '/eia/session.php';
 kasu_session_start();
 require_once __DIR__ . '/../eia/librerias.php';
+require_once __DIR__ . '/php/mesa_helpers.php';
 date_default_timezone_set('America/Mexico_City');
 
 /* ===== Bloque utilidades (escape HTML) — 05/11/2025, JCCM ===== */
@@ -29,6 +30,7 @@ if (empty($_SESSION['Vendedor'])) {
 /* ===== Defaults y variables de contexto — 05/11/2025, JCCM ===== */
 $VerCache = isset($VerCache) ? (string)$VerCache : '1';
 $Niv      = (int)$basicas->BuscarCampos($mysqli, "Nivel", "Empleados", "IdUsuario", $_SESSION["Vendedor"]);
+$hasGlobalCommercialScope = kasu_director_role_key($mysqli, $Niv) === 'general';
 $IdVen    = (int)$basicas->BuscarCampos($mysqli, "Id",    "Empleados", "IdUsuario", $_SESSION["Vendedor"]);
 $Ventana  = null;         // Ventana a cargar (Ventana1..4)
 $Lanzar   = null;         // '#Ventana' si hay que abrir modal
@@ -206,7 +208,7 @@ if (isset($_GET['Msg'])) {
            *********************************************************************************/
 
           $vistos = [];
-          if ($Niv >= 5) {
+          if ($Niv >= 5 && !$hasGlobalCommercialScope) {
             $usr = (string)$_SESSION["Vendedor"];
             $Ventas = "SELECT * FROM Venta WHERE Usuario = '" . $mysqli->real_escape_string($usr) . "'";
             if ($resultado = $mysqli->query($Ventas)) {
@@ -231,7 +233,7 @@ if (isset($_GET['Msg'])) {
               }
             }
 
-          } elseif ($Niv <= 4 && $Niv >= 2) {
+          } elseif ($Niv <= 4 && $Niv >= 2 && !$hasGlobalCommercialScope) {
             $IdSuc  = (int)$basicas->BuscarCampos($mysqli, "Sucursal", "Empleados", "IdUsuario", $_SESSION["Vendedor"]);
             $NomSuc = (string)$basicas->BuscarCampos($mysqli, "NombreSucursal", "Sucursal", "Id", $IdSuc);
             $sqal   = "SELECT * FROM Empleados WHERE Nombre!='Vacante' AND Nivel>='{$Niv}' AND Sucursal=".(int)$IdSuc;
@@ -264,10 +266,10 @@ if (isset($_GET['Msg'])) {
               }
             }
 
-          } elseif ($Niv == 1) {
+          } elseif ($Niv == 1 || $hasGlobalCommercialScope) {
             $IdSuc  = (int)$basicas->BuscarCampos($mysqli, "Sucursal", "Empleados", "IdUsuario", $_SESSION["Vendedor"]);
             $NomSuc = (string)$basicas->BuscarCampos($mysqli, "NombreSucursal", "Sucursal", "Id", $IdSuc);
-            $sqal   = "SELECT * FROM Empleados WHERE Nombre!='Vacante' AND Nivel>='{$Niv}'";
+            $sqal   = "SELECT * FROM Empleados WHERE Nombre!='Vacante'";
 
             if ($r = $mysqli->query($sqal)) {
               foreach ($r as $emp) {

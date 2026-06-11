@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__ . '/ia_role_profiles.php';
 
 /**
  * ============================================================================
@@ -55,24 +56,17 @@ class IAContextBuilder {
         );
         
         // Determinar rol funcional
-        $this->userData['rol'] = $this->determineUserRole($this->userData['nivel']);
+        $this->userData['rol'] = $this->determineUserRole(
+            $this->userData['nombre_nivel'],
+            $this->userData['nivel']
+        );
     }
     
     /**
      * Determina rol funcional basado en nivel
      */
-    private function determineUserRole(int $nivel): array {
-        $roles = [
-            7 => ['nombre' => 'Agente Externo', 'ventas_propias' => true, 'cobranza' => false, 'equipo' => false],
-            6 => ['nombre' => 'Ejecutivo de Ventas', 'ventas_propias' => true, 'cobranza' => false, 'equipo' => false],
-            5 => ['nombre' => 'Ejecutivo de Cobranza', 'ventas_propias' => false, 'cobranza' => true, 'equipo' => false],
-            4 => ['nombre' => 'Coordinador', 'ventas_propias' => false, 'cobranza' => false, 'equipo' => true],
-            3 => ['nombre' => 'Gerente de Ruta', 'ventas_propias' => false, 'cobranza' => false, 'equipo' => true],
-            2 => ['nombre' => 'Mesa de Control', 'ventas_propias' => false, 'cobranza' => false, 'equipo' => false],
-            1 => ['nombre' => 'Dirección', 'ventas_propias' => false, 'cobranza' => false, 'equipo' => false]
-        ];
-        
-        return $roles[$nivel] ?? ['nombre' => 'Colaborador', 'ventas_propias' => false, 'cobranza' => false, 'equipo' => false];
+    private function determineUserRole(string $nombreNivel, int $nivel): array {
+        return kasu_ia_role_profile($nombreNivel, $nivel);
     }
     
     /**

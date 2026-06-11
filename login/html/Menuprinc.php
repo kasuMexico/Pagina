@@ -8,11 +8,12 @@
  *  - Si la página actual inicia con "Mesa_": solo mostrar "Pwa_Principal.php" y opciones Mesa_*.
  *  - Agregar Mesa_Marketing.php y Mesa_Finanzas.php con iconos color/B&N.
  *  - Ocultar Marketing y Finanzas cuando la página actual inicia con "Pwa_".
- *  - Marketing y Finanzas visibles solo para niveles 1 y 2.
+ *  - Visibilidad de módulos según el perfil especializado del puesto.
  *  - Modernizado a estilo iOS (bottom nav tipo dock, labels bajo icono, blur suave).
  ********************************************************************************************/
 
 declare(strict_types=1);
+require_once __DIR__ . '/../php/mesa_helpers.php';
 
 /* ==========================================================================================
  * BLOQUE: Variables de contexto
@@ -71,13 +72,19 @@ $isSocial = ($CoMn === 'Pwa_Sociales.php');
 $isMesaMarketing = ($CoMn === 'Mesa_Marketing.php');
 $isMesaFinanzas  = ($CoMn === 'Mesa_Finanzas.php');
 $isMesaApiMarket = ($CoMn === 'Mesa_ApiMarket.php');
+$isMesaProspectos = ($CoMn === 'Mesa_Prospectos.php');
 
 /* Grupos */
 $isMesaGroup = (strncmp($CoMn, 'Mesa_', 5) === 0);
 $isPwaGroup  = (strncmp($CoMn, 'Pwa_', 4) === 0);
 
-/* Visibilidad por nivel para Marketing/Finanzas */
-$canSeeMesaMF = ($Niv === 1 || $Niv === 2);
+/* Visibilidad por puesto para módulos administrativos */
+$marketingRole = function_exists('kasu_marketing_role_key') ? kasu_marketing_role_key($mysqli, $Niv) : '';
+$directorRole = kasu_director_role_key($mysqli, $Niv);
+$canSeeMesaMarketing = kasu_can_access_marketing($mysqli, $Niv);
+$canSeeMesaFinanzas = kasu_can_access_finance($mysqli, $Niv);
+$canSeeMesaApiMarket = kasu_can_access_api_market($mysqli, $Niv);
+$canSeeMesaProspectos = kasu_can_access_commercial($mysqli, $Niv) || $marketingRole !== '';
 ?>
 <nav class="MenuPrincipal kasu-bottom-nav" role="navigation" aria-label="Navegación principal">
   <?php
@@ -95,8 +102,8 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
         $anchorDisabled,
       );
 
-      // Mesa_Marketing (solo niveles 1 y 2)
-      if ($canSeeMesaMF) {
+      // Mesa Marketing
+      if ($canSeeMesaMarketing) {
         btnIcon(
           'Mesa_Marketing.php',
           'assets/img/Iconos_menu/marketing_black.png',
@@ -106,8 +113,8 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
         );
       }
 
-      // Mesa_Finanzas (solo niveles 1 y 2)
-      if ($canSeeMesaMF) {
+      // Mesa_Finanzas (Dirección General y Dirección de Finanzas)
+      if ($canSeeMesaFinanzas) {
         btnIcon(
           'Mesa_Finanzas.php',
           'assets/img/Iconos_menu/Finanzas_black.png',
@@ -117,8 +124,8 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
         );
       }
 
-      // Mesa API Market (solo niveles 1 y 2)
-      if ($canSeeMesaMF) {
+      // Mesa API Market
+      if ($canSeeMesaApiMarket) {
         btnIcon(
           'Mesa_ApiMarket.php',
           'assets/img/Iconos_menu/kasu_black.png',
@@ -126,6 +133,18 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
           $isMesaApiMarket,
           $anchorDisabled,
           'API'
+        );
+      }
+
+      // Mesa de Prospectos (administración y equipo de Marketing)
+      if ($canSeeMesaProspectos) {
+        btnIcon(
+          'Mesa_Prospectos.php',
+          'assets/img/Iconos_menu/prospectos_black.png',
+          'assets/img/Iconos_menu/prospectos.png',
+          $isMesaProspectos,
+          $anchorDisabled,
+          'Prospectos'
         );
       }
 
@@ -153,8 +172,8 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
         $anchorDisabled,
       );
 
-      // Análisis (solo Nivel 1)
-      if ($Niv === 1) {
+      // Análisis financiero
+      if ($canSeeMesaFinanzas) {
         btnIcon(
           'Pwa_Analisis_Ventas.php',
           'assets/img/Iconos_menu/analisis_black.png',
@@ -164,8 +183,8 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
         );
       }
 
-      // Clientes (todos excepto Nivel 2)
-      if ($Niv !== 2) {
+      // Clientes
+      if ($marketingRole === '' && $Niv !== 2 && ($directorRole === '' || in_array($directorRole, ['general', 'comercial'], true))) {
         btnIcon(
           'Pwa_Clientes.php',
           'assets/img/Iconos_menu/usuario_black.png',
@@ -176,7 +195,7 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
       }
 
       // Prospectos (no 5,3,2)
-      if ($Niv !== 5 && $Niv !== 3 && $Niv !== 2) {
+      if ($marketingRole === '' && $Niv !== 5 && $Niv !== 3 && $Niv !== 2 && ($directorRole === '' || in_array($directorRole, ['general', 'marketing', 'comercial'], true))) {
         btnIcon(
           'Pwa_Prospectos.php',
           'assets/img/Iconos_menu/prospectos_black.png',
@@ -186,8 +205,19 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
         );
       }
 
+      if ($marketingRole !== '') {
+        btnIcon(
+          'Mesa_Prospectos.php',
+          'assets/img/Iconos_menu/prospectos_black.png',
+          'assets/img/Iconos_menu/prospectos.png',
+          $isMesaProspectos,
+          $anchorDisabled,
+          'Mesa Prospectos'
+        );
+      }
+
       // Cobranza/Pagos (no 7)
-      if ($Niv !== 7) {
+      if ($marketingRole === '' && $Niv !== 7 && ($directorRole === '' || in_array($directorRole, ['general', 'finanzas'], true))) {
         btnIcon(
           'Pwa_Registro_Pagos.php',
           'assets/img/Iconos_menu/Cobrar_black.png',
@@ -198,7 +228,7 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
       }
 
       // Sociales (niveles 7, 6, 1)
-      if ($Niv === 7 || $Niv === 6 || $Niv === 1) {
+      if ($marketingRole === '' && ($Niv === 7 || $Niv === 6 || $Niv === 1 || in_array($directorRole, ['general', 'marketing'], true))) {
         btnIcon(
           'Pwa_Sociales.php',
           'assets/img/Iconos_menu/facebook_black.png',
@@ -209,34 +239,36 @@ $canSeeMesaMF = ($Niv === 1 || $Niv === 2);
       }
 
       // Marketing y Finanzas: ocultar si estamos en una Pwa_*
-      if (!$isPwaGroup && $canSeeMesaMF) {
-        // Mesa_Marketing
-        btnIcon(
-          'Mesa_Marketing.php',
-          'assets/img/Iconos_menu/marketing_black.png',
-          'assets/img/Iconos_menu/marketing.png',
-          $isMesaMarketing,
-          $anchorDisabled,
-        );
+      if (!$isPwaGroup) {
+        if ($canSeeMesaMarketing) {
+          btnIcon(
+            'Mesa_Marketing.php',
+            'assets/img/Iconos_menu/marketing_black.png',
+            'assets/img/Iconos_menu/marketing.png',
+            $isMesaMarketing,
+            $anchorDisabled,
+          );
+        }
+        if ($canSeeMesaFinanzas) {
+          btnIcon(
+            'Mesa_Finanzas.php',
+            'assets/img/Iconos_menu/Finanzas_black.png',
+            'assets/img/Iconos_menu/Finanzas.png',
+            $isMesaFinanzas,
+            $anchorDisabled,
+          );
 
-        // Mesa_Finanzas
-        btnIcon(
-          'Mesa_Finanzas.php',
-          'assets/img/Iconos_menu/Finanzas_black.png',
-          'assets/img/Iconos_menu/Finanzas.png',
-          $isMesaFinanzas,
-          $anchorDisabled,
-        );
-
-        // Mesa API Market
-        btnIcon(
-          'Mesa_ApiMarket.php',
-          'assets/img/Iconos_menu/kasu_black.png',
-          'assets/img/kasu_logo.jpeg',
-          $isMesaApiMarket,
-          $anchorDisabled,
-          'API'
-        );
+        }
+        if ($canSeeMesaApiMarket) {
+          btnIcon(
+            'Mesa_ApiMarket.php',
+            'assets/img/Iconos_menu/kasu_black.png',
+            'assets/img/kasu_logo.jpeg',
+            $isMesaApiMarket,
+            $anchorDisabled,
+            'API'
+          );
+        }
       }
 
       // Herramientas (siempre)

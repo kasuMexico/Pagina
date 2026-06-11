@@ -16,6 +16,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/eia/session.php';
 kasu_session_start();
 require_once __DIR__ . '/../eia/librerias.php';
+require_once __DIR__ . '/php/mesa_helpers.php';
 date_default_timezone_set('America/Mexico_City');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 header_remove('X-Powered-By');
@@ -59,6 +60,13 @@ if ($res = $stmt->get_result()) {
 }
 $stmt->close();
 $Vende = $Reg['Nivel'] ?? null;
+$nivelSesion = (int)$Vende;
+$canManageEmployees = kasu_can_manage_employees($mysqli, $nivelSesion);
+$canAccessApiMarket = kasu_can_access_api_market($mysqli, $nivelSesion);
+$canAccessCommercial = kasu_can_access_commercial($mysqli, $nivelSesion);
+$canAccessMarketing = kasu_can_access_marketing($mysqli, $nivelSesion);
+$canSearchProspects = $canAccessCommercial || $canAccessMarketing;
+$canUseQuickSearches = $canManageEmployees || $canAccessCommercial || $canSearchProspects;
 
 // Contacto del empleado
 if (!empty($Reg['IdContacto'])) {
@@ -304,7 +312,7 @@ $VerCache = time();
       </section>
       <?php endif; ?>
 
-      <?php if ((int)$Vende <= 2): ?>
+      <?php if ($canAccessApiMarket): ?>
       <section class="tool-section tool-span-4">
         <header>
           <strong>API Market</strong>
@@ -317,7 +325,7 @@ $VerCache = time();
       </section>
       <?php endif; ?>
 
-      <?php if ((int)$Vende <= 2): ?>
+      <?php if ($canManageEmployees): ?>
       <!-- SECCION: Asignacion de Metas-->
       <section class="tool-section tool-span-2">
         <header><strong>Metas y normalidad</strong></header>
@@ -342,7 +350,7 @@ $VerCache = time();
       </section>
       <?php endif; ?>
 
-      <?php if ((int)$Vende <= 2): ?>
+      <?php if ($canManageEmployees): ?>
       <!-- SECCION: Carga masiva de clientes -->
       <section class="tool-section tool-span-2">
         <header><strong>Carga masiva de clientes</strong></header>
@@ -384,18 +392,19 @@ $VerCache = time();
         </div>
       </section>
 
-      <?php if ((int)$Vende <= 3): ?>
+      <?php if ($canUseQuickSearches): ?>
       <!-- SECCION: INGRESO A SUB SECCIONES-->
       <section class="tool-section tool-span-3">
         <header><strong>Buscadores rápidos</strong></header>
         <div class="tool-section-body">
-          <?php if ((int)$Vende <= 2): ?>
+          <?php if ($canManageEmployees): ?>
           <form method="POST" action="Mesa_Empleados.php" class="integrated-search mb-2">
             <input type="text" name="nombre" placeholder="Nombre del colaborador">
             <button type="submit">Buscar</button>
           </form>
           <?php endif; ?>
 
+          <?php if ($canAccessCommercial): ?>
           <form method="POST" action="Mesa_Clientes.php" class="integrated-search mb-2">
             <input type="text" name="nombre" placeholder="Cliente por nombre">
             <button type="submit">Buscar</button>
@@ -410,8 +419,9 @@ $VerCache = time();
             </select>
             <button type="submit">Filtrar</button>
           </form>
+          <?php endif; ?>
 
-          <?php if ((int)$Vende <= 3): ?>
+          <?php if ($canSearchProspects): ?>
           <form method="POST" action="Mesa_Prospectos.php" class="integrated-search mb-0">
             <input type="text" name="nombre" placeholder="Prospecto por nombre">
             <button type="submit">Buscar</button>

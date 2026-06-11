@@ -50,6 +50,20 @@ $FechFin = date('Y-m-d', strtotime($FechFin_str));
 $name  = $_POST['nombre'] ?? ($_GET['name'] ?? '');
 $Vende = $basicas->BuscarCampos($mysqli,'Id','Empleados','IdUsuario',$_SESSION['Vendedor']);
 $Nivel = $basicas->BuscarCampos($mysqli,'Nivel','Empleados','IdUsuario',$_SESSION['Vendedor']);
+$directorRoles = kasu_ensure_director_roles($mysqli);
+$canManageEmployees = kasu_can_manage_employees($mysqli, (int)$Nivel);
+if (!$canManageEmployees) {
+  http_response_code(403);
+  exit('No tienes permisos para administrar colaboradores.');
+}
+$marketingRoles = kasu_ensure_marketing_roles($mysqli);
+if (empty($_SESSION['csrf_empleados_permisos'])) {
+  $_SESSION['csrf_empleados_permisos'] = bin2hex(random_bytes(32));
+}
+$csrfPermisos = (string)$_SESSION['csrf_empleados_permisos'];
+if (empty($_SESSION['csrf_auth'])) {
+  $_SESSION['csrf_auth'] = bin2hex(random_bytes(32));
+}
 
 // =================== Selector de ventana (IdEmpleado = {Vtn}{Id}) ===================
 // Qué hace: Interpreta parámetro disparador y precarga $Reg del empleado si aplica
@@ -92,6 +106,50 @@ if ($Reg) {
 // Fecha: 05/11/2025 | Revisado por: JCCM
 if (!empty($_POST['CambiNivl']) && !empty($_POST['NvoNivel']) && !empty($_POST['IdEmpleado'])) {
   $basicas->ActCampo($mysqli,'Empleados','Nivel',(int)$_POST['NvoNivel'],(int)$_POST['IdEmpleado']);
+}
+
+// =================== Permisos de Mesa Prospectos ===================
+if (!empty($_POST['GuardarPermisosUsuario'])) {
+  $csrfOk = hash_equals($csrfPermisos, (string)($_POST['csrf_permisos'] ?? ''));
+  $idPermisoEmpleado = (int)($_POST['IdEmpleado'] ?? 0);
+  $perfilPermiso = (string)($_POST['PerfilMesaProspectos'] ?? '');
+  $nivelDestino = 0;
+  $jefeMarketing = (int)($_POST['JefeMarketing'] ?? 0);
+
+  if (!$csrfOk || $idPermisoEmpleado <= 0) {
+    http_response_code(403);
+    exit('No fue posible actualizar los permisos.');
+  }
+
+  if ($perfilPermiso === 'jefe') {
+    $nivelDestino = (int)($marketingRoles['jefe'] ?? 0);
+  } elseif ($perfilPermiso === 'ejecutivo') {
+    $nivelDestino = (int)($marketingRoles['ejecutivo'] ?? 0);
+    $nivelJefe = (int)$basicas->BuscarCampos($mysqli, 'Nivel', 'Empleados', 'Id', $jefeMarketing);
+    if ($jefeMarketing <= 0 || $nivelJefe !== (int)($marketingRoles['jefe'] ?? 0)) {
+      $nivelDestino = 0;
+    }
+  } elseif (isset($directorRoles[$perfilPermiso])) {
+    $nivelDestino = (int)$directorRoles[$perfilPermiso];
+  } elseif ($perfilPermiso === 'sin_acceso') {
+    $nivelDestino = (int)($_POST['PuestoSinAcceso'] ?? 0);
+    $specialRoles = array_merge(array_map('intval', $marketingRoles), array_map('intval', $directorRoles));
+    if (in_array($nivelDestino, $specialRoles, true)) {
+      $nivelDestino = 0;
+    }
+  }
+
+  if ($nivelDestino > 0) {
+    $basicas->ActCampo($mysqli, 'Empleados', 'Nivel', $nivelDestino, $idPermisoEmpleado);
+    if ($perfilPermiso === 'ejecutivo') {
+      $basicas->ActCampo($mysqli, 'Empleados', 'Equipo', $jefeMarketing, $idPermisoEmpleado);
+    }
+    header('Location: ' . $_SERVER['PHP_SELF'] . '?name=' . rawurlencode((string)$name) . '&Msg=' . rawurlencode('Permisos actualizados.'));
+    exit;
+  }
+
+  header('Location: ' . $_SERVER['PHP_SELF'] . '?name=' . rawurlencode((string)$name) . '&Msg=' . rawurlencode('Selecciona un perfil y configuración válidos.'));
+  exit;
 }
 
 // =================== Redirección a contrato PDF ===================
@@ -145,6 +203,94 @@ $VerCache = $VerCache ?? time();
   <link rel="stylesheet" href="/login/assets/css/Menu_Superior.css?v=<?= h((string)$VerCache) ?>">
   <link rel="stylesheet" href="/login/assets/css/pwa-core.css?v=<?= h((string)$VerCache) ?>">
   <link rel="stylesheet" href="/login/assets/css/pwa-components.css?v=<?= h((string)$VerCache) ?>">
+  <style>
+    #VentanasEMergentes .modal {
+      padding-right: 0 !important;
+    }
+    #VentanasEMergentes .modal-dialog {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: auto;
+      width: min(520px, 100vw);
+      max-width: none;
+      min-height: 100vh;
+      margin: 0 !important;
+      transform: translateX(105%);
+      transition: transform .22s ease-out;
+    }
+    #VentanasEMergentes .modal.show .modal-dialog {
+      margin: 0 !important;
+      transform: translateX(0);
+    }
+    #VentanasEMergentes .modal-content {
+      min-height: 100vh;
+      max-height: 100vh;
+      overflow: hidden;
+      border: 0;
+      border-left: 1px solid #d5dde5;
+      border-radius: 0;
+      box-shadow: -16px 0 36px rgba(15, 23, 42, .2);
+    }
+    #VentanasEMergentes .modal-content > form {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      max-height: 100vh;
+    }
+    #VentanasEMergentes .modal-header {
+      flex: 0 0 auto;
+      padding: calc(env(safe-area-inset-top, 0px) + 16px) 18px 14px;
+    }
+    #VentanasEMergentes .modal-header .close {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      margin: 0;
+      padding: 0;
+      border: 2px solid #1760b3;
+      border-radius: 50%;
+      color: #1760b3;
+      opacity: 1;
+    }
+    #VentanasEMergentes .modal-body {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      padding: 18px;
+    }
+    #VentanasEMergentes .modal-footer {
+      flex: 0 0 auto;
+      padding: 12px 18px calc(env(safe-area-inset-bottom, 0px) + 12px);
+      background: #fff;
+    }
+    #VentanasEMergentes .modal-footer .btn,
+    #VentanasEMergentes .modal-footer input[type="submit"] {
+      min-height: 40px;
+      border-radius: 8px;
+    }
+    .permission-summary {
+      padding: 12px;
+      border: 1px solid #dce4ec;
+      border-radius: 12px;
+      background: #f7fafc;
+    }
+    .permission-summary ul { margin: 8px 0 0; padding-left: 20px; }
+    .commission-history {
+      display: grid;
+      gap: 8px;
+      margin-top: 20px;
+    }
+    .commission-history-item {
+      padding: 10px;
+      border: 1px solid #dce4ec;
+      border-radius: 10px;
+      background: #f7fafc;
+    }
+    .commission-history-item p { margin: 2px 0; font-size: 13px; }
+  </style>
 </head>
 <body onload="localize()"> 
   <!-- =================== Top bar fija Mesa_Empleados.php ===================
@@ -187,7 +333,7 @@ $VerCache = $VerCache ?? time();
     <div class="modal fade" id="Ventana1" tabindex="-1" role="dialog" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
-          <form method="POST" action="php/Funcionalidad_Empleados.php">
+          <form method="POST" action="php/Funcionalidad_Empleados.php" enctype="multipart/form-data">
             <div class="modal-header">
               <h5 class="modal-title"><?= h($Reg['Nombre'] ?? 'Colaborador') ?></h5>
               <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
@@ -195,9 +341,12 @@ $VerCache = $VerCache ?? time();
             <div class="modal-body">
               <input type="hidden" name="Host" value="<?= h($_SERVER['PHP_SELF']) ?>">
               <input type="hidden" name="name" value="<?= h($name) ?>">
+              <input type="hidden" name="csrf" value="<?= h($_SESSION['csrf_auth']) ?>">
               <input type="hidden" name="IdEmpleado" value="<?= h($Reg['IdUsuario'] ?? '') ?>">
-              <input type="hidden" name="Banco" value="<?= h($Cuenta) ?>">
-              <input type="hidden" name="Referencia" value="<?= h($RefDepo) ?>">
+              <input type="hidden" name="CuentaDestino" value="<?= h($Cuenta) ?>">
+              <input type="hidden" name="ReferenciaInterna" value="<?= h($RefDepo) ?>">
+              <input type="hidden" name="PeriodoInicio" value="<?= h($FechIni) ?>">
+              <input type="hidden" name="PeriodoFin" value="<?= h($FechFin) ?>">
 
               <p>Comisiones generadas del</p>
               <h2><strong><?= h($FechIni_str) ?></strong> al <strong><?= h($FechFin_str) ?></strong></h2>
@@ -208,11 +357,75 @@ $VerCache = $VerCache ?? time();
               <p>Clabe Registrada</p>
               <h2><strong><?= h($Cuenta) ?></strong></h2>
 
-              <p>Referencia del pago</p>
+              <p>Referencia interna KASU</p>
               <h2><strong><?= h($RefDepo) ?></strong></h2>
 
               <label>Cantidad a pagar</label>
               <input class="form-control" type="number" name="Cantidad" placeholder="Cantidad" min="0" step="0.01" required>
+
+              <label class="mt-3">Banco del que sale la transferencia</label>
+              <input class="form-control" type="text" name="BancoEmisor" placeholder="Ej. BBVA, Banorte, Santander" maxlength="100" required>
+
+              <label class="mt-3">Número de referencia bancaria</label>
+              <input class="form-control" type="text" name="ReferenciaOperacion" placeholder="Folio, clave de rastreo o referencia" maxlength="150" required>
+
+              <label class="mt-3">Fecha de la operación</label>
+              <input class="form-control" type="date" name="FechaOperacion" value="<?= h(date('Y-m-d')) ?>" max="<?= h(date('Y-m-d')) ?>" required>
+
+              <label class="mt-3">Comprobante PDF de la operación</label>
+              <input class="form-control-file" type="file" name="ComprobantePdf" accept="application/pdf,.pdf" required>
+              <small class="text-muted">Solo PDF, máximo 10 MB.</small>
+
+              <?php
+                $historialComisiones = [];
+                $idVendedorHistorial = (string)($Reg['IdUsuario'] ?? '');
+                if ($idVendedorHistorial !== '') {
+                  $stmtHistorial = $mysqli->prepare("
+                    SELECT *
+                    FROM Comisiones_pagos
+                    WHERE IdVendedor = ?
+                    ORDER BY fechaRegistro DESC
+                    LIMIT 10
+                  ");
+                  $stmtHistorial->bind_param('s', $idVendedorHistorial);
+                  $stmtHistorial->execute();
+                  $rsHistorial = $stmtHistorial->get_result();
+                  while ($pagoHistorial = $rsHistorial->fetch_assoc()) {
+                    $historialComisiones[] = $pagoHistorial;
+                  }
+                  $stmtHistorial->close();
+                }
+              ?>
+              <div class="commission-history">
+                <strong>Últimos pagos registrados</strong>
+                <?php if (!$historialComisiones): ?>
+                  <p class="text-muted">Este colaborador aún no tiene pagos registrados.</p>
+                <?php else: ?>
+                  <?php foreach ($historialComisiones as $pagoHistorial): ?>
+                    <div class="commission-history-item">
+                      <p><strong>$ <?= number_format((float)($pagoHistorial['Cantidad'] ?? 0), 2) ?></strong></p>
+                      <p>Fecha: <?= h($pagoHistorial['FechaOperacion'] ?? $pagoHistorial['fechaRegistro'] ?? '') ?></p>
+                      <?php if (!empty($pagoHistorial['PeriodoInicio']) && !empty($pagoHistorial['PeriodoFin'])): ?>
+                        <p>Periodo: <?= h($pagoHistorial['PeriodoInicio']) ?> al <?= h($pagoHistorial['PeriodoFin']) ?></p>
+                      <?php endif; ?>
+                      <p>Banco: <?= h($pagoHistorial['Banco'] ?? 'Sin registro') ?></p>
+                      <p>Referencia: <?= h($pagoHistorial['Referencia'] ?? 'Sin registro') ?></p>
+                      <?php if (!empty($pagoHistorial['CuentaDestino'])): ?>
+                        <p>CLABE destino: <?= h($pagoHistorial['CuentaDestino']) ?></p>
+                      <?php endif; ?>
+                      <?php if (!empty($pagoHistorial['ReferenciaInterna'])): ?>
+                        <p>Referencia KASU: <?= h($pagoHistorial['ReferenciaInterna']) ?></p>
+                      <?php endif; ?>
+                      <p>Registró: <?= h($pagoHistorial['UsrResgistra'] ?? 'Sin registro') ?></p>
+                      <?php if (!empty($pagoHistorial['ComprobantePdf']) && !empty($pagoHistorial['Id'])): ?>
+                        <a href="php/Descargar_Comprobante_Comision.php?id=<?= (int)$pagoHistorial['Id'] ?>" target="_blank" rel="noopener">
+                          Ver comprobante PDF
+                        </a>
+                      <?php endif; ?>
+                    </div>
+                  <?php endforeach; ?>
+                <?php endif; ?>
+              </div>
             </div>
             <div class="modal-footer">
               <?php if (isset($_POST['Saldo']) && (float)$_POST['Saldo'] >= 1): ?>
@@ -245,6 +458,7 @@ $VerCache = $VerCache ?? time();
             <div class="modal-body">
               <input type="hidden" name="Host" value="<?= h($_SERVER['PHP_SELF']) ?>">
               <input type="hidden" name="name" value="<?= h($name) ?>">
+              <input type="hidden" name="csrf" value="<?= h($_SESSION['csrf_auth']) ?>">
 
               <label>Nombre</label>
               <input class="form-control" type="text" name="Nombre" required>
@@ -458,6 +672,107 @@ $VerCache = $VerCache ?? time();
         </div>
       </div>
     </div>
+
+    <!-- Ventana8: Permisos de Mesa Prospectos -->
+    <div class="modal fade" id="Ventana8" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <form method="POST" action="<?= h($_SERVER['PHP_SELF']) ?>">
+            <div class="modal-header">
+              <div>
+                <small class="text-muted">Permisos del usuario</small>
+                <h5 class="modal-title"><?= h($Reg['Nombre'] ?? 'Colaborador') ?></h5>
+              </div>
+              <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <input type="hidden" name="csrf_permisos" value="<?= h($csrfPermisos) ?>">
+              <input type="hidden" name="nombre" value="<?= h($name) ?>">
+              <input type="hidden" name="IdEmpleado" value="<?= h($Reg['Id'] ?? '') ?>">
+
+              <?php
+                $nivelSeleccionado = (int)($Reg['Nivel'] ?? 0);
+                $perfilSeleccionado = 'sin_acceso';
+                if ($nivelSeleccionado === (int)($marketingRoles['jefe'] ?? 0)) {
+                  $perfilSeleccionado = 'jefe';
+                } elseif ($nivelSeleccionado === (int)($marketingRoles['ejecutivo'] ?? 0)) {
+                  $perfilSeleccionado = 'ejecutivo';
+                } else {
+                  foreach ($directorRoles as $directorKey => $directorId) {
+                    if ($nivelSeleccionado === (int)$directorId) {
+                      $perfilSeleccionado = $directorKey;
+                      break;
+                    }
+                  }
+                }
+              ?>
+
+              <label for="PerfilMesaProspectos">Perfil de acceso del usuario</label>
+              <select class="form-control" id="PerfilMesaProspectos" name="PerfilMesaProspectos" required>
+                <option value="sin_acceso" <?= $perfilSeleccionado === 'sin_acceso' ? 'selected' : '' ?>>Sin perfil de Marketing</option>
+                <option value="jefe" <?= $perfilSeleccionado === 'jefe' ? 'selected' : '' ?>>Jefe de Marketing</option>
+                <option value="ejecutivo" <?= $perfilSeleccionado === 'ejecutivo' ? 'selected' : '' ?>>Ejecutivo de Marketing</option>
+                <option value="general" <?= $perfilSeleccionado === 'general' ? 'selected' : '' ?>>Director General</option>
+                <option value="finanzas" <?= $perfilSeleccionado === 'finanzas' ? 'selected' : '' ?>>Director de Finanzas</option>
+                <option value="marketing" <?= $perfilSeleccionado === 'marketing' ? 'selected' : '' ?>>Director de Marketing</option>
+                <option value="comercial" <?= $perfilSeleccionado === 'comercial' ? 'selected' : '' ?>>Director Comercial</option>
+              </select>
+
+              <div class="mt-3" id="PermisoJefeMarketing">
+                <label for="JefeMarketing">Jefe de Marketing responsable</label>
+                <select class="form-control" id="JefeMarketing" name="JefeMarketing">
+                  <option value="">Selecciona un jefe</option>
+                  <?php
+                    $nivelJefeMarketing = (int)($marketingRoles['jefe'] ?? 0);
+                    $stmtJefes = $mysqli->prepare("
+                      SELECT Id, Nombre
+                      FROM Empleados
+                      WHERE Nivel = ? AND Nombre <> 'Vacante' AND Id <> ?
+                      ORDER BY Nombre
+                    ");
+                    $regId = (int)($Reg['Id'] ?? 0);
+                    $stmtJefes->bind_param('ii', $nivelJefeMarketing, $regId);
+                    $stmtJefes->execute();
+                    $rsJefes = $stmtJefes->get_result();
+                    while ($jefe = $rsJefes->fetch_assoc()):
+                  ?>
+                    <option value="<?= h($jefe['Id']) ?>" <?= (int)($Reg['Equipo'] ?? 0) === (int)$jefe['Id'] ? 'selected' : '' ?>>
+                      <?= h($jefe['Nombre']) ?>
+                    </option>
+                  <?php endwhile; $stmtJefes->close(); ?>
+                </select>
+                <small class="text-muted">Obligatorio para ejecutivos. Define los prospectos visibles para el jefe.</small>
+              </div>
+
+              <div class="mt-3" id="PermisoPuestoSinAcceso">
+                <label for="PuestoSinAcceso">Puesto al retirar el acceso</label>
+                <select class="form-control" id="PuestoSinAcceso" name="PuestoSinAcceso">
+                  <option value="">Selecciona el puesto que conservará</option>
+                  <?php
+                    $rsPuestos = $mysqli->query("SELECT Id, NombreNivel FROM Nivel ORDER BY Id");
+                    while ($puesto = $rsPuestos->fetch_assoc()):
+                      $specialRoles = array_merge(array_map('intval', $marketingRoles), array_map('intval', $directorRoles));
+                      if (in_array((int)$puesto['Id'], $specialRoles, true)) { continue; }
+                  ?>
+                    <option value="<?= h($puesto['Id']) ?>" <?= $nivelSeleccionado === (int)$puesto['Id'] ? 'selected' : '' ?>>
+                      <?= h($puesto['NombreNivel']) ?>
+                    </option>
+                  <?php endwhile; $rsPuestos->close(); ?>
+                </select>
+              </div>
+
+              <div class="permission-summary mt-4">
+                <strong>Permisos que se aplicarán</strong>
+                <ul id="PermisoResumen"></ul>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" name="GuardarPermisosUsuario" value="1" class="btn btn-primary">Guardar permisos</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- =================== Contenido principal ===================
@@ -548,7 +863,7 @@ $VerCache = $VerCache ?? time();
                 <div class="mesa-actions-grid">
                   <form method="POST" action="<?= h($_SERVER['PHP_SELF']) ?>">
                     <?php
-                    if ((int)$Nivel < 3){
+                    if ($canManageEmployees){
                       echo '
                         <!-- Botón de Pagar Comisiones -->
                         <input type="hidden" name="nombre" value="'.h($name).'">
@@ -568,6 +883,12 @@ $VerCache = $VerCache ?? time();
                         <label for="N7'.$btnId.'" class="btn" title="Cambiar puesto" style="background:#C0392B;color:#F8F9F9;">
                           <i class="material-icons">swap_vert</i>
                         </label>
+
+                        <!-- Botón de Permisos -->
+                        <input id="N7'.$btnId.'" type="submit" name="IdEmpleado" value="7'.$btnId.'" hidden>
+                        <label for="M8'.$btnId.'" class="btn" title="Administrar permisos" style="background:#5D6D7E;color:#F8F9F9;">
+                          <i class="material-icons">admin_panel_settings</i>
+                        </label>
                       ';
                     }
                     ?>
@@ -581,7 +902,7 @@ $VerCache = $VerCache ?? time();
                     <label for="B6<?= $btnId ?>" class="btn" title="Dar de baja" style="background:#E74C3C;color:#F8F9F9;">
                       <i class="material-icons">cancel</i>
                     </label>
-                    <input id="N7<?= $btnId ?>" type="submit" name="IdEmpleado" value="7<?= $btnId ?>" hidden>
+                    <input id="M8<?= $btnId ?>" type="submit" name="IdEmpleado" value="8<?= $btnId ?>" hidden>
                   </form>
                 </div>
               </td>
@@ -613,6 +934,40 @@ $VerCache = $VerCache ?? time();
       <?php if (!empty($Lanzar)): ?>
         $('<?= h($Lanzar) ?>').modal('show');
       <?php endif; ?>
+
+      var perfil = document.getElementById('PerfilMesaProspectos');
+      var bloqueJefe = document.getElementById('PermisoJefeMarketing');
+      var bloqueSinAcceso = document.getElementById('PermisoPuestoSinAcceso');
+      var jefeMarketing = document.getElementById('JefeMarketing');
+      var puestoSinAcceso = document.getElementById('PuestoSinAcceso');
+      var resumen = document.getElementById('PermisoResumen');
+      function actualizarPermisos() {
+        if (!perfil || !resumen) return;
+        var valor = perfil.value;
+        if (bloqueJefe) bloqueJefe.hidden = valor !== 'ejecutivo';
+        if (bloqueSinAcceso) bloqueSinAcceso.hidden = valor !== 'sin_acceso';
+        if (jefeMarketing) jefeMarketing.required = valor === 'ejecutivo';
+        if (puestoSinAcceso) puestoSinAcceso.required = valor === 'sin_acceso';
+        if (valor === 'jefe') {
+          resumen.innerHTML = '<li>Ver sus prospectos y los asignados a sus ejecutivos.</li><li>Ejecutar acciones y mover tarjetas.</li><li>Reasignar únicamente a ejecutivos de su equipo.</li>';
+        } else if (valor === 'ejecutivo') {
+          resumen.innerHTML = '<li>Ver únicamente prospectos asignados directamente.</li><li>Ejecutar acciones y mover tarjetas.</li><li>Sin permiso para reasignar prospectos.</li>';
+        } else if (valor === 'general') {
+          resumen.innerHTML = '<li>Visión global de todas las áreas.</li><li>Acceso al análisis financiero y a las mesas administrativas.</li>';
+        } else if (valor === 'finanzas') {
+          resumen.innerHTML = '<li>Acceso al análisis financiero y Mesa Finanzas.</li><li>Sin acceso a Marketing ni al área Comercial.</li>';
+        } else if (valor === 'marketing') {
+          resumen.innerHTML = '<li>Acceso a Marketing y Mesa Prospectos.</li><li>Sin acceso a información financiera.</li>';
+        } else if (valor === 'comercial') {
+          resumen.innerHTML = '<li>Acceso a clientes y Mesa Prospectos.</li><li>Sin acceso a información financiera.</li>';
+        } else {
+          resumen.innerHTML = '<li>Se retirará el perfil especial de Marketing.</li><li>Se aplicarán los accesos normales del puesto seleccionado.</li>';
+        }
+      }
+      if (perfil) {
+        perfil.addEventListener('change', actualizarPermisos);
+        actualizarPermisos();
+      }
     });
   </script>
 </body>

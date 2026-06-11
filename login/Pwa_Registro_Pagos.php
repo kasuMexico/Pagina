@@ -15,6 +15,7 @@ kasu_session_start();
 date_default_timezone_set('America/Mexico_City');
 setlocale(LC_ALL,'es_ES.UTF-8');
 require_once __DIR__ . '/../eia/librerias.php';
+require_once __DIR__ . '/php/mesa_helpers.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 /* ==== Sesión obligatoria ==== */
@@ -27,6 +28,7 @@ if (empty($_SESSION['Vendedor'])) {
 $VerCache  = time();
 $Vendedor  = (string)$_SESSION['Vendedor'];
 $Niv       = (int)($basicas->BuscarCampos($mysqli, 'Nivel', 'Empleados', 'IdUsuario', $Vendedor) ?? 0);
+$canSeeGlobalFinance = kasu_can_access_finance($mysqli, $Niv);
 $IdSucUsr  = (int)($basicas->BuscarCampos($mysqli, 'Sucursal', 'Empleados', 'IdUsuario', $Vendedor) ?? 0);
 $NomSucUsr = (string)($basicas->BuscarCampos($mysqli, 'NombreSucursal', 'Sucursal', 'Id', $IdSucUsr) ?? '');
 
@@ -177,12 +179,12 @@ $bucket_vencidas = [];
 $bucket_sem1     = [];
 $bucket_sem2     = [];
 
-if ($Niv >= 5) {
+if ($Niv >= 5 && !$canSeeGlobalFinance) {
   collect_bucket($mysqli, $bucket_vencidas, $Vendedor, $NomSucUsr, 'pp.Promesa <= ?', [$Vendedor, $HOY]);
   collect_bucket($mysqli, $bucket_sem1,     $Vendedor, $NomSucUsr, 'pp.Promesa BETWEEN ? AND ?', [$Vendedor, $W1_I, $W1_F]);
   collect_bucket($mysqli, $bucket_sem2,     $Vendedor, $NomSucUsr, 'pp.Promesa BETWEEN ? AND ?', [$Vendedor, $W2_I, $W2_F]);
 
-} elseif ($Niv <= 4 && $Niv >= 2) {
+} elseif ($Niv <= 4 && $Niv >= 2 && !$canSeeGlobalFinance) {
   $rs = $mysqli->query("SELECT IdUsuario FROM Empleados WHERE Nombre<>'Vacante' AND Nivel>={$Niv} AND Sucursal={$IdSucUsr}");
   while ($rs && ($e = $rs->fetch_assoc())) {
     $vend = (string)$e['IdUsuario'];
@@ -192,7 +194,7 @@ if ($Niv >= 5) {
   }
 
 } else { // Niv == 1
-  $rs = $mysqli->query("SELECT IdUsuario, Sucursal FROM Empleados WHERE Nombre<>'Vacante' AND Nivel>={$Niv}");
+  $rs = $mysqli->query("SELECT IdUsuario, Sucursal FROM Empleados WHERE Nombre<>'Vacante'");
   while ($rs && ($e = $rs->fetch_assoc())) {
     $vend = (string)$e['IdUsuario'];
     $nomS = (string)($basicas->BuscarCampos($mysqli, 'NombreSucursal', 'Sucursal', 'Id', (int)$e['Sucursal']) ?? '');

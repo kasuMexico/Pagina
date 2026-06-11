@@ -16,6 +16,18 @@ kasu_session_start();
  * [1] INICIALIZACIÓN: conexión, zona horaria, helpers
  * ========================================================================== */
 require_once __DIR__ . '/../eia/librerias.php';          // Debe exponer $mysqli, $basicas, $financieras
+require_once __DIR__ . '/php/mesa_helpers.php';
+
+if (empty($_SESSION['Vendedor'])) {
+  header('Location: https://kasu.com.mx/login');
+  exit;
+}
+$Niv = (int)$basicas->BuscarCampos($mysqli, 'Nivel', 'Empleados', 'IdUsuario', $_SESSION['Vendedor']);
+if (!kasu_can_access_finance($mysqli, $Niv)) {
+  http_response_code(403);
+  exit('No tienes permisos para consultar el análisis financiero.');
+}
+
 require_once 'php/Analisis_Metas.php';        // Calcula metas del mes, sueldos y comisiones
 /* =============================================================================
  * [1.5] INCLUIR CÁLCULO FONDO FUNERARIO
@@ -36,18 +48,6 @@ if (!$mysqli->ping()) {
 $tz  = new DateTimeZone('America/Mexico_City');
 $hoy = new DateTimeImmutable('today', $tz);
 $ver = (string)time();
-
-if (!isset($_SESSION['Vendedor'])) {
-  $tok = isset($_GET['dataP']) ? base64_decode((string)$_GET['dataP'], true) : null;
-  if ($tok === 'ValidJCCM') {
-    $_SESSION['dataP'] = 'ValidJCCM';
-  } else {
-    header('Location: https://kasu.com.mx/login');
-    exit;
-  }
-} else {
-  $Niv = (string)$basicas->BuscarCampos($mysqli, 'Nivel', 'Empleados', 'IdUsuario', $_SESSION['Vendedor']);
-}
 
 if (!function_exists('h')) {
   function h($v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
@@ -823,7 +823,7 @@ if (!empty($historialFondo) && count($historialFondo) >= 2) {
 
   <!-- Menú inferior -->
   <section id="Menu">
-    <?php if(($_SESSION['dataP'] ?? '') !== 'ValidJCCM' || isset($_SESSION['Vendedor'])) { require_once 'html/Menuprinc.php'; } ?>
+    <?php require_once 'html/Menuprinc.php'; ?>
   </section>
 
   <!-- CONTENIDO -->

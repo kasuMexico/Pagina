@@ -7,6 +7,7 @@ require_once __DIR__ . '/../eia/Conexiones/cn_vtas.php';
 require_once __DIR__ . '/../eia/Funciones/Funciones_Basicas.php';
 require_once __DIR__ . '/../apimarket/Funciones/cn_apimarket.php';
 require_once __DIR__ . '/../apimarket/Funciones/Funciones_ApiAccess.php';
+require_once __DIR__ . '/php/mesa_helpers.php';
 
 date_default_timezone_set('America/Mexico_City');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -40,7 +41,7 @@ $stmt->execute();
 $Reg = $stmt->get_result()->fetch_assoc() ?: null;
 $stmt->close();
 $Nivel = (int)($Reg['Nivel'] ?? 99);
-$canManageApis = ($Nivel === 1 || $Nivel === 2);
+$canManageApis = kasu_can_access_api_market($mysqli, $Nivel);
 
 if (!$canManageApis) {
     http_response_code(403);

@@ -25,6 +25,7 @@ if (!isset($_SESSION["Vendedor"])) {
 }
 
 require_once '../../eia/librerias.php';
+require_once __DIR__ . '/mesa_helpers.php';
 kasu_apply_error_settings(); // 2025-11-18: Centraliza errores en /eia/error.log accesible vía HTTPS
 
 date_default_timezone_set('America/Mexico_City');
@@ -355,6 +356,10 @@ if (!empty($_POST['LeadSales'])) {
     }
 
     $idProspecto = isset($_POST['IdProspecto']) ? (int)$_POST['IdProspecto'] : 0;
+    if (!kasu_marketing_can_manage_prospect($mysqli, $pros, (string)$_SESSION['Vendedor'], $idProspecto)) {
+        http_response_code(403);
+        exit('No tienes permisos para gestionar este prospecto.');
+    }
     $freqRaw = strtoupper(trim((string)($_POST['Frecuencia'] ?? '')));
     $nombre  = trim((string)($_POST['nombre'] ?? ''));
 
@@ -450,6 +455,10 @@ if (!empty($_POST['LeadSales'])) {
 // ======================================================================
 if (!empty($_POST['ActDatosPROS'])) {
     $idProspecto = isset($_POST['IdProspecto']) ? (int)$_POST['IdProspecto'] : 0;
+    if (!kasu_marketing_can_manage_prospect($mysqli, $pros, (string)$_SESSION['Vendedor'], $idProspecto)) {
+        http_response_code(403);
+        exit('No tienes permisos para gestionar este prospecto.');
+    }
     if ($idProspecto <= 0) {
         http_response_code(400);
         exit('IdProspecto inválido.');

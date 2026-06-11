@@ -45,6 +45,7 @@ try {
     }
 
     require_once __DIR__ . '/../librerias.php';       // $mysqli, $basicas, $pros, etc.
+    require_once __DIR__ . '/ia_role_profiles.php';
     
     // Intentar cargar OpenAI (pero NO es crítico si falla)
     $openaiAvailable = false;
@@ -91,17 +92,9 @@ try {
     $nombreSucursal = (string)$basicas->BuscarCampos($mysqli, 'nombreSucursal','Sucursal',  'Id',        $idSucursal);
     $nombreNivel    = (string)$basicas->BuscarCampos($mysqli, 'NombreNivel',   'Nivel',     'Id',        $nivel);
 
-    // Mapeo simple del rol
-    $rolDescripcion = 'Rol no identificado';
-    switch ($nivel) {
-        case 7: $rolDescripcion = 'Agente Externo (ejecutivo de ventas externo)'; break;
-        case 6: $rolDescripcion = 'Ejecutivo de Ventas (interno)'; break;
-        case 5: $rolDescripcion = 'Ejecutivo de Cobranza'; break;
-        case 4: $rolDescripcion = 'Coordinador (equipo de ventas/cobranza)'; break;
-        case 3: $rolDescripcion = 'Gerente de Ruta (sucursal)'; break;
-        case 2: $rolDescripcion = 'Mesa de Control (análisis centralizado)'; break;
-        case 1: $rolDescripcion = 'Dirección / CEO'; break;
-    }
+    $perfilIa = kasu_ia_role_profile($nombreNivel, $nivel);
+    $rolDescripcion = (string)$perfilIa['descripcion'];
+    $instruccionRolIa = kasu_ia_role_instruction($perfilIa);
 
     $contextoUsuario = [
         'id_usuario'   => $idUsuario,
@@ -110,10 +103,19 @@ try {
         'nombre_nivel' => $nombreNivel,
         'sucursal'     => $nombreSucursal,
         'rol'          => $rolDescripcion,
+        'perfil_ia'    => $perfilIa,
+        'instruccion_ia' => $instruccionRolIa,
         'fecha_hoy'    => date('Y-m-d'),
     ];
 
-    $contextJson = json_encode($contextoUsuario, JSON_UNESCAPED_UNICODE);
+    $contextoPrompt = [
+        'puesto' => (string)$perfilIa['titulo'],
+        'alcance' => (string)$perfilIa['alcance'],
+        'sucursal' => $nombreSucursal,
+        'acciones_propias' => array_slice((array)$perfilIa['acciones'], 0, 4),
+        'evitar' => array_slice((array)$perfilIa['evitar'], 0, 3),
+    ];
+    $contextJson = json_encode($contextoPrompt, JSON_UNESCAPED_UNICODE);
 
     /* ========================== Historial de chat en sesión ========================== */
     if (!isset($_SESSION['VISTA360_CHAT']) || !is_array($_SESSION['VISTA360_CHAT'])) {
@@ -121,8 +123,8 @@ try {
     }
     $hist = $_SESSION['VISTA360_CHAT'];
 
-    // Construye texto plano del historial para el prompt (máx ~8 turnos)
-    $maxTurns = 8;
+    // Contexto reciente compacto: suficiente para continuidad sin reenviar todo el chat.
+    $maxTurns = 4;
     if (count($hist) > $maxTurns) {
         $hist = array_slice($hist, -$maxTurns);
     }
@@ -130,9 +132,28 @@ try {
     $historialTexto = '';
     foreach ($hist as $turno) {
         $role    = strtoupper($turno['role'] ?? 'USER');
-        $content = (string)($turno['content'] ?? '');
+        $content = mb_substr(strip_tags((string)($turno['content'] ?? '')), 0, 350, 'UTF-8');
         $historialTexto .= $role . ': ' . $content . "\n";
     }
+
+    $compactForAi = function ($value, int $depth = 0) use (&$compactForAi) {
+        if ($depth >= 4) {
+            return is_array($value) ? '[resumen omitido]' : $value;
+        }
+        if (is_string($value)) {
+            return mb_substr($value, 0, 300, 'UTF-8');
+        }
+        if (!is_array($value)) {
+            return $value;
+        }
+        $isList = array_is_list($value);
+        $limit = $isList ? 3 : 12;
+        $out = [];
+        foreach (array_slice($value, 0, $limit, true) as $key => $item) {
+            $out[$key] = $compactForAi($item, $depth + 1);
+        }
+        return $out;
+    };
 
     /* ========================== Helper: llamar endpoints internos ========================== */
 
@@ -384,7 +405,7 @@ try {
         }
         
         // Patrones para estadísticas del empleado
-        if (preg_match('/\b(c[oó]mo voy|mis ventas|mi desempeño|mis resultados|resumen del mes|ventas del mes|p[oó]lizas vendidas)\b/iu', $mensajeLower)) {
+        if (preg_match('/\b(c[oó]mo voy|mis ventas|mi desempeño|mis resultados|resumen del mes|ventas del mes|p[oó]lizas vendidas|recomendaci[oó]n|qu[eé] debo priorizar|prioridades de hoy)\b/iu', $mensajeLower)) {
             return [
                 'accion' => 'estadisticas_empleado_mes',
                 'argumentos' => [],
@@ -571,11 +592,12 @@ try {
                     $ventas = $toolResult['ventas_mes'] ?? [];
                     $pagos = $toolResult['pagos_mes'] ?? [];
                     $prospectos = $toolResult['prospectos_mes'] ?? [];
-                    
-                    $nombre = $contextoUsuario['nombre'] ?? 'Ejecutivo';
-                    
-                    $html = "<p><strong>📊 Análisis de tu Desempeño</strong></p>";
-                    $html .= "<p>¡Hola <strong>{$nombre}</strong>! Aquí tu resumen:</p>";
+                    $perfil = $contextoUsuario['perfil_ia'] ?? [];
+                    $titulo = htmlspecialchars((string)($perfil['titulo'] ?? 'Colaborador'), ENT_QUOTES, 'UTF-8');
+                    $alcance = htmlspecialchars((string)($perfil['alcance'] ?? 'personal'), ENT_QUOTES, 'UTF-8');
+
+                    $html = "<p><strong>Análisis para {$titulo}</strong></p>";
+                    $html .= "<p>Resumen de alcance <strong>{$alcance}</strong>:</p>";
                     
                     $html .= "<ul>";
                     if (!empty($ventas['unidades'])) {
@@ -595,19 +617,10 @@ try {
                     }
                     $html .= "</ul>";
                     
-                    // Recomendaciones basadas en datos
-                    $html .= "<p><strong>🎯 Recomendaciones:</strong></p>";
-                    $html .= "<ol>";
-                    
-                    if (!empty($pagos['importe_mora']) && $pagos['importe_mora'] > 0) {
-                        $html .= "<li><strong>Prioridad alta:</strong> Contactar clientes en mora</li>";
+                    $html .= "<p><strong>Acciones propias de tu puesto:</strong></p><ol>";
+                    foreach (array_slice((array)($perfil['acciones'] ?? []), 0, 3) as $accionPerfil) {
+                        $html .= '<li>' . htmlspecialchars((string)$accionPerfil, ENT_QUOTES, 'UTF-8') . '</li>';
                     }
-                    
-                    if (empty($prospectos['total']) || $prospectos['total'] < 10) {
-                        $html .= "<li><strong>Prioridad media:</strong> Agregar nuevos prospectos</li>";
-                    }
-                    
-                    $html .= "<li><strong>Acción continua:</strong> Seguimiento a prospectos calientes</li>";
                     $html .= "</ol>";
                     
                     return $html;
@@ -679,132 +692,45 @@ try {
                            <p><small>💡 <strong>Frase de apertura:</strong> \"Hola [nombre], soy [tu nombre] de KASU. Llamo porque ayudamos a familias a planificar su tranquilidad futura. ¿Tienes 2 minutos para contarte cómo?\"</small></p>";
                 }
                 
-                // Respuesta general de coaching
-                return "<p><strong>🤖 Asistente KASU</strong></p>
-                       <p>¡Hola " . ($contextoUsuario['nombre'] ?? 'ejecutivo') . "! Puedo ayudarte con:</p>
-                       <ul>
-                       <li><strong>🔍 Búsqueda de clientes/prospectos</strong> (por nombre)</li>
-                       <li><strong>💰 Cálculo de saldos y moratorios</strong></li>
-                       <li><strong>📧 Envío de correos</strong> (póliza, fichas, estado de cuenta, liga de pago)</li>
-                       <li><strong>📊 Análisis de tu desempeño</strong></li>
-                       <li><strong>🎓 Coaching de ventas, cobranza y prospección</strong></li>
-                       </ul>
-                       <p><small>💡 <strong>Ejemplos:</strong></small></p>
-                       <ul>
-                       <li><small>\"Busca al cliente Juan Pérez\"</small></li>
-                       <li><small>\"¿Cuánto debe la venta 123?\"</small></li>
-                       <li><small>\"Envía la póliza de María García\"</small></li>
-                       <li><small>\"Analiza mi desempeño este mes\"</small></li>
-                       <li><small>\"¿Cómo puedo mejorar mis ventas?\"</small></li>
-                       </ul>";
+                $perfil = $contextoUsuario['perfil_ia'] ?? [];
+                $titulo = htmlspecialchars((string)($perfil['titulo'] ?? 'Colaborador'), ENT_QUOTES, 'UTF-8');
+                $html = "<p><strong>Asistente KASU para {$titulo}</strong></p>";
+                $html .= '<p>Puedo ayudarte a priorizar acciones propias de tu puesto:</p><ul>';
+                foreach (array_slice((array)($perfil['acciones'] ?? []), 0, 4) as $accionPerfil) {
+                    $html .= '<li>' . htmlspecialchars((string)$accionPerfil, ENT_QUOTES, 'UTF-8') . '</li>';
+                }
+                $html .= '</ul><p><small>Pregunta: \"¿Qué debo priorizar hoy?\" o \"Analiza mi desempeño este mes\".</small></p>';
+                return $html;
         }
     }
 
     /* ========================== PRIMERA ETAPA: Decidir acción (con o sin IA) ========================== */
 
-    $accionData = null;
-    
-    // Intentar con OpenAI primero
-    if ($openaiAvailable) {
+    $accionLocal = detectarAccionLocal($mensajeParaDeteccion);
+    $accionData = (($accionLocal['nota_sistema'] ?? '') !== 'No se detectó acción específica')
+        ? $accionLocal
+        : null;
+
+    // Solo usar IA para clasificar mensajes ambiguos.
+    if (!$accionData && $openaiAvailable) {
         try {
             $promptAccion = <<<PROMPT
-Eres un ORQUESTADOR de acciones para la IA comercial de KASU.
+Clasifica una solicitud de KASU en UNA acción:
+- ninguna: consejo o explicación.
+- buscar_cliente: buscar cliente/prospecto, saldo o mora por nombre.
+- informacion_demografica: edad o nacimiento.
+- estadisticas_empleado_mes: desempeño, prioridades o recomendación.
+- enviar_correo: enviar póliza/fichas/estado/liga; usa id_venta y tipo.
 
-Contexto del usuario (JSON):
-{$contextJson}
+CONTEXTO: {$contextJson}
+HISTORIAL: {$historialTexto}
+MENSAJE: "{$mensajeParaDeteccion}"
 
-Historial reciente de conversación:
-{$historialTexto}
-
-Mensaje actual del usuario:
-"{$mensajeParaDeteccion}"
-
-Tu tarea es decidir UNA sola acción principal a ejecutar y estructurar argumentos claros.
-
-ACCIONES PERMITIDAS
--------------------
-1) "ninguna"
-   - Cuando el usuario:
-     * Pide explicación de productos, manejo de objeciones, scripts de venta.
-     * Pide ayuda general ("¿cómo respondo si...?", "ayúdame a argumentar...").
-   - No tocas base de datos ni envías correos.
-
-2) "buscar_cliente"
-   - Cuando pide buscar, localizar o revisar información de clientes:
-     * "busca a ana maria"
-     * "localiza a carlos pérez"
-     * "revisa clientes llamados luis"
-     * "muéstrame el saldo de juan pérez"
-   - También cuando pide ver crédito, adeudo, saldo, mora de alguien:
-     * "¿cuánto debe maría lópez?"
-     * "revisa el crédito de pedro"
-   - ARGUMENTOS:
-     {
-       "nombre": "texto a buscar en el nombre del cliente"
-     }
-
-3) "informacion_demografica"
-   - Cuando pregunta específicamente por datos personales del cliente:
-     * "¿qué edad tiene?"
-     * "fecha de nacimiento de..."
-     * "¿cuándo cumple años?"
-   - ARGUMENTOS:
-     {
-       "nombre": "nombre del cliente"
-     }
-
-4) "estadisticas_empleado_mes"
-   - Cuando pregunta por su propio desempeño, números, metas o resultados:
-     * "¿cómo voy este mes?"
-     * "mis ventas de noviembre"
-     * "¿cuántas pólizas llevo?"
-     * "resumen de mis resultados este mes"
-   - ARGUMENTOS:
-     {
-       "id_usuario": "ID del usuario logueado",
-       "mes": "YYYY-MM" (si el usuario menciona un mes/año; si no, usar mes actual)
-     }
-
-5) "enviar_correo"
-   - Cuando explícitamente quiere enviar un CORREO transaccional a un cliente:
-     * "envía póliza de la venta 123"
-     * "manda las fichas de pago de la venta 450"
-     * "envía el estado de cuenta de juan pérez, venta 890"
-     * "manda la liga de pago MP a la venta 321"
-   - Primero debes distinguir el tipo de correo que quiere:
-     * "póliza" o "poliza"          → tipo = "poliza"
-     * "fichas" o "fichas de pago"  → tipo = "fichas"
-     * "estado de cuenta"           → tipo = "estado_cuenta"
-     * "liga de pago", "link de pago", "pago con tarjeta", "mercado pago", "MP"
-                                    → tipo = "liga_pago"
-     * Si solo dice "envía/manda correo" → tipo = "auto" (el sistema decide según estatus)
-   - ID de venta:
-     * Si el usuario menciona explícitamente "venta 123", "venta #123", "ID 123",
-       extrae ese número y úsalo como "id_venta".
-     * Si NO da un ID de venta pero menciona un nombre de cliente,
-       entonces NO elijas "enviar_correo"; elige "buscar_cliente" primero.
-   - ARGUMENTOS:
-     {
-       "id_venta": 123,
-       "tipo": "auto|poliza|fichas|estado_cuenta|liga_pago"
-     }
-
-FORMATO DE RESPUESTA
---------------------
-Responde ÚNICAMENTE un JSON con este esquema EXACTO:
-
-{
-  "accion": "ninguna | buscar_cliente | informacion_demografica | enviar_correo | estadisticas_empleado_mes",
-  "argumentos": { ... },
-  "nota_sistema": "breve explicación en español para el backend; el usuario NO la ve"
-}
-
-- "accion" debe ser una de las cinco cadenas indicadas.
-- "argumentos" debe ser SIEMPRE un objeto JSON (aunque vaya vacío).
-- NO agregues comentarios ni texto fuera del JSON.
+Devuelve solo JSON:
+{"accion":"...","argumentos":{},"nota_sistema":"..."}
 PROMPT;
 
-            $textoAccion = openai_simple_text($promptAccion, 650);
+            $textoAccion = openai_simple_text($promptAccion, 180);
             $accionData  = json_decode($textoAccion, true);
             
             if (!is_array($accionData)) {
@@ -818,9 +744,9 @@ PROMPT;
         }
     }
     
-    // Si OpenAI falló o no está disponible, usar detección local
+    // Si IA falló o no está disponible, usar detección local.
     if (!$accionData || !is_array($accionData)) {
-        $accionData = detectarAccionLocal($mensajeParaDeteccion);
+        $accionData = $accionLocal;
     }
     
     $accion     = (string)($accionData['accion'] ?? 'ninguna');
@@ -1017,71 +943,27 @@ PROMPT;
 
     $htmlRespuesta = '';
     
-    // Intentar con OpenAI si está disponible
-    if ($openaiAvailable) {
+    // Resultados mecánicos usan plantillas locales; IA solo para análisis o preguntas abiertas.
+    $needsAiResponse = in_array($accionEjecutada, ['estadisticas_empleado_mes', 'ninguna'], true);
+    if ($openaiAvailable && $needsAiResponse) {
         try {
-            $toolJson = json_encode($toolResult, JSON_UNESCAPED_UNICODE);
+            $toolJson = json_encode($compactForAi($toolResult), JSON_UNESCAPED_UNICODE);
             
             $promptRespuesta = <<<PROMPT
-Eres la IA comercial conversacional de KASU.
+Eres asesor de gestión de KASU.
+ROL: {$instruccionRolIa}
+CONTEXTO: {$contextJson}
+ACCIÓN: {$accionEjecutada}
+RESULTADO: {$toolJson}
+HISTORIAL: {$historialTexto}
+PREGUNTA: "{$mensajeUsuario}"
 
-Tienes:
-- CONTEXTO_USUARIO (JSON):
-{$contextJson}
-
-- ACCION_EJECUTADA: {$accionEjecutada}
-
-- RESULTADO_DE_LA_ACCION (JSON):
-{$toolJson}
-
-- HISTORIAL RECIENTE:
-{$historialTexto}
-
-- MENSAJE ACTUAL DEL USUARIO:
-"{$mensajeUsuario}"
-
-TU TAREA:
-Generar una respuesta CORTA, CLARA y ACCIONABLE en ESPAÑOL, para mostrar in-app en un chat de la PWA.
-
-REGLAS:
-- Devuelve ÚNICAMENTE HTML sencillo: usa solo <p>, <ul>, <ol>, <li>, <strong>, <b>, <em>, <i>, <br>.
-- Máximo 8 líneas visibles (por ejemplo 1–2 párrafos breves + 2–4 bullets).
-- Si RESULTADO_DE_LA_ACCION.ok == false, NO muestres el error técnico.
-  En su lugar, da sugerencias prácticas, por ejemplo:
-  * "Verifica la conexión y vuelve a intentar"
-  * "Revisa la ortografía del nombre"
-  * "Reporta a Sistemas si el problema persiste"
-
-ACCIONES ESPECÍFICAS:
-- Si ACCION_EJECUTADA == "buscar_cliente":
-  * Si hay resultados: menciona cuántos clientes encontraste y da 1 ejemplo.
-  * Si no hay resultados: sugiere verificar ortografía o buscar por otro dato.
-  * Si hubo error: da sugerencias prácticas (como arriba).
-
-- Si ACCION_EJECUTADA == "informacion_demografica":
-  * Informa amablemente que el sistema no tiene registrada la edad/fecha de nacimiento.
-  * Sugiere formas de obtener esta información: llamar al cliente, enviar WhatsApp, revisar contrato.
-  * Proporciona una frase sugerida para solicitar la información educadamente.
-
-- Si ACCION_EJECUTADA == "enviar_correo":
-  * Si se envió: confirma claramente "<strong>Correo enviado</strong>" y sugiere confirmar recepción.
-  * Si no se pudo: indica que se necesita el ID de venta o elegir al cliente correcto.
-  * Si hay status_venta: menciona el estatus (ej: "cliente ACTIVO, se envió póliza").
-
-- Si ACCION_EJECUTADA == "estadisticas_empleado_mes":
-  * Resume brevemente el desempeño (ventas, pólizas, etc. si están disponibles).
-  * Da 1–2 recomendaciones concretas de acción para mejorar.
-
-- Si ACCION_EJECUTADA == "ninguna":
-  * Actúa como coach comercial.
-  * Responde directamente al mensaje del usuario con tips, frases o guías.
-
-NUNCA digas "según los datos" o "basado en el JSON".
-Habla directamente al usuario: "Encontré...", "Te sugiero...", "Puedes..."
-Devuelve solo el HTML final, sin texto adicional.
+Responde directamente en español con la mejor orientación para ese puesto.
+Usa solo información disponible, prioriza impacto y no asignes tareas de otro nivel.
+Salida: solo HTML <p><ul><ol><li><strong>, máximo 100 palabras.
 PROMPT;
 
-            $htmlRespuesta = openai_simple_text($promptRespuesta, 850);
+            $htmlRespuesta = openai_simple_text($promptRespuesta, 420);
             
             // Sanitizar HTML permitido
             $allowedTags   = '<p><ul><ol><li><strong><b><em><i><br>';

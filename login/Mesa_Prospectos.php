@@ -31,87 +31,6 @@ if (!function_exists('h')) {
   function h($v){ return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 }
 
-if (!function_exists('kasu_load_empleados_tree')) {
-  function kasu_load_empleados_tree(mysqli $mysqli): array {
-    $byId = [];
-    $children = [];
-    if ($res = $mysqli->query("SELECT Id, IdUsuario, Equipo, Nivel FROM Empleados")) {
-      while ($row = $res->fetch_assoc()) {
-        $id = (int)$row['Id'];
-        $byId[$id] = [
-          'IdUsuario' => (string)($row['IdUsuario'] ?? ''),
-          'Equipo'    => (int)($row['Equipo'] ?? 0),
-          'Nivel'     => (int)($row['Nivel'] ?? 0),
-        ];
-        $parent = (int)($row['Equipo'] ?? 0);
-        if (!isset($children[$parent])) {
-          $children[$parent] = [];
-        }
-        $children[$parent][] = $id;
-      }
-      $res->close();
-    }
-    return [$byId, $children];
-  }
-
-  function kasu_collect_descendants(int $rootId, array $byId, array $children): array {
-    $scope = [];
-    if ($rootId <= 0) {
-      return [];
-    }
-    $stack = [$rootId];
-    while ($stack) {
-      $current = array_pop($stack);
-      if (!isset($byId[$current])) {
-        continue;
-      }
-      $usr = strtoupper(trim((string)$byId[$current]['IdUsuario']));
-      if ($usr !== '') {
-        $scope[$usr] = true;
-      }
-      foreach ($children[$current] ?? [] as $childId) {
-        $stack[] = $childId;
-      }
-    }
-    return array_keys($scope);
-  }
-
-  function kasu_find_ancestor_level(int $startId, array $byId, int $targetLevel): ?int {
-    $current = $startId;
-    while ($current > 0 && isset($byId[$current])) {
-      if ((int)($byId[$current]['Nivel'] ?? 0) === $targetLevel) {
-        return $current;
-      }
-      $parent = (int)($byId[$current]['Equipo'] ?? 0);
-      if ($parent === 0 || $parent === $current) {
-        break;
-      }
-      $current = $parent;
-    }
-    return null;
-  }
-
-  function kasu_scope_user_ids(int $nivel, int $empleadoId, array $byId, array $children): ?array {
-    if ($nivel <= 0 || $empleadoId <= 0) {
-      return null;
-    }
-    if ($nivel <= 2) {
-      return null;
-    }
-
-    $rootId = $empleadoId;
-    if ($nivel === 5) {
-      $gerente = kasu_find_ancestor_level($empleadoId, $byId, 3);
-      if ($gerente !== null) {
-        $rootId = $gerente;
-      }
-    }
-
-    $ids = kasu_collect_descendants($rootId, $byId, $children);
-    return $ids ?: null;
-  }
-}
-
 if (!function_exists('kasu_table_exists')) {
   function kasu_table_exists(mysqli $db, string $table): bool {
     $sql = "SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ? LIMIT 1";
@@ -157,6 +76,10 @@ $Metodo  = "Mesa";
 $nombre  = $_POST['nombre'] ?? ($_GET['nombre'] ?? '');
 if ($nombre === '') $nombre = ' ';
 $nombreTrim = trim((string)$nombre);
+if (empty($_SESSION['csrf_mesa_pipeline'])) {
+  $_SESSION['csrf_mesa_pipeline'] = bin2hex(random_bytes(32));
+}
+$pipelineCsrf = (string)$_SESSION['csrf_mesa_pipeline'];
 
 // =================== Selector (IdProspecto = {V}{Id}) ===================
 // Qué hace: Interpreta el parámetro IdProspecto, determina la ventana a abrir y carga el prospecto
@@ -219,6 +142,14 @@ $nivelSesion = (int)$basicas->BuscarCampos($mysqli, 'Nivel', 'Empleados', 'IdUsu
 $idEmpleadoSesion = (int)$basicas->BuscarCampos($mysqli, 'Id', 'Empleados', 'IdUsuario', $_SESSION['Vendedor']);
 [$kasuEmpleadosMap, $kasuEmpleadosChildren] = kasu_load_empleados_tree($mysqli);
 $kasuScopeUsers = kasu_scope_user_ids($nivelSesion, $idEmpleadoSesion, $kasuEmpleadosMap, $kasuEmpleadosChildren);
+$marketingRoleSesion = kasu_marketing_role_key($mysqli, $nivelSesion);
+$marketingAssignmentIds = kasu_marketing_assignment_ids(
+  $marketingRoleSesion,
+  $idEmpleadoSesion,
+  $kasuEmpleadosMap,
+  $kasuEmpleadosChildren
+);
+$canReassignProspect = $marketingRoleSesion !== 'ejecutivo';
 $kasuScopeSet = null;
 if (is_array($kasuScopeUsers)) {
   $kasuScopeSet = [];
@@ -230,9 +161,49 @@ if (is_array($kasuScopeUsers)) {
   }
 }
 
+// Los usuarios con alcance limitado solo pueden abrir prospectos asignados
+// directamente a ellos o a integrantes de su equipo.
+if (is_array($Reg) && !empty($Reg) && $kasuScopeSet !== null) {
+  $regAssignedId = (int)($Reg['Asignado'] ?? 0);
+  $regAssignedUser = strtoupper(trim((string)($kasuEmpleadosMap[$regAssignedId]['IdUsuario'] ?? '')));
+  if ($regAssignedUser === '' || !isset($kasuScopeSet[$regAssignedUser])) {
+    $Reg = null;
+    $Ventana = null;
+    $Lanzar = null;
+  }
+}
+if ($marketingRoleSesion === 'ejecutivo' && $Ventana === 'Ventana3') {
+  $Reg = null;
+  $Ventana = null;
+  $Lanzar = null;
+}
+
 $hasCitas = kasu_table_exists($pros, 'citas');
 $hasAgenda = kasu_table_exists($pros, 'agenda_llamadas');
 $hasFunerarias = kasu_table_exists($pros, 'prospectos_funerarias');
+$pipelineStages = [
+  'lead' => 'Lead',
+  'citado' => 'Citado',
+  'presupuesto_enviado' => 'Presupuesto Enviado',
+  'concretado' => 'Concretado',
+  'cancelado' => 'Cancelado',
+];
+$hasProspectosPipeline = false;
+try {
+  $pros->query("
+    CREATE TABLE IF NOT EXISTS Prospectos_Pipeline (
+      IdProspecto INT NOT NULL,
+      Etapa VARCHAR(40) NOT NULL DEFAULT 'lead',
+      ActualizadoPor VARCHAR(100) NOT NULL DEFAULT '',
+      FechaActualizacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (IdProspecto),
+      KEY idx_prospectos_pipeline_etapa (Etapa)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  ");
+  $hasProspectosPipeline = kasu_table_exists($pros, 'Prospectos_Pipeline');
+} catch (Throwable $e) {
+  error_log('Mesa_Prospectos pipeline: ' . $e->getMessage());
+}
 $stmtCita = null;
 $stmtAgenda = null;
 if ($hasCitas) {
@@ -242,10 +213,61 @@ if ($hasAgenda) {
   $stmtAgenda = $pros->prepare("SELECT inicio FROM agenda_llamadas WHERE prospecto_id = ? ORDER BY inicio DESC LIMIT 1");
 }
 
+// =================== Movimiento entre etapas del pipeline ===================
+if (!empty($_POST['MoverPipeline'])) {
+  $pipelineId = (int)($_POST['IdProspectoNum'] ?? 0);
+  $pipelineStage = (string)($_POST['EtapaPipeline'] ?? '');
+  $pipelineAllowed = isset($pipelineStages[$pipelineStage]);
+  $pipelineCsrfOk = hash_equals($pipelineCsrf, (string)($_POST['csrf_pipeline'] ?? ''));
+  $pipelineVisible = false;
+
+  if ($pipelineId > 0 && $pipelineAllowed && $pipelineCsrfOk && $hasProspectosPipeline) {
+    $stmtVisible = $pros->prepare("SELECT Asignado FROM prospectos WHERE Id = ? AND Cancelacion = 0 LIMIT 1");
+    if ($stmtVisible) {
+      $stmtVisible->bind_param('i', $pipelineId);
+      $stmtVisible->execute();
+      $visibleRow = $stmtVisible->get_result()->fetch_assoc();
+      $stmtVisible->close();
+      if ($visibleRow) {
+        $assignedId = (int)($visibleRow['Asignado'] ?? 0);
+        $assignedUser = strtoupper(trim((string)($kasuEmpleadosMap[$assignedId]['IdUsuario'] ?? '')));
+        $pipelineVisible = $kasuScopeSet === null || ($assignedUser !== '' && isset($kasuScopeSet[$assignedUser]));
+      }
+    }
+  }
+
+  if ($pipelineVisible) {
+    $pipelineUser = (string)($_SESSION['Vendedor'] ?? '');
+    $stmtMove = $pros->prepare("
+      INSERT INTO Prospectos_Pipeline (IdProspecto, Etapa, ActualizadoPor)
+      VALUES (?, ?, ?)
+      ON DUPLICATE KEY UPDATE Etapa = VALUES(Etapa), ActualizadoPor = VALUES(ActualizadoPor)
+    ");
+    $stmtMove->bind_param('iss', $pipelineId, $pipelineStage, $pipelineUser);
+    $stmtMove->execute();
+    $stmtMove->close();
+    $msg = 'Prospecto movido a ' . ($pipelineStages[$pipelineStage] ?? 'la nueva etapa') . '.';
+  } else {
+    $msg = 'No se pudo actualizar la etapa del prospecto.';
+  }
+
+  $location = $_SERVER['PHP_SELF'] . '?Msg=' . rawurlencode($msg);
+  if ($nombreTrim !== '') {
+    $location .= '&nombre=' . rawurlencode($nombreTrim);
+  }
+  header('Location: ' . $location);
+  exit;
+}
+
 // =================== Cancelación de prospecto (POST CancelaCte) ===================
 // Qué hace: Registra auditoría, marca cancelación y notifica por mensaje
 // Fecha: 05/11/2025 | Revisado por: JCCM
 if (!empty($_POST['CancelaCte'])) {
+    $cancelProspectId = (int)($_POST['IdVenta'] ?? 0);
+    if (!kasu_marketing_can_manage_prospect($mysqli, $pros, (string)$_SESSION['Vendedor'], $cancelProspectId)) {
+      http_response_code(403);
+      exit('No tienes permisos para cancelar este prospecto.');
+    }
     // Auditoría (GPS + fingerprint)
     $ids = $seguridad->auditoria_registrar(
         $mysqli,
@@ -266,6 +288,10 @@ if (!empty($_POST['CancelaCte'])) {
 if (!empty($_POST['RegistrarComentario'])) {
   $idProspectoNum = (int)($_POST['IdProspectoNum'] ?? 0);
   $comentario = trim((string)($_POST['Comentario'] ?? ''));
+  if (!kasu_marketing_can_manage_prospect($mysqli, $pros, (string)$_SESSION['Vendedor'], $idProspectoNum)) {
+    http_response_code(403);
+    exit('No tienes permisos para comentar este prospecto.');
+  }
   if ($idProspectoNum > 0 && $comentario !== '') {
     if (kasu_table_exists($pros, 'Prospectos_Comentarios')) {
       $idUsuario = (string)($_SESSION['Vendedor'] ?? '');
@@ -329,12 +355,41 @@ if (!empty($_POST['RegistrarComentario'])) {
     :root {
       --mesa-menu-bg: #808b96;
       --mesa-menu-text: #f8f9f9;
+      --topbar-height: 46px;
+      --topbar-h: 46px;
     }
     .mesa-prospectos .topbar {
       background: var(--mesa-menu-bg);
       border-bottom: 1px solid rgba(255, 255, 255, 0.25);
       color: var(--mesa-menu-text);
       position: fixed;
+      min-height: var(--topbar-height);
+      padding: calc(4px + var(--safe-t, 0px)) 14px 4px;
+    }
+    .mesa-prospectos .topbar-left {
+      gap: 7px;
+    }
+    .mesa-prospectos .topbar img[alt="KASU"] {
+      width: 27px;
+      height: 27px;
+    }
+    .mesa-prospectos .topbar .title {
+      font-size: .88rem;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .mesa-prospectos .topbar .eyebrow {
+      font-size: .58rem;
+      line-height: 1;
+    }
+    .mesa-prospectos .topbar .action-btn {
+      gap: 4px;
+      padding: 5px 11px;
+      font-size: .75rem;
+      box-shadow: 0 7px 18px rgba(34, 197, 94, .38);
+    }
+    .mesa-prospectos .topbar .action-btn .material-icons {
+      font-size: 17px;
     }
     .mesa-prospectos .topbar .title,
     .mesa-prospectos .topbar .eyebrow,
@@ -362,6 +417,390 @@ if (!empty($_POST['RegistrarComentario'])) {
       background: var(--mesa-menu-bg);
       color: var(--mesa-menu-text);
       z-index: 2;
+    }
+    .prospectos-dashboard {
+      padding: calc(var(--topbar-h) + var(--safe-t, 0px) + 12px) 16px
+        calc(var(--bottombar-h, 48px) + var(--safe-b, 0px) + 8px);
+    }
+    .prospectos-toolbar,
+    .prospectos-metrics,
+    .prospectos-board-wrap {
+      max-width: 1800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .prospectos-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .prospectos-toolbar h2 {
+      margin: 0;
+      font-size: 24px;
+    }
+    .prospectos-search {
+      display: flex;
+      gap: 8px;
+      width: min(100%, 420px);
+    }
+    .prospectos-search .form-control {
+      border-radius: 10px;
+    }
+    .prospectos-metrics {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .prospectos-metric {
+      background: #fff;
+      border: 1px solid #d5dce3;
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+    .prospectos-metric span {
+      display: block;
+      color: #667788;
+      font-size: 13px;
+    }
+    .prospectos-metric strong {
+      color: #263746;
+      font-size: 24px;
+    }
+    .prospectos-board-wrap {
+      background: #fff;
+      border: 1px solid #d5dce3;
+      border-radius: 14px;
+      padding: 14px;
+    }
+    .prospectos-board-note {
+      margin: 0 0 12px;
+      color: #667788;
+      font-size: 14px;
+    }
+    .prospectos-board {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(220px, 1fr));
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+    .prospectos-column {
+      min-height: 470px;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      border: 1px solid #ccd5de;
+      border-radius: 12px;
+      background: #f4f8ff;
+      transition: border-color .2s ease, box-shadow .2s ease;
+    }
+    .prospectos-column[data-stage="citado"] { background: #f1fbf8; }
+    .prospectos-column[data-stage="presupuesto_enviado"] { background: #fffaef; }
+    .prospectos-column[data-stage="concretado"] { background: #f2fae6; }
+    .prospectos-column[data-stage="cancelado"] { background: #fff1f1; }
+    .prospectos-column.is-drop-target {
+      border-color: #58a66b;
+      box-shadow: inset 0 0 0 2px rgba(88, 166, 107, .25);
+    }
+    .prospectos-column-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .prospectos-column-head h3 {
+      margin: 0;
+      color: #263746;
+      font-size: 17px;
+    }
+    .prospectos-column-head span {
+      min-width: 28px;
+      padding: 3px 8px;
+      border: 1px solid #cad3de;
+      border-radius: 999px;
+      background: #fff;
+      text-align: center;
+      font-size: 13px;
+    }
+    .prospectos-cards {
+      display: grid;
+      align-content: start;
+      gap: 8px;
+      flex: 1;
+    }
+    .prospecto-card {
+      display: grid;
+      gap: 5px;
+      padding: 10px;
+      border: 1px solid #cfd6df;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: 0 3px 10px rgba(13, 31, 56, .06);
+      cursor: grab;
+      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+    }
+    .prospecto-card:hover,
+    .prospecto-card:focus {
+      border-color: #8099b2;
+      box-shadow: 0 8px 18px rgba(13, 31, 56, .12);
+      outline: none;
+      transform: translateY(-1px);
+    }
+    .prospecto-card.is-selected {
+      border-color: #58a66b;
+      box-shadow: 0 0 0 2px rgba(88, 166, 107, .22);
+    }
+    .prospecto-card.is-dragging {
+      opacity: .55;
+      cursor: grabbing;
+    }
+    .prospecto-card strong { color: #263746; }
+    .prospecto-card small { color: #667788; }
+    .prospecto-card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .prospecto-chip {
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: #eef2f6;
+      color: #455769;
+      font-size: 11px;
+    }
+    .prospecto-card-hint {
+      margin-top: 4px;
+      padding-top: 6px;
+      border-top: 1px solid #edf0f3;
+      color: #60758a;
+      font-size: 11px;
+    }
+    .prospecto-detail-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 2040;
+      border: 0;
+      background: rgba(20, 35, 50, .28);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease;
+    }
+    .prospecto-detail-backdrop.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .prospecto-detail {
+      position: fixed;
+      top: 0;
+      right: 0;
+      z-index: 2050;
+      width: min(430px, 100vw);
+      height: 100vh;
+      padding: calc(var(--safe-t, 0px) + 16px) 18px
+        calc(var(--bottombar-h, 48px) + var(--safe-b, 0px) + 16px);
+      overflow-y: auto;
+      background: #fff;
+      border-left: 1px solid #cdd6df;
+      box-shadow: -16px 0 36px rgba(13, 31, 56, .18);
+      transform: translateX(105%);
+      transition: transform .22s ease;
+    }
+    .prospecto-detail.is-open {
+      transform: translateX(0);
+    }
+    .prospecto-detail-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e3e8ed;
+    }
+    .prospecto-detail-head h3 {
+      margin: 0 0 3px;
+      color: #263746;
+      font-size: 22px;
+    }
+    .prospecto-detail-head p {
+      margin: 0;
+      color: #60758a;
+      font-size: 13px;
+    }
+    .prospecto-detail-close {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 34px;
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      border: 1px solid #d4dce4;
+      border-radius: 999px;
+      background: #f4f7fa;
+      color: #34495e;
+      cursor: pointer;
+    }
+    .prospecto-detail-section {
+      margin-top: 16px;
+      padding: 14px;
+      border: 1px solid #dce3e9;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+    .prospecto-detail-section h4 {
+      margin: 0 0 10px;
+      color: #263746;
+      font-size: 15px;
+    }
+    .prospecto-detail-data {
+      display: grid;
+      gap: 9px;
+      margin: 0;
+    }
+    .prospecto-detail-data div {
+      display: grid;
+      gap: 1px;
+    }
+    .prospecto-detail-data dt {
+      margin: 0;
+      color: #718196;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .prospecto-detail-data dd {
+      margin: 0;
+      color: #263746;
+      font-size: 14px;
+      overflow-wrap: anywhere;
+    }
+    .prospecto-detail-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .prospecto-detail-actions form {
+      display: contents;
+    }
+    .prospecto-detail-actions .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      min-height: 38px;
+      margin: 0;
+      padding: 7px 10px;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 12px;
+    }
+    .prospecto-detail-actions .material-icons {
+      font-size: 18px;
+    }
+    /* Los formularios de acción existentes se presentan como un segundo panel lateral. */
+    .mesa-prospectos #Ventana {
+      z-index: 3100;
+      padding-right: 0 !important;
+    }
+    .mesa-prospectos #Ventana .modal-dialog {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: auto;
+      width: min(520px, 100vw);
+      max-width: none;
+      min-height: 100vh;
+      margin: 0 !important;
+      transform: translateX(105%);
+      transition: transform .22s ease-out;
+    }
+    .mesa-prospectos #Ventana.show .modal-dialog {
+      margin: 0 !important;
+      transform: translateX(0);
+    }
+    .mesa-prospectos #Ventana .modal-content {
+      min-height: 100vh;
+      max-height: 100vh;
+      overflow: hidden;
+      border: 0;
+      border-left: 1px solid #cdd6df;
+      border-radius: 0;
+      box-shadow: -16px 0 36px rgba(13, 31, 56, .22);
+    }
+    .mesa-prospectos #Ventana .modal-content > form {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      max-height: 100vh;
+    }
+    .mesa-prospectos #Ventana .modal-header {
+      flex: 0 0 auto;
+      align-items: center;
+      padding: calc(var(--safe-t, 0px) + 16px) 18px 14px;
+      border-bottom: 1px solid #e3e8ed;
+    }
+    .mesa-prospectos #Ventana .modal-title {
+      color: #263746;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .mesa-prospectos #Ventana .modal-header .close {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      margin: 0;
+      padding: 0;
+      border: 2px solid #1760b3;
+      border-radius: 999px;
+      color: #1760b3;
+      font-size: 26px;
+      line-height: 1;
+      opacity: 1;
+    }
+    .mesa-prospectos #Ventana .modal-body {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      padding: 18px;
+      background: #fff;
+    }
+    .mesa-prospectos #Ventana .modal-footer {
+      flex: 0 0 auto;
+      padding: 12px 18px calc(var(--safe-b, 0px) + 12px);
+      background: #fff;
+      border-top: 1px solid #e3e8ed;
+    }
+    .mesa-prospectos #Ventana .modal-footer .btn,
+    .mesa-prospectos #Ventana .modal-footer input[type="submit"] {
+      min-height: 40px;
+      border-radius: 8px;
+    }
+    .mesa-prospectos #Ventana + .modal-backdrop,
+    .mesa-prospectos .modal-backdrop.show {
+      opacity: .32;
+    }
+    .prospectos-empty {
+      margin: 0;
+      padding: 12px 8px;
+      color: #758494;
+      text-align: center;
+      font-size: 13px;
+    }
+    @media (max-width: 900px) {
+      .prospectos-toolbar { align-items: stretch; flex-direction: column; }
+      .prospectos-search { width: 100%; }
+      .prospectos-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .prospectos-board { grid-template-columns: repeat(5, minmax(190px, 1fr)); }
+      .prospectos-dashboard {
+        padding: calc(var(--topbar-h) + var(--safe-t, 0px) + 10px) 10px
+          calc(var(--bottombar-h, 48px) + var(--safe-b, 0px) + 8px);
+      }
     }
   </style>
 </head>
@@ -438,7 +877,7 @@ if (!empty($_POST['RegistrarComentario'])) {
                     echo "SISTEMA";
                     $Niv = 4;
                     $sql = "SELECT * FROM Empleados WHERE Nivel >= $Niv AND Nombre != 'Vacante'";
-                  } elseif ($Niv === 1) {
+                  } elseif ($Niv === 1 || kasu_director_role_key($mysqli, $Niv) === 'general') {
                     $UsrPro = $RegUsuario;
                     echo $UsrPro ?: "Sin Asignar";
                     $sql = "SELECT * FROM Empleados WHERE Nombre != 'Vacante'";
@@ -456,16 +895,37 @@ if (!empty($_POST['RegistrarComentario'])) {
             <select class="form-control" name="NvoVend">
             <?php
             // Solo nivel 6 o superior, sin "Vacante"
-            $sql = "
-              SELECT e.Id, e.Nombre, COALESCE(s.nombreSucursal,'Sin sucursal') AS Sucursal
-              FROM Empleados e
-              LEFT JOIN Sucursal s ON s.Id = e.Sucursal
-              WHERE e.Nivel >= 6 AND e.Nombre <> 'Vacante'
-              ORDER BY s.nombreSucursal, e.Nombre
-            ";
-            if ($res = $mysqli->query($sql)) {
-              while ($row = $res->fetch_assoc()) {
-                echo '<option value="'.h($row['Id']).'">'.h($row['Nombre'].' - '.$row['Sucursal']).'</option>';
+            if (is_array($marketingAssignmentIds)) {
+              foreach ($marketingAssignmentIds as $assignmentId) {
+                $stmtMarketing = $mysqli->prepare("
+                  SELECT e.Id, e.Nombre, COALESCE(s.nombreSucursal, 'Sin sucursal') AS Sucursal
+                  FROM Empleados e
+                  LEFT JOIN Sucursal s ON s.Id = e.Sucursal
+                  WHERE e.Id = ? AND e.Nombre <> 'Vacante'
+                  LIMIT 1
+                ");
+                $stmtMarketing->bind_param('i', $assignmentId);
+                $stmtMarketing->execute();
+                $row = $stmtMarketing->get_result()->fetch_assoc();
+                $stmtMarketing->close();
+                if ($row) {
+                  echo '<option value="'.h($row['Id']).'">'.h($row['Nombre'].' - Ejecutivo de Marketing - '.$row['Sucursal']).'</option>';
+                }
+              }
+            } else {
+              $sql = "
+                SELECT e.Id, e.Nombre, COALESCE(s.nombreSucursal,'Sin sucursal') AS Sucursal,
+                       COALESCE(n.NombreNivel, 'Ejecutivo') AS Puesto
+                FROM Empleados e
+                LEFT JOIN Sucursal s ON s.Id = e.Sucursal
+                LEFT JOIN Nivel n ON n.Id = e.Nivel
+                WHERE e.Nivel >= 6 AND e.Nombre <> 'Vacante'
+                ORDER BY s.nombreSucursal, e.Nombre
+              ";
+              if ($res = $mysqli->query($sql)) {
+                while ($row = $res->fetch_assoc()) {
+                  echo '<option value="'.h($row['Id']).'">'.h($row['Nombre'].' - '.$row['Puesto'].' - '.$row['Sucursal']).'</option>';
+                }
               }
             }
             ?>
@@ -605,272 +1065,256 @@ if (!empty($_POST['RegistrarComentario'])) {
     </div></div>
   </div>
 
-  <!-- =================== Tabla de prospectos ===================
-       Qué hace: Lista prospectos activos, calcula semanas y muestra acciones
-       Fecha: 05/11/2025 | Revisado por: JCCM -->
-  <section name="impresion de datos finales" class="mesa-prospectos-content">
-    <div class="mesa-prospectos-scroll table-responsive mesa-table-wrapper">
-      <table class="table mesa-table" data-mesa="prospectos">
-        <thead>
-          <tr>
-            <th>Nombre Prospecto</th>
-            <th>Sem. Activo</th>
-            <th>Servicio</th>
-            <th>Cita</th>
-            <th>Origen</th>
-            <th>Asignado</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-        <?php
-        $rowsUnified = [];
+  <!-- =================== Pipeline de prospectos =================== -->
+  <section class="mesa-prospectos-content prospectos-dashboard">
+    <?php
+      $pipelineMap = [];
+      if ($hasProspectosPipeline && ($resPipeline = $pros->query("SELECT IdProspecto, Etapa FROM Prospectos_Pipeline"))) {
+        while ($pipelineRow = $resPipeline->fetch_assoc()) {
+          $stage = (string)($pipelineRow['Etapa'] ?? 'lead');
+          $pipelineMap[(int)$pipelineRow['IdProspecto']] = isset($pipelineStages[$stage]) ? $stage : 'lead';
+        }
+        $resPipeline->close();
+      }
 
-        // Prospectos de ventas
-        if ($nombre === ' ') {
-          $buscar = $basicas->BLikesD2($pros,'prospectos','FullName',$nombre,'Cancelacion',0,'Automatico',0);
-        } else {
-          $buscar = $basicas->BLikesCan($pros,'prospectos','FullName',$nombre,'Cancelacion',0);
+      $pipelineBuckets = array_fill_keys(array_keys($pipelineStages), []);
+      $buscar = $nombre === ' '
+        ? $basicas->BLikesD2($pros, 'prospectos', 'FullName', $nombre, 'Cancelacion', 0, 'Automatico', 0)
+        : $basicas->BLikesCan($pros, 'prospectos', 'FullName', $nombre, 'Cancelacion', 0);
+
+      foreach ($buscar as $row) {
+        $assignedId = (int)($row['Asignado'] ?? 0);
+        $assignedUser = strtoupper(trim((string)($kasuEmpleadosMap[$assignedId]['IdUsuario'] ?? '')));
+        if ($kasuScopeSet !== null && ($assignedUser === '' || !isset($kasuScopeSet[$assignedUser]))) {
+          continue;
         }
 
-        foreach ($buscar as $row) {
-          $assignedId = (int)($row['Asignado'] ?? 0);
-          $assignedUser = '';
-          if (isset($kasuEmpleadosMap[$assignedId])) {
-            $assignedUser = strtoupper(trim((string)$kasuEmpleadosMap[$assignedId]['IdUsuario']));
-          }
-          if ($kasuScopeSet !== null && $assignedUser !== '' && !isset($kasuScopeSet[$assignedUser])) {
-            continue;
-          }
-          $rowsUnified[] = [
-            'tipo' => 'venta',
-            'sort' => strtotime((string)($row['Alta'] ?? '')) ?: 0,
-            'data' => $row,
-          ];
+        $prosId = (int)($row['Id'] ?? 0);
+        $citaTxt = '';
+        if ($prosId > 0 && $stmtCita) {
+          $stmtCita->bind_param('i', $prosId);
+          $stmtCita->execute();
+          $rowCita = $stmtCita->get_result()->fetch_assoc();
+          $citaTxt = $rowCita ? kasu_format_fecha_es((string)($rowCita['FechaCita'] ?? '')) : '';
+        }
+        if ($citaTxt === '' && $prosId > 0 && $stmtAgenda) {
+          $stmtAgenda->bind_param('i', $prosId);
+          $stmtAgenda->execute();
+          $rowCita = $stmtAgenda->get_result()->fetch_assoc();
+          $citaTxt = $rowCita ? kasu_format_fecha_es((string)($rowCita['inicio'] ?? '')) : '';
         }
 
-        // Prospectos de funerarias
-        if ($hasFunerarias) {
-          if ($nombreTrim !== '') {
-            $like = '%' . $nombreTrim . '%';
-            $stmtFun = $pros->prepare("
-              SELECT NombreComercial, RazonSocial, Contacto, Cargo, Telefono, Whatsapp, Email,
-                     Direccion, Ciudad, Estado, CP, Cobertura, Servicios, Salas, CapacidadSala,
-                     Disponibilidad, Permisos, Comentarios, FechaRegistro
-              FROM prospectos_funerarias
-              WHERE NombreComercial LIKE ? OR RazonSocial LIKE ? OR Contacto LIKE ?
-              ORDER BY FechaRegistro DESC
-            ");
-            if ($stmtFun) {
-              $stmtFun->bind_param('sss', $like, $like, $like);
-              $stmtFun->execute();
-              $funRows = $stmtFun->get_result()->fetch_all(MYSQLI_ASSOC);
-              $stmtFun->close();
-              foreach ($funRows as $rowFun) {
-                $rowsUnified[] = [
-                  'tipo' => 'funeraria',
-                  'sort' => strtotime((string)($rowFun['FechaRegistro'] ?? '')) ?: 0,
-                  'data' => $rowFun,
-                ];
-              }
-            }
-          } else {
-            if ($resFun = $pros->query("
-              SELECT NombreComercial, RazonSocial, Contacto, Cargo, Telefono, Whatsapp, Email,
-                     Direccion, Ciudad, Estado, CP, Cobertura, Servicios, Salas, CapacidadSala,
-                     Disponibilidad, Permisos, Comentarios, FechaRegistro
-              FROM prospectos_funerarias
-              ORDER BY FechaRegistro DESC
-            ")) {
-              $funRows = $resFun->fetch_all(MYSQLI_ASSOC);
-              $resFun->close();
-              foreach ($funRows as $rowFun) {
-                $rowsUnified[] = [
-                  'tipo' => 'funeraria',
-                  'sort' => strtotime((string)($rowFun['FechaRegistro'] ?? '')) ?: 0,
-                  'data' => $rowFun,
-                ];
-              }
-            }
+        $row['_cita'] = $citaTxt;
+        $row['_asignado'] = $basicas->BuscarCampos($mysqli, 'IdUsuario', 'Empleados', 'Id', $assignedId);
+        $row['_semanas'] = max(0, (int)round(((strtotime(date('Y-m-d')) - (strtotime((string)($row['Alta'] ?? '')) ?: strtotime(date('Y-m-d')))) / 604800), 0));
+        $stage = $pipelineMap[$prosId] ?? ($citaTxt !== '' ? 'citado' : 'lead');
+        $pipelineBuckets[$stage][] = ['tipo' => 'venta', 'data' => $row];
+      }
+
+      if ($hasFunerarias && $kasuScopeSet === null) {
+        $funRows = [];
+        if ($nombreTrim !== '') {
+          $like = '%' . $nombreTrim . '%';
+          $stmtFun = $pros->prepare("
+            SELECT NombreComercial, RazonSocial, Contacto, Cargo, Telefono, Whatsapp, Email,
+                   Direccion, Ciudad, Estado, CP, Cobertura, Servicios, Salas, CapacidadSala,
+                   Disponibilidad, Permisos, Comentarios, FechaRegistro
+            FROM prospectos_funerarias
+            WHERE NombreComercial LIKE ? OR RazonSocial LIKE ? OR Contacto LIKE ?
+            ORDER BY FechaRegistro DESC
+          ");
+          if ($stmtFun) {
+            $stmtFun->bind_param('sss', $like, $like, $like);
+            $stmtFun->execute();
+            $funRows = $stmtFun->get_result()->fetch_all(MYSQLI_ASSOC);
+            $stmtFun->close();
           }
+        } elseif ($resFun = $pros->query("
+          SELECT NombreComercial, RazonSocial, Contacto, Cargo, Telefono, Whatsapp, Email,
+                 Direccion, Ciudad, Estado, CP, Cobertura, Servicios, Salas, CapacidadSala,
+                 Disponibilidad, Permisos, Comentarios, FechaRegistro
+          FROM prospectos_funerarias ORDER BY FechaRegistro DESC
+        ")) {
+          $funRows = $resFun->fetch_all(MYSQLI_ASSOC);
+          $resFun->close();
         }
+        foreach ($funRows as $rowFun) {
+          $pipelineBuckets['lead'][] = ['tipo' => 'funeraria', 'data' => $rowFun];
+        }
+      }
 
-        usort($rowsUnified, function ($a, $b) {
-          return ($b['sort'] ?? 0) <=> ($a['sort'] ?? 0);
-        });
+      if ($stmtCita) { $stmtCita->close(); }
+      if ($stmtAgenda) { $stmtAgenda->close(); }
+      $pipelineTotal = array_sum(array_map('count', $pipelineBuckets));
+    ?>
 
-        foreach ($rowsUnified as $item):
-          if ($item['tipo'] === 'venta'):
-            $row = $item['data'];
-            $Sem     = strtotime((string)($row['Alta'] ?? ''));
-            $HoyA    = strtotime(date("Y-m-d"));
-            $ContSem = $Sem ? (($HoyA - $Sem) / 604800) : 0;
-
-            $citaTxt = '';
-            $prosId = (int)($row['Id'] ?? 0);
-            if ($prosId > 0 && $stmtCita) {
-              $stmtCita->bind_param('i', $prosId);
-              $stmtCita->execute();
-              $rowCita = $stmtCita->get_result()->fetch_assoc();
-              $citaTxt = $rowCita ? kasu_format_fecha_es((string)($rowCita['FechaCita'] ?? '')) : '';
-            }
-            if ($citaTxt === '' && $prosId > 0 && $stmtAgenda) {
-              $stmtAgenda->bind_param('i', $prosId);
-              $stmtAgenda->execute();
-              $rowCita = $stmtAgenda->get_result()->fetch_assoc();
-              $citaTxt = $rowCita ? kasu_format_fecha_es((string)($rowCita['inicio'] ?? '')) : '';
-            }
-            $telRaw = preg_replace('/\D+/', '', (string)($row['NoTel'] ?? ''));
-            $telIntl = $telRaw;
-            if ($telRaw !== '' && strlen($telRaw) === 10) {
-              $telIntl = '52' . $telRaw;
-            }
-        ?>
-          <tr>
-            <td><?= h($row['FullName']) ?></td>
-            <td><?= (int)round($ContSem, 0) ?></td>
-            <td><?= h($row['Servicio_Interes']) ?></td>
-            <td><?= h($citaTxt) ?></td>
-            <td><?= h($row['Origen']) ?></td>
-            <td><?= h($basicas->BuscarCampos($mysqli,'IdUsuario','Empleados','Id',(int)$row['Asignado'])) ?></td>
-            <td class="mesa-actions" data-label="Acciones">
-              <div class="mesa-actions-grid">
-                <form method="POST" action="<?= h($_SERVER['PHP_SELF']) ?>">
-                  <input type="hidden" name="Host"   value="<?= h($_SERVER['PHP_SELF']) ?>">
-                  <input type="hidden" name="nombre" value="<?= h($nombre) ?>">
-
-                  <!-- Registrar Venta (1) -->
-                  <?php if (trim((string)($row['Curp'] ?? '')) !== ''): ?>
-                    <label for="b1<?= (int)$row['Id'] ?>" title="Registrar Venta" class="btn" style="background:#58D68D;color:#F8F9F9;">
-                      <i class="material-icons">verified_user</i>
-                    </label>
-                    <input id="b1<?= (int)$row['Id'] ?>" type="submit" name="IdProspecto" value="1<?= (int)$row['Id'] ?>" hidden>
-                  <?php endif; ?>
-
-                  <!-- Enviar lead Sales (6) -->
-                  <label for="b6<?= (int)$row['Id'] ?>" title="Enviar lead Sales" class="btn" style="background:#21618C;color:#F8F9F9;">
-                    <i class="material-icons">card_travel</i>
-                  </label>
-                  <input id="b6<?= (int)$row['Id'] ?>" type="submit" name="IdProspecto" value="6<?= (int)$row['Id'] ?>" hidden>
-
-                  <!-- Dar de Baja (2) -->
-                  <label for="b2<?= (int)$row['Id'] ?>" title="Dar de Baja al Prospecto" class="btn" style="background:#E74C3C;color:#F8F9F9;">
-                    <i class="material-icons">cancel</i>
-                  </label>
-                  <input id="b2<?= (int)$row['Id'] ?>" type="submit" name="IdProspecto" value="2<?= (int)$row['Id'] ?>" hidden>
-
-                  <!-- Reasignar a ejecutivo (3) -->
-                  <label for="b3<?= (int)$row['Id'] ?>" title="Asignar prospecto a un ejecutivo" class="btn" style="background:#AF7AC5;color:#F8F9F9;">
-                    <i class="material-icons">people_alt</i>
-                  </label>
-                  <input id="b3<?= (int)$row['Id'] ?>" type="submit" name="IdProspecto" value="3<?= (int)$row['Id'] ?>" hidden>
-
-                  <!-- Comentarios y seguimiento (7) -->
-                  <label for="b7<?= (int)$row['Id'] ?>" title="Comentarios y seguimiento" class="btn" style="background:#3498DB;color:#F8F9F9;">
-                    <i class="material-icons">chat</i>
-                  </label>
-                  <input id="b7<?= (int)$row['Id'] ?>" type="submit" name="IdProspecto" value="7<?= (int)$row['Id'] ?>" hidden>
-                  <!-- Cambiar datos (5) -->
-                  <label for="b5<?= (int)$row['Id'] ?>" title="Cambiar datos del Prospecto" class="btn" style="background:#AAB7B8;color:#F8F9F9;">
-                    <i class="material-icons">badge</i>
-                  </label>
-                  <input id="b5<?= (int)$row['Id'] ?>" type="submit" name="IdProspecto" value="5<?= (int)$row['Id'] ?>" hidden>
-
-                  <?php if ($telRaw !== ''): ?>
-                    <a class="btn" href="<?= h('tel:' . $telRaw) ?>" title="Llamar" style="background:#1abc9c;color:#F8F9F9;">
-                      <i class="material-icons">call</i>
-                    </a>
-                    <a class="btn" href="<?= h('https://wa.me/' . $telIntl) ?>" title="WhatsApp" target="_blank" rel="noopener" style="background:#25D366;color:#F8F9F9;">
-                      <i class="fa fa-whatsapp" aria-hidden="true" style="font-size:18px;line-height:1;"></i>
-                    </a>
-                  <?php endif; ?>
-                </form>
-              </div>
-            </td>
-          </tr>
-        <?php else:
-          $rowFun = $item['data'];
-          $fechaFun = (string)($rowFun['FechaRegistro'] ?? '');
-          $SemFun = strtotime($fechaFun);
-          $HoyA = strtotime(date("Y-m-d"));
-          $ContSemFun = $SemFun ? (($HoyA - $SemFun) / 604800) : 0;
-          $citaFun = 'Espacio: ' . (int)($rowFun['Salas'] ?? 0) . ' salas / ' . (int)($rowFun['CapacidadSala'] ?? 0) . ' pax';
-          $ubicFun = trim((string)($rowFun['Ciudad'] ?? '') . ', ' . (string)($rowFun['Estado'] ?? ''));
-          $telFun = preg_replace('/\D+/', '', (string)($rowFun['Telefono'] ?? ''));
-          $waFun = preg_replace('/\D+/', '', (string)($rowFun['Whatsapp'] ?? ''));
-        ?>
-          <tr>
-            <td>
-              <?= h($rowFun['NombreComercial'] ?? '') ?><br>
-              <small class="text-muted"><?= h($rowFun['RazonSocial'] ?? '') ?></small>
-            </td>
-            <td><?= (int)round($ContSemFun, 0) ?></td>
-            <td>
-              FUNERARIA<br>
-              <small class="text-muted"><?= h($rowFun['Servicios'] ?? '') ?></small>
-            </td>
-            <td><?= h($citaFun) ?></td>
-            <td>
-              <?= h($ubicFun) ?><br>
-              <small class="text-muted"><?= h($rowFun['Cobertura'] ?? '') ?></small>
-            </td>
-            <td>
-              <?= h($rowFun['Contacto'] ?? '') ?><br>
-              <small class="text-muted"><?= h($rowFun['Cargo'] ?? '') ?></small>
-            </td>
-            <td class="mesa-actions" data-label="Acciones">
-              <div class="mesa-actions-grid">
-                <button
-                  type="button"
-                  class="btn"
-                  style="background:#5D6D7E;color:#F8F9F9;"
-                  data-toggle="modal"
-                  data-target="#ModalFuneraria"
-                  data-nombre="<?= h($rowFun['NombreComercial'] ?? '') ?>"
-                  data-razon="<?= h($rowFun['RazonSocial'] ?? '') ?>"
-                  data-contacto="<?= h($rowFun['Contacto'] ?? '') ?>"
-                  data-cargo="<?= h($rowFun['Cargo'] ?? '') ?>"
-                  data-telefono="<?= h($telFun) ?>"
-                  data-whatsapp="<?= h($waFun) ?>"
-                  data-email="<?= h($rowFun['Email'] ?? '') ?>"
-                  data-direccion="<?= h($rowFun['Direccion'] ?? '') ?>"
-                  data-ciudad="<?= h($rowFun['Ciudad'] ?? '') ?>"
-                  data-estado="<?= h($rowFun['Estado'] ?? '') ?>"
-                  data-cp="<?= h($rowFun['CP'] ?? '') ?>"
-                  data-cobertura="<?= h($rowFun['Cobertura'] ?? '') ?>"
-                  data-servicios="<?= h($rowFun['Servicios'] ?? '') ?>"
-                  data-disponibilidad="<?= h($rowFun['Disponibilidad'] ?? '') ?>"
-                  data-permisos="<?= h($rowFun['Permisos'] ?? '') ?>"
-                  data-comentarios="<?= h($rowFun['Comentarios'] ?? '') ?>"
-                  data-registro="<?= h(kasu_format_fecha_es($fechaFun)) ?>"
-                >
-                  <i class="material-icons">visibility</i>
-                </button>
-
-                <?php if ($telFun !== ''): ?>
-                  <a class="btn" href="<?= h('tel:' . $telFun) ?>" title="Llamar" style="background:#1abc9c;color:#F8F9F9;">
-                    <i class="material-icons">call</i>
-                  </a>
-                <?php endif; ?>
-                <?php if ($waFun !== ''): ?>
-                  <a class="btn" href="<?= h('https://wa.me/52' . $waFun) ?>" title="WhatsApp" target="_blank" rel="noopener" style="background:#25D366;color:#F8F9F9;">
-                    <i class="fa fa-whatsapp" aria-hidden="true" style="font-size:18px;line-height:1;"></i>
-                  </a>
-                <?php endif; ?>
-              </div>
-            </td>
-          </tr>
-        <?php endif; ?>
-        <?php endforeach; ?>
-        <?php
-          if ($stmtCita) { $stmtCita->close(); }
-          if ($stmtAgenda) { $stmtAgenda->close(); }
-        ?>
-        </tbody>
-      </table>
-
+    <div class="prospectos-toolbar">
+      <div>
+        <h2>Tablero de Prospectos</h2>
+        <small class="text-muted">Haz clic en un prospecto para gestionarlo o arrastra su tarjeta para cambiar la etapa.</small>
+      </div>
+      <form method="GET" action="<?= h($_SERVER['PHP_SELF']) ?>" class="prospectos-search">
+        <input class="form-control" type="search" name="nombre" value="<?= h($nombreTrim) ?>" placeholder="Buscar prospecto, funeraria o contacto">
+        <button class="btn btn-dark" type="submit"><i class="material-icons">search</i></button>
+      </form>
     </div>
+
+    <div class="prospectos-metrics">
+      <?php foreach ($pipelineStages as $stageKey => $stageLabel): ?>
+        <article class="prospectos-metric">
+          <span><?= h($stageLabel) ?></span>
+          <strong><?= count($pipelineBuckets[$stageKey]) ?></strong>
+        </article>
+      <?php endforeach; ?>
+    </div>
+
+    <div class="prospectos-board-wrap">
+      <?php if (!$hasProspectosPipeline): ?>
+        <div class="alert alert-warning">No fue posible preparar la persistencia del pipeline. El tablero funciona en modo de lectura.</div>
+      <?php endif; ?>
+      <p class="prospectos-board-note"><?= (int)$pipelineTotal ?> registros visibles. Las funerarias permanecen en Lead hasta contar con identificador de seguimiento.</p>
+      <div class="prospectos-board">
+        <?php foreach ($pipelineStages as $stageKey => $stageLabel): ?>
+          <section class="prospectos-column" data-stage="<?= h($stageKey) ?>">
+            <div class="prospectos-column-head">
+              <h3><?= h($stageLabel) ?></h3>
+              <span><?= count($pipelineBuckets[$stageKey]) ?></span>
+            </div>
+            <div class="prospectos-cards">
+              <?php foreach ($pipelineBuckets[$stageKey] as $item): ?>
+                <?php if ($item['tipo'] === 'venta'):
+                  $row = $item['data'];
+                  $prosId = (int)($row['Id'] ?? 0);
+                  $telRaw = preg_replace('/\D+/', '', (string)($row['NoTel'] ?? ''));
+                  $telIntl = strlen($telRaw) === 10 ? '52' . $telRaw : $telRaw;
+                ?>
+                  <article
+                    class="prospecto-card js-prospecto-card"
+                    draggable="<?= $hasProspectosPipeline ? 'true' : 'false' ?>"
+                    tabindex="0"
+                    role="button"
+                    aria-label="Abrir detalle de <?= h($row['FullName'] ?? 'prospecto') ?>"
+                    data-prospecto-id="<?= $prosId ?>"
+                    data-stage="<?= h($stageKey) ?>"
+                    data-stage-label="<?= h($pipelineStages[$stageKey] ?? $stageKey) ?>"
+                    data-name="<?= h($row['FullName'] ?? '') ?>"
+                    data-service="<?= h($row['Servicio_Interes'] ?? '') ?>"
+                    data-origin="<?= h($row['Origen'] ?? '') ?>"
+                    data-assigned="<?= h($row['_asignado'] ?: 'Sin asignar') ?>"
+                    data-weeks="<?= (int)($row['_semanas'] ?? 0) ?>"
+                    data-appointment="<?= h($row['_cita'] ?? '') ?>"
+                    data-phone="<?= h($telRaw) ?>"
+                    data-phone-intl="<?= h($telIntl) ?>"
+                    data-email="<?= h($row['Email'] ?? '') ?>"
+                    data-address="<?= h($row['Direccion'] ?? '') ?>"
+                    data-curp="<?= h($row['Curp'] ?? '') ?>"
+                    data-created="<?= h(kasu_format_fecha_es((string)($row['Alta'] ?? ''))) ?>"
+                  >
+                    <strong><?= h($row['FullName'] ?? '') ?></strong>
+                    <small><?= h($row['Servicio_Interes'] ?? 'Sin servicio') ?></small>
+                    <div class="prospecto-card-meta">
+                      <span class="prospecto-chip"><?= (int)($row['_semanas'] ?? 0) ?> sem.</span>
+                      <span class="prospecto-chip"><?= h($row['Origen'] ?? 'Sin origen') ?></span>
+                      <span class="prospecto-chip"><?= h($row['_asignado'] ?: 'Sin asignar') ?></span>
+                    </div>
+                    <?php if ((string)($row['_cita'] ?? '') !== ''): ?><small><strong>Cita:</strong> <?= h($row['_cita']) ?></small><?php endif; ?>
+                  </article>
+                <?php else:
+                  $rowFun = $item['data'];
+                  $fechaFun = (string)($rowFun['FechaRegistro'] ?? '');
+                  $telFun = preg_replace('/\D+/', '', (string)($rowFun['Telefono'] ?? ''));
+                  $waFun = preg_replace('/\D+/', '', (string)($rowFun['Whatsapp'] ?? ''));
+                ?>
+                  <article class="prospecto-card" draggable="false" tabindex="0" role="button"
+                    data-toggle="modal" data-target="#ModalFuneraria"
+                    data-nombre="<?= h($rowFun['NombreComercial'] ?? '') ?>" data-razon="<?= h($rowFun['RazonSocial'] ?? '') ?>"
+                    data-contacto="<?= h($rowFun['Contacto'] ?? '') ?>" data-cargo="<?= h($rowFun['Cargo'] ?? '') ?>"
+                    data-telefono="<?= h($telFun) ?>" data-whatsapp="<?= h($waFun) ?>" data-email="<?= h($rowFun['Email'] ?? '') ?>"
+                    data-direccion="<?= h($rowFun['Direccion'] ?? '') ?>" data-ciudad="<?= h($rowFun['Ciudad'] ?? '') ?>"
+                    data-estado="<?= h($rowFun['Estado'] ?? '') ?>" data-cp="<?= h($rowFun['CP'] ?? '') ?>"
+                    data-cobertura="<?= h($rowFun['Cobertura'] ?? '') ?>" data-servicios="<?= h($rowFun['Servicios'] ?? '') ?>"
+                    data-disponibilidad="<?= h($rowFun['Disponibilidad'] ?? '') ?>" data-permisos="<?= h($rowFun['Permisos'] ?? '') ?>"
+                    data-comentarios="<?= h($rowFun['Comentarios'] ?? '') ?>" data-registro="<?= h(kasu_format_fecha_es($fechaFun)) ?>">
+                    <strong><?= h($rowFun['NombreComercial'] ?? '') ?></strong>
+                    <small><?= h($rowFun['Contacto'] ?? 'Sin contacto') ?> · Funeraria</small>
+                    <div class="prospecto-card-meta">
+                      <span class="prospecto-chip"><?= h($rowFun['Ciudad'] ?? '') ?></span>
+                      <span class="prospecto-chip"><?= h($rowFun['Cobertura'] ?? 'Sin cobertura') ?></span>
+                    </div>
+                    <span class="prospecto-card-hint">Clic para ver detalle</span>
+                  </article>
+                <?php endif; ?>
+              <?php endforeach; ?>
+              <?php if (count($pipelineBuckets[$stageKey]) === 0): ?><p class="prospectos-empty">Sin prospectos</p><?php endif; ?>
+            </div>
+          </section>
+        <?php endforeach; ?>
+      </div>
+    </div>
+
+    <form id="pipelineMoveForm" method="POST" action="<?= h($_SERVER['PHP_SELF']) ?>" hidden>
+      <input type="hidden" name="MoverPipeline" value="1">
+      <input type="hidden" name="IdProspectoNum" id="pipelineMoveId" value="">
+      <input type="hidden" name="EtapaPipeline" id="pipelineMoveStage" value="">
+      <input type="hidden" name="nombre" value="<?= h($nombre) ?>">
+      <input type="hidden" name="csrf_pipeline" value="<?= h($pipelineCsrf) ?>">
+    </form>
   </section>
+
+  <button type="button" class="prospecto-detail-backdrop" id="prospectoDetailBackdrop" aria-label="Cerrar detalle"></button>
+  <aside class="prospecto-detail" id="prospectoDetail" aria-hidden="true">
+    <div class="prospecto-detail-head">
+      <div>
+        <h3 id="detailName">Prospecto</h3>
+        <p><span id="detailService"></span> · <span id="detailStage"></span></p>
+      </div>
+      <button type="button" class="prospecto-detail-close" id="prospectoDetailClose" aria-label="Cerrar detalle">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+
+    <section class="prospecto-detail-section">
+      <h4>Datos del prospecto</h4>
+      <dl class="prospecto-detail-data">
+        <div><dt>Teléfono</dt><dd id="detailPhone">Sin teléfono</dd></div>
+        <div><dt>Correo</dt><dd id="detailEmail">Sin correo</dd></div>
+        <div><dt>Dirección</dt><dd id="detailAddress">Sin dirección</dd></div>
+        <div><dt>CURP</dt><dd id="detailCurp">Sin CURP</dd></div>
+        <div><dt>Origen</dt><dd id="detailOrigin">Sin origen</dd></div>
+        <div><dt>Asignado</dt><dd id="detailAssigned">Sin asignar</dd></div>
+        <div><dt>Cita</dt><dd id="detailAppointment">Sin cita</dd></div>
+        <div><dt>Antigüedad</dt><dd id="detailAge"></dd></div>
+        <div><dt>Alta</dt><dd id="detailCreated">Sin fecha</dd></div>
+      </dl>
+    </section>
+
+    <section class="prospecto-detail-section">
+      <h4>Contacto rápido</h4>
+      <div class="prospecto-detail-actions">
+        <a class="btn" id="detailCall" href="#" style="background:#1abc9c"><i class="material-icons">call</i> Llamar</a>
+        <a class="btn" id="detailWhatsapp" href="#" target="_blank" rel="noopener" style="background:#25D366"><i class="fa fa-whatsapp"></i> WhatsApp</a>
+        <a class="btn" id="detailMail" href="#" style="background:#5D6D7E"><i class="material-icons">email</i> Correo</a>
+      </div>
+    </section>
+
+    <section class="prospecto-detail-section">
+      <h4>Acciones del prospecto</h4>
+      <div class="prospecto-detail-actions">
+        <form method="POST" action="<?= h($_SERVER['PHP_SELF']) ?>" id="detailActionsForm">
+          <input type="hidden" name="Host" value="<?= h($_SERVER['PHP_SELF']) ?>">
+          <input type="hidden" name="nombre" value="<?= h($nombre) ?>">
+          <button class="btn" id="detailSale" type="submit" name="IdProspecto" value="" style="background:#58D68D"><i class="material-icons">verified_user</i> Registrar venta</button>
+          <button class="btn" id="detailLeadSales" type="submit" name="IdProspecto" value="" style="background:#21618C"><i class="material-icons">card_travel</i> LeadSales</button>
+          <button class="btn" id="detailFollowup" type="submit" name="IdProspecto" value="" style="background:#3498DB"><i class="material-icons">chat</i> Seguimiento</button>
+          <button class="btn" id="detailEdit" type="submit" name="IdProspecto" value="" style="background:#7f8c8d"><i class="material-icons">badge</i> Editar</button>
+          <?php if ($canReassignProspect): ?>
+            <button class="btn" id="detailAssign" type="submit" name="IdProspecto" value="" style="background:#AF7AC5"><i class="material-icons">people_alt</i> Reasignar</button>
+          <?php endif; ?>
+          <button class="btn" id="detailCancel" type="submit" name="IdProspecto" value="" style="background:#E74C3C"><i class="material-icons">cancel</i> Dar de baja</button>
+        </form>
+      </div>
+    </section>
+  </aside>
 
   <div class="modal fade" id="ModalFuneraria" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
@@ -1004,6 +1448,177 @@ if (!empty($_POST['RegistrarComentario'])) {
         } catch (err) {
           resultBox.innerHTML = '<p class="text-danger mb-0">Error al llamar a IA.</p>';
         }
+      });
+    });
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var board = document.querySelector('.prospectos-board');
+      var moveForm = document.getElementById('pipelineMoveForm');
+      var idInput = document.getElementById('pipelineMoveId');
+      var stageInput = document.getElementById('pipelineMoveStage');
+      if (!board || !moveForm || !idInput || !stageInput) return;
+
+      var detail = document.getElementById('prospectoDetail');
+      var detailBackdrop = document.getElementById('prospectoDetailBackdrop');
+      var detailClose = document.getElementById('prospectoDetailClose');
+      var draggedCard = null;
+      var detailFields = {
+        name: document.getElementById('detailName'),
+        service: document.getElementById('detailService'),
+        stage: document.getElementById('detailStage'),
+        phone: document.getElementById('detailPhone'),
+        email: document.getElementById('detailEmail'),
+        address: document.getElementById('detailAddress'),
+        curp: document.getElementById('detailCurp'),
+        origin: document.getElementById('detailOrigin'),
+        assigned: document.getElementById('detailAssigned'),
+        appointment: document.getElementById('detailAppointment'),
+        age: document.getElementById('detailAge'),
+        created: document.getElementById('detailCreated')
+      };
+      var detailButtons = {
+        sale: document.getElementById('detailSale'),
+        leadSales: document.getElementById('detailLeadSales'),
+        followup: document.getElementById('detailFollowup'),
+        edit: document.getElementById('detailEdit'),
+        assign: document.getElementById('detailAssign'),
+        cancel: document.getElementById('detailCancel'),
+        call: document.getElementById('detailCall'),
+        whatsapp: document.getElementById('detailWhatsapp'),
+        mail: document.getElementById('detailMail')
+      };
+
+      function setText(element, value, fallback) {
+        if (element) element.textContent = value || fallback || '';
+      }
+
+      function setLink(element, href, visible) {
+        if (!element) return;
+        element.hidden = !visible;
+        element.setAttribute('href', visible ? href : '#');
+      }
+
+      function closeDetail() {
+        if (!detail || !detailBackdrop) return;
+        detail.classList.remove('is-open');
+        detailBackdrop.classList.remove('is-open');
+        detail.setAttribute('aria-hidden', 'true');
+        board.querySelectorAll('.prospecto-card.is-selected').forEach(function (card) {
+          card.classList.remove('is-selected');
+        });
+      }
+
+      function openDetail(card) {
+        if (!detail || !detailBackdrop) return;
+        var data = card.dataset;
+        var prospectoId = data.prospectoId || '';
+
+        setText(detailFields.name, data.name, 'Prospecto');
+        setText(detailFields.service, data.service, 'Sin servicio');
+        setText(detailFields.stage, data.stageLabel, 'Lead');
+        setText(detailFields.phone, data.phone, 'Sin teléfono');
+        setText(detailFields.email, data.email, 'Sin correo');
+        setText(detailFields.address, data.address, 'Sin dirección');
+        setText(detailFields.curp, data.curp, 'Sin CURP');
+        setText(detailFields.origin, data.origin, 'Sin origen');
+        setText(detailFields.assigned, data.assigned, 'Sin asignar');
+        setText(detailFields.appointment, data.appointment, 'Sin cita');
+        setText(detailFields.age, (data.weeks || '0') + ' semanas activo');
+        setText(detailFields.created, data.created, 'Sin fecha');
+
+        if (detailButtons.sale) {
+          detailButtons.sale.value = '1' + prospectoId;
+          detailButtons.sale.hidden = !data.curp;
+        }
+        if (detailButtons.leadSales) detailButtons.leadSales.value = '6' + prospectoId;
+        if (detailButtons.followup) detailButtons.followup.value = '7' + prospectoId;
+        if (detailButtons.edit) detailButtons.edit.value = '5' + prospectoId;
+        if (detailButtons.assign) detailButtons.assign.value = '3' + prospectoId;
+        if (detailButtons.cancel) detailButtons.cancel.value = '2' + prospectoId;
+
+        setLink(detailButtons.call, 'tel:' + (data.phone || ''), !!data.phone);
+        setLink(detailButtons.whatsapp, 'https://wa.me/' + (data.phoneIntl || ''), !!data.phoneIntl);
+        setLink(detailButtons.mail, 'mailto:' + (data.email || ''), !!data.email);
+
+        board.querySelectorAll('.prospecto-card.is-selected').forEach(function (selectedCard) {
+          selectedCard.classList.remove('is-selected');
+        });
+        card.classList.add('is-selected');
+        detail.classList.add('is-open');
+        detailBackdrop.classList.add('is-open');
+        detail.setAttribute('aria-hidden', 'false');
+        if (detailClose) detailClose.focus();
+      }
+
+      function clearTargets() {
+        board.querySelectorAll('.prospectos-column.is-drop-target').forEach(function (column) {
+          column.classList.remove('is-drop-target');
+        });
+      }
+
+      board.querySelectorAll('.js-prospecto-card[data-prospecto-id]').forEach(function (card) {
+        card.addEventListener('click', function () {
+          if (card.dataset.dragged === '1') return;
+          openDetail(card);
+        });
+        card.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openDetail(card);
+          }
+        });
+      });
+
+      board.querySelectorAll('.prospecto-card[draggable="true"][data-prospecto-id]').forEach(function (card) {
+        card.addEventListener('dragstart', function (event) {
+          draggedCard = card;
+          card.dataset.dragged = '1';
+          card.classList.add('is-dragging');
+          closeDetail();
+          if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', card.getAttribute('data-prospecto-id') || '');
+          }
+        });
+        card.addEventListener('dragend', function () {
+          card.classList.remove('is-dragging');
+          clearTargets();
+          draggedCard = null;
+          window.setTimeout(function () {
+            card.dataset.dragged = '0';
+          }, 180);
+        });
+      });
+
+      if (detailClose) detailClose.addEventListener('click', closeDetail);
+      if (detailBackdrop) detailBackdrop.addEventListener('click', closeDetail);
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') closeDetail();
+      });
+
+      board.querySelectorAll('.prospectos-column[data-stage]').forEach(function (column) {
+        column.addEventListener('dragover', function (event) {
+          event.preventDefault();
+          column.classList.add('is-drop-target');
+        });
+        column.addEventListener('dragleave', function () {
+          column.classList.remove('is-drop-target');
+        });
+        column.addEventListener('drop', function (event) {
+          event.preventDefault();
+          clearTargets();
+          if (!draggedCard) return;
+
+          var prospectoId = draggedCard.getAttribute('data-prospecto-id') || '';
+          var currentStage = draggedCard.getAttribute('data-stage') || '';
+          var targetStage = column.getAttribute('data-stage') || '';
+          if (!prospectoId || !targetStage || currentStage === targetStage) return;
+
+          idInput.value = prospectoId;
+          stageInput.value = targetStage;
+          moveForm.submit();
+        });
       });
     });
   </script>

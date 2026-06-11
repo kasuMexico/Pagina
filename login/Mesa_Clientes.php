@@ -414,7 +414,7 @@ $VerCache = time();
                     echo "SISTEMA";
                     $Niv = 4;
                     $sql = "SELECT * FROM Empleados WHERE Nivel >= {$Niv} AND Nombre != 'Vacante'";
-                  } elseif ($Niv === 1) {
+                  } elseif ($Niv === 1 || kasu_director_role_key($mysqli, $Niv) === 'general') {
                     $UsrPro = $basicas->BuscarCampos($mysqli, "Nombre", "Empleados", "IdUsuario", $Reg['Usuario'] ?? '');
                     echo $UsrPro ?: "Sin Asignar";
                     $sql = "SELECT * FROM Empleados WHERE Nombre != 'Vacante'";

@@ -263,6 +263,29 @@ HTML;
       </tr>
 HTML;
 
+            case 'CREACIÓN DE CONTRASEÑA':
+                $cteSeguro = htmlspecialchars($cte, ENT_QUOTES, 'UTF-8');
+                $usuario = htmlspecialchars((string)($data['Usuario'] ?? ''), ENT_QUOTES, 'UTF-8');
+                $urlSegura = htmlspecialchars($dirUrl, ENT_QUOTES, 'UTF-8');
+                return <<<HTML
+      <tr>
+        <td style="padding:30px 30px 20px;font-family:'Segoe UI',sans-serif;color:#0f172a;">
+          <h2 style="margin:0 0 12px;font-size:22px;">Bienvenido al equipo KASU</h2>
+          <p style="margin:0 0 14px;font-size:16px;color:#475569;line-height:1.6;">
+            {$cteSeguro}, tu cuenta de colaborador fue creada. Utiliza el siguiente usuario para ingresar:
+          </p>
+          <p style="margin:0;font-size:20px;color:#0f172a;line-height:1.6;text-align:center;">
+            <strong>{$usuario}</strong>
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <td align="center" style="padding:0 30px 35px;">
+          <a href="{$urlSegura}" target="_blank" style="display:inline-block;padding:14px 30px;background:#1e4fa3;border-radius:999px;font-family:'Segoe UI',sans-serif;font-size:17px;color:#fff;text-decoration:none;">Crear mi contraseña</a>
+        </td>
+      </tr>
+HTML;
+
             case 'ENVÍO DE FACTURA':
                 return <<<HTML
       <tr>
@@ -662,6 +685,64 @@ HTML;
         $headers[] = "Reply-To: soporte@kasu.com.mx";
 
         return @mail($to, (string)$asunto, (string)$html, implode("\r\n", $headers));
+    }
+
+    /**
+     * Envía correo transaccional mediante el SMTP configurado en .env.
+     */
+    public function EnviarCorreoSmtp($cte, $address, $asunto, $html): bool {
+        $this->trackUsage();
+        $to = (string)$address;
+        if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            return false;
+        }
+
+        $root = realpath(__DIR__ . '/../..') ?: dirname(__DIR__, 2);
+        $autoload = $root . '/vendor/autoload.php';
+        if (!is_file($autoload)) {
+            return $this->EnviarCorreo($cte, $address, $asunto, $html);
+        }
+        require_once $autoload;
+
+        if (class_exists(\Dotenv\Dotenv::class) && is_file($root . '/.env')) {
+            \Dotenv\Dotenv::createUnsafeImmutable($root)->safeLoad();
+        }
+        if (!class_exists(\PHPMailer\PHPMailer\PHPMailer::class)) {
+            return $this->EnviarCorreo($cte, $address, $asunto, $html);
+        }
+
+        $env = static function (string $key, string $default = ''): string {
+            $value = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
+            return is_string($value) && $value !== '' ? $value : $default;
+        };
+
+        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+        try {
+            $mail->isSMTP();
+            $mail->Host = $env('SMTP_HOST', 'smtp.hostinger.mx');
+            $mail->SMTPAuth = true;
+            $mail->Username = $env('SMTP_USER');
+            $mail->Password = $env('SMTP_PASS');
+            $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = (int)$env('SMTP_PORT', '587');
+            $mail->CharSet = 'UTF-8';
+            $mail->Timeout = 15;
+
+            $fromEmail = $env('FROM_EMAIL', 'atncliente@kasu.com.mx');
+            $fromName = $env('FROM_NAME', 'KASU');
+            $mail->setFrom($fromEmail, $fromName);
+            $mail->addReplyTo($env('REPLY_TO', $fromEmail), $fromName);
+            $mail->addAddress($to, (string)$cte);
+            $mail->isHTML(true);
+            $mail->Subject = (string)$asunto;
+            $mail->Body = (string)$html;
+            $mail->AltBody = strip_tags((string)$html);
+            $mail->send();
+            return true;
+        } catch (Throwable $e) {
+            error_log('[KASU][CorreoSMTP] ' . $e->getMessage());
+            return false;
+        }
     }
 
     /**

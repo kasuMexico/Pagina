@@ -20,6 +20,7 @@
 require_once dirname(__DIR__, 3) . '/eia/session.php';
 kasu_session_start();
 require_once __DIR__ . '/../../eia/librerias.php';
+require_once __DIR__ . '/../mesa_helpers.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 header('Content-Type: application/json; charset=utf-8');
@@ -35,6 +36,12 @@ if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
 
 /* ========= 2) Nivel del usuario y líder/equipo base ========= */
 $NivelUsuario = (int)$basicas->BuscarCampos($mysqli, 'Nivel', 'Empleados', 'IdUsuario', $_SESSION['Vendedor']);
+$canSeeFinance = kasu_can_access_finance($mysqli, $NivelUsuario);
+if (!$canSeeFinance) {
+    http_response_code(403);
+    echo json_encode(['cols'=>[], 'rows'=>[]], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 /* Id interno del registro del empleado actual. Se usa como “semilla” para el recorrido por equipos. */
 $lider = (int)$basicas->BuscarCampos($mysqli, 'Id', 'Empleados', 'IdUsuario', $_SESSION['Vendedor']);
 
@@ -53,6 +60,7 @@ $sql = "SELECT * FROM Status";
 $result = $mysqli->query($sql);
 
 $stmtCount = $mysqli->prepare("SELECT COUNT(*) AS total FROM Venta WHERE Usuario = ? AND Status = ? AND FechaRegistro BETWEEN ? AND ?");
+$stmtCountGlobal = $mysqli->prepare("SELECT COUNT(*) AS total FROM Venta WHERE Status = ? AND FechaRegistro BETWEEN ? AND ?");
 $countStatus = function(string $usuario, string $status) use (&$stmtCount, $iniFull, $finFull): int {
     $stmtCount->bind_param('ssss', $usuario, $status, $iniFull, $finFull);
     $stmtCount->execute();
@@ -75,7 +83,12 @@ while ($row = $result->fetch_assoc()) {
     $unidades_vendidas = 0;
     $liderBase = $lider;
 
-    if ($NivelUsuario >= 5) {
+    if ($canSeeFinance) {
+        $stmtCountGlobal->bind_param('sss', $statusNombre, $iniFull, $finFull);
+        $stmtCountGlobal->execute();
+        $unidades_vendidas = (int)($stmtCountGlobal->get_result()->fetch_assoc()['total'] ?? 0);
+        $stmtCountGlobal->free_result();
+    } elseif ($NivelUsuario >= 5) {
         // Ventas solo del usuario en sesión
         $unidades_vendidas = $countStatus((string)$_SESSION['Vendedor'], $statusNombre);
 
@@ -117,3 +130,4 @@ while ($row = $result->fetch_assoc()) {
 /* ========= 4) Salida JSON ========= */
 echo json_encode($data, JSON_UNESCAPED_UNICODE);
 $stmtCount->close();
+$stmtCountGlobal->close();

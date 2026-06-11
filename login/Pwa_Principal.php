@@ -15,7 +15,9 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/eia/session.php';
 kasu_session_start();
 require_once __DIR__ . '/../eia/librerias.php';
+require_once __DIR__ . '/php/mesa_helpers.php';
 require_once __DIR__ . '/php/Analisis_Metas.php';
+require_once __DIR__ . '/../eia/Vista-360/ia_role_profiles.php';
 date_default_timezone_set('America/Mexico_City');
 
 /* ==========================================================================================
@@ -86,6 +88,8 @@ $suc         = (int)$basicas->BuscarCampos($mysqli, 'Sucursal',       'Empleados
 $su2         = (string)$basicas->BuscarCampos($mysqli, 'nombreSucursal', 'Sucursal',  'Id',        $suc);
 $nombreNivel = (string)$basicas->BuscarCampos($mysqli, 'NombreNivel',    'Nivel',     'Id',        $NivRaw);
 $Niv         = (int)$NivRaw;
+$canSeeFinance = kasu_can_access_finance($mysqli, $Niv);
+$iaProfile = kasu_ia_role_profile($nombreNivel, $Niv);
 
 /* ==========================================================================================
  * BLOQUE: Defaults de variables de metas/KPIs
@@ -453,7 +457,7 @@ if ($hora >= 6 && $hora < 12) {
             </article>
 
             <!-- Panel extra para Dirección / CEO -->
-            <?php if ($Niv === 1): ?>
+            <?php if ($canSeeFinance): ?>
               <article class="card-base kpi-card">
                 <div class="kpi-chip">
                   <i class="fa fa-university"></i> Cobranza global
@@ -494,8 +498,8 @@ if ($hora >= 6 && $hora < 12) {
             <img src="/eia/assets/img/ia-thinking-2.gif" alt="IA KASU">
           </div>
           <div>
-            <p class="ia-modal-title">IA Comercial KASU · Vista 360</p>
-            <p class="ia-modal-subtitle">Haz preguntas sobre tus clientes, créditos y ventas.</p>
+            <p class="ia-modal-title">IA KASU · <?= htmlspecialchars((string)$iaProfile['titulo'], ENT_QUOTES) ?></p>
+            <p class="ia-modal-subtitle">Asesoría enfocada en las responsabilidades de tu puesto.</p>
           </div>
         </div>
         <button type="button" class="ia-modal-close" id="iaModalClose" aria-label="Cerrar asistente IA">×</button>
@@ -503,13 +507,13 @@ if ($hora >= 6 && $hora < 12) {
 
       <div class="ia-chat-log" id="iaChatLog">
         <div class="ia-chat-bubble ia">
-          <p>Hola, soy tu asistente IA de KASU. Puedo:</p>
+          <p>Hola, soy tu asistente IA para <strong><?= htmlspecialchars((string)$iaProfile['titulo'], ENT_QUOTES) ?></strong>. Puedo ayudarte a:</p>
           <ul>
-            <li>Revisar estatus de crédito de tus clientes.</li>
-            <li>Enviar pólizas, fichas o ligas de pago por correo.</li>
-            <li>Analizar tus ventas y ayudarte con objeciones.</li>
+            <?php foreach (array_slice((array)$iaProfile['acciones'], 0, 4) as $iaAction): ?>
+              <li><?= htmlspecialchars(ucfirst((string)$iaAction), ENT_QUOTES) ?>.</li>
+            <?php endforeach; ?>
           </ul>
-          <span class="ia-chat-meta">IA · Vista 360</span>
+          <span class="ia-chat-meta">IA · <?= htmlspecialchars((string)$iaProfile['alcance'], ENT_QUOTES) ?></span>
         </div>
       </div>
 
@@ -596,15 +600,12 @@ if ($hora >= 6 && $hora < 12) {
 
       contenedorIA.innerHTML = '<p>Cargando recomendación de IA...</p>';
 
-      // Endpoint ESPECÍFICO para la recomendación / orquestador de tools
-      fetch('/eia/Vista-360/vista360_chat_acciones.php', {
+      // Endpoint especializado: genera la tarjeta con una sola llamada a IA.
+      fetch('/eia/Vista-360/vista360_recomendacion.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          // El endpoint está documentado para recibir "mensaje"
-          mensaje: 'Genera una recomendación breve y accionable para este vendedor, ' +
-                   'basada en su cartera y resultados del mes actual en Vista 360. ' +
-                   'Devuélvela en HTML corto, con bullets concretos para mejorar su desempeño.'
+          contexto: 'Tarjeta diaria del panel principal.'
         })
       })
       .then(function (resp) {
@@ -612,7 +613,6 @@ if ($hora >= 6 && $hora < 12) {
       })
       .then(function (data) {
         if (data && data.ok && data.html) {
-          // El endpoint vista360_chat_acciones.php ya está pensado para devolver "html"
           contenedorIA.innerHTML = data.html;
         } else {
           contenedorIA.innerHTML = '<p>No fue posible obtener la recomendación de IA en este momento.</p>';

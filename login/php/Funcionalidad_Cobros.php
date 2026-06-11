@@ -55,6 +55,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__, 2) . '/eia/session.php';
 kasu_session_start();
 require_once __DIR__ . '/../../eia/librerias.php';
+require_once __DIR__ . '/mesa_helpers.php';
 kasu_apply_error_settings(); // 2025-11-18: Log centralizado para Mesa Cobros
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
@@ -62,6 +63,11 @@ if (empty($_SESSION['Vendedor'])) {
     http_response_code(403);
     header('Location: https://kasu.com.mx/login');
     exit;
+}
+$nivelSesion = (int)$basicas->BuscarCampos($mysqli, 'Nivel', 'Empleados', 'IdUsuario', $_SESSION['Vendedor']);
+if (!kasu_can_access_finance($mysqli, $nivelSesion)) {
+    http_response_code(403);
+    exit('No tienes permisos para ejecutar operaciones financieras.');
 }
 
 if (!function_exists('h')) {

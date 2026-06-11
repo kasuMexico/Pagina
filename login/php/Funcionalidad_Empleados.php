@@ -24,6 +24,7 @@ kasu_session_start();
  * Fecha: 05/11/2025 — Revisado por: JCCM
  * ========================================================================================== */
 require_once '../../eia/librerias.php';
+require_once __DIR__ . '/mesa_helpers.php';
 kasu_apply_error_settings(); // 2025-11-18: Registro centralizado en https://kasu.com.mx/eia/error.log
 date_default_timezone_set('America/Mexico_City');
 
@@ -40,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Nunca registrar contraseñas ni tokens sensibles en el log
     $sensibles = [
         'PassWord', 'PassWord1', 'PassWord2', 'PassAct',
-        'csrf', 'csrf_auth', 'csrf_logout',
+        'data', 'csrf', 'csrf_auth', 'csrf_logout',
     ];
     foreach ($sensibles as $key) {
         if (array_key_exists($key, $logSafe)) {
@@ -115,6 +116,35 @@ if (!function_exists('kasu_generate_usuario')) {
         return $candidate;
     }
 }
+
+if (!function_exists('kasu_send_employee_password_setup_email')) {
+    function kasu_send_employee_password_setup_email(
+        Correo $correo,
+        string $nombre,
+        string $email,
+        string $idUsuario,
+        string $tokenTemporal,
+        int $idEmpleado
+    ): bool {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $idUsuario === '' || $tokenTemporal === '') {
+            return false;
+        }
+
+        $url = 'https://kasu.com.mx/login/index.php?data=' . rawurlencode(base64_encode($tokenTemporal))
+             . '&Usr=' . rawurlencode($idUsuario);
+        $asunto = 'CREACIÓN DE CONTRASEÑA';
+        $mensaje = $correo->Mensaje($asunto, [
+            'Cte' => $nombre,
+            'DirUrl' => $url,
+            'Usuario' => $idUsuario,
+        ], (string)$idEmpleado);
+
+        return is_string($mensaje)
+            && $mensaje !== ''
+            && $correo->EnviarCorreoSmtp($nombre, $email, $asunto, $mensaje);
+    }
+}
+
 if (!function_exists('kasu_contact_columns')) {
     function kasu_contact_columns(mysqli $mysqli): array
     {
@@ -370,31 +400,160 @@ if (!empty($_POST['CambiarPass'])) {
 /********************************* BLOQUE: PAGO DE COMISIONES *********************************/
 /* Qué hace: Registra un pago de comisión en Comisiones_pagos */
 if (isset($_POST['PagoCom'])) {
-    // CSRF opcional para compatibilidad
-    if (isset($_POST['csrf']) && !hash_equals($_SESSION['csrf_auth'] ?? '', (string)$_POST['csrf'])) {
+    if (!hash_equals($_SESSION['csrf_auth'] ?? '', (string)($_POST['csrf'] ?? ''))) {
         http_response_code(403);
         exit;
     }
+    $nivelRegistraPago = (int)$basicas->BuscarCampos(
+        $mysqli,
+        'Nivel',
+        'Empleados',
+        'IdUsuario',
+        (string)($_SESSION['Vendedor'] ?? '')
+    );
+    if (!kasu_can_access_finance($mysqli, $nivelRegistraPago)) {
+        http_response_code(403);
+        exit('No tienes permisos para registrar pagos de comisiones.');
+    }
 
-    $Cantidad   = $mysqli->real_escape_string((string)($_POST['Cantidad']   ?? ''));
-    $IdEmpleado = $mysqli->real_escape_string((string)($_POST['IdEmpleado'] ?? ''));
-    $Cuenta     = $mysqli->real_escape_string((string)($_POST['Cuenta']     ?? ''));
-    $RefDepo    = $mysqli->real_escape_string((string)($_POST['RefDepo']    ?? ''));
-    $Host       = $mysqli->real_escape_string((string)($_POST['Host']       ?? ''));
-    $name       = $mysqli->real_escape_string((string)($_POST['name']       ?? ''));
+    $Cantidad          = (float)($_POST['Cantidad'] ?? 0);
+    $IdEmpleado        = trim((string)($_POST['IdEmpleado'] ?? ''));
+    $CuentaDestino     = trim((string)($_POST['CuentaDestino'] ?? ''));
+    $ReferenciaInterna = trim((string)($_POST['ReferenciaInterna'] ?? ''));
+    $BancoEmisor       = trim((string)($_POST['BancoEmisor'] ?? ''));
+    $Referencia        = trim((string)($_POST['ReferenciaOperacion'] ?? ''));
+    $FechaOperacion    = trim((string)($_POST['FechaOperacion'] ?? ''));
+    $PeriodoInicio     = trim((string)($_POST['PeriodoInicio'] ?? ''));
+    $PeriodoFin        = trim((string)($_POST['PeriodoFin'] ?? ''));
+    $Host              = (string)($_POST['Host'] ?? '/login/Mesa_Empleados.php');
+    $name              = trim((string)($_POST['name'] ?? ''));
+
+    $fechaValida = DateTime::createFromFormat('Y-m-d', $FechaOperacion);
+    $fechaValida = $fechaValida && $fechaValida->format('Y-m-d') === $FechaOperacion;
+    if (
+        $Cantidad <= 0
+        || $IdEmpleado === ''
+        || $BancoEmisor === ''
+        || $Referencia === ''
+        || !$fechaValida
+        || $FechaOperacion > $hoy
+        || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $PeriodoInicio)
+        || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $PeriodoFin)
+    ) {
+        http_response_code(400);
+        exit('Completa correctamente los datos financieros del pago.');
+    }
+
+    if (
+        empty($_FILES['ComprobantePdf'])
+        || ($_FILES['ComprobantePdf']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK
+        || !is_uploaded_file($_FILES['ComprobantePdf']['tmp_name'])
+    ) {
+        http_response_code(400);
+        exit('Adjunta el comprobante PDF de la operación.');
+    }
+
+    $pdf = $_FILES['ComprobantePdf'];
+    if ((int)($pdf['size'] ?? 0) <= 0 || (int)$pdf['size'] > 10 * 1024 * 1024) {
+        http_response_code(400);
+        exit('El comprobante PDF debe pesar menos de 10 MB.');
+    }
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    if ($finfo->file($pdf['tmp_name']) !== 'application/pdf') {
+        http_response_code(400);
+        exit('El comprobante debe ser un archivo PDF válido.');
+    }
+
+    $columns = [
+        'CuentaDestino' => "VARCHAR(40) NULL",
+        'ReferenciaInterna' => "VARCHAR(64) NULL",
+        'FechaOperacion' => "DATE NULL",
+        'PeriodoInicio' => "DATE NULL",
+        'PeriodoFin' => "DATE NULL",
+        'ComprobantePdf' => "VARCHAR(255) NULL",
+    ];
+    foreach ($columns as $column => $definition) {
+        $stmtColumn = $mysqli->prepare("
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = DATABASE() AND table_name = 'Comisiones_pagos' AND column_name = ?
+            LIMIT 1
+        ");
+        $stmtColumn->bind_param('s', $column);
+        $stmtColumn->execute();
+        $exists = (bool)$stmtColumn->get_result()->fetch_row();
+        $stmtColumn->close();
+        if (!$exists) {
+            $mysqli->query("ALTER TABLE Comisiones_pagos ADD COLUMN `$column` $definition");
+        }
+    }
+
+    $stmtDuplicate = $mysqli->prepare("
+        SELECT Id
+        FROM Comisiones_pagos
+        WHERE Banco = ? AND Referencia = ?
+        LIMIT 1
+    ");
+    $stmtDuplicate->bind_param('ss', $BancoEmisor, $Referencia);
+    $stmtDuplicate->execute();
+    $duplicate = $stmtDuplicate->get_result()->fetch_assoc();
+    $stmtDuplicate->close();
+    if ($duplicate) {
+        http_response_code(409);
+        exit('Ya existe un pago registrado con ese banco y referencia.');
+    }
+
+    $uploadDir = dirname(__DIR__) . '/archivos/comisiones/';
+    if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
+        http_response_code(500);
+        exit('No fue posible preparar el almacenamiento del comprobante.');
+    }
+    $pdfName = 'comision_' . date('Ymd_His') . '_' . bin2hex(random_bytes(8)) . '.pdf';
+    $pdfDestination = $uploadDir . $pdfName;
+    if (!move_uploaded_file($pdf['tmp_name'], $pdfDestination)) {
+        http_response_code(500);
+        exit('No fue posible guardar el comprobante PDF.');
+    }
+    $pdfPath = '/login/archivos/comisiones/' . $pdfName;
 
     $DatGps = [
-        "Cantidad"      => $Cantidad,
+        "Cantidad"      => number_format($Cantidad, 2, '.', ''),
         "IdVendedor"    => $IdEmpleado,
         "UsrResgistra"  => $_SESSION["Vendedor"] ?? '',
-        "Banco"         => $Cuenta,
-        "Referencia"    => $RefDepo,
+        "Banco"         => $BancoEmisor,
+        "Referencia"    => $Referencia,
+        "CuentaDestino" => $CuentaDestino,
+        "ReferenciaInterna" => $ReferenciaInterna,
+        "FechaOperacion" => $FechaOperacion,
+        "PeriodoInicio" => $PeriodoInicio,
+        "PeriodoFin" => $PeriodoFin,
+        "ComprobantePdf" => $pdfPath,
         "fechaRegistro" => $hoy . " " . $HoraActual
     ];
 
-    $basicas->InsertCampo($mysqli, "Comisiones_pagos", $DatGps);
+    try {
+        $insertResult = $basicas->InsertCampo($mysqli, "Comisiones_pagos", $DatGps);
+        if (!is_numeric($insertResult) || (int)$insertResult <= 0) {
+            throw new RuntimeException('No se pudo registrar el pago de comisiones.');
+        }
+    } catch (Throwable $e) {
+        @unlink($pdfDestination);
+        throw $e;
+    }
+    try {
+        $seguridad->auditoria_registrar(
+            $mysqli,
+            $basicas,
+            $_POST,
+            'Pago_Comisiones',
+            $Host
+        );
+    } catch (Throwable $e) {
+        error_log('No se pudo auditar el pago de comisiones: ' . $e->getMessage());
+    }
 
-    header('Location: https://kasu.com.mx' . $Host . '?Vt=1&name=' . $name);
+    $hostPath = parse_url($Host, PHP_URL_PATH) ?: '/login/Mesa_Empleados.php';
+    header('Location: https://kasu.com.mx' . $hostPath . '?Vt=1&name=' . rawurlencode($name) . '&Msg=' . rawurlencode('Pago de comisiones registrado.'));
     exit;
 }
 
@@ -535,7 +694,7 @@ if (isset($_POST['CreaEmpl'])) {
 
         // Usuario sugerido por nombre
         $DirUrl = kasu_generate_usuario($mysqli, $Reg['FullName']);
-        $dRc    = mt_rand();
+        $dRc    = bin2hex(random_bytes(32));
 
         // Actualiza prospecto
         $basicas->ActCampo($pros, "prospectos", "NoTel",      $Telefono,    $IdProspecto);
@@ -592,16 +751,33 @@ if (isset($_POST['CreaEmpl'])) {
             "Cuenta"    => $CuentaVal,
             "Nomina"    => $NominaInt,
         ], static fn($v) => $v !== null && $v !== '');
-        $nuevoId = $basicas->InsertCampo($mysqli, "Empleados", $empleadoData);
+        $nuevoId = (int)$basicas->InsertCampo($mysqli, "Empleados", $empleadoData);
+        if ($nuevoId <= 0) {
+            throw new RuntimeException('No fue posible crear el empleado.');
+        }
         $contra  = '&Add=' . $IdContacto;
 
-        $alert = "El distribuidor se registró correctamente. Asigna sucursal y coordinador con mesa de control. Luego podrá ingresar al sistema.";
-        header('Location: https://kasu.com.mx' . $Host . '?&name=' . $name . '&Msg=' . $alert);
+        $correoEnviado = kasu_send_employee_password_setup_email(
+            $Correo,
+            (string)($Reg['FullName'] ?? ''),
+            $Email,
+            $DirUrl,
+            $dRc,
+            (int)$nuevoId
+        );
+        $alert = $correoEnviado
+            ? "El distribuidor se registró correctamente y recibió el correo para crear su contraseña."
+            : "El distribuidor se registró correctamente, pero no se pudo enviar el correo. Reenvíalo desde Mesa Empleados.";
+        header(
+            'Location: https://kasu.com.mx' . $Host
+            . '?&name=' . rawurlencode($name)
+            . '&Msg=' . rawurlencode($alert)
+        );
         exit;
     } else {
         // Usuario sugerido
         $DirUrl = kasu_generate_usuario($mysqli, $Nombre);
-        $dRc    = mt_rand();
+        $dRc    = bin2hex(random_bytes(32));
 
         // Contacto para empleado directo
         $contactAddressColumn = kasu_contact_address_field($mysqli);
@@ -633,14 +809,34 @@ if (isset($_POST['CreaEmpl'])) {
             "Cuenta"    => $CuentaVal,
             "Nomina"    => $NominaInt
         ], static fn($v) => $v !== null && $v !== '');
-        $basicas->InsertCampo($mysqli, "Empleados", $empleadoData);
+        $nuevoId = (int)$basicas->InsertCampo($mysqli, "Empleados", $empleadoData);
+        if ($nuevoId <= 0) {
+            throw new RuntimeException('No fue posible crear el empleado.');
+        }
 
         if ((int)$Nivel === 7 && !empty($IdProspecto)) {
             $basicas->ActCampo($pros, "prospectos", "Cancelacion", 1, $IdProspecto);
             $contra = '&Add=' . $uSR;
         }
 
-        header('Location: https://kasu.com.mx' . $Host . '?Ml=1&name=' . $name . ($contra ?? ''));
+        $correoEnviado = kasu_send_employee_password_setup_email(
+            $Correo,
+            $Nombre,
+            $Email,
+            $DirUrl,
+            $dRc,
+            $nuevoId
+        );
+        $mensajeAlta = $correoEnviado
+            ? 'Empleado creado. Se envió el correo para crear su contraseña.'
+            : 'Empleado creado, pero no se pudo enviar el correo. Usa Reenviar contraseña.';
+
+        header(
+            'Location: https://kasu.com.mx' . $Host
+            . '?Ml=1&name=' . rawurlencode($name)
+            . '&Msg=' . rawurlencode($mensajeAlta)
+            . ($contra ?? '')
+        );
         exit;
     }
 }
@@ -707,7 +903,7 @@ if (
                     $decodedPass
                 );
 
-                error_log('[KASU][GenCont] decodedPass=' . $decodedPass . ' IdEmpleado=' . $PassRecordId);
+                error_log('[KASU][GenCont] Token validado para IdEmpleado=' . $PassRecordId);
 
                 if ($PassRecordId > 0) {
                     // 4) Registrar GPS (si llega)

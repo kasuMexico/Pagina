@@ -169,7 +169,7 @@ try {
     ]);
 
     // Si el usuario pide explícitamente una recomendación para mejorar su desempeño,
-    // delegamos al orquestador vista360_chat_acciones.php y respondemos directo.
+    // delegamos al endpoint especializado de recomendación y respondemos directo.
     if (!empty($userMessage) && iaDetectRecomendacionIntent($userMessage)) {
         $recResponse = iaCallVista360Recomendacion($userMessage, $userContext);
 
@@ -314,13 +314,17 @@ un PLAN en formato JSON para que el sistema ejecute acciones sobre clientes y pr
 CONTEXTO_USUARIO_JSON:
 {$userInfo}
 
+REGLA DE ROL:
+Adapta el plan al puesto, alcance, enfoques y acciones indicados en CONTEXTO_USUARIO_JSON.
+No asignes a directores, gerentes, coordinadores o Mesa de Control tareas de ejecutivo individual.
+
 TOOLS_DISPONIBLES_JSON (formato OpenAI "function"):
 {$toolsJson}
 
 HISTORIAL_DE_CONVERSACION:
 {$history}
 
-MENSAJE_ACTUAL_DEL_EJECUTIVO:
+MENSAJE_ACTUAL_DEL_USUARIO:
 "{$userMessage}"
 
 TAREAS POSIBLES (no exhaustivas, son ejemplos):
@@ -623,10 +627,13 @@ function buildPlanningPrompt(
     $userInfo = json_encode($userContext['usuario'], JSON_UNESCAPED_UNICODE);
     
     return <<<PROMPT
-Eres el agente de IA conversacional de KASU, una plataforma de servicios funerarios a futuro.
+Eres el agente de IA de gestión de KASU, una plataforma de servicios funerarios a futuro.
 
 CONTEXTO DEL USUARIO (JSON):
 {$userInfo}
+
+REGLA DE ROL:
+Respeta el puesto y su alcance. No recomiendes tareas propias de otro nivel.
 
 HERRAMIENTAS DISPONIBLES (JSON array):
 {$toolsJson}
@@ -795,12 +802,12 @@ function iaDetectRecomendacionIntent(string $msg): bool
 }
 
 /**
- * Llama al endpoint vista360_chat_acciones.php para obtener
+ * Llama al endpoint especializado para obtener
  * una recomendación de desempeño y la adapta al formato del chat.
  */
 function iaCallVista360Recomendacion(string $userMessage, array $userContext): array
 {
-    $path    = '/eia/Vista-360/vista360_chat_acciones.php';
+    $path    = '/eia/Vista-360/vista360_recomendacion.php';
     $docRoot = rtrim((string)($_SERVER['DOCUMENT_ROOT'] ?? ''), '/');
     $local   = $docRoot . $path;
 
@@ -817,12 +824,9 @@ function iaCallVista360Recomendacion(string $userMessage, array $userContext): a
     $host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
     $url    = $scheme . $host . $path;
 
-    // Mensaje que verá vista360_chat_acciones.php como "mensaje" del usuario
+    // Nota breve opcional para orientar la recomendación.
     $payload = [
-        'mensaje' =>
-            'Genera una recomendación breve y accionable para mejorar mi desempeño este mes ' .
-            'en ventas, cobranza y prospección en Vista 360. Mensaje original del usuario: "' .
-            $userMessage . '".',
+        'contexto' => mb_substr($userMessage, 0, 180, 'UTF-8'),
     ];
 
     $ch = curl_init($url);
@@ -868,7 +872,7 @@ function iaCallVista360Recomendacion(string $userMessage, array $userContext): a
             'ok'   => false,
             'type' => 'recommendation_error',
             'html' => '<p>No fue posible interpretar la recomendación de IA.</p>',
-            'error' => 'Respuesta no JSON desde vista360_chat_acciones.php (HTTP ' . $code . ')',
+            'error' => 'Respuesta no JSON desde vista360_recomendacion.php (HTTP ' . $code . ')',
         ];
     }
 

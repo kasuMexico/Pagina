@@ -19,6 +19,8 @@ require_once dirname(__DIR__, 3) . '/eia/session.php';
 kasu_session_start();
 //inlcuir el archivo de funciones
 require_once __DIR__ . '/../../../eia/librerias.php';
+require_once __DIR__ . '/../mesa_helpers.php';
+kasu_require_finance_access($mysqli, $basicas);
 
 header('Content-Type: application/json; charset=utf-8');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);

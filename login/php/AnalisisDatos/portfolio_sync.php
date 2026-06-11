@@ -15,12 +15,10 @@ $projectRoot = dirname(__DIR__, 3);
 require_once $projectRoot . '/eia/session.php';
 kasu_session_start();
 require_once $projectRoot . '/eia/librerias.php'; // Debe exponer $mysqli
+require_once dirname(__DIR__) . '/mesa_helpers.php';
 
 // Acceso
-if (!isset($_SESSION['Vendedor']) && ($_SESSION['dataP'] ?? '') !== 'ValidJCCM') {
-    header('Location: https://kasu.com.mx/login');
-    exit;
-}
+kasu_require_finance_access($mysqli, $basicas);
 
 // CSRF (reutiliza el mismo token que ya tienes en la vista)
 if (empty($_SESSION['csrf_port'])) {

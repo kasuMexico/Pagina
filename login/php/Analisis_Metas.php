@@ -114,7 +114,9 @@ $collectUsuarios = static function (int $id) use (&$collectUsuarios, &$visCache,
 };
 
 $teamUsers = [];
-if ($VendId > 0) {
+if (function_exists('kasu_can_access_finance') && kasu_can_access_finance($mysqli, $nivelUsuario)) {
+    $teamUsers = array_column($empleados, 'usuario');
+} elseif ($VendId > 0) {
     $teamUsers = $collectUsuarios($VendId);
 }
 if (!$teamUsers) {
@@ -137,7 +139,10 @@ if ($resPend = $mysqli->query($sqlPend)) {
     $CobranzaMpPendiente = (float)($resPend->fetch_assoc()['total'] ?? 0.0);
     $resPend->close();
 }
-if ($nivelUsuario === 1) {
+if (
+    $nivelUsuario === 1
+    || (function_exists('kasu_can_access_finance') && kasu_can_access_finance($mysqli, $nivelUsuario))
+) {
     $CobHoy = $CobranzaSucursales + $CobranzaPlataforma + $CobranzaMpPendiente;
 }
 

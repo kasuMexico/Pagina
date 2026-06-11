@@ -27,6 +27,15 @@ if (empty($_SESSION['Vendedor'])) {
   exit();
 }
 
+if (($_SESSION['kasu_activacion_sync'] ?? '') !== date('Y-m-d')) {
+  try {
+    $financieras->activarVentasLiquidadasVencidas($mysqli);
+    $_SESSION['kasu_activacion_sync'] = date('Y-m-d');
+  } catch (Throwable $e) {
+    error_log('No se pudieron regularizar las pólizas en activación: ' . $e->getMessage());
+  }
+}
+
 /* ===== Defaults y variables de contexto — 05/11/2025, JCCM ===== */
 $VerCache = isset($VerCache) ? (string)$VerCache : '1';
 $Niv      = (int)$basicas->BuscarCampos($mysqli, "Nivel", "Empleados", "IdUsuario", $_SESSION["Vendedor"]);

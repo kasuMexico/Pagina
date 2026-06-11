@@ -269,6 +269,7 @@ if (isset($_POST['Pago'])) {
 
         // Cambia a ACTIVACION
         $basicas->ActCampo($mysqli, "Venta", "Status", 'ACTIVACION', $IdVenta);
+        $financieras->registrarFechaLiquidacion($mysqli, (int)$IdVenta);
 
         // Token one-shot para envío de correo
         $_SESSION['mail_token'] = bin2hex(random_bytes(32));

@@ -159,12 +159,23 @@ $dryRun = (PHP_SAPI === 'cli' && in_array('--dry-run', $argv ?? [], true)) || ((
 $limit = (int)($_GET['limit'] ?? 200);
 $limit = max(1, min($limit, 1000));
 
+$ventasActivadas = 0;
+if (!$dryRun && isset($mysqli) && $mysqli instanceof mysqli) {
+  try {
+    $ventasActivadas = $financieras->activarVentasLiquidadasVencidas($mysqli);
+    kasu_cron_log("Pólizas cambiadas de ACTIVACION a ACTIVO: {$ventasActivadas}.");
+  } catch (Throwable $e) {
+    kasu_cron_log('No se pudieron regularizar las pólizas en activación: ' . $e->getMessage());
+  }
+}
+
 $frecuencias = ['DIARIO'];
 $result = kasu_send_promos($pros, $Correo, $frecuencias, $limit, $dryRun);
 
 echo json_encode([
   'ok' => true,
   'dry_run' => $dryRun,
+  'ventas_activadas' => $ventasActivadas,
   'enviados' => $result['enviados'],
   'omitidos' => $result['omitidos'],
 ], JSON_UNESCAPED_SLASHES);

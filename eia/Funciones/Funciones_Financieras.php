@@ -46,6 +46,85 @@ class Financieras {
         return null;
     }
 
+    /** Comprueba si Venta cuenta con una columna sin interrumpir instalaciones pendientes de migración. */
+    private function ventaTieneColumna(mysqli $c0, string $columna): bool {
+        static $cache = [];
+        $key = spl_object_id($c0) . ':' . $columna;
+        if (array_key_exists($key, $cache)) {
+            return $cache[$key];
+        }
+        $stmt = $c0->prepare("
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = DATABASE() AND table_name = 'Venta' AND column_name = ?
+            LIMIT 1
+        ");
+        $stmt->bind_param('s', $columna);
+        $stmt->execute();
+        $cache[$key] = (bool)$stmt->get_result()->fetch_row();
+        $stmt->close();
+        return $cache[$key];
+    }
+
+    /** Guarda la fecha en que una póliza quedó liquidada y comenzó su periodo de activación. */
+    public function registrarFechaLiquidacion(mysqli $c0, int $idVenta, ?string $fecha = null): void {
+        $this->trackUsage();
+        if ($idVenta <= 0 || !$this->ventaTieneColumna($c0, 'FechaLiquidacion')) {
+            return;
+        }
+        $fechaLiquidacion = $fecha ?: date('Y-m-d H:i:s');
+        $stmt = $c0->prepare("
+            UPDATE Venta
+            SET FechaLiquidacion = COALESCE(FechaLiquidacion, ?)
+            WHERE Id = ?
+        ");
+        $stmt->bind_param('si', $fechaLiquidacion, $idVenta);
+        $stmt->execute();
+        $stmt->close();
+    }
+
+    /**
+     * Convierte a ACTIVO las pólizas con 30 días naturales cumplidos desde su liquidación.
+     * Para registros históricos usa el último pago válido y después la fecha de venta.
+     */
+    public function activarVentasLiquidadasVencidas(mysqli $c0): int {
+        $this->trackUsage();
+        $tieneFechaLiquidacion = $this->ventaTieneColumna($c0, 'FechaLiquidacion');
+        if ($tieneFechaLiquidacion) {
+            $c0->query("
+                UPDATE Venta v
+                LEFT JOIN (
+                    SELECT IdVenta, MAX(FechaRegistro) AS FechaUltimoPago
+                    FROM Pagos
+                    WHERE status IS NULL OR status != 'Mora'
+                    GROUP BY IdVenta
+                ) p ON p.IdVenta = v.Id
+                SET v.FechaLiquidacion = COALESCE(p.FechaUltimoPago, v.FechaRegistro)
+                WHERE v.Status IN ('ACTIVACION', 'ACTIVO')
+                  AND v.FechaLiquidacion IS NULL
+            ");
+        }
+
+        $fechaBase = $tieneFechaLiquidacion
+            ? 'COALESCE(v.FechaLiquidacion, p.FechaUltimoPago, v.FechaRegistro)'
+            : 'COALESCE(p.FechaUltimoPago, v.FechaRegistro)';
+
+        $sql = "
+            UPDATE Venta v
+            LEFT JOIN (
+                SELECT IdVenta, MAX(FechaRegistro) AS FechaUltimoPago
+                FROM Pagos
+                WHERE status IS NULL OR status != 'Mora'
+                GROUP BY IdVenta
+            ) p ON p.IdVenta = v.Id
+            SET v.Status = 'ACTIVO'
+            WHERE v.Status = 'ACTIVACION'
+              AND DATE({$fechaBase}) <= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        ";
+        $c0->query($sql);
+        return max(0, $c0->affected_rows);
+    }
+
     /** Datos clave del producto. */
     public function getProductoData($c0, $Producto) {
         $this->trackUsage();
@@ -332,12 +411,13 @@ class Financieras {
                     $basicas->ActCampo($c0, "Venta", "Status", "CANCELADO", $ventaId);
                 } elseif ($SuPag >= $valorCredito) {
                     $basicas->ActCampo($c0, "Venta", "Status", "ACTIVACION", $ventaId);
+                    $this->registrarFechaLiquidacion($c0, $ventaId, $ultimoPagoFecha ?: date('Y-m-d H:i:s'));
                 }
 
             } elseif ($venta['Status'] === "ACTIVACION") {
-                $baseAct  = $ultimoPagoFecha ?: $venta['FechaRegistro'];
+                $baseAct  = $venta['FechaLiquidacion'] ?? ($ultimoPagoFecha ?: $venta['FechaRegistro']);
                 $fechaAct = strtotime($baseAct . " + 30 days");
-                if ($Hoy > $fechaAct) {
+                if ($Hoy >= $fechaAct) {
                     $basicas->ActCampo($c0, "Venta", "Status", "ACTIVO", $ventaId);
 
                     // Correo de activación por instancia/variable

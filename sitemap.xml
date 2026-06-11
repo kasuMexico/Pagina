@@ -7,64 +7,92 @@
 
   <url>
     <loc>https://kasu.com.mx/</loc>
-    <lastmod>2025-10-31T19:57:37+00:00</lastmod>
+    <lastmod>2026-06-11</lastmod>
   </url>
 
   <!-- Core -->
   <url>
     <loc>https://kasu.com.mx/funerarias</loc>
-    <lastmod>2025-10-31T19:57:37+00:00</lastmod>
+    <lastmod>2026-06-11</lastmod>
   </url>
   <url>
     <loc>https://kasu.com.mx/nft</loc>
-    <lastmod>2025-10-31T19:57:37+00:00</lastmod>
+    <lastmod>2026-06-11</lastmod>
   </url>
   <url>
     <loc>https://kasu.com.mx/testimonios</loc>
-    <lastmod>2025-10-31T19:57:37+00:00</lastmod>
+    <lastmod>2026-06-11</lastmod>
   </url>
   <url>
     <loc>https://kasu.com.mx/terminos-y-condiciones</loc>
-    <lastmod>2025-10-31T19:57:37+00:00</lastmod>
+    <lastmod>2026-06-11</lastmod>
   </url>
   <url>
     <loc>https://kasu.com.mx/privacidad</loc>
-    <lastmod>2025-10-31T19:57:37+00:00</lastmod>
+    <lastmod>2026-06-11</lastmod>
   </url>
   <url>
     <loc>https://kasu.com.mx/prospectos</loc>
-    <lastmod>2025-10-31T19:57:37+00:00</lastmod>
+    <lastmod>2026-06-11</lastmod>
+  </url>
+  <url>
+    <loc>https://kasu.com.mx/preguntas-frecuentes</loc>
+    <lastmod>2026-06-11</lastmod>
+  </url>
+  <url>
+    <loc>https://kasu.com.mx/linktree</loc>
+    <lastmod>2026-06-11</lastmod>
+  </url>
+  <url>
+    <loc>https://kasu.com.mx/apimarket/</loc>
+    <lastmod>2026-06-11</lastmod>
+  </url>
+  <url>
+    <loc>https://kasu.com.mx/apimarket/documentacion/doc_accounts.php</loc>
+    <lastmod>2026-06-11</lastmod>
+  </url>
+  <url>
+    <loc>https://kasu.com.mx/apimarket/documentacion/doc_payments.php</loc>
+    <lastmod>2026-06-11</lastmod>
+  </url>
+  <url>
+    <loc>https://kasu.com.mx/apimarket/documentacion/doc_customer.php</loc>
+    <lastmod>2026-06-11</lastmod>
+  </url>
+  <url>
+    <loc>https://kasu.com.mx/apimarket/documentacion/doc_validatemexico.php</loc>
+    <lastmod>2026-06-11</lastmod>
   </url>
   <!-- Si hoy usas registro.php, déjalo así hasta migrar a ruta limpia -->
   <url>
     <loc>https://kasu.com.mx/registro.php</loc>
-    <lastmod>2025-10-31T19:57:37+00:00</lastmod>
+    <lastmod>2026-06-11</lastmod>
   </url>
 
   <!-- Productos canónicos -->
   <url>
     <loc>https://kasu.com.mx/productos/gastos-funerarios</loc>
-    <lastmod>2025-10-31T19:57:37+00:00</lastmod>
+    <lastmod>2026-06-11</lastmod>
   </url>
   <url>
     <loc>https://kasu.com.mx/productos/plan-privado-de-retiro</loc>
-    <lastmod>2025-10-31T19:57:37+00:00</lastmod>
+    <lastmod>2026-06-11</lastmod>
   </url>
   <url>
     <loc>https://kasu.com.mx/productos/gastos-funerarios-policias</loc>
-    <lastmod>2025-10-31T19:57:37+00:00</lastmod>
+    <lastmod>2026-06-11</lastmod>
   </url>
   <url>
     <loc>https://kasu.com.mx/productos/gastos-funerarios-taxistas</loc>
-    <lastmod>2025-10-31T19:57:37+00:00</lastmod>
+    <lastmod>2026-06-11</lastmod>
   </url>
   <url>
     <loc>https://kasu.com.mx/productos/kasu-maternidad</loc>
-    <lastmod>2025-10-31T19:57:37+00:00</lastmod>
+    <lastmod>2026-06-11</lastmod>
   </url>
   <url>
     <loc>https://kasu.com.mx/productos/kasu-futuro-18</loc>
-    <lastmod>2025-10-31T19:57:37+00:00</lastmod>
+    <lastmod>2026-06-11</lastmod>
   </url>
 
   <!-- Documento estático útil -->

@@ -22,6 +22,8 @@ require_once __DIR__ . '/eia/analytics_bootstrap.php';
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
   <link rel="canonical" href="https://kasu.com.mx/linktree">
+  <link rel="alternate" href="https://kasu.com.mx/linktree" hreflang="es-MX">
+  <link rel="alternate" href="https://kasu.com.mx/linktree" hreflang="x-default">
 
   <!-- Open Graph -->
   <meta property="og:type" content="website">
@@ -29,14 +31,14 @@ require_once __DIR__ . '/eia/analytics_bootstrap.php';
   <meta property="og:url" content="https://kasu.com.mx/linktree">
   <meta property="og:title" content="Link in Bio de KASU | Enlaces y artículos">
   <meta property="og:description" content="Accede a nuestros contenidos: educación, retiro, finanzas y más.">
-  <meta property="og:image" content="https://kasu.com.mx/assets/images/guiafuneraria.png">
+  <meta property="og:image" content="https://kasu.com.mx/assets/images/guiafuneraria-512.png">
   <meta property="og:image:alt" content="Guía funeraria KASU">
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Link in Bio de KASU | Enlaces y artículos">
   <meta name="twitter:description" content="Selecciona tu tema y abre el artículo correspondiente.">
-  <meta name="twitter:image" content="https://kasu.com.mx/assets/images/guiafuneraria.png">
+  <meta name="twitter:image" content="https://kasu.com.mx/assets/images/guiafuneraria-512.png">
 
   <!-- JSON-LD -->
   <script type="application/ld+json">

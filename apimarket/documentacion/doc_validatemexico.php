@@ -24,6 +24,7 @@ $TOKEN_URL = $BASE_URL . '/api/Token_Full';
 <head>
   <meta charset="utf-8">
   <link rel="canonical" href="https://kasu.com.mx/apimarket/documentacion/doc_validatemexico.php">
+  <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Documentación Validate_Mexico V1 para validar CURP y RFC con caché, wallet prepago y upstream controlado.">
   <meta name="author" content="Jose Carlos Cabrera Monroy">
@@ -33,7 +34,6 @@ $TOKEN_URL = $BASE_URL . '/api/Token_Full';
 
   <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/bootstrap.min.css">
   <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/font-awesome.css">
-  <link rel="stylesheet" href="https://kasu.com.mx/assets/css/index.css">
   <link rel="stylesheet" href="../assets/index.css">
   <link rel="stylesheet" href="../assets/codigo.css">
 </head>

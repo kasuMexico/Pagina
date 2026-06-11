@@ -22,7 +22,7 @@
 
           <?php
           // Ruta actual normalizada (sin query y sin slash final, excepto la raíz)
-          $uri = strtok($_SERVER['REQUEST_URI'], '?');
+          $uri = strtok($_SERVER['REQUEST_URI'] ?? '/', '?');
           $uri_norm = rtrim($uri, '/');
           if ($uri_norm === '') { $uri_norm = '/'; }
           ?>
@@ -36,13 +36,16 @@
               echo '
 
               <li role="none">
-                <a href="/index.php" role="menuitem" itemprop="url"><span itemprop="name">Inicio</span></a>
+                <a href="/" role="menuitem" itemprop="url"><span itemprop="name">Inicio</span></a>
               </li>
 
               <li role="none"><a href="/prospectos" role="menuitem" itemprop="url"><span itemprop="name"><strong>+ Informacion</strong></span></a></li>
               ';
             }
             ?>
+            <li role="none">
+              <a href="/preguntas-frecuentes" role="menuitem" itemprop="url"><span itemprop="name">Preguntas frecuentes</span></a>
+            </li>
             <li role="none">
               <a href="/blog" role="menuitem" itemprop="url"><span itemprop="name">Blog</span></a>
             </li>
@@ -57,7 +60,7 @@
               ';
             } else {
               echo '
-              <li role="none" class="nav-cta"><a href="/funerarias.php" role="menuitem" itemprop="url"><span itemprop="name">Registro funerarias</span></a></li>
+              <li role="none" class="nav-cta"><a href="/funerarias" role="menuitem" itemprop="url"><span itemprop="name">Registro funerarias</span></a></li>
               ';
             }
             ?>

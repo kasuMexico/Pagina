@@ -29,18 +29,18 @@ if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
   <meta name="description" content="Opiniones reales de clientes KASU sobre nuestros servicios funerarios de pago único y cobertura nacional en México.">
   <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
   <meta name="author" content="Erendida Itzel Castro Marquez">
-  <link rel="canonical" href="https://kasu.com.mx/testimonios.php">
-  <link rel="alternate" href="https://kasu.com.mx/testimonios.php" hreflang="es-MX">
-  <link rel="alternate" href="https://kasu.com.mx/testimonios.php" hreflang="x-default">
+  <link rel="canonical" href="https://kasu.com.mx/testimonios">
+  <link rel="alternate" href="https://kasu.com.mx/testimonios" hreflang="es-MX">
+  <link rel="alternate" href="https://kasu.com.mx/testimonios" hreflang="x-default">
 
   <!-- Open Graph / Twitter -->
   <meta property="og:type" content="website">
   <meta property="og:locale" content="es_MX">
   <meta property="og:title" content="KASU | Opiniones de clientes">
   <meta property="og:description" content="Lee testimonios auténticos de nuestros clientes. Descubre por qué confían en KASU.">
-  <meta property="og:url" content="https://kasu.com.mx/testimonios.php">
+  <meta property="og:url" content="https://kasu.com.mx/testimonios">
   <meta property="og:site_name" content="Guía funeraria KASU">
-  <meta property="og:image" content="https://kasu.com.mx/assets/images/guiafuneraria.png">
+  <meta property="og:image" content="https://kasu.com.mx/assets/images/guiafuneraria-512.png">
   <meta property="og:image:alt" content="Guía funeraria KASU">
   <meta name="twitter:card" content="summary_large_image">
 
@@ -66,7 +66,7 @@ if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
     "@context":"https://schema.org",
     "@type":"WebPage",
     "name":"Opiniones de clientes KASU",
-    "url":"https://kasu.com.mx/testimonios.php",
+    "url":"https://kasu.com.mx/testimonios",
     "inLanguage":"es-MX",
     "description":"Testimonios auténticos de clientes sobre los servicios funerarios de KASU en México."
   }

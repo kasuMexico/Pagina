@@ -45,6 +45,20 @@ if (isset($_GET['Msg'])) {
   <title>Red KASU | Registro de funerarias</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Integra tu funeraria a la red KASU. Registro de convenios, requisitos y estandares de servicio.">
+  <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
+  <meta name="author" content="KASU Servicios a Futuro">
+  <link rel="canonical" href="https://kasu.com.mx/funerarias">
+  <link rel="alternate" href="https://kasu.com.mx/funerarias" hreflang="es-MX">
+  <link rel="alternate" href="https://kasu.com.mx/funerarias" hreflang="x-default">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="es_MX">
+  <meta property="og:site_name" content="KASU">
+  <meta property="og:title" content="Red KASU | Registro de funerarias">
+  <meta property="og:description" content="Conoce los requisitos para integrar una funeraria a la red de servicios KASU.">
+  <meta property="og:url" content="https://kasu.com.mx/funerarias">
+  <meta property="og:image" content="https://kasu.com.mx/assets/images/guiafuneraria-512.png">
+  <meta property="og:image:alt" content="Red de funerarias KASU">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" sizes="48x48" href="/assets/images/Index/florkasu-48.png">
   <link rel="icon" type="image/png" sizes="96x96" href="/assets/images/Index/florkasu-96.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/Index/florkasu-192.png">
@@ -57,6 +71,17 @@ if (isset($_GET['Msg'])) {
   <link rel="stylesheet" type="text/css" href="/assets/css/index-home.css?v=<?php echo $verCache; ?>">
   <link rel="stylesheet" type="text/css" href="/assets/css/funerarias.css?v=<?php echo $verCache; ?>">
   <link rel="stylesheet" type="text/css" href="/assets/css/kasu-chat.css?v=<?php echo $verCache; ?>">
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"WebPage",
+    "name":"Registro de funerarias en la red KASU",
+    "url":"https://kasu.com.mx/funerarias",
+    "description":"Requisitos y registro para integrar una funeraria a la red de servicios KASU.",
+    "inLanguage":"es-MX",
+    "isPartOf":{"@type":"WebSite","name":"KASU","url":"https://kasu.com.mx/"}
+  }
+  </script>
 </head>
 <body class="kasu-ui funerarias-page">
   <?php require_once __DIR__ . '/html/MenuPrincipal.php'; ?>

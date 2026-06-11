@@ -1,11 +1,11 @@
 <div class="container">
     <div class="col-lg-12">
       <ul class="row d-flex justify-content-center">
-          <li><a class="capital" href="https://kasu.com.mx/testimonios.php">Testimonios</a></li>
+          <li><a class="capital" href="https://kasu.com.mx/testimonios">Testimonios</a></li>
           <li><a class="capital" target="_blank" href="https://kasu.com.mx/login">Equipo Kasu</a></li>
           <li><a class="capital" target="_blank" href="https://kasu.com.mx/desarrollo">Desarrollador</a></li>
-          <li><a class="capital" href="https://kasu.com.mx/terminos-y-condiciones.php">Términos y Condiciones</a></li>
-          <li><a class="capital" href="https://kasu.com.mx/terminos-y-condiciones.php">Política de Privacidad</a></li>
+          <li><a class="capital" href="https://kasu.com.mx/terminos-y-condiciones">Términos y Condiciones</a></li>
+          <li><a class="capital" href="https://kasu.com.mx/privacidad">Política de Privacidad</a></li>
           <li><a class="capital" target="_blank" href="https://kasu.com.mx/letraspeq.php">Legal</a></li>
       </ul>
     </div>

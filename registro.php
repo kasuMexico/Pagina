@@ -229,7 +229,8 @@ if (isset($_GET['Msg'])) {
   <title>Registro de servicio | KASU</title>
     <!-- Canonical y hreflang -->
   <link rel="canonical" href="https://kasu.com.mx/registro.php">
-  <link rel="alternate" hreflang="es-MX" href="https://kasu.com.mx/prospectos.php">
+  <link rel="alternate" hreflang="es-MX" href="https://kasu.com.mx/registro.php">
+  <link rel="alternate" hreflang="x-default" href="https://kasu.com.mx/registro.php">
   
   <!-- Viewport -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -244,13 +245,13 @@ if (isset($_GET['Msg'])) {
   <meta property="og:title" content="Comprar KASU | plagina de compra de servicios">
   <meta property="og:description" content="Adquire tu servicio KASU con cobro a tu tarjeta de debito - credito, o paga en tiendas de convenciencia.">
   <meta property="og:url" content="https://kasu.com.mx/registro.php">
-  <meta property="og:image" content="https://kasu.com.mx/assets/images/guiafuneraria.png">
+  <meta property="og:image" content="https://kasu.com.mx/assets/images/guiafuneraria-512.png">
   <meta property="og:locale" content="es_MX">
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Comprar KASU | plagina de compra de servicios">
   <meta name="twitter:description" content="Adquire tu servicio KASU con cobro a tu tarjeta de debito - credito, o paga en tiendas de convenciencia.">
-  <meta name="twitter:image" content="https://kasu.com.mx/assets/images/guiafuneraria.png">
+  <meta name="twitter:image" content="https://kasu.com.mx/assets/images/guiafuneraria-512.png">
   
   <!-- Iconos -->
   <link rel="icon" type="image/png" sizes="48x48" href="/assets/images/Index/florkasu-48.png">
@@ -422,10 +423,10 @@ if (isset($_GET['Msg'])) {
         <div class="field-wrap" style="padding-top: 10px; padding-bottom: 10px;">
           <ul>
             <li>
-              <input type="checkbox" name="Terminos" required><strong>Acepto</strong> los <a href="/terminos-y-condiciones.php" target="_blank" rel="noopener">Términos y condiciones</a>
+              <input type="checkbox" name="Terminos" required><strong>Acepto</strong> los <a href="/terminos-y-condiciones" target="_blank" rel="noopener">Términos y condiciones</a>
             </li>
             <li>
-              <input type="checkbox" name="Aviso" required><strong>Acepto</strong> el <a href="/privacidad.php" target="_blank" rel="noopener">Aviso de Privacidad</a>
+              <input type="checkbox" name="Aviso" required><strong>Acepto</strong> el <a href="/privacidad" target="_blank" rel="noopener">Aviso de Privacidad</a>
             </li>
             <li>          
               <input type="checkbox" name="Fideicomiso" required><strong>Acepto</strong> los terminos del <a href="/Fideicomiso_F0003.pdf" target="_blank" rel="noopener">Fideicomiso F/0003</a>

@@ -46,7 +46,8 @@ try {
 <head>
     <meta charset="utf-8">
     <meta name="keywords" content="Cobros">
-    <link rel="canonical" href="https://kasu.com.mx">
+    <link rel="canonical" href="https://kasu.com.mx/apimarket/documentacion/doc_accounts.php">
+    <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Documentación API_ACCOUNTS V1 para registrar servicios KASU, generar póliza y liga de pago.">
     <meta name="author" content="Jose Carlos Cabrera Monroy">
@@ -57,7 +58,6 @@ try {
     <!-- CSS -->
     <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/font-awesome.css">
-    <link rel="stylesheet" href="https://kasu.com.mx/assets/css/index.css">
     <link rel="stylesheet" href="../assets/index.css">
     <link rel="stylesheet" href="../assets/codigo.css">
 </head>
@@ -153,8 +153,8 @@ try {
                         <tr><td>numero_pagos</td><td style="text-align: justify;">Número de pagos elegidos. Si es mayor a 1 se calcula crédito.</td></tr>
                         <tr><td>dia_pago</td><td style="text-align: justify;">Día de pago mensual permitido: <strong>1</strong> o <strong>15</strong>. En contado se registra como 0.</td></tr>
                         <tr><td>tipo_servicio</td><td style="text-align: justify;">Tipo de servicio KASU. Si no se envía, se usa <strong>Ecologico</strong>.</td></tr>
-                        <tr><td>terminos</td><td style="text-align: justify;">Aceptación de <a href="https://kasu.com.mx/terminos-y-condiciones.php"><strong>Términos y Condiciones</strong></a>. Valores: <strong>acepto</strong> o <strong>accept</strong>.</td></tr>
-                        <tr><td>aviso</td><td style="text-align: justify;">Aceptación del <a href="https://kasu.com.mx/terminos-y-condiciones.php"><strong>Aviso de Privacidad</strong></a>. Valores: <strong>acepto</strong> o <strong>accept</strong>.</td></tr>
+                        <tr><td>terminos</td><td style="text-align: justify;">Aceptación de <a href="https://kasu.com.mx/terminos-y-condiciones"><strong>Términos y Condiciones</strong></a>. Valores: <strong>acepto</strong> o <strong>accept</strong>.</td></tr>
+                        <tr><td>aviso</td><td style="text-align: justify;">Aceptación del <a href="https://kasu.com.mx/privacidad"><strong>Aviso de Privacidad</strong></a>. Valores: <strong>acepto</strong> o <strong>accept</strong>.</td></tr>
                         <tr><td>fideicomiso</td><td style="text-align: justify;">Ingreso al <a href="https://kasu.com.mx/Fideicomiso_F0003.pdf"><strong>Fideicomiso F/0003</strong></a>. Valores: <strong>acepto</strong> o <strong>accept</strong>.</td></tr>
                         <tr><td>direccion.calle</td><td style="text-align: justify;">Calle del cliente.</td></tr>
                         <tr><td>direccion.numero</td><td style="text-align: justify;">Número de casa.</td></tr>

@@ -25,27 +25,28 @@ require_once __DIR__ . '/eia/librerias.php';
   <meta name="theme-color" content="#F1F1FC">
 
   <!-- Canonical -->
-  <link rel="canonical" href="https://kasu.com.mx/privacidad.php">
+  <link rel="canonical" href="https://kasu.com.mx/privacidad">
+  <link rel="alternate" href="https://kasu.com.mx/privacidad" hreflang="es-MX">
+  <link rel="alternate" href="https://kasu.com.mx/privacidad" hreflang="x-default">
 
   <!-- Open Graph -->
   <?php
     // URL absoluta segura
-    $reqUri = $_SERVER['REQUEST_URI'] ?? '/privacidad.php';
-    $absUrl = 'https://kasu.com.mx' . strtok($reqUri, ' ');
+    $absUrl = 'https://kasu.com.mx/privacidad';
   ?>
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Guía funeraria KASU">
   <meta property="og:url" content="<?php echo htmlspecialchars($absUrl, ENT_QUOTES, 'UTF-8'); ?>">
   <meta property="og:title" content="Aviso de Privacidad | KASU">
   <meta property="og:description" content="Transparencia y cumplimiento: conoce nuestro aviso de privacidad y uso de datos">
-  <meta property="og:image" content="https://kasu.com.mx/assets/images/guiafuneraria.png">
+  <meta property="og:image" content="https://kasu.com.mx/assets/images/guiafuneraria-512.png">
   <meta property="og:image:alt" content="Guía funeraria KASU">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Aviso de Privacidad | KASU">
   <meta name="twitter:description" content="Transparencia y cumplimiento: conoce nuestro aviso de privacidad y uso de datos">
-  <meta name="twitter:image" content="https://kasu.com.mx/assets/images/guiafuneraria.png">
+  <meta name="twitter:image" content="https://kasu.com.mx/assets/images/guiafuneraria-512.png">
 
   <!-- JSON-LD WebPage -->
   <script type="application/ld+json">

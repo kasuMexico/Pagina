@@ -67,12 +67,12 @@ if ($qsMsg !== null) {
     <meta property="og:title" content="Planes funerarios y servicios funerarios | KASU">
     <meta property="og:description" content="Planes funerarios y servicios funerarios con Plan Servicios funerarios y planes de prevision. Cobertura nacional y red de funeraria.">
     <meta property="og:url" content="https://kasu.com.mx/">
-    <meta property="og:image" content="https://kasu.com.mx/assets/images/guiafuneraria.png">
+    <meta property="og:image" content="https://kasu.com.mx/assets/images/guiafuneraria-512.png">
     <meta property="og:image:alt" content="Guía funeraria KASU">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Planes funerarios y servicios funerarios | KASU">
     <meta name="twitter:description" content="Planes funerarios y servicios funerarios con Plan Servicios funerarios y planes de prevision. Atencion inmediata 24/7.">
-    <meta name="twitter:image" content="https://kasu.com.mx/assets/images/guiafuneraria.png">
+    <meta name="twitter:image" content="https://kasu.com.mx/assets/images/guiafuneraria-512.png">
 
     <!-- PWA/Branding menor -->
     <meta name="theme-color" content="#F1F1FC">
@@ -119,7 +119,7 @@ if ($qsMsg !== null) {
           "@type": "Organization",
           "name": "KASU",
           "url": "https://kasu.com.mx/",
-          "logo": "/assets/images/Index/florkasu.png",
+          "logo": "https://kasu.com.mx/assets/images/Index/florkasu.png",
           "brand": "KASU",
           "sameAs": [
             "https://www.facebook.com/KasuMexico",
@@ -139,12 +139,7 @@ if ($qsMsg !== null) {
           "@type": "WebSite",
           "name": "KASU",
           "url": "https://kasu.com.mx/",
-          "inLanguage": "es-MX",
-          "potentialAction": {
-            "@type": "SearchAction",
-            "target": "https://kasu.com.mx/?q={search_term_string}",
-            "query-input": "required name=search_term_string"
-          }
+          "inLanguage": "es-MX"
         }
       ]
     }
@@ -249,7 +244,7 @@ if ($qsMsg !== null) {
     <section class="section colored" id="testimonials">
         <div class="container">
             <div class="opiniones-header">
-                <p>En KASU no inventamos reseñas; conoce las <strong><a target="_blank" rel="noopener" href="/testimonios.php">Opiniones Reales</a></strong> de nuestros clientes.</p>
+                <p>En KASU no inventamos reseñas; conoce las <strong><a target="_blank" rel="noopener" href="/testimonios">Opiniones Reales</a></strong> de nuestros clientes.</p>
             </div>
         </div>
         <?php
@@ -361,6 +356,31 @@ if ($qsMsg !== null) {
     </section>
 
     <!-- Final - Articulos de Blog -->
+
+    <section class="home-faq-section" aria-labelledby="home-faq-title">
+        <div class="container">
+            <div class="home-faq-header">
+                <p class="clients-eyebrow">Respuestas claras antes de contratar</p>
+                <h2 class="clients-title" id="home-faq-title">Preguntas frecuentes sobre los servicios KASU</h2>
+                <p>Consulta información basada en el contrato sobre activación, servicios incluidos y cómo solicitar atención.</p>
+            </div>
+            <div class="home-faq-grid">
+                <article>
+                    <h3>¿Cuándo se activa el servicio?</h3>
+                    <p>Después de liquidar totalmente el precio y transcurrir 30 días naturales posteriores a la liquidación y activación en el fideicomiso.</p>
+                </article>
+                <article>
+                    <h3>¿Qué puede incluir?</h3>
+                    <p>Traslados dentro del límite contratado, velación, cafetería, acondicionamiento, ataúd o urna, trámites y cremación cuando fue seleccionada.</p>
+                </article>
+                <article>
+                    <h3>¿Cómo se solicita?</h3>
+                    <p>Contacta a KASU con los datos de tu póliza. La funeraria designada validará al titular mediante su CURP.</p>
+                </article>
+            </div>
+            <a class="home-faq-link" href="/preguntas-frecuentes">Consultar todas las preguntas frecuentes</a>
+        </div>
+    </section>
 
 
     <!-- Footer -->

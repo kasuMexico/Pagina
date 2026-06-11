@@ -308,7 +308,7 @@
   "@context":"https://schema.org",
   "@type":"CollectionPage",
   "name":"KASU NFT",
-  "url":"https://kasu.com.mx/nft.php",
+  "url":"https://kasu.com.mx/nft",
   "about": {
     "@type":"Thing",
     "name":"KASU NFT - colección y recompensas por staking"

@@ -107,14 +107,14 @@ if (isset($_GET['Msg'])) {
   <meta property="og:title" content="API Market KASU V1 | APIs de cuentas, pagos, clientes y validación">
   <meta property="og:description" content="Conecta tu plataforma a API_ACCOUNTS, API_PAYMENTS, API_CUSTOMER y Validate_Mexico con seguridad y soporte.">
   <meta property="og:url" content="https://kasu.com.mx/apimarket/">
-  <meta property="og:image" content="https://kasu.com.mx/assets/images/og/kasu-apimarket.png">
+  <meta property="og:image" content="https://kasu.com.mx/assets/images/Index/ksulogo.png">
   <meta property="og:locale" content="es_MX">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="API Market de KASU | Open banking y servicios fintech integrables">
   <meta name="twitter:description" content="Integra cuentas, pagos, clientes y validaciones CURP/RFC a tu app con APIs KASU V1.">
-  <meta name="twitter:image" content="https://kasu.com.mx/assets/images/og/kasu-apimarket.png">
+  <meta name="twitter:image" content="https://kasu.com.mx/assets/images/Index/ksulogo.png">
 
   <!-- Icono -->
   <link rel="icon" href="https://kasu.com.mx/assets/images/Index/florkasu.png">
@@ -125,7 +125,6 @@ if (isset($_GET['Msg'])) {
   <!-- CSS externo + local -->
   <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/bootstrap.min.css">
   <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/font-awesome.css">
-  <link rel="stylesheet" href="https://kasu.com.mx/assets/css/index.css">
   <link rel="stylesheet" href="<?php echo htmlspecialchars($assetPrefix . 'index.css', ENT_QUOTES, 'UTF-8'); ?>">
   <link rel="stylesheet" href="<?php echo htmlspecialchars($assetPrefix . 'codigo.css', ENT_QUOTES, 'UTF-8'); ?>">
 
@@ -141,7 +140,7 @@ if (isset($_GET['Msg'])) {
         "@type": "Organization",
         "name": "KASU",
         "url": "https://kasu.com.mx/",
-        "logo": "/assets/images/Index/florkasu.png",
+        "logo": "https://kasu.com.mx/assets/images/Index/florkasu.png",
         "sameAs": [
           "https://www.facebook.com/kasu.mx",
           "https://www.linkedin.com/company/kasu-mx"
@@ -150,12 +149,7 @@ if (isset($_GET['Msg'])) {
       {
         "@type": "WebSite",
         "name": "KASU",
-        "url": "https://kasu.com.mx/",
-        "potentialAction": {
-          "@type": "SearchAction",
-          "target": "https://kasu.com.mx/buscar?q={search_term_string}",
-          "query-input": "required name=search_term_string"
-        }
+        "url": "https://kasu.com.mx/"
       },
       {
         "@type": "WebPage",

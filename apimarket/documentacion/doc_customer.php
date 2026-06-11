@@ -52,6 +52,7 @@ if (isset($mysqli) && ($mysqli instanceof mysqli)) {
     <meta charset="utf-8">
     <meta name="keywords" content="Cobros">
     <link rel="canonical" href="https://kasu.com.mx<?php echo htmlspecialchars(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/', ENT_QUOTES, 'UTF-8'); ?>">
+    <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="Documentación API_CUSTOMER V1 para consultar clientes, catálogo de productos y ventas autorizadas.">
     <meta name="author" content="Jose Carlos Cabrera Monroy">
@@ -62,7 +63,6 @@ if (isset($mysqli) && ($mysqli instanceof mysqli)) {
     <!-- Additional CSS Files -->
     <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/font-awesome.css">
-    <link rel="stylesheet" href="https://kasu.com.mx/assets/css/index.css">
     <link rel="stylesheet" href="../assets/index.css">
     <link rel="stylesheet" href="../assets/codigo.css">
 </head>

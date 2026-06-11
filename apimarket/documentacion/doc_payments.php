@@ -17,7 +17,8 @@ require_once '../librerias_api.php';
 <head>
   <meta charset="utf-8">
   <meta name="keywords" content="Cobros">
-  <link rel="canonical" href="kasu.com.mx">
+  <link rel="canonical" href="https://kasu.com.mx/apimarket/documentacion/doc_payments.php">
+  <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="description" content="Documentación API_PAYMENTS V1 para consultar estado de cuenta y registrar pagos PSD2.">
   <meta name="author" content="Jose Carlos cabrera Monroy">
@@ -28,7 +29,6 @@ require_once '../librerias_api.php';
   <!-- Additional CSS Files -->
   <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/bootstrap.min.css">
   <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/font-awesome.css">
-  <link rel="stylesheet" href="https://kasu.com.mx/assets/css/index.css">
   <link rel="stylesheet" href="../assets/index.css">
   <link rel="stylesheet" href="../assets/codigo.css">
 </head>

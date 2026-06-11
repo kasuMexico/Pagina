@@ -31,6 +31,8 @@
       <div class="footer-col">
         <p class="footer-heading">KASU</p>
         <ul class="footer-links" role="list">
+          <li><a href="/preguntas-frecuentes" title="Preguntas frecuentes sobre KASU">Preguntas frecuentes</a></li>
+          <li><a href="/productos/gastos-funerarios" title="Plan de gastos funerarios KASU">Plan funerario</a></li>
           <li><a href="/testimonios" title="Testimonios de clientes">Testimonios</a></li>
           <li><a target="_blank" rel="noopener" href="/login" title="Acceso al equipo KASU">Equipo KASU</a></li>
         </ul>
@@ -68,6 +70,8 @@
 </div>
 
 <?php
-// Cerramos las conexiones a la base de datos
-mysqli_close($mysqli);
+// Cerramos la conexión cuando la página realmente la utiliza.
+if (isset($mysqli) && $mysqli instanceof mysqli) {
+  mysqli_close($mysqli);
+}
 ?>

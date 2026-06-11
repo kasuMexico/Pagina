@@ -39,6 +39,14 @@ RewriteRule ^privacidad\.php$ /privacidad [R=301,L]
 RewriteCond %{THE_REQUEST} \s/+prospectos\.php[?\s] [NC]
 RewriteRule ^prospectos\.php$ /prospectos [R=301,L]
 
+RewriteCond %{THE_REQUEST} \s/+preguntas-frecuentes\.php[?\s] [NC]
+RewriteRule ^preguntas-frecuentes\.php$ /preguntas-frecuentes [R=301,L]
+
+RewriteCond %{THE_REQUEST} \s/+link\.php[?\s] [NC]
+RewriteRule ^link\.php$ /linktree [R=301,L]
+
+RewriteRule ^link/?$ /linktree [R=301,L]
+
 RewriteCond %{THE_REQUEST} \s/+ActualizacionDatos/index\.php[?\s] [NC]
 RewriteRule ^ActualizacionDatos/index\.php$ /ActualizacionDatos/ [R=301,L]
 
@@ -96,6 +104,8 @@ RewriteRule ^funerarias/?$               /funerarias.php             [QSA,L]
 RewriteRule ^terminos-y-condiciones/?$   /terminos-y-condiciones.php [QSA,L]
 RewriteRule ^privacidad/?$               /privacidad.php             [QSA,L]
 RewriteRule ^prospectos/?$               /prospectos.php             [QSA,L]
+RewriteRule ^preguntas-frecuentes/?$     /preguntas-frecuentes.php   [QSA,L]
+RewriteRule ^linktree/?$                 /link.php                    [QSA,L]
 RewriteRule ^nft/?$                      /nft.php                    [QSA,L]
 RewriteRule ^fundacion/?$                /fundacion.php              [QSA,L]
 

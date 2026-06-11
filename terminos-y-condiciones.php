@@ -21,18 +21,18 @@ require_once __DIR__ . '/eia/librerias.php';
   <meta name="description" content="Lee los Términos y Condiciones de KASU. Transparencia, uso de servicios y responsabilidades.">
   <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
   <meta name="author" content="Erendida Itzel Castro Marquez">
-  <link rel="canonical" href="https://kasu.com.mx/terminos-y-condiciones.php">
-  <link rel="alternate" href="https://kasu.com.mx/terminos-y-condiciones.php" hreflang="es-MX">
-  <link rel="alternate" href="https://kasu.com.mx/terminos-y-condiciones.php" hreflang="x-default">
+  <link rel="canonical" href="https://kasu.com.mx/terminos-y-condiciones">
+  <link rel="alternate" href="https://kasu.com.mx/terminos-y-condiciones" hreflang="es-MX">
+  <link rel="alternate" href="https://kasu.com.mx/terminos-y-condiciones" hreflang="x-default">
 
   <!-- Open Graph / Twitter -->
   <meta property="og:type" content="website">
   <meta property="og:locale" content="es_MX">
   <meta property="og:title" content="Términos y Condiciones | KASU">
   <meta property="og:description" content="Condiciones de uso de los servicios KASU, licencias de contenido y responsabilidades.">
-  <meta property="og:url" content="https://kasu.com.mx/terminos-y-condiciones.php">
+  <meta property="og:url" content="https://kasu.com.mx/terminos-y-condiciones">
   <meta property="og:site_name" content="Guía funeraria KASU">
-  <meta property="og:image" content="https://kasu.com.mx/assets/images/guiafuneraria.png">
+  <meta property="og:image" content="https://kasu.com.mx/assets/images/guiafuneraria-512.png">
   <meta property="og:image:alt" content="Guía funeraria KASU">
   <meta name="twitter:card" content="summary_large_image">
 
@@ -57,7 +57,7 @@ require_once __DIR__ . '/eia/librerias.php';
     "@context":"https://schema.org",
     "@type":"WebPage",
     "name":"Términos y Condiciones",
-    "url":"https://kasu.com.mx/terminos-y-condiciones.php",
+    "url":"https://kasu.com.mx/terminos-y-condiciones",
     "inLanguage":"es-MX",
     "description":"Condiciones de uso de los servicios KASU, licencias y responsabilidades."
   }

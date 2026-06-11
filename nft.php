@@ -69,7 +69,7 @@ function some_function3($VAr) {
   <?php
     // SEO dinámico por idioma (no altera lógica)
     $lg  = $Lgj;
-    $abs = 'https://kasu.com.mx' . strtok($_SERVER['REQUEST_URI'] ?? '/nft.php',' ');
+    $abs = 'https://kasu.com.mx/nft' . (isset($_GET['Lg']) ? '?Lg=' . urlencode($lg) : '');
     $titleMap = [
       'Espanol' => 'THE KASU NFT | Recompensas por cada NFT',
       'Ingles'  => 'THE KASU NFT | Rewards for every NFT',
@@ -94,13 +94,13 @@ function some_function3($VAr) {
   <meta name="theme-color" content="#F1F1FC">
 
   <!-- Canonical -->
-  <link rel="canonical" href="https://kasu.com.mx/nft.php<?= isset($_GET['Lg']) ? '?Lg='.urlencode($lg) : '' ?>">
+  <link rel="canonical" href="<?= htmlspecialchars($abs, ENT_QUOTES, 'UTF-8') ?>">
 
   <!-- Hreflang -->
-  <link rel="alternate" href="https://kasu.com.mx/nft.php?Lg=Espanol" hreflang="es-MX">
-  <link rel="alternate" href="https://kasu.com.mx/nft.php?Lg=Ingles"  hreflang="en">
-  <link rel="alternate" href="https://kasu.com.mx/nft.php?Lg=Aleman"  hreflang="de">
-  <link rel="alternate" href="https://kasu.com.mx/nft.php"           hreflang="x-default">
+  <link rel="alternate" href="https://kasu.com.mx/nft?Lg=Espanol" hreflang="es-MX">
+  <link rel="alternate" href="https://kasu.com.mx/nft?Lg=Ingles"  hreflang="en">
+  <link rel="alternate" href="https://kasu.com.mx/nft?Lg=Aleman"  hreflang="de">
+  <link rel="alternate" href="https://kasu.com.mx/nft"             hreflang="x-default">
 
   <!-- Open Graph -->
   <meta property="og:type" content="website">
@@ -203,9 +203,9 @@ function some_function3($VAr) {
           <div class="kasu-nft__lang">
             <label for="kasu-lang" class="sr-only"><?= htmlspecialchars($hero['lang_label'], ENT_QUOTES, 'UTF-8') ?></label>
             <select id="kasu-lang" class="kasu-nft__lang-select" onchange="this.value && (window.location = this.value);">
-              <option value="https://kasu.com.mx/nft.php?Lg=Espanol" <?= $Lgj === 'Espanol' ? 'selected' : '' ?>>Español</option>
-              <option value="https://kasu.com.mx/nft.php?Lg=Ingles" <?= $Lgj === 'Ingles' ? 'selected' : '' ?>>English</option>
-              <option value="https://kasu.com.mx/nft.php?Lg=Aleman" <?= $Lgj === 'Aleman' ? 'selected' : '' ?>>Deutsch</option>
+              <option value="https://kasu.com.mx/nft?Lg=Espanol" <?= $Lgj === 'Espanol' ? 'selected' : '' ?>>Español</option>
+              <option value="https://kasu.com.mx/nft?Lg=Ingles" <?= $Lgj === 'Ingles' ? 'selected' : '' ?>>English</option>
+              <option value="https://kasu.com.mx/nft?Lg=Aleman" <?= $Lgj === 'Aleman' ? 'selected' : '' ?>>Deutsch</option>
             </select>
           </div>
         </div>

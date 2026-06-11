@@ -179,8 +179,9 @@ if (isset($_GET['Msg'])) {
   <title>Regístrate para recibir información | KASU</title>
 
   <!-- Canonical y hreflang -->
-  <link rel="canonical" href="https://kasu.com.mx/prospectos.php">
-  <link rel="alternate" hreflang="es-MX" href="https://kasu.com.mx/prospectos.php">
+  <link rel="canonical" href="https://kasu.com.mx/prospectos">
+  <link rel="alternate" hreflang="es-MX" href="https://kasu.com.mx/prospectos">
+  <link rel="alternate" hreflang="x-default" href="https://kasu.com.mx/prospectos">
 
   <!-- Viewport -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -195,15 +196,15 @@ if (isset($_GET['Msg'])) {
   <meta property="og:site_name" content="KASU Servicios a Futuro">
   <meta property="og:title" content="KASU | Regístrate para recibir información">
   <meta property="og:description" content="Déjanos tus datos para que un asesor KASU te brinde toda la información que necesitas.">
-  <meta property="og:url" content="https://kasu.com.mx/prospectos.php">
-  <meta property="og:image" content="https://kasu.com.mx/assets/images/guiafuneraria.png">
+  <meta property="og:url" content="https://kasu.com.mx/prospectos">
+  <meta property="og:image" content="https://kasu.com.mx/assets/images/guiafuneraria-512.png">
   <meta property="og:locale" content="es_MX">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="KASU | Regístrate para recibir información">
   <meta name="twitter:description" content="Déjanos tus datos para que un asesor KASU te brinde toda la información que necesitas.">
-  <meta name="twitter:image" content="https://kasu.com.mx/assets/images/guiafuneraria.png">
+  <meta name="twitter:image" content="https://kasu.com.mx/assets/images/guiafuneraria-512.png">
 
   <!-- Iconos -->
   <link rel="icon" type="image/png" sizes="48x48" href="/assets/images/Index/florkasu-48.png">
@@ -581,7 +582,7 @@ if (isset($_GET['Msg'])) {
           <div class="ProspectoLegal">
             KASU Servicios a Futuro utilizara tus datos unicamente para contactarte y
             brindarte informacion sobre nuestros servicios, conforme a nuestro
-            <a href="/privacidad.php" target="_blank" rel="noopener">Aviso de Privacidad</a>.
+            <a href="/privacidad" target="_blank" rel="noopener">Aviso de Privacidad</a>.
           </div>
 
           <?php if (!empty($opiniones)): ?>

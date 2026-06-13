@@ -4,10 +4,30 @@ User-agent: *
 # Privado / internos
 Disallow: /login/
 Disallow: /eia/
+Disallow: /php/
+Disallow: /pago/
+Disallow: /hooks/
+Disallow: /config/
+Disallow: /tmp/
+Disallow: /ActualizacionDatos/
 Disallow: /vendor/
+Disallow: /apimarket/api/
+Disallow: /apimarket/Funciones/
+Disallow: /apimarket/acceso.php
+Disallow: /apimarket/contacto.php
 Disallow: /cgi-bin/
 Disallow: /phpmyadmin/
 Disallow: /error.php
+Disallow: /constructor.php
+Disallow: /edocta.php
+
+# Páginas públicas prioritarias
+Allow: /
+Allow: /preguntas-frecuentes.php
+Allow: /registro.php
+Allow: /productos.php
+Allow: /prospectos.php
+Allow: /sitemap.xml
 
 # Evita URLs con parámetros de tracking o sesiones
 Disallow: /*?*utm_*
@@ -26,7 +46,6 @@ Allow: /blog/wp-admin/admin-ajax.php
 
 # Sitemaps
 Sitemap: https://kasu.com.mx/sitemap.xml
-Sitemap: https://kasu.com.mx/blog/sitemap_index.xml
 
 # Host preferido (algunos bots como Yandex lo usan)
 Host: kasu.com.mx

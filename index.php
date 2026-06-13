@@ -76,6 +76,7 @@ if ($qsMsg !== null) {
 
     <!-- PWA/Branding menor -->
     <meta name="theme-color" content="#F1F1FC">
+    <meta name="msvalidate.01" content="986F6A43DD95C6795AA17CBB12C332D1" />
 
     <!-- Conexiones rápidas -->
     <link rel="dns-prefetch" href="//kasu.com.mx">

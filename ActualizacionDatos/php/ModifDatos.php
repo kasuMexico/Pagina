@@ -15,16 +15,6 @@
                 <div class="font-weight-bold"><?php echo h($venta['Nombre']); ?></div>
               </div>
               <div class="col-md-4 mb-2">
-                <small class="text-muted">Producto</small>
-                <div class="font-weight-bold"><?php echo h($ProductoComprado); ?></div>
-              </div>
-              <div class="col-md-4 mb-2">
-                <small class="text-muted">Status de la póliza</small>
-                <div class="font-weight-bold">
-                  <span class="badge badge-pagado"><?php echo h((string)($venta['Status'] ?? '')); ?></span>
-                </div>
-              </div>
-              <div class="col-md-4 mb-2">
                 <small class="text-muted">Tipo de servicio</small>
                 <div class="font-weight-bold"><?php echo h((string)($venta['TipoServicio'] ?? '')); ?></div>
               </div>

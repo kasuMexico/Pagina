@@ -337,6 +337,9 @@ for ($i=0; $i<6; $i++) {
         <a href="#" class="nav-link active" data-target="#sec-estado">
           <i class="fa fa-list-alt"></i> &nbsp; Mis Referidos
         </a>
+        <a href="#" class="nav-link" data-target="#sec-polizas">
+          <i class="fa fa-credit-card"></i> &nbsp; Mis Pólizas
+        </a>
         <a href="#" class="nav-link" data-target="#sec-sociales">
           <i class="fa fa-share-square"></i> &nbsp; Compartir KASU
         </a>
@@ -371,6 +374,9 @@ for ($i=0; $i<6; $i++) {
         
         // Sección: Compartir KASU (incluye datos cliente + tarjetas)
         require_once $base . '/CompartirRedes.php';
+
+        // Sección: Mis Pólizas (tarjetas NFT con todas las pólizas del cliente)
+        require_once $base . '/MisPolizas.php';
 
         // Modal de edición (siempre disponible)
         require_once $base . '/ModalEditarDatos.php';

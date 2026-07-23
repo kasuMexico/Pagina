@@ -619,7 +619,10 @@ document.addEventListener('DOMContentLoaded', function () {
         slides[current].classList.add('is-active');
     }, intervalMs);
 
-});\n</script>\n\n<?php require_once __DIR__ . '/html/kasu-chat-widget.php'; ?>\n\n</body>\n</html>
+});
+</script>
+
+<?php require_once __DIR__ . '/html/kasu-chat-widget.php'; ?>
 
 </body>
 </html>

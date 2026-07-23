@@ -1,69 +1,78 @@
         <section id="sec-datos" class="section">
-          <div class="card-kasu">
-            <h5 class="features-title mb-3">Modificar mis datos</h5>
 
-            <form id="ActDatCli" method="post" action="/login/php/Funcionalidad_Pwa.php" autocomplete="off">
-              <input type="hidden" name="IdVenta"   value="<?php echo h((string)$venta['Id']); ?>">
-              <input type="hidden" name="IdContact" value="<?php echo h((string)$venta['IdContact']); ?>">
-              <input type="hidden" name="Host"      value="<?php echo h((string)($_SERVER['PHP_SELF'] ?? '')); ?>">
-              <input type="hidden" name="CURP"      value="<?php echo h($curp); ?>">
-              <input type="hidden" name="Poliza"    value="<?php echo h($venta['IdFIrma']); ?>">
+          <!-- Datos del cliente (solo lectura) -->
+          <div class="card-kasu mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="features-title mb-0">Mis datos</h5>
+              <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#modalEditarDatos">
+                <i class="fa fa-pencil"></i> Editar
+              </button>
+            </div>
 
-              <div class="form-group">
-                <label>Nombre</label>
-                <h2 class="text-center"><strong><?php echo h($venta['Nombre']); ?></strong></h2>
+            <div class="row datos-cliente">
+              <div class="col-md-4 mb-2">
+                <small class="text-muted">Nombre</small>
+                <div class="font-weight-bold"><?php echo h($venta['Nombre']); ?></div>
               </div>
-
-              <div class="row">
-                <div class="col-md-6">
-                  <label>Producto</label>
-                  <h2 class="text-center"><strong><?php echo h($ProductoComprado); ?></strong></h2>
+              <div class="col-md-4 mb-2">
+                <small class="text-muted">Producto</small>
+                <div class="font-weight-bold"><?php echo h($ProductoComprado); ?></div>
+              </div>
+              <div class="col-md-4 mb-2">
+                <small class="text-muted">Status de la póliza</small>
+                <div class="font-weight-bold">
+                  <span class="badge badge-pagado"><?php echo h((string)($venta['Status'] ?? '')); ?></span>
                 </div>
-                <div class="col-md-6">
-                  <label>Status de la póliza</label>
-                  <h2 class="text-center"><strong><?php echo h((string)($venta['Status'] ?? '')); ?></strong></h2>
+              </div>
+              <div class="col-md-4 mb-2">
+                <small class="text-muted">Tipo de servicio</small>
+                <div class="font-weight-bold"><?php echo h((string)($venta['TipoServicio'] ?? '')); ?></div>
+              </div>
+              <div class="col-md-8 mb-2">
+                <small class="text-muted">Dirección</small>
+                <div class="font-weight-bold">
+                  <?php
+                    $dirPartes = array_filter([
+                      $addr['calle'] ?? '',
+                      ($addr['numero'] ?? '') ? 'No. ' . $addr['numero'] : '',
+                      $addr['colonia'] ?? '',
+                      $addr['codigo_postal'] ?? '',
+                      $addr['municipio'] ?? '',
+                      $addr['estado'] ?? ''
+                    ], fn($s) => $s !== '');
+                    echo h(implode(', ', $dirPartes));
+                  ?>
                 </div>
               </div>
-
-              <hr>
-
-              <div class="form-group">
-                <label>Cambia tu tipo de servicio</label>
-                <select class="form-control" name="TipoServ">
-                  <option value="Tradicional" <?php echo $venta['TipoServicio']==='Tradicional'?'selected':''; ?>>TRADICIONAL</option>
-                  <option value="Cremacion"   <?php echo $venta['TipoServicio']==='Cremacion'?'selected':''; ?>>CREMACION</option>
-                  <option value="Ecologico"   <?php echo $venta['TipoServicio']==='Ecologico'?'selected':''; ?>>ECOLOGICO</option>
-                </select>
+              <div class="col-md-4 mb-2">
+                <small class="text-muted">Teléfono</small>
+                <div class="font-weight-bold"><?php echo h($addr['Telefono']); ?></div>
               </div>
-
-              <label>Cambia la dirección</label>
-              <div class="mb-2">
-                <input class="form-control mb-2" type="text" name="Codigo_Postal" value="<?php echo h($addr['codigo_postal']); ?>" placeholder="Código Postal">
-                <div class="row mb-2">
-                  <div class="col-6"><input class="form-control" type="text" name="Calle"   value="<?php echo h($addr['calle']); ?>"   placeholder="Nombre de la Calle"></div>
-                  <div class="col-6"><input class="form-control" type="text" name="Numero"  value="<?php echo h($addr['numero']); ?>"  placeholder="Número de la Casa"></div>
-                </div>
-                <input class="form-control mb-2" type="text" name="Colonia" value="<?php echo h($addr['colonia']); ?>" placeholder="Colonia / Localidad">
-                <div class="row mb-2">
-                  <div class="col-6"><input class="form-control" type="text" name="Municipio" value="<?php echo h($addr['municipio']); ?>" placeholder="Municipio"></div>
-                  <div class="col-6"><input class="form-control" type="text" name="Estado"    value="<?php echo h($addr['estado']); ?>"    placeholder="Estado"></div>
-                </div>
-                <input class="form-control" type="text" name="Referencia" value="<?php echo h($addr['Referencia']); ?>" placeholder="Referencia del domicilio">
+              <div class="col-md-4 mb-2">
+                <small class="text-muted">Email</small>
+                <div class="font-weight-bold" style="word-break:break-all;"><?php echo h($addr['Mail']); ?></div>
               </div>
-
-              <div class="form-group">
-                <label>Teléfono</label>
-                <input class="form-control" type="text" name="Telefono" value="<?php echo h($addr['Telefono']); ?>">
+              <?php if (!empty($addr['Referencia'])): ?>
+              <div class="col-md-8 mb-2">
+                <small class="text-muted">Referencia del domicilio</small>
+                <div class="font-weight-bold"><?php echo h($addr['Referencia']); ?></div>
               </div>
-
-              <div class="form-group">
-                <label>Email</label>
-                <input class="form-control" type="email" name="Email" value="<?php echo h($addr['Mail']); ?>">
-              </div>
-
-              <div class="mt-2">
-                <button type="submit" name="CamDat" class="btn btn-primary">Guardar cambios</button>
-              </div>
-            </form>
+              <?php endif; ?>
+            </div>
           </div>
+
+          <!-- Explicación + Tarjetas de promoción -->
+          <div class="card-kasu">
+            <div class="text-center mb-3">
+              <h5 class="features-title mb-2">Comparte KASU y gana</h5>
+              <p class="text-muted mb-0" style="font-size:14px;">
+                Estas tarjetas sirven para hacer promoción a KASU. Si alguien compra utilizando una de tus tarjetas, 
+                <strong>recibes una comisión como cliente</strong>. ¡Comparte en tus redes y genera ingresos extras!
+              </p>
+            </div>
+            <div class="row">
+              <?php include __DIR__ . '/_tarjetas_html.php'; ?>
+            </div>
+          </div>
+
         </section>

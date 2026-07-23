@@ -1,180 +1,97 @@
 <?php
 /********************************************************************************************
- * Qué hace: Renderiza “Post Sociales” para vendedores autenticados. Muestra cupones de venta
- *           y artículos compartibles en redes, calculando comisión estimada según nivel.
- * Criterios: solo tarjetas activas (Validez_Fin >= hoy o NULL) y orden aleatorio en cada carga.
- * Fecha: 09/11/2025
- * Revisado por: JCCM
+ * Qué hace: Sección "Compartir KASU" – muestra datos del cliente + tarjetas de promoción.
+ * Fecha: 23/07/2026
  ********************************************************************************************/
-
 declare(strict_types=1);
-
-/* ==========================================================================================
- * BLOQUE: Datos de usuario / comisiones
- * ========================================================================================== */
-$PorCom = (float)($basicas->BuscarCampos($mysqli, 'N' . 7, 'Comision', 'Id', 2) ?? 0);
-
-/* ==========================================================================================
- * BLOQUE: Helpers de consulta local (prepared statements)
- * ========================================================================================== */
-/** Tarjetas activas por tipo en orden aleatorio */
-function getActivePosts(mysqli $db, string $tipo, int $limit): array {
-  $sql = "SELECT Id, Red, DesA, TitA, Producto, Img
-          FROM PostSociales
-          WHERE Status = 1
-            AND Tipo   = ?
-            AND (Validez_Fin IS NULL OR Validez_Fin = '' OR Validez_Fin >= CURDATE())
-          ORDER BY RAND()
-          LIMIT ?";
-  $stmt = $db->prepare($sql);
-  if ($stmt === false) return [];
-  $stmt->bind_param('si', $tipo, $limit);
-  $stmt->execute();
-  $res  = $stmt->get_result();
-  $rows = $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
-  $stmt->close();
-  return $rows;
-}
-
-/** Comisión por producto mostrado */
-function comisionPorProducto(mysqli $db, string $producto, float $porcentaje): float {
-  $gen = (float)($GLOBALS['basicas']->BuscarCampos($db, 'comision', 'Productos', 'Producto', $producto) ?? 0);
-  return $gen * ($porcentaje / 100.0);
-}
-
-/* ==========================================================================================
- * BLOQUE: Identidad de referidos y share URLs
- * ========================================================================================== */
-$IdFirma = (string)($venta['IdFIrma'] ?? ($_SESSION['Vendedor'] ?? ''));
-
-/** URLs de share por red */
-function buildShare(array $reg, string $idFirma): array {
-  $payload = (string)($reg['Id'] ?? '') . '|' . $idFirma;
-  $dest = 'https://kasu.com.mx/constructor.php?datafb=' . base64_encode($payload);
-  $tit  = (string)($reg['TitA'] ?? '');
-  $txt  = (string)($reg['DesA'] ?? '');
-
-  return [
-    'dest' => $dest,
-    'fb'   => 'https://www.facebook.com/sharer/sharer.php?u=' . rawurlencode($dest),
-    'x'    => 'https://twitter.com/intent/tweet?text=' . rawurlencode(trim("$tit $txt"))
-             . '&url=' . rawurlencode($dest),
-    'li'   => 'https://www.linkedin.com/sharing/share-offsite/?url=' . rawurlencode($dest),
-  ];
-}
 ?>
 <style>
-  .share-row{display:flex;gap:.5rem;align-items:center;margin:.5rem 0}
-  .ico-social{width:36px;height:36px;object-fit:contain;vertical-align:middle}
+  .share-row{display:flex;gap:.35rem;align-items:center;margin:.35rem 0}
+  .ico-social{width:30px;height:30px;object-fit:contain;vertical-align:middle}
+  .tarjeta-kasu{border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.06);transition:transform .15s ease;border:1px solid #eee;}
+  .tarjeta-kasu:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(0,0,0,.1);}
+  .datos-cliente .font-weight-bold{font-size:15px;}
 </style>
 
 <section id="sec-sociales" class="section">
-  <main class="page-content">
-    <div class="container">
-      <div class="row">
-        <?php
-        /* ======= Cupones de Venta activos, aleatorios (6) ======= */
-        $cupones = getActivePosts($mysqli, 'Vta', 6);
-        if (!$cupones) {
-          echo '<div class="col-12"><p class="text-muted">No hay cupones activos.</p></div>';
-        }
-        foreach ($cupones as $Reg) {
-          $share = buildShare($Reg, $IdFirma);
-          $Comis = comisionPorProducto($mysqli, (string)$Reg['Producto'], $PorCom);
-          ?>
-          <div class="col-12 col-md-6 mb-4">
-            <div class="card h-100">
-              <div class="card-body">
-                <!-- Imagen principal: ya NO es link -->
-                <img class="img-fluid w-100"
-                     src="https://kasu.com.mx/assets/images/cupones/<?= htmlspecialchars((string)$Reg['Img'], ENT_QUOTES) ?>"
-                     alt="Cupón">
 
-                <!-- Íconos de share -->
-                <div class="share-row">
-                  <a href="<?= htmlspecialchars($share['fb'], ENT_QUOTES) ?>" target="_blank" rel="noopener" aria-label="Compartir en Facebook">
-                    <img class="ico-social" src="/login/assets/img/sociales/facebook.png" alt="Facebook">
-                  </a>
-                  <a href="<?= htmlspecialchars($share['x'], ENT_QUOTES) ?>" target="_blank" rel="noopener" aria-label="Compartir en X">
-                    <img class="ico-social" src="/login/assets/img/sociales/x.png" alt="X">
-                  </a>
-                  <a href="<?= htmlspecialchars($share['li'], ENT_QUOTES) ?>" target="_blank" rel="noopener" aria-label="Compartir en LinkedIn">
-                    <img class="ico-social" src="/login/assets/img/sociales/LinkedIn.png" alt="LinkedIn">
-                  </a>
-                  <a href="#" onclick="shareInstagram('<?= htmlspecialchars($share['dest'], ENT_QUOTES) ?>');return false;" aria-label="Compartir en Instagram">
-                    <img class="ico-social" src="/login/assets/img/sociales/instagram.png" alt="Instagram">
-                  </a>
-                </div>
-                <hr>
-                <br>
-                <div class="ContCupon">
-                  <h2 class="h6 mb-2"><?= htmlspecialchars((string)$Reg['TitA'], ENT_QUOTES) ?></h2>
-                  <h3 class="mb-0"><?= htmlspecialchars((string)$Reg['DesA'], ENT_QUOTES) ?></h3>
-                </div>
-              </div>
-            </div>
-          </div>
+  <!-- Datos del cliente (solo lectura) -->
+  <div class="card-kasu mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="features-title mb-0">Mis datos</h5>
+      <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#modalEditarDatos">
+        <i class="fa fa-pencil"></i> Editar
+      </button>
+    </div>
+
+    <div class="row datos-cliente">
+      <div class="col-md-4 mb-2">
+        <small class="text-muted">Nombre</small>
+        <div class="font-weight-bold"><?php echo h($venta['Nombre']); ?></div>
+      </div>
+      <div class="col-md-4 mb-2">
+        <small class="text-muted">Producto</small>
+        <div class="font-weight-bold"><?php echo h($ProductoComprado); ?></div>
+      </div>
+      <div class="col-md-4 mb-2">
+        <small class="text-muted">Status de la póliza</small>
+        <div class="font-weight-bold">
+          <span class="badge badge-pagado"><?php echo h((string)($venta['Status'] ?? '')); ?></span>
+        </div>
+      </div>
+      <div class="col-md-4 mb-2">
+        <small class="text-muted">Tipo de servicio</small>
+        <div class="font-weight-bold"><?php echo h((string)($venta['TipoServicio'] ?? '')); ?></div>
+      </div>
+      <div class="col-md-8 mb-2">
+        <small class="text-muted">Dirección</small>
+        <div class="font-weight-bold">
           <?php
-        }
-
-        /* ======= Artículos activos, aleatorios (4) ======= */
-        $articulos = getActivePosts($mysqli, 'Art', 4);
-        if (!$articulos) {
-          echo '<div class="col-12"><p class="text-muted">No hay artículos activos.</p></div>';
-        }
-        foreach ($articulos as $Reg) {
-          $share = buildShare($Reg, $IdFirma);
-
-          $Comis = comisionPorProducto($mysqli, (string)$Reg['Producto'], $PorCom);
-          // Ajuste por producto para artículos
-          if (($Reg['Producto'] ?? '') === 'Universidad') {
-            $Comis /= 2500;
-          } elseif (($Reg['Producto'] ?? '') === 'Retiro') {
-            $Comis /= 1000;
-          } else {
-            $Comis /= 100;
-          }
+            $dirPartes = array_filter([
+              $addr['calle'] ?? '',
+              ($addr['numero'] ?? '') ? 'No. ' . $addr['numero'] : '',
+              $addr['colonia'] ?? '',
+              $addr['codigo_postal'] ?? '',
+              $addr['municipio'] ?? '',
+              $addr['estado'] ?? ''
+            ], fn($s) => $s !== '');
+            echo h(implode(', ', $dirPartes));
           ?>
-          <div class="col-12 col-md-6 mb-4">
-            <div class="card h-100">
-              <div class="card-body">
-                <!-- Imagen principal: ya NO es link -->
-                <img class="img-fluid w-100"
-                     src="<?= htmlspecialchars((string)$Reg['Img'], ENT_QUOTES) ?>" alt="Artículo">
+        </div>
+      </div>
+      <div class="col-md-4 mb-2">
+        <small class="text-muted">Teléfono</small>
+        <div class="font-weight-bold"><?php echo h($addr['Telefono']); ?></div>
+      </div>
+      <div class="col-md-4 mb-2">
+        <small class="text-muted">Email</small>
+        <div class="font-weight-bold" style="word-break:break-all;"><?php echo h($addr['Mail']); ?></div>
+      </div>
+      <?php if (!empty($addr['Referencia'])): ?>
+      <div class="col-md-8 mb-2">
+        <small class="text-muted">Referencia del domicilio</small>
+        <div class="font-weight-bold"><?php echo h($addr['Referencia']); ?></div>
+      </div>
+      <?php endif; ?>
+    </div>
+  </div>
 
-                <!-- Íconos de share -->
-                <div class="share-row">
-                  <a href="<?= htmlspecialchars($share['fb'], ENT_QUOTES) ?>" target="_blank" rel="noopener" aria-label="Compartir en Facebook">
-                    <img class="ico-social" src="/login/assets/img/sociales/facebook.png" alt="Facebook">
-                  </a>
-                  <a href="<?= htmlspecialchars($share['x'], ENT_QUOTES) ?>" target="_blank" rel="noopener" aria-label="Compartir en X">
-                    <img class="ico-social" src="/login/assets/img/sociales/x.png" alt="X">
-                  </a>
-                  <a href="<?= htmlspecialchars($share['li'], ENT_QUOTES) ?>" target="_blank" rel="noopener" aria-label="Compartir en LinkedIn">
-                    <img class="ico-social" src="/login/assets/img/sociales/LinkedIn.png" alt="LinkedIn">
-                  </a>
-                  <a href="#" onclick="shareInstagram('<?= htmlspecialchars($share['dest'], ENT_QUOTES) ?>');return false;" aria-label="Compartir en Instagram">
-                    <img class="ico-social" src="/login/assets/img/sociales/instagram.png" alt="Instagram">
-                  </a>
-                </div>
-                <hr>
-                <br>
-                <div class="ContCupon">
-                  <h2 class="h5">Lectura $<?= number_format($Comis, 2) ?></h2>
-                  <h3 class="h6 mb-2"><?= htmlspecialchars((string)$Reg['TitA'], ENT_QUOTES) ?></h3>
-                  <p class="mb-1"><?= htmlspecialchars((string)$Reg['DesA'], ENT_QUOTES) ?></p>
-                  <small class="text-muted">*Comisión por usuario único, por día de lectura</small>
-                </div>
-              </div>
-            </div>
-          </div>
-          <?php
-        }
-        ?>
-      </div><!-- /.row -->
-      <br><br><br><br>
-    </div><!-- /.container -->
-  </main>
+  <!-- Explicación + Tarjetas de promoción -->
+  <div class="card-kasu">
+    <div class="text-center mb-3">
+      <h5 class="features-title mb-2">Comparte KASU y gana</h5>
+      <p class="text-muted mb-0" style="font-size:14px;">
+        Estas tarjetas sirven para hacer promoción a KASU. Si alguien compra utilizando una de tus tarjetas, 
+        <strong>recibes una comisión como cliente</strong>. ¡Comparte en tus redes y genera ingresos extras!
+      </p>
+    </div>
+    <div class="row">
+      <?php include __DIR__ . '/_tarjetas_html.php'; ?>
+    </div>
+  </div>
+
+  <br><br>
+
 </section>
 
 <!-- Instagram: Web Share o copiar enlace -->

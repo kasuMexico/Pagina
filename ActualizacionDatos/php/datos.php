@@ -360,14 +360,20 @@ for ($i=0; $i<6; $i++) {
         // Base = directorio del archivo actual
         $base = __DIR__;
 
+        // Funciones y datos de tarjetas (una sola carga)
+        require_once $base . '/TarjetasCompartir.php';
+
         // Sección: Estado de cuenta
         require_once $base . '/EstadoCta.php';
 
-        // Sección: Modificar mis datos
+        // Sección: Mis Datos (incluye datos cliente + tarjetas)
         require_once $base . '/ModifDatos.php';
         
-        // Sección: Modificar mis datos
+        // Sección: Compartir KASU (incluye datos cliente + tarjetas)
         require_once $base . '/CompartirRedes.php';
+
+        // Modal de edición (siempre disponible)
+        require_once $base . '/ModalEditarDatos.php';
         ?>
       </div>
     </main>

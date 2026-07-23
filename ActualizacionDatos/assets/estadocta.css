@@ -85,4 +85,14 @@
       display:flex; gap:12px; align-items:center; justify-content:space-between; padding-top:10px;
     }
 
+    /* Tarjetas compactas para 3-por-fila */
+    .tarjeta-kasu{border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.06);transition:transform .15s ease;border:1px solid #eee;overflow:hidden;}
+    .tarjeta-kasu:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(0,0,0,.1);}
+    .tarjeta-kasu .card-body{padding:.5rem !important;}
+    .tarjeta-kasu .ContCupon h2{font-size:14px !important;transform:none !important;margin-bottom:2px !important;}
+    .tarjeta-kasu .ContCupon h3{font-size:12px !important;transform:none !important;}
+    .tarjeta-kasu .ContCupon p{font-size:11px !important;transform:none !important;width:100% !important;}
+    .tarjeta-kasu .share-row{gap:.25rem;margin:.3rem 0;}
+    .tarjeta-kasu .ico-social{width:28px;height:28px;}
+    .datos-cliente .font-weight-bold{font-size:15px;}
     

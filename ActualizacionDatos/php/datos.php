@@ -331,10 +331,10 @@ for ($i=0; $i<6; $i++) {
         Mi cuenta KASU
       </h5>
       <nav class="nav flex-column">
-        <a href="#" class="nav-link" data-target="#sec-datos">
+        <a href="#" class="nav-link active" data-target="#sec-datos">
           <i class="fa fa-user"></i> &nbsp; Mis Datos
         </a>
-        <a href="#" class="nav-link active" data-target="#sec-estado">
+        <a href="#" class="nav-link" data-target="#sec-estado">
           <i class="fa fa-list-alt"></i> &nbsp; Mis Referidos
         </a>
         <form id="logoutForm" action="logout.php" method="post" style="display:none">

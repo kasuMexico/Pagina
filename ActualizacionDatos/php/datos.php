@@ -363,6 +363,9 @@ for ($i=0; $i<6; $i++) {
         // Funciones y datos de tarjetas (una sola carga)
         require_once $base . '/TarjetasCompartir.php';
 
+        // Datos de pólizas (una sola carga, antes de secciones)
+        require_once $base . '/_polizas_data.php';
+
         // Sección: Estado de cuenta
         require_once $base . '/EstadoCta.php';
 

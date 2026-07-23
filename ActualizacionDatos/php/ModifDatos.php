@@ -61,6 +61,12 @@
             </div>
           </div>
 
+          <!-- Mis Pólizas Contratadas -->
+          <div class="card-kasu mb-4">
+            <h5 class="features-title mb-3">Mis Pólizas Contratadas</h5>
+            <?php include __DIR__ . '/_polizas_grid.php'; ?>
+          </div>
+
           <!-- Explicación + Tarjetas de promoción -->
           <div class="card-kasu">
             <div class="text-center mb-3">

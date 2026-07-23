@@ -1,4 +1,4 @@
-        <section id="sec-datos" class="section">
+        <section id="sec-datos" class="section active">
 
           <!-- Datos del cliente (solo lectura) -->
           <div class="card-kasu mb-4">

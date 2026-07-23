@@ -340,9 +340,6 @@ for ($i=0; $i<6; $i++) {
         <a href="#" class="nav-link" data-target="#sec-polizas">
           <i class="fa fa-credit-card"></i> &nbsp; Mis Pólizas
         </a>
-        <a href="#" class="nav-link" data-target="#sec-sociales">
-          <i class="fa fa-share-square"></i> &nbsp; Compartir KASU
-        </a>
         <form id="logoutForm" action="logout.php" method="post" style="display:none">
           <input type="hidden" name="csrf" value="<?php echo h($_SESSION['csrf_logout']); ?>">
         </form>

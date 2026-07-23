@@ -363,6 +363,8 @@ $VerCache = time();
         line-height: 1;
       }
     }
+    .topbar-chat-btn{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;text-decoration:none;font-size:13px;font-weight:600;transition:background .2s}
+    .topbar-chat-btn:hover{background:rgba(255,255,255,.25);color:#fff;text-decoration:none}
   </style>
 </head>
 <body class="mesa-clientes" onload="localize()">
@@ -934,5 +936,6 @@ $VerCache = time();
       <?php endif; ?>
     });
   </script>
+  <?php require_once __DIR__ . '/html/kasu_agent_fab.php'; ?>
 </body>
 </html>

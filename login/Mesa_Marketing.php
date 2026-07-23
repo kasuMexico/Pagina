@@ -33,7 +33,7 @@ if (!function_exists('h')) {
 date_default_timezone_set('America/Mexico_City');
 $FechIni  = date("Y-m-01");
 $FechFin  = date("Y-m-d");
-$VerCache = '1';
+$VerCache = time();
 
 // ================= CSRF simple =================
 if (empty($_SESSION['csrf_mm'])) {
@@ -424,5 +424,6 @@ if (isset($_GET['Msg'])) {
   <script src="Javascript/finger.js?v=3"></script>
   <script src="Javascript/localize.js?v=3"></script>
   <script src="Javascript/Inyectar_gps_form.js"></script>
+<?php require_once __DIR__ . "/html/kasu_agent_fab.php"; ?>
 </body>
 </html>

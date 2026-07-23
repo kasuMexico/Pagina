@@ -13,6 +13,23 @@ try {
         session_start();
     }
 
+    // Rate-limiting: 15 mensajes por IP cada 60 segundos
+    $rateLimitKey = 'kasu_chat_rl_' . ($_SERVER['REMOTE_ADDR'] ?? 'cli');
+    $rateLimitWindow = 60;
+    $rateLimitMax = 15;
+    $now = time();
+    $rlData = $_SESSION[$rateLimitKey] ?? ['count' => 0, 'reset' => $now + $rateLimitWindow];
+    if ($now > $rlData['reset']) {
+        $rlData = ['count' => 0, 'reset' => $now + $rateLimitWindow];
+    }
+    $rlData['count']++;
+    $_SESSION[$rateLimitKey] = $rlData;
+    if ($rlData['count'] > $rateLimitMax) {
+        http_response_code(429);
+        echo json_encode(['ok' => false, 'error' => 'Demasiadas solicitudes. Espera unos segundos.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
     require_once __DIR__ . '/../librerias.php';
     require_once __DIR__ . '/../php/Telcto.php';
     require_once __DIR__ . '/../Funciones/Funciones_Financieras.php';
@@ -32,6 +49,20 @@ try {
     }
 
     global $mysqli, $pros, $basicas, $seguridad, $financieras;
+
+    // Si el chat ya fue transferido a un agente humano, rechazar mensajes
+    if (!empty($_SESSION['kasu_transferido_humano'])) {
+        $ticketCode = $_SESSION['kasu_ticket_code'] ?? 'desconocido';
+        http_response_code(200);
+        echo json_encode([
+            'ok' => true,
+            'type' => 'transferred',
+            'html' => '<p>Este chat esta siendo atendido por un agente humano. Tu ticket es <strong>' . htmlspecialchars($ticketCode, ENT_QUOTES, 'UTF-8') . '</strong>. Un agente te contactara pronto.</p>',
+            'data' => ['results' => []],
+            'chat_token' => '',
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
 
     $contactPhone = '';
     if (isset($tel)) {
@@ -969,19 +1000,324 @@ try {
         return ['ok' => true, 'tema' => $tema, 'articulos' => $items];
     });
 
-    $planSource = 'basic';
-    if ($openaiAvailable) {
-        try {
-            $plan = generatePublicPlanWithAI($userMessage, $conversationStore, $toolsRegistry->getToolsForOpenAI(), $publicContext, $sessionData['history'] ?? '');
-            $planSource = 'ai';
-        } catch (Throwable $e) {
-            $plan = generatePublicPlanBasic($userMessage, $publicContext);
-            $planSource = 'basic';
+    $registerTool('buscar_cliente_prospecto', [
+        'description' => 'Busca clientes (Contacto) y prospectos por nombre para saber si ya existe en KASU.',
+        'parameters' => [
+            'type' => 'object',
+            'properties' => [
+                'nombre' => ['type' => 'string', 'description' => 'Nombre a buscar'],
+                'tipo' => ['type' => 'string', 'enum' => ['cliente', 'prospecto', 'ambos']],
+                'limit' => ['type' => 'integer'],
+            ],
+            'required' => ['nombre'],
+        ],
+    ], function (array $args) use ($mysqli, $pros): array {
+        $nombre = trim((string)($args['nombre'] ?? ''));
+        $tipo = (string)($args['tipo'] ?? 'ambos');
+        $limit = (int)($args['limit'] ?? 10);
+        $limit = ($limit > 0 && $limit <= 50) ? $limit : 10;
+
+        if ($nombre === '') {
+            return ['ok' => false, 'error' => 'Nombre requerido.'];
         }
-    } else {
-        $plan = generatePublicPlanBasic($userMessage, $publicContext);
-        $planSource = 'basic';
-    }
+
+        $resultados = [];
+        $like = '%' . $mysqli->real_escape_string($nombre) . '%';
+
+        if ($tipo === 'cliente' || $tipo === 'ambos') {
+            $sql = "SELECT c.id, c.Mail AS email, c.Telefono AS telefono,
+                           u.Nombre, u.Paterno, u.Materno, u.ClaveCurp AS curp,
+                           v.Id AS id_venta, v.IdFIrma AS poliza, v.Producto, v.Status
+                    FROM Contacto c
+                    LEFT JOIN Usuario u ON u.IdContact = c.id
+                    LEFT JOIN Venta v ON v.IdContact = c.id
+                    WHERE (u.Nombre LIKE ? OR u.Paterno LIKE ? OR u.Materno LIKE ?)
+                      AND u.ClaveCurp IS NOT NULL
+                    ORDER BY c.id DESC LIMIT ?";
+            if ($stmt = $mysqli->prepare($sql)) {
+                $stmt->bind_param('sssi', $like, $like, $like, $limit);
+                $stmt->execute();
+                $res = $stmt->get_result();
+                while ($row = $res->fetch_assoc()) {
+                    $row['origen'] = 'cliente';
+                    $resultados[] = $row;
+                }
+                $stmt->close();
+            }
+        }
+
+        if ($tipo === 'prospecto' || $tipo === 'ambos') {
+            $sql = "SELECT Id, FullName AS nombre, Email AS email, NoTel AS telefono,
+                           Curp AS curp, Servicio_Interes AS servicio_interes, Cancelacion
+                    FROM prospectos
+                    WHERE FullName LIKE ?
+                    ORDER BY Id DESC LIMIT ?";
+            if ($stmt = $pros->prepare($sql)) {
+                $stmt->bind_param('si', $like, $limit);
+                $stmt->execute();
+                $res = $stmt->get_result();
+                while ($row = $res->fetch_assoc()) {
+                    $row['origen'] = 'prospecto';
+                    $resultados[] = $row;
+                }
+                $stmt->close();
+            }
+        }
+
+        if (empty($resultados)) {
+            return ['ok' => true, 'encontrados' => 0, 'resultados' => [], 'mensaje' => 'No se encontro a ' . $nombre . ' en clientes ni prospectos.'];
+        }
+
+        // Si solo hay un cliente exacto, activar modo verificacion
+        $clientes = array_filter($resultados, fn($r) => ($r['origen'] ?? '') === 'cliente');
+        $primerCliente = !empty($clientes) ? reset($clientes) : null;
+        $modoVerificacion = (count($clientes) === 1 && !empty($primerCliente['id']));
+
+        if ($modoVerificacion) {
+            // Guardar estado de verificacion en DB
+            $idContact = (int)$primerCliente['id'];
+            $idVenta = (int)($primerCliente['id_venta'] ?? 0);
+            $phone = (string)($primerCliente['telefono'] ?? '');
+            $email = (string)($primerCliente['email'] ?? '');
+
+            $stmt = $pros->prepare("INSERT INTO kasu_chat_verifications (chat_token, id_contact, id_venta, step, phone_expected, email_expected) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE step='phone', phone_expected=VALUES(phone_expected), email_expected=VALUES(email_expected), attempts=0, otp_code=NULL, otp_expires=NULL");
+            if ($stmt) {
+                $step = 'phone';
+                $token = $_SESSION['kasu_public_context']['chat_token'] ?? 'anon';
+                $stmt->bind_param('siisss', $token, $idContact, $idVenta, $step, $phone, $email);
+                $stmt->execute();
+                $stmt->close();
+            }
+
+            return [
+                'ok' => true,
+                'encontrados' => 1,
+                'modo' => 'verificacion',
+                'step' => 'phone',
+                'mensaje' => 'Encontrado. Para verificar tu identidad, necesito validar algunos datos.',
+                'resultados' => [] // no exponer datos del cliente
+            ];
+        }
+
+        return ['ok' => true, 'encontrados' => count($resultados), 'resultados' => $resultados];
+    });
+
+    $registerTool('verificar_dato', [
+        'description' => 'Verifica telefono, email o codigo OTP del cliente durante el proceso de validacion de identidad.',
+        'parameters' => [
+            'type' => 'object',
+            'properties' => [
+                'tipo' => ['type' => 'string', 'enum' => ['telefono', 'email', 'codigo']],
+                'valor' => ['type' => 'string'],
+            ],
+            'required' => ['tipo', 'valor'],
+        ],
+    ], function (array $args) use ($mysqli, $pros): array {
+        $tipo = trim((string)($args['tipo'] ?? ''));
+        $valor = trim((string)($args['valor'] ?? ''));
+        $token = $_SESSION['kasu_public_context']['chat_token'] ?? '';
+
+        if ($token === '') {
+            return ['ok' => false, 'error' => 'Sin sesion activa.'];
+        }
+
+        $stmt = $pros->prepare("SELECT * FROM kasu_chat_verifications WHERE chat_token = ? LIMIT 1");
+        $stmt->bind_param('s', $token);
+        $stmt->execute();
+        $v = $stmt->get_result()->fetch_assoc() ?: [];
+        $stmt->close();
+
+        if (!$v) {
+            return ['ok' => false, 'error' => 'No hay verificacion en curso. Pide primero el nombre.'];
+        }
+
+        $attempts = (int)($v['attempts'] ?? 0);
+        if ($attempts >= 5) {
+            return ['ok' => false, 'error' => 'Demasiados intentos. Contacta a un agente humano.'];
+        }
+
+        // Incrementar intentos
+        $pros->query("UPDATE kasu_chat_verifications SET attempts = attempts + 1 WHERE chat_token = '" . $pros->real_escape_string($token) . "'");
+
+        if ($tipo === 'telefono') {
+            $digits = preg_replace('/\D+/', '', $valor);
+            $expected = preg_replace('/\D+/', '', (string)($v['phone_expected'] ?? ''));
+            if ($digits === $expected) {
+                $pros->query("UPDATE kasu_chat_verifications SET step = 'email', attempts = 0 WHERE chat_token = '" . $pros->real_escape_string($token) . "'");
+                return ['ok' => true, 'step' => 'email', 'verificado' => true, 'mensaje' => 'Telefono verificado.'];
+            }
+            return ['ok' => true, 'step' => 'phone', 'verificado' => false, 'mensaje' => 'Telefono incorrecto. Intenta de nuevo.'];
+        }
+
+        if ($tipo === 'email') {
+            $expected = strtolower(trim((string)($v['email_expected'] ?? '')));
+            if (strtolower($valor) === $expected) {
+                $pros->query("UPDATE kasu_chat_verifications SET step = 'otp', attempts = 0 WHERE chat_token = '" . $pros->real_escape_string($token) . "'");
+                return ['ok' => true, 'step' => 'otp', 'verificado' => true, 'mensaje' => 'Email verificado.'];
+            }
+            return ['ok' => true, 'step' => 'email', 'verificado' => false, 'mensaje' => 'Email incorrecto. Intenta de nuevo.'];
+        }
+
+        if ($tipo === 'codigo') {
+            $otpExpected = (string)($v['otp_code'] ?? '');
+            $otpExpires = (string)($v['otp_expires'] ?? '');
+            if ($otpExpected === '' || $otpExpires === '') {
+                return ['ok' => false, 'error' => 'No hay codigo pendiente. Pide que te lo envie de nuevo.'];
+            }
+            if (strtotime($otpExpires) < time()) {
+                return ['ok' => false, 'error' => 'El codigo expiro. Pide uno nuevo.'];
+            }
+            if ($valor === $otpExpected) {
+                $pros->query("UPDATE kasu_chat_verifications SET step = 'verified', attempts = 0, otp_code = NULL WHERE chat_token = '" . $pros->real_escape_string($token) . "'");
+                $_SESSION['kasu_verified_client'] = [
+                    'id_contact' => (int)$v['id_contact'],
+                    'id_venta' => (int)$v['id_venta'],
+                    'verified_at' => time(),
+                ];
+                return ['ok' => true, 'step' => 'verified', 'verificado' => true, 'mensaje' => 'Identidad verificada. Bienvenido.'];
+            }
+            return ['ok' => true, 'step' => 'otp', 'verificado' => false, 'mensaje' => 'Codigo incorrecto. Intenta de nuevo.'];
+        }
+
+        return ['ok' => false, 'error' => 'Tipo de verificacion no valido.'];
+    });
+
+    $registerTool('enviar_codigo_verificacion', [
+        'description' => 'Genera y envia un codigo de verificacion al email del cliente.',
+        'parameters' => [
+            'type' => 'object',
+            'properties' => [],
+            'required' => [],
+        ],
+    ], function (array $args) use ($mysqli, $pros): array {
+        $token = $_SESSION['kasu_public_context']['chat_token'] ?? '';
+        if ($token === '') {
+            return ['ok' => false, 'error' => 'Sin sesion activa.'];
+        }
+
+        $stmt = $pros->prepare("SELECT email_expected FROM kasu_chat_verifications WHERE chat_token = ? AND step = 'otp' LIMIT 1");
+        $stmt->bind_param('s', $token);
+        $stmt->execute();
+        $v = $stmt->get_result()->fetch_assoc() ?: [];
+        $stmt->close();
+
+        if (!$v || empty($v['email_expected'])) {
+            return ['ok' => false, 'error' => 'Primero verifica nombre, telefono y email.'];
+        }
+
+        $email = $v['email_expected'];
+        $otp = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $expires = date('Y-m-d H:i:s', time() + 300); // 5 minutos
+
+        $pros->query("UPDATE kasu_chat_verifications SET otp_code = '" . $pros->real_escape_string($otp) . "', otp_expires = '" . $expires . "' WHERE chat_token = '" . $pros->real_escape_string($token) . "'");
+
+        // Enviar OTP al email
+        $subject = 'KASU - Codigo de verificacion';
+        $body = "Tu codigo de verificacion KASU es: {$otp}\n\nValido por 5 minutos.\n\nSi no solicitaste esto, ignora este mensaje.";
+        $headers = "From: atncliente@kasu.com.mx\r\nContent-Type: text/plain; charset=UTF-8";
+        @mail($email, $subject, $body, $headers);
+
+        return ['ok' => true, 'mensaje' => 'Codigo enviado a ' . substr($email, 0, 3) . '...' . substr($email, strrpos($email, '@')) . '. Revisa tu correo.'];
+    });
+
+    $registerTool('calcular_estado_credito', [
+        'description' => 'Calcula el estado de credito de un cliente: saldo pendiente, pagos realizados, mora.',
+        'parameters' => [
+            'type' => 'object',
+            'properties' => [
+                'id_venta' => ['type' => 'integer', 'description' => 'ID de la venta del cliente'],
+            ],
+            'required' => ['id_venta'],
+        ],
+    ], function (array $args) use ($mysqli, $basicas, $financieras): array {
+        $idVenta = (int)($args['id_venta'] ?? 0);
+        if ($idVenta <= 0) {
+            return ['ok' => false, 'error' => 'ID de venta requerido.'];
+        }
+
+        if (!method_exists($financieras, 'estado_mora_corriente')) {
+            return ['ok' => false, 'error' => 'Funcion financiera no disponible.'];
+        }
+
+        $estado = $financieras->estado_mora_corriente($idVenta);
+        if (!is_array($estado)) {
+            return ['ok' => false, 'error' => 'No se pudo obtener el estado de credito.'];
+        }
+
+        $estado['ok'] = true;
+        return $estado;
+    });
+
+    $registerTool('registrar_ticket', [
+        'description' => 'Crea un ticket de atencion humana cuando el chat de IA no puede resolver la solicitud. El ticket se asigna a Mesa_Clientes o Mesa_Prospectos segun el tipo de usuario.',
+        'parameters' => [
+            'type' => 'object',
+            'properties' => [
+                'tipo' => ['type' => 'string', 'enum' => ['prospecto', 'cliente']],
+                'motivo' => ['type' => 'string', 'description' => 'Resumen del motivo del ticket'],
+            ],
+            'required' => ['tipo', 'motivo'],
+        ],
+    ], function (array $args) use ($mysqli, $pros): array {
+        $tipo = trim((string)($args['tipo'] ?? 'prospecto'));
+        $motivo = trim((string)($args['motivo'] ?? ''));
+        $token = $_SESSION['kasu_public_context']['chat_token'] ?? '';
+        $ctx = $_SESSION['kasu_public_context'] ?? [];
+
+        if ($token === '') {
+            return ['ok' => false, 'error' => 'Sin sesion activa.'];
+        }
+
+        $ticketCode = 'KT' . date('ymd') . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
+
+        $nombre = (string)($ctx['nombre'] ?? ($ctx['curp'] ?? 'Usuario'));
+        $curp = (string)($ctx['curp'] ?? '');
+        $email = (string)($ctx['email'] ?? '');
+        $telefono = (string)($ctx['telefono'] ?? '');
+        $idContact = (int)($ctx['id_contact'] ?? 0);
+        $idVenta = (int)($ctx['id_venta'] ?? 0);
+
+        // Si es cliente verificado, usar datos de sesion
+        if (!empty($_SESSION['kasu_verified_client'])) {
+            $tipo = 'cliente';
+            $idContact = (int)$_SESSION['kasu_verified_client']['id_contact'];
+            $idVenta = (int)$_SESSION['kasu_verified_client']['id_venta'];
+        }
+
+        $stmt = $pros->prepare("INSERT INTO kasu_support_tickets (ticket_code, chat_token, tipo, nombre_cliente, curp, email, telefono, motivo, id_contact, id_venta, contexto_json, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,'abierto')");
+        $ctxJson = json_encode($ctx, JSON_UNESCAPED_UNICODE);
+        if ($stmt) {
+            $stmt->bind_param('ssssssssiis', $ticketCode, $token, $tipo, $nombre, $curp, $email, $telefono, $motivo, $idContact, $idVenta, $ctxJson);
+            $stmt->execute();
+            $ticketId = $stmt->insert_id;
+            $stmt->close();
+
+            // Registrar mensaje inicial del sistema
+            $sysMsg = $token . '|system|Ticket ' . $ticketCode . ' creado. Motivo: ' . $motivo;
+            $stmt2 = $pros->prepare("INSERT INTO kasu_support_messages (ticket_id, role, content) VALUES (?,'system',?)");
+            $stmt2->bind_param('is', $ticketId, $sysMsg);
+            $stmt2->execute();
+            $stmt2->close();
+
+            // Marcar sesion como transferida a humano
+            $_SESSION['kasu_transferido_humano'] = true;
+            $_SESSION['kasu_ticket_code'] = $ticketCode;
+
+            $destino = ($tipo === 'cliente') ? 'Mesa_Clientes' : 'Mesa_Prospectos';
+            return [
+                'ok' => true,
+                'ticket' => $ticketCode,
+                'tipo' => $tipo,
+                'destino' => $destino,
+                'mensaje' => 'Ticket ' . $ticketCode . ' creado. Un agente de ' . $destino . ' te atendera pronto.',
+            ];
+        }
+
+        return ['ok' => false, 'error' => 'No se pudo crear el ticket.'];
+    });
+
+    $planSource = 'ai';
+    $plan = generatePublicPlanWithAI($userMessage, $conversationStore, $toolsRegistry->getToolsForOpenAI(), $publicContext, $sessionData['history'] ?? '');
 
     if (empty($plan['source'])) {
         $plan['source'] = $planSource;
@@ -997,8 +1333,7 @@ try {
     if ($plan['mode'] === 'tool_sequence' && empty($plan['actions'])) {
         $plan['mode'] = 'answer_only';
         if (trim((string)($plan['response'] ?? '')) === '') {
-            $plan = generatePublicPlanBasic($userMessage, $publicContext);
-            $plan = sanitizePublicPlan($plan, $allowedTools, $publicContext, $userMessage);
+            $plan['response'] = 'Hola, soy KASU. Te ayudo con cotizacion, poliza o llamada. Que necesitas?';
         }
     }
 
@@ -1170,498 +1505,6 @@ function sanitizePublicPlan(array $plan, array $allowedTools, array $context, st
     ];
 }
 
-function generatePublicPlanBasic(string $message, array $context): array {
-    $msg = mb_strtolower($message, 'UTF-8');
-    $hasCurp = !empty($context['curp']);
-    $hasPoliza = !empty($context['poliza']);
-    $hasServicio = !empty($context['servicio']);
-    $hasEdad = !empty($context['edad']) || !empty($context['fecha_nacimiento']) || !empty($context['curp']);
-    $intentCliente = !empty($context['intent_cliente']);
-    $pendingCurp = $context['pending_curp_confirm'] ?? null;
-    $pendingCotizacionCorreo = !empty($context['pending_cotizacion_correo']);
-    $contactPhone = preg_replace('/\\D+/', '', (string)($context['contact_phone'] ?? ''));
-    $contactPhoneTxt = $contactPhone !== '' ? kasu_format_phone($contactPhone) : '';
-    $curpOnly = preg_match('/^[A-Z]{4}\\d{6}[A-Z0-9]{8}$/i', trim($message)) === 1;
-
-    if ($pendingCotizacionCorreo && !empty($context['nombre']) && !empty($context['email']) && $hasEdad) {
-        return [
-            'mode' => 'tool_sequence',
-            'response' => 'Listo, envio tu cotizacion al correo.',
-            'actions' => [
-                [
-                    'tool' => 'enviar_cotizacion_correo',
-                    'args' => [
-                        'nombre' => $context['nombre'] ?? '',
-                        'fecha_nacimiento' => $context['fecha_nacimiento'] ?? '',
-                        'curp' => $context['curp'] ?? '',
-                        'telefono' => $context['telefono'] ?? '',
-                        'email' => $context['email'] ?? '',
-                        'servicio' => $context['servicio'] ?? 'FUNERARIO',
-                        'plazo_meses' => $context['plazo_meses'] ?? 1,
-                    ],
-                ],
-            ],
-            'next_steps' => [],
-        ];
-    }
-
-    if (!empty($pendingCurp) && preg_match('/^\\s*s[i\\x{00ED}]\\s*$/iu', $msg)) {
-        $nombre = is_array($pendingCurp) ? (string)($pendingCurp['nombre'] ?? '') : '';
-        $polizaLink = is_array($pendingCurp) ? (string)($pendingCurp['poliza_pdf'] ?? '') : '';
-        $line = '';
-        if ($polizaLink !== '') {
-            $line = 'descarga tu poliza aqui: ' . $polizaLink;
-        }
-        if ($contactPhoneTxt !== '') {
-            $line .= ($line !== '' ? ' y ' : '') . 'llama al ' . $contactPhoneTxt . ' para atencion inmediata';
-        }
-        if ($line === '') {
-            $line = 'llama a KASU para atencion inmediata';
-        }
-        $resp = 'Confirmado' . ($nombre !== '' ? ', ' . $nombre : '') . ': ' . $line . '.';
-        if (stripos($line, 'poliza a la mano') === false) {
-            $resp .= ' Ten tu poliza a la mano.';
-        }
-        return [
-            'mode' => 'answer_only',
-            'response' => $resp,
-            'actions' => [],
-            'next_steps' => [],
-        ];
-    }
-
-    if (!empty($pendingCurp) && preg_match('/^\\s*no\\s*$/i', $msg)) {
-        return [
-            'mode' => 'answer_only',
-            'response' => 'Ok. Comparte la CURP correcta o el numero de poliza.',
-            'actions' => [],
-            'next_steps' => [],
-        ];
-    }
-
-    if ($hasCurp && !$hasPoliza && ($curpOnly || ($intentCliente && preg_match('/\\b(curp|cliente|poliza|servicio|fallec|defunc|familiar)\\b/iu', $msg)))) {
-        return [
-            'mode' => 'tool_sequence',
-            'response' => 'Estoy validando tu CURP para confirmar el nombre.',
-            'actions' => [
-                [
-                    'tool' => 'consultar_cliente_curp',
-                    'args' => ['curp' => $context['curp']],
-                ],
-            ],
-            'next_steps' => [],
-        ];
-    }
-
-    if ($hasCurp && $hasPoliza && $curpOnly) {
-        return [
-            'mode' => 'tool_sequence',
-            'response' => 'Voy a revisar tu servicio con los datos que ya me compartiste.',
-            'actions' => [
-                [
-                    'tool' => 'consultar_cliente',
-                    'args' => ['curp' => $context['curp'], 'poliza' => $context['poliza']],
-                ],
-            ],
-            'next_steps' => [],
-        ];
-    }
-
-    if ($intentCliente || preg_match('/\b(mi\s+poliza|mi\s+servicio|mi\s+cuenta|cliente|estatus|status|numero\s+de\s+poliza)\b/iu', $msg)) {
-        if ($hasCurp && $hasPoliza) {
-            return [
-                'mode' => 'tool_sequence',
-                'response' => 'Voy a revisar tu servicio con los datos que ya me compartiste.',
-                'actions' => [
-                    [
-                        'tool' => 'consultar_cliente',
-                        'args' => ['curp' => $context['curp'], 'poliza' => $context['poliza']],
-                    ],
-                ],
-                'next_steps' => [],
-            ];
-        }
-        if ($hasCurp && !$hasPoliza) {
-            return [
-                'mode' => 'tool_sequence',
-                'response' => 'Estoy validando tu CURP para confirmar el nombre.',
-                'actions' => [
-                    [
-                        'tool' => 'consultar_cliente_curp',
-                        'args' => ['curp' => $context['curp']],
-                    ],
-                ],
-                'next_steps' => [],
-            ];
-        }
-        return [
-            'mode' => 'answer_only',
-            'response' => 'Para revisar tu servicio necesito tu CURP y el numero de poliza. Compartemelos y te ayudo en seguida.',
-            'actions' => [],
-            'next_steps' => [],
-        ];
-    }
-
-    if (preg_match('/\b(enviar|manda).*\bpoliza\b/u', $msg)) {
-        if ($hasCurp && $hasPoliza) {
-            return [
-                'mode' => 'tool_sequence',
-                'response' => 'Voy a enviar tu poliza al correo registrado.',
-                'actions' => [
-                    [
-                        'tool' => 'enviar_poliza_correo',
-                        'args' => ['curp' => $context['curp'], 'poliza' => $context['poliza']],
-                    ],
-                ],
-                'next_steps' => [],
-            ];
-        }
-        return [
-            'mode' => 'answer_only',
-            'response' => 'Para enviarte tu poliza necesito tu CURP y el numero de poliza.',
-            'actions' => [],
-            'next_steps' => [],
-        ];
-    }
-
-    if (preg_match('/\b(activa|activo|estatus|status|producto|tipo)\b/u', $msg) && $hasCurp && $hasPoliza) {
-        return [
-            'mode' => 'tool_sequence',
-            'response' => 'Voy a revisar tu servicio con los datos que ya me compartiste.',
-            'actions' => [
-                [
-                    'tool' => 'consultar_cliente',
-                    'args' => ['curp' => $context['curp'], 'poliza' => $context['poliza']],
-                ],
-            ],
-            'next_steps' => [],
-        ];
-    }
-
-    if (preg_match('/\b(cotiz|precio|costo|presupuesto|cuanto|cuesta)\b/u', $msg)) {
-        if ($hasEdad) {
-            return [
-                'mode' => 'tool_sequence',
-                'response' => 'Voy a generar tu cotizacion.',
-                'actions' => [
-                    [
-                        'tool' => 'cotizar_producto',
-                        'args' => [
-                            'servicio' => $context['servicio'] ?? 'FUNERARIO',
-                            'curp' => $context['curp'] ?? '',
-                            'fecha_nacimiento' => $context['fecha_nacimiento'] ?? '',
-                            'edad' => $context['edad'] ?? 0,
-                            'plazo_meses' => $context['plazo_meses'] ?? 1,
-                        ],
-                    ],
-                ],
-                'next_steps' => [],
-            ];
-        }
-        return [
-            'mode' => 'answer_only',
-            'response' => 'Para cotizar necesito tu edad y si eres policia de gobierno o taxista/transportista. Si no, es funerario.',
-            'actions' => [],
-            'next_steps' => [],
-        ];
-    }
-
-    if (preg_match('/\\bcorreo\\b/iu', $msg) && !preg_match('/\\bpoliza\\b/iu', $msg)) {
-        $faltantes = [];
-        if (empty($context['nombre'])) {
-            $faltantes[] = 'nombre';
-        }
-        if (empty($context['email'])) {
-            $faltantes[] = 'correo';
-        }
-        if (!$hasEdad) {
-            $faltantes[] = 'edad o fecha de nacimiento';
-        }
-        if (!empty($faltantes)) {
-            return [
-                'mode' => 'answer_only',
-                'response' => 'Para enviarte la cotizacion necesito: ' . implode(', ', $faltantes) . '.',
-                'actions' => [],
-                'next_steps' => [],
-            ];
-        }
-        return [
-            'mode' => 'tool_sequence',
-            'response' => 'Listo, envio tu cotizacion al correo registrado.',
-            'actions' => [
-                [
-                    'tool' => 'enviar_cotizacion_correo',
-                    'args' => [
-                        'nombre' => $context['nombre'] ?? '',
-                        'fecha_nacimiento' => $context['fecha_nacimiento'] ?? '',
-                        'curp' => $context['curp'] ?? '',
-                        'telefono' => $context['telefono'] ?? '',
-                        'email' => $context['email'] ?? '',
-                        'servicio' => $context['servicio'] ?? 'FUNERARIO',
-                        'plazo_meses' => $context['plazo_meses'] ?? 1,
-                    ],
-                ],
-            ],
-            'next_steps' => [],
-        ];
-    }
-
-    if (preg_match('/\\b(contratar|contrato|registro|registrar|comprar|adquirir)\\b/iu', $msg)) {
-        $faltantes = [];
-        if (empty($context['curp'])) {
-            $faltantes[] = 'CURP';
-        }
-        if (empty($context['email'])) {
-            $faltantes[] = 'correo';
-        }
-        if (empty($context['telefono'])) {
-            $faltantes[] = 'telefono';
-        }
-        if (empty($context['codigo_postal'])) {
-            $faltantes[] = 'codigo postal';
-        }
-        if (empty($context['plazo_meses'])) {
-            $faltantes[] = 'plazo (contado o meses)';
-        }
-        if (!empty($context['plazo_meses']) && (int)$context['plazo_meses'] > 1 && empty($context['dia_pago'])) {
-            $faltantes[] = 'dia de pago (1 o 15)';
-        }
-        $terminosOk = kasu_is_acepto((string)($context['terminos'] ?? ''));
-        $avisoOk = kasu_is_acepto((string)($context['aviso'] ?? ''));
-        $fideOk = kasu_is_acepto((string)($context['fideicomiso'] ?? ''));
-        if (!$terminosOk || !$avisoOk || !$fideOk) {
-            $faltantes[] = 'aceptar terminos, aviso y fideicomiso';
-        }
-
-        if (!empty($faltantes)) {
-            return [
-                'mode' => 'answer_only',
-                'response' => 'Para contratar necesito: ' . implode(', ', $faltantes) . '.',
-                'actions' => [],
-                'next_steps' => [],
-            ];
-        }
-
-        return [
-            'mode' => 'tool_sequence',
-            'response' => 'Voy a registrar tu poliza.',
-            'actions' => [
-                [
-                    'tool' => 'registrar_poliza',
-                    'args' => [
-                        'curp' => $context['curp'] ?? '',
-                        'email' => $context['email'] ?? '',
-                        'telefono' => $context['telefono'] ?? '',
-                        'codigo_postal' => $context['codigo_postal'] ?? '',
-                        'servicio' => $context['servicio'] ?? 'FUNERARIO',
-                        'tipo_servicio' => $context['tipo_servicio'] ?? '',
-                        'plazo_meses' => $context['plazo_meses'] ?? 1,
-                        'dia_pago' => $context['dia_pago'] ?? 0,
-                        'terminos' => $context['terminos'] ?? '',
-                        'aviso' => $context['aviso'] ?? '',
-                        'fideicomiso' => $context['fideicomiso'] ?? '',
-                        'host' => $context['source'] ?? 'public_chat',
-                    ],
-                ],
-            ],
-            'next_steps' => [],
-        ];
-    }
-
-    if (preg_match('/\bpoliza|p[o\\x{00F3}]liza|quiero una poliza|quiero poliza\b/iu', $msg)) {
-        return [
-            'mode' => 'answer_only',
-            'response' => 'Para cotizar necesito tu edad y si eres policia de gobierno o taxista/transportista. Si no, es funerario.',
-            'actions' => [],
-            'next_steps' => [],
-        ];
-    }
-
-    if (preg_match('/\\b(blog|articul|articulo|articulos|ahorro|finanzas|educacion|retiro|tanatolog)\\b/iu', $msg)) {
-        $tema = 'kasu';
-        if (preg_match('/ahorro|finanzas/iu', $msg)) {
-            $tema = 'ahorro';
-        } elseif (preg_match('/educacion/iu', $msg)) {
-            $tema = 'educacion';
-        } elseif (preg_match('/retiro/iu', $msg)) {
-            $tema = 'retiro';
-        } elseif (preg_match('/tanatolog/iu', $msg)) {
-            $tema = 'tanatologia';
-        }
-        return [
-            'mode' => 'tool_sequence',
-            'response' => 'Te comparto articulos recomendados.',
-            'actions' => [
-                [
-                    'tool' => 'recomendar_articulos_blog',
-                    'args' => ['tema' => $tema],
-                ],
-            ],
-            'next_steps' => [],
-        ];
-    }
-
-    if (preg_match('/\b(informacion|info|detalles)\b/u', $msg)) {
-        return [
-            'mode' => 'answer_only',
-            'response' => 'Necesitas info de poliza, cotizacion, llamada o articulos? Dime cual.',
-            'actions' => [],
-            'next_steps' => [],
-        ];
-    }
-
-    if (preg_match('/\\b(cobertura|cubre|donde\\s+(tienen|tiene)\\s+cobertura)\\b/iu', $msg)) {
-        return [
-            'mode' => 'answer_only',
-            'response' => 'KASU tiene cobertura en toda la Republica Mexicana. Si quieres te cotizo.',
-            'actions' => [],
-            'next_steps' => [],
-        ];
-    }
-
-    if (preg_match('/como\\s+funciona|funcionamiento/u', $msg)) {
-        if (!empty($context['servicio'])) {
-            if ($context['servicio'] === 'FUNERARIO') {
-                return [
-                    'mode' => 'answer_only',
-                    'response' => 'El servicio funerario te da cobertura y apoyo al momento del evento. Te cotizo si quieres.',
-                    'actions' => [],
-                    'next_steps' => [],
-                ];
-            }
-            if ($context['servicio'] === 'SEGURIDAD') {
-                return [
-                    'mode' => 'answer_only',
-                    'response' => 'Seguridad es solo para policias de gobierno. Eres policia de gobierno? si/no.',
-                    'actions' => [],
-                    'next_steps' => [],
-                ];
-            }
-            if ($context['servicio'] === 'TRANSPORTE') {
-                return [
-                    'mode' => 'answer_only',
-                    'response' => 'Transporte es solo para taxistas/transportistas. Trabajas en eso? si/no.',
-                    'actions' => [],
-                    'next_steps' => [],
-                ];
-            }
-        }
-        return [
-            'mode' => 'answer_only',
-            'response' => 'Depende del servicio. Eres policia de gobierno o taxista/transportista? Si no, es funerario.',
-            'actions' => [],
-            'next_steps' => [],
-        ];
-    }
-
-    if (preg_match('/\b(pago|mensual|mes|cada\s+mes|periodo|credito|cr[e\\x{00E9}]dito)\b/iu', $msg) && !empty($context['last_quote']['costo_contado'])) {
-        $costo = (float)$context['last_quote']['costo_contado'];
-        $maxCredito = (int)($context['last_quote']['max_credito'] ?? 0);
-        $resp = 'Contado: $' . number_format($costo, 2) . ' una sola vez.';
-        if ($maxCredito > 0) {
-            $resp .= ' A credito es mensual hasta ' . $maxCredito . ' meses. Dime el plazo y te calculo.';
-        } else {
-            $resp .= ' Si quieres mensualidad, dime el plazo.';
-        }
-        return [
-            'mode' => 'answer_only',
-            'response' => $resp,
-            'actions' => [],
-            'next_steps' => [],
-        ];
-    }
-
-    if ($hasServicio && $hasEdad && preg_match('/\b(anos|anios|a\\x{00F1}os|\\d{4}|\\d{2}\\/\\d{2}\\/\\d{4})\b/iu', $msg)) {
-        return [
-            'mode' => 'tool_sequence',
-            'response' => 'Voy a generar tu cotizacion.',
-            'actions' => [
-                [
-                    'tool' => 'cotizar_producto',
-                    'args' => [
-                        'servicio' => $context['servicio'],
-                        'curp' => $context['curp'] ?? '',
-                        'fecha_nacimiento' => $context['fecha_nacimiento'] ?? '',
-                        'edad' => $context['edad'] ?? 0,
-                    ],
-                ],
-            ],
-            'next_steps' => [],
-        ];
-    }
-
-    if (!empty($context['servicio']) && $context['servicio'] === 'SEGURIDAD' && empty($context['es_policia_gob'])) {
-        return [
-            'mode' => 'answer_only',
-            'response' => 'El servicio de seguridad es solo para policias de gobierno. Eres policia de gobierno? si/no.',
-            'actions' => [],
-            'next_steps' => [],
-        ];
-    }
-
-    if (!empty($context['servicio']) && $context['servicio'] === 'TRANSPORTE' && empty($context['es_transportista'])) {
-        return [
-            'mode' => 'answer_only',
-            'response' => 'El servicio de transporte es solo para taxistas o transportistas. Trabajas en eso? si/no.',
-            'actions' => [],
-            'next_steps' => [],
-        ];
-    }
-
-    if (preg_match('/\\b(\\d{1,2})\\s*(mes|meses)\\b/iu', $msg)) {
-        if ($hasEdad) {
-            return [
-                'mode' => 'tool_sequence',
-                'response' => 'Calculo la mensualidad con ese plazo.',
-                'actions' => [
-                    [
-                        'tool' => 'cotizar_producto',
-                        'args' => [
-                            'servicio' => $context['servicio'] ?? 'FUNERARIO',
-                            'curp' => $context['curp'] ?? '',
-                            'fecha_nacimiento' => $context['fecha_nacimiento'] ?? '',
-                            'edad' => $context['edad'] ?? 0,
-                            'plazo_meses' => $context['plazo_meses'] ?? 1,
-                        ],
-                    ],
-                ],
-                'next_steps' => [],
-            ];
-        }
-        return [
-            'mode' => 'answer_only',
-            'response' => 'Para calcular mensualidad necesito tu edad o fecha de nacimiento.',
-            'actions' => [],
-            'next_steps' => [],
-        ];
-    }
-
-    if (preg_match('/\b(agendar|llamada|llamen|contacto)\b/u', $msg)) {
-        return [
-            'mode' => 'answer_only',
-            'response' => 'Para agendar, dime nombre, telefono y fecha/hora.',
-            'actions' => [],
-            'next_steps' => [],
-        ];
-    }
-
-    if (preg_match('/\b(funeria|funeraria|registrar\s+funeraria)\b/u', $msg)) {
-        return [
-            'mode' => 'answer_only',
-            'response' => 'Para registrar tu funeraria necesito nombre, ciudad y telefono.',
-            'actions' => [],
-            'next_steps' => [],
-        ];
-    }
-
-    return [
-        'mode' => 'answer_only',
-        'response' => 'Hola, soy KASU. Te ayudo con cotizacion, poliza o llamada. Que necesitas?',
-        'actions' => [],
-        'next_steps' => [],
-    ];
-}
-
 function generatePublicPlanWithAI(string $message, IAConversationStore $store, array $tools, array $context, string $dbHistory): array {
     $history = $dbHistory !== '' ? $dbHistory : $store->getFormattedHistory(6);
     $toolsJson = json_encode($tools, JSON_UNESCAPED_UNICODE);
@@ -1684,15 +1527,37 @@ Eres el asistente publico de KASU (ventas y atencion al cliente). Devuelve SIEMP
 REGLAS:
 - Si falta informacion clave, responde con una pregunta y usa mode=answer_only.
 - Usa CONTEXTO_CONOCIDO_JSON para no pedir datos ya dados.
-- Para clientes existentes, pide CURP + numero de poliza y usa la tool consultar_cliente cuando los tengas.
+- IMPORTANTE: "precio de mi poliza" o "cuanto cuesta" SIN haber dado CURP+poliza antes = quiere COTIZAR un servicio nuevo, NO consultar uno existente. Activa modo cotizacion (pide CURP o edad).
+- Si el usuario da su nombre y NO sabes si es cliente, usa buscar_cliente_prospecto para verificarlo.
+- IMPORTANTE VERIFICACION: si buscar_cliente_prospecto devuelve modo='verificacion', DEBES verificar su identidad antes de mostrar datos. NO muestres CURP, poliza ni status. Sigue estos pasos UNO POR UNO:
+  1️⃣ Pide el telefono y verificalo con verificar_dato(tipo:'telefono', valor:'...')
+  2️⃣ Si telefono OK → pide el email y verificalo con verificar_dato(tipo:'email', valor:'...')
+  3️⃣ Si email OK → envia codigo con enviar_codigo_verificacion() y pide el codigo al usuario
+  4️⃣ Verifica el codigo con verificar_dato(tipo:'codigo', valor:'...')
+  5️⃣ Si codigo OK → el cliente queda verificado. Ahora SI puedes usar consultar_cliente, calcular_estado_credito y mostrar datos.
+- Si buscar_cliente_prospecto NO encuentra al usuario, tratalo como prospecto nuevo y ofrece cotizar.
+- Si ya tienes id_venta de un cliente, usa calcular_estado_credito para mostrar saldo pendiente, pagos y mora.
+- Solo trata al usuario como cliente existente si YA proporciono CURP+poliza en esta conversacion o buscar_cliente_prospecto lo confirmo.
+- Para clientes existentes CON CURP+poliza ya dados, usa la tool consultar_cliente.
 - Si solo tiene CURP y no tiene poliza, usa consultar_cliente_curp para confirmar el nombre y pedir confirmacion.
-- Para cotizacion necesitas edad o fecha de nacimiento y servicio.
+- Para cotizacion necesitas CURP (o edad/fecha de nacimiento) y servicio.
+- SI YA TIENES CURP + SERVICIO: NO preguntes nada mas, ejecuta YA la tool cotizar_producto con mode=tool_sequence. El plazo es opcional (por defecto 1 = contado).
 - Para enviar cotizacion por correo necesitas nombre, correo, servicio y edad/fecha.
 - Si el usuario pidio cotizacion por correo y luego solo comparte su nombre, usa el contexto (correo/edad/servicio) para enviarla.
 - Para agendar llamada necesitas inicio (fecha/hora) y datos del prospecto (nombre y contacto).
 - Para enviar poliza usa la tool enviar_poliza_correo (requiere curp y poliza).
 - Para contratar una poliza nueva usa registrar_poliza cuando tengas: CURP, correo, telefono, codigo postal, servicio, plazo, dia de pago (si es credito) y aceptacion de terminos/aviso/fideicomiso.
-- Si faltan datos de registro, pregunta solo por lo que falte.
+- IMPORTANTE CIERRE DE VENTA: cuando el usuario diga "me interesa", "si quiero", "contratar" o muestre intencion de compra, NO pidas todos los datos de golpe. Sigue este orden EXACTO:
+  1️⃣ Primero pregunta: "Prefieres que te registre yo ahora mismo o prefieres que un agente humano te llame para hacerlo?"
+  2️⃣ Si elige agente humano: usa agendar_llamada (pide nombre y telefono si faltan).
+  3️⃣ Si elige que tu lo registres: pide los datos UNO POR UNO en este orden:
+     a) correo electronico
+     b) telefono (10 digitos)
+     c) codigo postal
+     d) dia de pago (1 o 15, solo si es credito)
+     e) confirmacion de terminos, aviso de privacidad y fideicomiso (pregunta: "Aceptas los terminos, aviso de privacidad y fideicomiso?")
+     f) Cuando tengas TODO → ejecuta registrar_poliza con mode=tool_sequence.
+- NO pidas mas de UN dato por mensaje durante el registro.
 - El servicio de seguridad es solo para policias de gobierno.
 - El servicio de transporte es solo para taxistas/transportistas.
 - Si no es policia ni transportista, asigna funerario.
@@ -1702,6 +1567,7 @@ REGLAS:
 - Responde maximo en 2 oraciones, sin listas largas ni markdown.
 - Puedes recomendar articulos con la tool de blog.
 - No des asesoria financiera.
+- IMPORTANTE TRANSFERENCIA A HUMANO: si el usuario pide hablar con persona, el problema es complejo, o no puede resolverse via chat, USA registrar_ticket. tipo='cliente' si esta verificado → Mesa_Clientes. tipo='prospecto' si es nuevo → Mesa_Prospectos. Tras crear ticket, despide al usuario: "Un agente te contactara pronto."
 
 CONTEXTO_CONOCIDO_JSON:
 {$contextJson}
@@ -1735,12 +1601,12 @@ PROMPT;
     $start = strpos($responseText, '{');
     $end = strrpos($responseText, '}');
     if ($start === false || $end === false) {
-        return generatePublicPlanBasic($message, $context);
+        return ['mode' => 'answer_only', 'response' => 'No pude procesar tu solicitud. Intenta de nuevo.', 'actions' => [], 'next_steps' => []];
     }
     $json = substr($responseText, $start, $end - $start + 1);
     $plan = json_decode($json, true);
     if (!is_array($plan)) {
-        return generatePublicPlanBasic($message, $context);
+        return ['mode' => 'answer_only', 'response' => 'No pude procesar tu solicitud. Intenta de nuevo.', 'actions' => [], 'next_steps' => []];
     }
 
     return $plan;
@@ -2151,6 +2017,23 @@ function kasu_update_context_from_result(array $context, string $tool, array $re
         }
     }
 
+    if ($tool === 'buscar_cliente_prospecto') {
+        $lista = $result['resultados'] ?? [];
+        if (!empty($lista[0])) {
+            $primero = $lista[0];
+            if (($primero['origen'] ?? '') === 'cliente') {
+                $context['intent_cliente'] = true;
+                if (!empty($primero['id_venta'])) $context['id_venta'] = (int)$primero['id_venta'];
+                if (!empty($primero['curp'])) $context['curp'] = (string)$primero['curp'];
+                if (!empty($primero['poliza'])) $context['poliza'] = (string)$primero['poliza'];
+            }
+        }
+    }
+
+    if ($tool === 'calcular_estado_credito' && !empty($result['ok'])) {
+        if (!empty($result['id_venta'])) $context['id_venta'] = (int)$result['id_venta'];
+    }
+
     return $context;
 }
 
@@ -2218,6 +2101,18 @@ function kasu_fill_args_from_context(string $tool, array $args, array $context):
 }
 
 function kasu_args_missing(string $tool, array $args): bool {
+    if ($tool === 'buscar_cliente_prospecto') {
+        return empty($args['nombre']);
+    }
+    if ($tool === 'verificar_dato') {
+        return empty($args['tipo']) || empty($args['valor']);
+    }
+    if ($tool === 'enviar_codigo_verificacion') {
+        return false; // sin args requeridos
+    }
+    if ($tool === 'calcular_estado_credito') {
+        return empty($args['id_venta']) || (int)$args['id_venta'] <= 0;
+    }
     if ($tool === 'consultar_cliente' || $tool === 'enviar_poliza_correo') {
         return empty($args['curp']) || empty($args['poliza']);
     }
@@ -2366,6 +2261,47 @@ function buildPublicHtml(string $response, array $results, string $contactPhone)
                     }
                     $html .= '</ul></div>';
                 }
+                break;
+
+            case 'buscar_cliente_prospecto':
+                $encontrados = (int)($result['encontrados'] ?? 0);
+                $lista = $result['resultados'] ?? [];
+                if ($encontrados > 0) {
+                    $html .= '<div><p>Encontre ' . $encontrados . ' resultado(s):</p>';
+                    foreach ($lista as $r) {
+                        $origen = $r['origen'] ?? '';
+                        $nombreCli = trim(($r['Nombre'] ?? '') . ' ' . ($r['Paterno'] ?? '') . ' ' . ($r['Materno'] ?? ''));
+                        if ($nombreCli === '') $nombreCli = $r['nombre'] ?? 'Sin nombre';
+                        $curpCli = $r['curp'] ?? '';
+                        $polizaCli = $r['poliza'] ?? '';
+                        $statusCli = $r['Status'] ?? ($r['Cancelacion'] ?? '');
+                        $html .= '<p>' . kasu_html($nombreCli) . ' (' . kasu_html($origen) . ')';
+                        if ($curpCli !== '') $html .= ' - CURP: ' . kasu_html($curpCli);
+                        if ($polizaCli !== '') $html .= ' - Poliza: ' . kasu_html($polizaCli);
+                        if ($statusCli !== '') $html .= ' - Status: ' . kasu_html((string)$statusCli);
+                        $html .= '</p>';
+                    }
+                    $html .= '</div>';
+                } else {
+                    $html .= '<p>' . kasu_html((string)($result['mensaje'] ?? 'No se encontraron resultados.')) . '</p>';
+                }
+                break;
+
+            case 'calcular_estado_credito':
+                $html .= '<div><p>Estado de tu credito</p>';
+                $html .= '<p>Pagado: $' . kasu_html(number_format((float)($result['pagado_importe'] ?? $result['total_pagado'] ?? 0), 2)) . '</p>';
+                $html .= '<p>Pendiente: $' . kasu_html(number_format((float)($result['pendiente_importe'] ?? $result['saldo_pendiente'] ?? 0), 2)) . '</p>';
+                $html .= '<p>Cuota mensual: $' . kasu_html(number_format((float)($result['cuota'] ?? 0), 2)) . '</p>';
+                $html .= '<p>Estado: ' . kasu_html(($result['en_mora'] ?? false) ? 'EN MORA' : (string)($result['estado'] ?? 'AL CORRIENTE')) . '</p>';
+                $html .= '</div>';
+                break;
+
+            case 'verificar_dato':
+                $html .= '<p>' . kasu_html((string)($result['mensaje'] ?? 'Verificacion procesada.')) . '</p>';
+                break;
+
+            case 'enviar_codigo_verificacion':
+                $html .= '<p>' . kasu_html((string)($result['mensaje'] ?? 'Codigo enviado.')) . '</p>';
                 break;
         }
     }

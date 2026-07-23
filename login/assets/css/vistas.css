@@ -42,8 +42,8 @@ main.page-content > *:first-child{
 }
 
 .dashboard-shell{
-  max-width:1100px;
-  margin:0 auto;
+  max-width:100%;
+  margin:0;
   padding:10px 16px 0;
 }
 .page-heading{
@@ -186,8 +186,8 @@ main.page-content > *:first-child{
 
 /* Layout específico: Estado de Cuenta */
 .statement-shell{
-  max-width:1100px;
-  margin:0 auto;
+  max-width:100%;
+  margin:0;
   padding:16px 16px 0;
 }
 .statement-header{

@@ -354,6 +354,110 @@ if ($qsMsg !== null) {
     </section>
 
     <!-- Inicio - Articulos de Blog -->
+    <?php
+    $blogCardsHtml = '';
+    $blogFetchError = false;
+
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL            => 'https://kasu.com.mx/blog/wp-json/wp/v2/posts?per_page=12&_embed=1',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS      => 3,
+        CURLOPT_TIMEOUT        => 15,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_HTTPHEADER     => ['Accept: application/json'],
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
+
+    $blogResponse = curl_exec($ch);
+    $blogHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($blogResponse !== false && $blogHttpCode === 200) {
+        $posts = json_decode($blogResponse, true);
+        if (is_array($posts) && count($posts) > 0) {
+            // Mezclar y tomar 3 al azar
+            shuffle($posts);
+            $selected = array_slice($posts, 0, 3);
+
+            foreach ($selected as $post) {
+                $title = wp_strip_html($post['title']['rendered'] ?? '');
+                $rawExcerpt = $post['excerpt']['rendered'] ?? $post['content']['rendered'] ?? '';
+                $excerpt = wp_truncate(wp_strip_html($rawExcerpt), 140);
+                $link = $post['link'] ?? '#';
+
+                // Imagen: featured media > yoast > primer img del contenido
+                $imageUrl = '';
+                $media = $post['_embedded']['wp:featuredmedia'][0] ?? null;
+                if ($media) {
+                    if (!empty($media['media_details']['sizes'])) {
+                        $imageUrl = $media['media_details']['sizes']['medium_large']['source_url']
+                                 ?? $media['media_details']['sizes']['large']['source_url']
+                                 ?? $media['source_url']
+                                 ?? '';
+                    } else {
+                        $imageUrl = $media['source_url'] ?? '';
+                    }
+                }
+                if (empty($imageUrl) && !empty($post['yoast_head_json'])) {
+                    $yoast = $post['yoast_head_json'];
+                    $og = $yoast['og_image'] ?? [];
+                    if (is_array($og) && isset($og[0]['url'])) {
+                        $imageUrl = $og[0]['url'];
+                    } elseif (!empty($yoast['twitter_image'])) {
+                        $imageUrl = $yoast['twitter_image'];
+                    }
+                }
+                if (empty($imageUrl)) {
+                    $contentHtml = $post['content']['rendered'] ?? '';
+                    if ($contentHtml !== '' && preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $contentHtml, $m)) {
+                        $imageUrl = $m[1];
+                    }
+                }
+
+                $titleAttr = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
+                $excerptAttr = htmlspecialchars($excerpt ?: 'Descubre mas en nuestro blog.', ENT_QUOTES, 'UTF-8');
+                $linkAttr = htmlspecialchars($link, ENT_QUOTES, 'UTF-8');
+                $imgAttr = htmlspecialchars($imageUrl, ENT_QUOTES, 'UTF-8');
+                $altAttr = htmlspecialchars($title ?: 'Articulo KASU', ENT_QUOTES, 'UTF-8');
+
+                $imgHtml = '';
+                if ($imageUrl !== '') {
+                    $imgHtml = '<div class="blog-card-media"><img src="' . $imgAttr . '" alt="' . $altAttr . '" loading="lazy" decoding="async"></div>';
+                }
+
+                $blogCardsHtml .= '
+                <article class="blog-card">
+                    <a class="blog-card-link" href="' . $linkAttr . '" aria-label="' . $titleAttr . '">
+                        ' . $imgHtml . '
+                        <div class="blog-card-body">
+                            <h3 class="blog-card-title">' . $titleAttr . '</h3>
+                            <p class="blog-card-text">' . $excerptAttr . '</p>
+                        </div>
+                    </a>
+                </article>';
+            }
+        } else {
+            $blogCardsHtml = '<p class="blog-status">Aun no hay articulos disponibles.</p>';
+        }
+    } else {
+        $blogFetchError = true;
+    }
+
+    // Funciones auxiliares usadas arriba
+    function wp_strip_html(string $html): string {
+        $text = strip_tags($html);
+        // Decodificar entidades HTML comunes
+        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        return trim($text);
+    }
+    function wp_truncate(string $text, int $max): string {
+        if (mb_strlen($text) <= $max) return $text;
+        return mb_substr($text, 0, $max) . '...';
+    }
+    ?>
+
     <section class="blog-section" id="Blog">
         <div class="container">
             <div class="blog-header">
@@ -361,8 +465,17 @@ if ($qsMsg !== null) {
                 <h2 class="blog-title">Articulos recientes</h2>
                 <p class="blog-sub">Explora contenido util y actual sobre servicios funerarios, previsión y bienestar familiar.</p>
             </div>
-            <div class="blog-grid" id="blog-cards" aria-live="polite"></div>
-            <p class="blog-status" id="blog-status">Cargando articulos...</p>
+            <div class="blog-grid" id="blog-cards">
+                <?php
+                if ($blogCardsHtml !== '') {
+                    echo $blogCardsHtml;
+                } elseif ($blogFetchError) {
+                    echo '<p class="blog-status">No se pudieron cargar los articulos del blog.</p>';
+                } else {
+                    echo '<p class="blog-status">Cargando articulos...</p>';
+                }
+                ?>
+            </div>
         </div>
     </section>
 
@@ -478,125 +591,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
         });
-    }
-
-    var blogContainer = document.getElementById('blog-cards');
-    var blogStatus = document.getElementById('blog-status');
-    if (blogContainer && blogStatus) {
-        var blogEndpoint = 'https://kasu.com.mx/blog/wp-json/wp/v2/posts?per_page=12&_embed=1';
-        var stripHtml = function (html) {
-            var temp = document.createElement('div');
-            temp.innerHTML = html || '';
-            return (temp.textContent || temp.innerText || '').trim();
-        };
-        var truncateText = function (text, max) {
-            if (text.length <= max) return text;
-            return text.slice(0, max).trim() + '...';
-        };
-        var pickRandom = function (items, count) {
-            var copy = items.slice();
-            var picked = [];
-            while (copy.length && picked.length < count) {
-                var index = Math.floor(Math.random() * copy.length);
-                picked.push(copy.splice(index, 1)[0]);
-            }
-            return picked;
-        };
-
-        fetch(blogEndpoint)
-            .then(function (response) {
-                if (!response.ok) throw new Error('Blog fetch failed');
-                return response.json();
-            })
-            .then(function (posts) {
-                if (!Array.isArray(posts) || posts.length === 0) {
-                    blogStatus.textContent = 'Aun no hay articulos disponibles.';
-                    return;
-                }
-
-                blogContainer.innerHTML = '';
-                var selected = pickRandom(posts, 3);
-                var getYoastImage = function (post) {
-                    if (!post || !post.yoast_head_json) return '';
-                    var og = post.yoast_head_json.og_image;
-                    if (Array.isArray(og) && og.length && og[0] && og[0].url) return og[0].url;
-                    if (post.yoast_head_json.twitter_image) return post.yoast_head_json.twitter_image;
-                    return '';
-                };
-                var getFirstContentImage = function (post) {
-                    if (!post || !post.content || !post.content.rendered) return '';
-                    var temp = document.createElement('div');
-                    temp.innerHTML = post.content.rendered;
-                    var img = temp.querySelector('img');
-                    if (!img) return '';
-                    return img.getAttribute('src') ||
-                        img.getAttribute('data-src') ||
-                        img.getAttribute('data-lazy-src') || '';
-                };
-
-                selected.forEach(function (post) {
-                    var title = stripHtml(post.title && post.title.rendered ? post.title.rendered : '');
-                    var rawExcerpt = post.excerpt && post.excerpt.rendered ? post.excerpt.rendered : (post.content && post.content.rendered ? post.content.rendered : '');
-                    var excerpt = truncateText(stripHtml(rawExcerpt), 140);
-                    var imageUrl = '';
-                    var media = post._embedded && post._embedded['wp:featuredmedia'] ? post._embedded['wp:featuredmedia'][0] : null;
-                    if (media) {
-                        if (media.media_details && media.media_details.sizes) {
-                            imageUrl = (media.media_details.sizes.medium_large && media.media_details.sizes.medium_large.source_url) ||
-                                (media.media_details.sizes.large && media.media_details.sizes.large.source_url) ||
-                                media.source_url || '';
-                        } else {
-                            imageUrl = media.source_url || '';
-                        }
-                    }
-                    if (!imageUrl) {
-                        imageUrl = getYoastImage(post) || getFirstContentImage(post);
-                    }
-
-                    var card = document.createElement('article');
-                    card.className = 'blog-card';
-
-                    var link = document.createElement('a');
-                    link.className = 'blog-card-link';
-                    link.href = post.link;
-                    link.setAttribute('aria-label', title || 'Ver articulo');
-
-                    var mediaWrap = document.createElement('div');
-                    mediaWrap.className = 'blog-card-media';
-                    if (imageUrl) {
-                        var img = document.createElement('img');
-                        img.src = imageUrl;
-                        img.alt = title || 'Articulo de blog';
-                        img.loading = 'lazy';
-                        img.decoding = 'async';
-                        mediaWrap.appendChild(img);
-                    }
-
-                    var body = document.createElement('div');
-                    body.className = 'blog-card-body';
-
-                    var titleEl = document.createElement('h3');
-                    titleEl.className = 'blog-card-title';
-                    titleEl.textContent = title || 'Articulo KASU';
-
-                    var textEl = document.createElement('p');
-                    textEl.className = 'blog-card-text';
-                    textEl.textContent = excerpt || 'Descubre mas en nuestro blog.';
-
-                    body.appendChild(titleEl);
-                    body.appendChild(textEl);
-                    link.appendChild(mediaWrap);
-                    link.appendChild(body);
-                    card.appendChild(link);
-                    blogContainer.appendChild(card);
-                });
-
-                blogStatus.textContent = '';
-                blogStatus.style.display = 'none';
-            })
-            .catch(function () {
-                blogStatus.textContent = 'No se pudieron cargar los articulos del blog.';
-            });
     }
 
     var banner = document.querySelector('.main-banner');

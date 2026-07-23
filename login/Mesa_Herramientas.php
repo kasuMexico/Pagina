@@ -297,7 +297,7 @@ $VerCache = time();
 
       <?php if ($Reg): ?>
       <!-- SECCION: Mi información-->
-      <section class="tool-section tool-span-4">
+      <section class="tool-section tool-span-1">
         <header>
           <strong>Mi información</strong>
           <small><?php echo h($basicas->BuscarCampos($mysqli,"NombreNivel","Nivel","Id",$Reg['Nivel'] ?? 0)); ?></small>
@@ -313,7 +313,7 @@ $VerCache = time();
       <?php endif; ?>
 
       <?php if ($canAccessApiMarket): ?>
-      <section class="tool-section tool-span-4">
+      <section class="tool-section tool-span-1">
         <header>
           <strong>API Market</strong>
           <small>Accesos, tokens y wallet</small>
@@ -327,7 +327,7 @@ $VerCache = time();
 
       <?php if ($canManageEmployees): ?>
       <!-- SECCION: Asignacion de Metas-->
-      <section class="tool-section tool-span-2">
+      <section class="tool-section tool-span-1">
         <header><strong>Metas y normalidad</strong></header>
         <div class="tool-section-body">
           <form method="POST" action="php/Funcionalidad_Pwa.php">
@@ -345,28 +345,6 @@ $VerCache = time();
               <input class="form-control" type="number" name="Normalidad" placeholder="Ej. 92">
             </div>
             <button class="btn btn-secondary btn-block" type="submit" name="Asignar" value="1">Guardar metas</button>
-          </form>
-        </div>
-      </section>
-      <?php endif; ?>
-
-      <?php if ($canManageEmployees): ?>
-      <!-- SECCION: Carga masiva de clientes -->
-      <section class="tool-section tool-span-2">
-        <header><strong>Carga masiva de clientes</strong></header>
-        <div class="tool-section-body">
-          <form method="POST" action="Lote_Clientes.php" enctype="multipart/form-data">
-            <div class="file-input mb-2">
-              <input type="file" id="archivoCsv" name="archivo_csv" accept=".csv,text/csv">
-              <label for="archivoCsv">
-                <span>Selecciona archivo CSV</span>
-                <em>Browse</em>
-              </label>
-            </div>
-            <div class="d-flex flex-wrap gap-2">
-              <button class="btn btn-secondary" type="submit">Subir archivo</button>
-              <a class="btn btn-outline-secondary" href="https://kasu.com.mx/login/assets/Plantilla_Ctes_Masivos_KASU.csv" download>Descargar plantilla</a>
-            </div>
           </form>
         </div>
       </section>
@@ -392,9 +370,31 @@ $VerCache = time();
         </div>
       </section>
 
+      <?php if ($canManageEmployees): ?>
+      <!-- SECCION: Carga masiva de clientes -->
+      <section class="tool-section tool-span-2">
+        <header><strong>Carga masiva de clientes</strong></header>
+        <div class="tool-section-body">
+          <form method="POST" action="Lote_Clientes.php" enctype="multipart/form-data">
+            <div class="file-input mb-2">
+              <input type="file" id="archivoCsv" name="archivo_csv" accept=".csv,text/csv">
+              <label for="archivoCsv">
+                <span>Selecciona archivo CSV</span>
+                <em>Browse</em>
+              </label>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <button class="btn btn-secondary" type="submit">Subir archivo</button>
+              <a class="btn btn-outline-secondary" href="https://kasu.com.mx/login/assets/Plantilla_Ctes_Masivos_KASU.csv" download>Descargar plantilla</a>
+            </div>
+          </form>
+        </div>
+      </section>
+      <?php endif; ?>
+
       <?php if ($canUseQuickSearches): ?>
       <!-- SECCION: INGRESO A SUB SECCIONES-->
-      <section class="tool-section tool-span-3">
+      <section class="tool-section tool-span-2">
         <header><strong>Buscadores rápidos</strong></header>
         <div class="tool-section-body">
           <?php if ($canManageEmployees): ?>
@@ -502,5 +502,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }, { passive: false });
   })();
 </script>
+<?php require_once __DIR__ . "/html/kasu_agent_fab.php"; ?>
 </body>
 </html>

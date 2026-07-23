@@ -38,8 +38,8 @@ main.page-content {
 }
 
 .dashboard-shell {
-  max-width: 1100px;
-  margin: 0 auto;
+  max-width: 100%;
+  margin: 0;
   padding: 8px 16px 0;
 }
 
@@ -87,4 +87,152 @@ main.page-content {
   border: 0;
   border-top: 1px solid rgba(15,23,42,.08);
   margin: 18px 0;
+}
+
+/* --- REGULAR ANCHO A 100% PARA PWA Y MESA --- */
+
+/* 1. Liberar los contenedores contenedores */
+.dashboard-shell,
+.statement-shell,
+main.page-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* 2. Liberar los componentes internos (Hero Card y Grids) */
+section.hero-card,
+section.dashboard-row,
+.card-base,
+.card-glass,
+.form-card,
+.kpi-grid {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* 3. Dashboard Row: 2 columnas fluidas a ancho completo (IA izq, KPIs der) */
+section.dashboard-row {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) !important;
+    gap: 20px !important;
+}
+
+/* 4. Hero Card: 2 columnas fluidas (info izq, avatar der) */
+section.hero-card {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) !important;
+    gap: 18px !important;
+}
+
+/* 5. Evitar desbordamiento horizontal en tablas y tarjetas */
+.table-card,
+.mesa-table-wrapper,
+.table-responsive {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+}
+.mesa-table-wrapper {
+    margin-bottom: 10px !important;
+}
+.mesa-table {
+    width: 100% !important;
+    table-layout: fixed !important;
+}
+.mesa-table th,
+.mesa-table td {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    overflow: hidden;
+}
+/* Evitar que el flex interno con imagen rompa el ancho de la celda */
+.mesa-table td .d-flex {
+    min-width: 0;
+}
+.mesa-table td .d-flex > div:last-child {
+    min-width: 0;
+    overflow: hidden;
+}
+.img-cup {
+    flex-shrink: 0;
+    max-width: 70px;
+}
+/* Acciones: grid 2x2 para que los botones quepan sin desbordar */
+.mesa-actions-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 4px !important;
+}
+.mesa-actions-grid form {
+    margin: 0;
+    min-width: 0;
+}
+.mesa-actions-grid .btn {
+    width: 100% !important;
+    min-width: 0;
+    padding: 4px 2px !important;
+    font-size: .7rem !important;
+}
+/* Date + botón: apilar vertical */
+.mesa-actions-grid .d-flex {
+    flex-direction: column !important;
+    gap: 2px !important;
+}
+.mesa-actions-grid .form-control-sm {
+    width: 100% !important;
+    max-width: none !important;
+    font-size: .65rem !important;
+    padding: 1px 2px !important;
+    height: 22px !important;
+}
+
+/* 6. Unificar tamaños de headings en cards (sin depender de vistas.css) */
+.card-glass h2,
+.table-card h2,
+.list-card h2,
+.form-card h2,
+.chart-card h2,
+.card-base header h2 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin: 0;
+    color: #0f172a;
+}
+
+/* 7. .action-btn para páginas que no cargan vistas.css */
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(59,130,246,.25);
+    font-weight: 700;
+    font-size: .92rem;
+    background: linear-gradient(135deg,rgba(255,255,255,.9),rgba(236,244,255,.95));
+    color: #1d4ed8;
+    box-shadow: 0 14px 32px rgba(59,130,246,.16);
+    text-decoration: none;
+    transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+    white-space: nowrap;
+}
+.action-btn.primary {
+    background: #0f6ef0;
+    color: #fff;
+    border-color: rgba(15,110,240,.35);
+    box-shadow: 0 14px 32px rgba(15,110,240,.45);
+}
+.action-btn.success {
+    background: #22c55e;
+    color: #fff;
+    border-color: rgba(34,197,94,.35);
+    box-shadow: 0 14px 32px rgba(34,197,94,.5);
+}
+.action-btn .material-icons {
+    font-size: 18px;
 }

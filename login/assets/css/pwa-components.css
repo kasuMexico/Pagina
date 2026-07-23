@@ -358,3 +358,103 @@
 }
 .modal-header { border-bottom: 1px solid rgba(226,232,240,.9); }
 .modal-footer { border-top: 1px solid rgba(226,232,240,.9); }
+
+/* ===== Fix desbordamiento horizontal en tablas ===== */
+.table-card,
+.mesa-table-wrapper,
+.table-responsive {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+}
+.mesa-table {
+    width: 100% !important;
+    table-layout: fixed !important;
+}
+.mesa-table th,
+.mesa-table td {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    overflow: hidden;
+}
+.mesa-table td .d-flex {
+    min-width: 0;
+}
+.mesa-table td .d-flex > div:last-child {
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* Acciones: grid 2x2 para que 4 botones quepan sin desbordar */
+.mesa-actions-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 4px !important;
+}
+.mesa-actions-grid form {
+    margin: 0;
+    min-width: 0;
+}
+.mesa-actions-grid .btn {
+    width: 100% !important;
+    min-width: 0;
+    padding: 4px 2px !important;
+    font-size: .7rem !important;
+}
+/* Date + botón: apilar verticalmente */
+.mesa-actions-grid .d-flex {
+    flex-direction: column !important;
+    gap: 2px !important;
+}
+.mesa-actions-grid .form-control-sm {
+    width: 100% !important;
+    max-width: none !important;
+    font-size: .65rem !important;
+    padding: 1px 2px !important;
+    height: 22px !important;
+}
+
+/* Unificar tamaños de headings en cards */
+.card-glass h2,
+.table-card h2,
+.list-card h2,
+.form-card h2,
+.chart-card h2,
+.card-base header h2 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin: 0;
+    color: #0f172a;
+}
+
+/* ===== .action-btn (copia de vistas.css para páginas que no la cargan) ===== */
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(59,130,246,.25);
+    font-weight: 700;
+    font-size: .92rem;
+    background: linear-gradient(135deg,rgba(255,255,255,.9),rgba(236,244,255,.95));
+    color: #1d4ed8;
+    box-shadow: 0 14px 32px rgba(59,130,246,.16);
+    text-decoration: none;
+    transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+    white-space: nowrap;
+}
+.action-btn.primary {
+    background: #0f6ef0;
+    color: #fff;
+    border-color: rgba(15,110,240,.35);
+    box-shadow: 0 14px 32px rgba(15,110,240,.45);
+}
+.action-btn.success {
+    background: #22c55e;
+    color: #fff;
+    border-color: rgba(34,197,94,.35);
+    box-shadow: 0 14px 32px rgba(34,197,94,.5);
+}
+.action-btn .material-icons {
+    font-size: 18px;
+}

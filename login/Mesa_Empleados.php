@@ -970,5 +970,6 @@ $VerCache = $VerCache ?? time();
       }
     });
   </script>
+<?php require_once __DIR__ . "/html/kasu_agent_fab.php"; ?>
 </body>
 </html>

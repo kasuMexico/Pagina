@@ -480,5 +480,6 @@ foreach ($mpOps as $mp) {
     modal.find('#c_HoraDeposito').val(hStr);
   });
   </script>
+<?php require_once __DIR__ . "/html/kasu_agent_fab.php"; ?>
 </body>
 </html>

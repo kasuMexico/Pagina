@@ -20,9 +20,9 @@ return [
         'enable_debug_log' => false
     ],
     
-    // Configuración de OpenAI
+    // Configuración de IA (DeepSeek)
     'openai' => [
-        'model' => 'gpt-5.1',
+        'model' => 'deepseek-chat',
         'max_tokens_planning' => 1200,
         'max_tokens_response' => 800,
         'temperature' => 0.7,

@@ -90,6 +90,7 @@ if (!$venta) {
       Regresar
     </a>
   </div>
+<?php require_once __DIR__ . "/html/kasu_agent_fab.php"; ?>
 </body>
 </html>
     <?php
@@ -454,5 +455,6 @@ HTML;
 <script type="text/javascript" src="Javascript/localize.js"></script>
 <script src="Javascript/fingerprint-core-y-utils.js"></script>
 <script src="Javascript/finger.js" defer></script>
+<?php require_once __DIR__ . "/html/kasu_agent_fab.php"; ?>
 </body>
 </html>

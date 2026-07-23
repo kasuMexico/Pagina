@@ -27,7 +27,30 @@ try {
     if (!ob_get_level()) { ob_start(); }
 
     // Core
-    require_once '../../eia/Conexiones/cn_vtas.php';
+    // Cargar variables de entorno desde .env
+if (!getenv('DB_PASS_VTAS')) {
+    $root = dirname(__DIR__);
+    $envFile = $root . '/.env';
+    if (is_file($envFile)) {
+        foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+            $line = trim($line);
+            if ($line === '' || $line[0] === '#') continue;
+            if (strpos($line, '=') === false) continue;
+            list($key, $value) = explode('=', $line, 2);
+            $key = trim($key);
+            $value = trim($value);
+            if ((($value[0] ?? '') === '"' || ($value[0] ?? '') === "'") && ($value[0] ?? '') === substr($value, -1)) {
+                $value = substr($value, 1, -1);
+            }
+            if ($key !== '' && getenv($key) === false) {
+                putenv("$key=$value");
+                $_ENV[$key] = $value;
+            }
+        }
+    }
+}
+
+require_once '../../eia/Conexiones/cn_vtas.php';
     require_once 'dompdfMaster/dompdf_config.inc.php';
     @require_once 'dompdfMaster/include/autoload.inc.php'; // autoload DOMPDF si existe
 

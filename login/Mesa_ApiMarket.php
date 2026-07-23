@@ -3,6 +3,28 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/eia/session.php';
 kasu_session_start();
+
+// Cargar variables de entorno desde .env (parser nativo)
+$root = dirname(__DIR__);
+$envFile = $root . '/.env';
+if (is_file($envFile)) {
+  foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+    $line = trim($line);
+    if ($line === '' || $line[0] === '#') continue;
+    if (strpos($line, '=') === false) continue;
+    list($key, $value) = explode('=', $line, 2);
+    $key = trim($key);
+    $value = trim($value);
+    if ((($value[0] ?? '') === '"' || ($value[0] ?? '') === "'") && ($value[0] ?? '') === substr($value, -1)) {
+      $value = substr($value, 1, -1);
+    }
+    if ($key !== '' && getenv($key) === false) {
+      putenv("$key=$value");
+      $_ENV[$key] = $value;
+    }
+  }
+}
+
 require_once __DIR__ . '/../eia/Conexiones/cn_vtas.php';
 require_once __DIR__ . '/../eia/Funciones/Funciones_Basicas.php';
 require_once __DIR__ . '/../apimarket/Funciones/cn_apimarket.php';
@@ -650,5 +672,6 @@ $VerCache = time();
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+<?php require_once __DIR__ . "/html/kasu_agent_fab.php"; ?>
 </body>
 </html>

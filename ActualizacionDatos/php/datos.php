@@ -304,7 +304,7 @@ for ($i=0; $i<6; $i++) {
   <link rel="icon" href="/assets/images/Index/florkasu.png">
   <link rel="stylesheet" href="../../assets/css/bootstrap.min.css">
   <link rel="stylesheet" href="../../assets/css/font-awesome.css">
-  <link rel="stylesheet" href="../assets/estadocta.css?v=1">
+  <link rel="stylesheet" href="../assets/estadocta.css?v=2">
   <link rel="stylesheet" href="../../login/assets/css/cupones.css">
 </head>
 <body>

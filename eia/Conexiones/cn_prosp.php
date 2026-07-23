@@ -1,14 +1,18 @@
 <?php
-//varibles de conexiones de base de datos
-    $db_host = "localhost"; // o prueba con la IP: 93.188.160.2 || srv908.hstgr.io
-    $db_user = "u557645733_prospectos";
-    $db_password = "Bo^6WK4ON8";
-    $db_name = "u557645733_prospectos";
-//coneccion con la base de datos para el registro de datos
+// Variables de conexión desde entorno (.env), con fallback para no romper entornos sin .env
+$db_host     = getenv('DB_HOST_PROSP')     ?: 'localhost';
+$db_user     = getenv('DB_USER_PROSP')     ?: 'u557645733_prospectos';
+$db_password = getenv('DB_PASS_PROSP')     ?: '';
+$db_name     = getenv('DB_NAME_PROSP')     ?: 'u557645733_prospectos';
+
+// Si no hay contraseña en entorno, el archivo .env no está configurado
+if ($db_password === '') {
+    die('Error de configuracion: DB_PASS_PROSP no definida.');
+}
+
 $pros = new mysqli($db_host, $db_user, $db_password, $db_name);
-//validacion de la conexion
-    //if ($pros->connect_errno){
-    //    echo "<br> Fallo al conectar a MySQL: (" . $pros->connect_errno . ") " . $pros->connect_error;
-    //  }
-    //      echo $pros->host_info . "\n"."Conexion Base Prospectos <br>";
+
+if ($pros->connect_errno) {
+    error_log('[KASU][cn_prosp] Fallo conexion: ' . $pros->connect_error);
+}
 ?>

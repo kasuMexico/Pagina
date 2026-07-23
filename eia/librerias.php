@@ -46,7 +46,7 @@ if (!defined('KASU_ERROR_LOG_FILE')) {
 }
 
 if (!defined('KASU_DEBUG_MODE')) {
-  define('KASU_DEBUG_MODE', kasu_env_flag('KASU_DEBUG_MODE', true));
+  define('KASU_DEBUG_MODE', kasu_env_flag('KASU_DEBUG_MODE', false));
 }
 if (!defined('KASU_LOG_TO_FILE')) {
   define('KASU_LOG_TO_FILE', kasu_env_flag('KASU_LOG_TO_FILE', true));
@@ -77,6 +77,27 @@ if (!function_exists('kasu_apply_error_settings')) {
 }
 
 kasu_apply_error_settings();
+
+// Cargar variables de entorno desde .env (parser nativo, sin dependencias)
+$root = dirname(__DIR__);
+$envFile = $root . '/.env';
+if (is_file($envFile)) {
+  foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+    $line = trim($line);
+    if ($line === '' || $line[0] === '#') continue;
+    if (strpos($line, '=') === false) continue;
+    list($key, $value) = explode('=', $line, 2);
+    $key = trim($key);
+    $value = trim($value);
+    if ((($value[0] ?? '') === '"' || ($value[0] ?? '') === "'") && ($value[0] ?? '') === substr($value, -1)) {
+      $value = substr($value, 1, -1);
+    }
+    if ($key !== '' && getenv($key) === false) {
+      putenv("$key=$value");
+      $_ENV[$key] = $value;
+    }
+  }
+}
 
 //incluir la conexion a la base de datos
 require_once __DIR__ . '/Conexiones/cn_prosp.php';

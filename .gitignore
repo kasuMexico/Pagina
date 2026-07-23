@@ -81,14 +81,11 @@ ehthumbs.db
 *.swo
 *.tmp
 sync_config.jsonc
-# Entornos
+
+# Secrets y runtime logs
+**/.env
 .env
 .env.*
+!.env.example
 eia/Vista-360/secret_config.php
-
-# Secrets
-**/.env
-eia/Vista-360/secret_config.php
-
-# runtime logs
-/eia/Funciones/usage_log.txt
+eia/Funciones/usage_log.txt

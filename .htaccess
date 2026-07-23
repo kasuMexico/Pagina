@@ -21,9 +21,6 @@ RewriteRule ^index\.php$ / [R=301,L]
 RewriteCond %{THE_REQUEST} \s/+nft\.php[?\s] [NC]
 RewriteRule ^nft\.php$ /nft [R=301,L]
 
-RewriteCond %{THE_REQUEST} \s/+fundacion\.php[?\s] [NC]
-RewriteRule ^fundacion\.php$ /fundacion [R=301,L]
-
 RewriteCond %{THE_REQUEST} \s/+testimonios\.php[?\s] [NC]
 RewriteRule ^testimonios\.php$ /testimonios [R=301,L]
 
@@ -107,7 +104,6 @@ RewriteRule ^prospectos/?$               /prospectos.php             [QSA,L]
 RewriteRule ^preguntas-frecuentes/?$     /preguntas-frecuentes.php   [QSA,L]
 RewriteRule ^linktree/?$                 /link.php                    [QSA,L]
 RewriteRule ^nft/?$                      /nft.php                    [QSA,L]
-RewriteRule ^fundacion/?$                /fundacion.php              [QSA,L]
 
 # === LOGIN: forzar slash final y servir index.php ===
 RewriteRule ^login$ /login/ [R=308,L]
@@ -154,7 +150,8 @@ ErrorDocument 404 /error.php
   Header set X-Content-Type-Options "nosniff"
   Header set X-Frame-Options "SAMEORIGIN"
   Header set Referrer-Policy "strict-origin-when-cross-origin"
-  # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+  Header always unset X-Powered-By
 
   # No cache para HTML/PHP cuando el switch NO_CACHE está activo
   <FilesMatch "\.(?:php|html?)$">
@@ -168,15 +165,17 @@ ErrorDocument 404 /error.php
     Header set Cache-Control "public, max-age=2592000, immutable"
   </FilesMatch>
 </IfModule>
-# Archivo de .Env para mercado pago
+# Bloquear archivos sensibles
 <Files ".env">
   Require all denied
 </Files>
+<Files "error.log">
+  Require all denied
+</Files>
+<FilesMatch "error_log$">
+  Require all denied
+</FilesMatch>
 
 <IfModule mod_autoindex.c>
   Options -Indexes
 </IfModule>
-# Proteccion de Archivo de contraseñas de correo masivo
-<Files ".env">
-  Require all denied
-</Files>

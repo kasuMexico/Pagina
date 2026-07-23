@@ -1,16 +1,18 @@
 <?php
-//varibles de conexiones de base de datos
-    $db_host = "srv908.hstgr.io"; // o prueba con la IP: 93.188.160.2
-    $db_user = "u557645733_kasuw";
-    $db_password = ";9Ai!5;G0QU";
-    $db_name = "u557645733_web";
-//coneccion con la base de datos para el registro de datos
+// Variables de conexión desde entorno (.env), con fallback para no romper entornos sin .env
+$db_host     = getenv('DB_HOST_VTAS')     ?: 'srv908.hstgr.io';
+$db_user     = getenv('DB_USER_VTAS')     ?: 'u557645733_kasuw';
+$db_password = getenv('DB_PASS_VTAS')     ?: '';
+$db_name     = getenv('DB_NAME_VTAS')     ?: 'u557645733_web';
+
+// Si no hay contraseña en entorno, el archivo .env no está configurado
+if ($db_password === '') {
+    die('Error de configuracion: DB_PASS_VTAS no definida.');
+}
+
 $mysqli = new mysqli($db_host, $db_user, $db_password, $db_name);
-//Validar la conexion con la base de datos
-    //if ($mysqli->connect_errno){
-    //    echo "Fallo al conectar a MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
-    //}
-    //    echo $mysqli->host_info . "\n"."Conexion Base Datos Ventas <br>";
-    //echo "imprime lo que trae el la variable mysqli -> en cn_vtas <br>";
-    //var_dump($mysqli);
+
+if ($mysqli->connect_errno) {
+    error_log('[KASU][cn_vtas] Fallo conexion: ' . $mysqli->connect_error);
+}
 ?>

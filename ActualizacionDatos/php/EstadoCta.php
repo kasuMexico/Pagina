@@ -1,4 +1,4 @@
-        <section id="sec-estado" class="section">
+        <section id="sec-estado" class="section active">
           <div class="card-kasu">
             <h5 class="features-title mb-3">Estado de cuenta</h5>
 

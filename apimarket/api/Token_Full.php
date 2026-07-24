@@ -40,9 +40,11 @@ if (!function_exists('api_token_full_handle')) {
             api_error(401, 'Firma invalida');
         }
 
+        $clientIp = api_client_ip();
         $tokenData = [
             'timestamp' => time(),
             'expires_in' => 600,
+            'ip' => $clientIp,
         ];
         $tokenJson = json_encode($tokenData, JSON_UNESCAPED_UNICODE);
         $token = hash_hmac('sha256', (string)$tokenJson, $expectedFirma);
@@ -62,6 +64,13 @@ if (!function_exists('api_token_full_handle')) {
 
 if (realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) {
     require_once __DIR__ . '/../librerias_api.php';
+
+    // === Rate limiting: 5 tokens por minuto por IP ===
+    api_rate_limit('token_full:' . api_client_ip(), 5, 60);
+
+    // === Headers de seguridad ===
+    api_security_headers();
+
     $db = api_require_db($mysqli ?? null, 'ventas');
     $data = api_read_json();
     api_token_full_handle($db, $data, $seguridad);

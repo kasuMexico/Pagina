@@ -6,6 +6,8 @@ require_once __DIR__ . '/../librerias_api.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 try {
+    api_security_headers();
+    api_rate_limit('accounts:' . api_client_ip(), 20, 60);
     $db = api_require_db($mysqli ?? null, 'ventas');
     $data = api_read_json();
     $auth = api_validate_bearer_or_exit($db, $data, 'API_ACCOUNTS');

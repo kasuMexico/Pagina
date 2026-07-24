@@ -49,7 +49,7 @@ $TOKEN_URL = $BASE_URL . '/api/Token_Full';
     <div class="doc-heading">
       <span class="api-kicker">Validate_Mexico</span>
       <h2>Endpoints y autenticación</h2>
-      <p>El endpoint V1 recibe solicitudes JSON por <strong>POST</strong>. Todas las operaciones requieren <strong>Authorization: Bearer</strong>, <strong>nombre_de_usuario</strong>, <strong>curp_en_uso</strong> y <strong>token_data</strong>.</p>
+      <p>El endpoint V1 recibe solicitudes JSON por <strong>POST</strong>. Todas las operaciones requieren <strong>Authorization: Bearer</strong>, <strong>nombre_de_usuario</strong>, <strong>curp_en_uso</strong> y <strong>token_data</strong>. <span class="api-badge api-badge--prepay">PREPAGO</span></p>
     </div>
     <div class="doc-grid">
       <div class="doc-panel">

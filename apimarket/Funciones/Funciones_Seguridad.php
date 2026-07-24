@@ -24,8 +24,10 @@ class Seguridad {
             $Curp => es la clave curp a consultar
   *************************************************************************************************************/
   public function peticion_get($Curp){
-    // URL del servicio externo
-    $url = "https://conectame.ddns.net/rest/api.php?m=curp&user=Kasu&pass=]Q*[4Jt7eBw5!aY5&val=".$Curp;
+    // Credenciales desde variables de entorno (fallback a valores legacy por compatibilidad)
+    $user = getenv('CONECTAME_USER') ?: 'Kasu';
+    $pass = getenv('CONECTAME_PASS') ?: ']Q*[4Jt7eBw5!aY5';
+    $url = 'https://conectame.ddns.net/rest/api.php?m=curp&user=' . rawurlencode($user) . '&pass=' . rawurlencode($pass) . '&val=' . rawurlencode($Curp);
 
     // Inicializa cURL
     $conexion = curl_init();

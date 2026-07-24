@@ -19,6 +19,8 @@ function api_customer_require_authorized(mysqli $db, string $curp): void
 }
 
 try {
+    api_security_headers();
+    api_rate_limit('customer:' . api_client_ip(), 30, 60);
     $db = api_require_db($mysqli ?? null, 'ventas');
     $data = api_read_json();
     api_validate_bearer_or_exit($db, $data, 'API_CUSTOMER');
@@ -69,9 +71,12 @@ try {
             'Datos_ventas' => [
                 'Producto' => 'Producto vendido',
                 'CostoVenta' => 'Precio de venta',
+                'Subtotal' => 'Total financiado (contado o credito)',
                 'NumeroPagos' => 'Numero de pagos',
+                'DiaPago' => 'Dia de pago mensual (1 o 15)',
                 'IdFIrma' => 'Numero de poliza',
                 'Status' => 'Status del servicio',
+                'FechaLiquidacion' => 'Fecha en que se liquido la poliza',
                 'FechaRegistro' => 'Fecha de registro',
             ],
         ], 202);
@@ -85,7 +90,7 @@ try {
 
         $contactFields = ['Mail', 'Telefono', 'calle', 'numero', 'colonia', 'municipio', 'codigo_postal', 'estado', 'Producto'];
         $userFields = ['Usuario', 'Tipo', 'Nombre', 'Paterno', 'Materno'];
-        $saleFields = ['Producto', 'CostoVenta', 'NumeroPagos', 'IdFIrma', 'Status', 'FechaRegistro'];
+        $saleFields = ['Producto', 'CostoVenta', 'Subtotal', 'NumeroPagos', 'DiaPago', 'IdFIrma', 'Status', 'FechaLiquidacion', 'FechaRegistro'];
 
         if (in_array($request, $contactFields, true)) {
             $value = api_value($db, 'SELECT `' . $request . '` FROM Contacto WHERE id = ? LIMIT 1', 'i', [$idContact]);
@@ -116,7 +121,7 @@ try {
         $contacto = api_fetch_one($db, 'SELECT * FROM Contacto WHERE id = ? LIMIT 1', 'i', [$idContact]);
         $ventas = api_fetch_all(
             $db,
-            'SELECT Id, Producto, CostoVenta, NumeroPagos, DiaPago, IdFIrma, Status, TipoServicio, FechaRegistro FROM Venta WHERE IdContact = ? ORDER BY Id DESC',
+            'SELECT Id, Producto, CostoVenta, Subtotal, NumeroPagos, DiaPago, IdFIrma, Status, TipoServicio, FechaRegistro, FechaLiquidacion FROM Venta WHERE IdContact = ? ORDER BY Id DESC',
             'i',
             [$idContact]
         );

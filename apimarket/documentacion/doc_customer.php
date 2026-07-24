@@ -83,7 +83,7 @@ if (isset($mysqli) && ($mysqli instanceof mysqli)) {
             <div class="doc-heading">
                 <span class="api-kicker">API_CUSTOMER</span>
                 <h2>Códigos y funciones disponibles</h2>
-                <p>Estos son los códigos generales generados por <strong>API_CUSTOMER</strong> y las claves admitidas por el endpoint <strong>/api/Customer_V1</strong>.</p>
+                <p>Estos son los códigos generales generados por <strong>API_CUSTOMER</strong> y las claves admitidas por el endpoint <strong>/api/Customer_V1</strong>. <span class="api-badge api-badge--free">GRATIS</span></p>
             </div>
             <div class="row">
                 <div class="col-lg-5 col-md-12 col-sm-12 align-self-center" data-scroll-reveal="enter left move 30px over 0.6s after 0.4s">
@@ -216,7 +216,7 @@ if (isset($mysqli) && ($mysqli instanceof mysqli)) {
         <div class="container">
             <div class="doc-heading">
                 <h2>Ejemplos frecuentes</h2>
-                <p><strong>request</strong> lista claves disponibles, <strong>individual_request</strong> devuelve un campo puntual y <strong>request_block</strong> devuelve bloques completos.</p>
+                <p><strong>request</strong> lista claves disponibles, <strong>individual_request</strong> devuelve un campo puntual y <strong>request_block</strong> devuelve bloques completos. Campos de venta ahora incluyen <strong>Subtotal</strong>, <strong>DiaPago</strong> y <strong>FechaLiquidacion</strong>.</p>
             </div>
             <div class="doc-grid">
                 <div class="doc-panel">

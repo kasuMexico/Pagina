@@ -80,6 +80,71 @@ if (!function_exists('api_client_ip')) {
     }
 }
 
+if (!function_exists('api_rate_limit')) {
+    /**
+     * Rate limiter basado en archivos. Sin dependencias externas.
+     * $key       → identificador unico (ej: 'token_full:192.168.1.1')
+     * $max       → maximo de peticiones permitidas en la ventana
+     * $windowSec → ventana de tiempo en segundos
+     */
+    function api_rate_limit(string $key, int $max = 10, int $windowSec = 60): void
+    {
+        $dir = sys_get_temp_dir() . '/kasu_rate_limits';
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0700, true);
+        }
+        $file = $dir . '/' . md5($key) . '.rl';
+        $now = time();
+
+        $raw = @file_get_contents($file);
+        $entries = ($raw !== false && $raw !== '') ? explode("\n", trim($raw)) : [];
+
+        // Filtrar entradas expiradas
+        $entries = array_filter($entries, static function ($ts) use ($now, $windowSec): bool {
+            return ($now - (int)$ts) < $windowSec;
+        });
+
+        if (count($entries) >= $max) {
+            $retryAfter = $windowSec;
+            if ($entries) {
+                $oldest = (int)min($entries);
+                $retryAfter = max(1, $windowSec - ($now - $oldest));
+            }
+            api_error(429, 'Demasiadas solicitudes. Reintenta en ' . $retryAfter . ' segundos.', [
+                'retry_after' => $retryAfter,
+            ]);
+        }
+
+        $entries[] = (string)$now;
+        @file_put_contents($file, implode("\n", $entries), LOCK_EX);
+    }
+}
+
+if (!function_exists('api_security_headers')) {
+    /** Headers de seguridad para todos los endpoints de API. */
+    function api_security_headers(): void
+    {
+        if (headers_sent()) {
+            return;
+        }
+        header('X-Content-Type-Options: nosniff');
+        header('X-Frame-Options: DENY');
+        header('X-XSS-Protection: 1; mode=block');
+        header('Referrer-Policy: strict-origin-when-cross-origin');
+        header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
+        // CORS solo para el dominio de KASU y apimarket
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+        if (in_array($origin, ['https://kasu.com.mx', 'https://apimarket.kasu.com.mx'], true)) {
+            header('Access-Control-Allow-Origin: ' . $origin);
+            header('Access-Control-Allow-Headers: Authorization, Content-Type');
+            header('Access-Control-Allow-Methods: POST, OPTIONS');
+        }
+        // Remover headers que filtran informacion del servidor
+        header_remove('X-Powered-By');
+        header_remove('Server');
+    }
+}
+
 if (!function_exists('api_require_db')) {
     function api_require_db($db, string $name = 'base de datos'): mysqli
     {
@@ -422,27 +487,69 @@ if (!function_exists('api_saldo_credito')) {
         $venta = api_get_venta($db, $idVenta);
         if (!$venta) return 0.0;
 
-        $fechaVenta = strtotime((string)$venta['FechaRegistro']);
-        $fechaHoy = strtotime(date('Y-m-d'));
-        if (!$fechaVenta || !$fechaHoy) return 0.0;
+        $numMeses   = max(1, (int)$venta['NumeroPagos']);
+        $producto   = (string)$venta['Producto'];
+        $costoVenta = (float)$venta['CostoVenta'];
 
-        $ultimoPago = api_value($db, 'SELECT MAX(FechaRegistro) FROM Pagos WHERE IdVenta = ?', 'i', [$idVenta]);
-        $fechaUltimoPago = $ultimoPago ? strtotime((string)$ultimoPago) : $fechaVenta;
+        $product = api_product_data($db, $producto);
+        if (!$product) return 0.0;
 
-        $diasDesdeVenta = max(0, (int)floor(($fechaHoy - $fechaVenta) / 86400));
-        $diasDesdeUltimoPago = max(0, (int)floor(($fechaHoy - $fechaUltimoPago) / 86400));
+        $tasaAnual = (float)$product['TasaAnual'];
+        $perido    = max(1, (int)($product['Perido'] ?? 1));
+        $fechaAlta = new DateTime((string)$venta['FechaRegistro']);
+        $hoy       = new DateTime('today');
 
-        $product = api_product_data($db, (string)$venta['Producto']);
-        $tasaAnual = $product ? (float)$product['TasaAnual'] : 0.0;
-        $i = ($tasaAnual / 100) / 365.0;
-        $base = 1 + $i;
-        $factorUltimoPago = ($diasDesdeUltimoPago > 0) ? pow($base, $diasDesdeUltimoPago) : 1.0;
-        $factorVenta = ($diasDesdeVenta > 0) ? pow($base, $diasDesdeVenta) : 1.0;
+        // Contado: lo que falta del precio total
+        if ($numMeses <= 1) {
+            $totalPagado = api_sum_pagos($db, $idVenta, false);
+            return max(0.0, round($costoVenta - $totalPagado, 2));
+        }
 
-        $pagos = api_sum_pagos($db, $idVenta, false);
-        $valorAcumulado = $factorUltimoPago > 0 ? ($pagos / $factorUltimoPago) : $pagos;
-        $capitalPendiente = (float)$venta['CostoVenta'] - $valorAcumulado;
-        return round(max(0, $capitalPendiente * $factorVenta), 2);
+        // Crédito: cuota por periodo ajustada por Perido
+        $cuota = api_pago_si($tasaAnual, $numMeses, $costoVenta);
+        if ($perido == 2) {
+            $cuota = round($cuota / 2, 2);
+        }
+
+        // Contar cuotas vencidas (misma lógica que SaldoCredito del core)
+        $stepDias = max(1, (int)floor(30 / $perido));
+        $y = (int)$fechaAlta->format('Y');
+        $m = (int)$fechaAlta->format('m');
+        $d = (int)$fechaAlta->format('d');
+
+        if ($perido === 1) {
+            $venc = new DateTime(date('Y-m-t', $fechaAlta->getTimestamp()));
+            if ($venc <= $fechaAlta) {
+                $venc = (new DateTime("{$y}-{$m}-01"))->modify('last day of next month');
+            }
+        } elseif ($perido === 2) {
+            if ($d <= 15) {
+                $venc = new DateTime("{$y}-{$m}-15");
+            } else {
+                $venc = new DateTime(date('Y-m-t', $fechaAlta->getTimestamp()));
+            }
+            if ($venc <= $fechaAlta) {
+                $venc->modify("+{$stepDias} days");
+            }
+        } else {
+            $venc = new DateTime("{$y}-{$m}-01");
+            while ($venc <= $fechaAlta) {
+                $venc->modify("+{$stepDias} days");
+            }
+        }
+
+        $totalPeriodos  = $numMeses * $perido;
+        $cuotasVencidas = 0;
+        $v = clone $venc;
+        while ($v <= $hoy && $cuotasVencidas < $totalPeriodos) {
+            $cuotasVencidas++;
+            $v->modify("+{$stepDias} days");
+        }
+
+        $esperado    = round($cuota * $cuotasVencidas, 2);
+        $totalPagado = api_sum_pagos($db, $idVenta, false);
+
+        return max(0.0, round($esperado - $totalPagado, 2));
     }
 }
 
@@ -452,23 +559,24 @@ if (!function_exists('api_pago_periodo')) {
         $venta = api_get_venta($db, $idVenta);
         if (!$venta) return 0.0;
 
-        $totalPagos = api_sum_pagos($db, $idVenta, false);
-        $valorCredito = api_pago_credito($db, $idVenta);
-        $saldo = api_saldo_credito($db, $idVenta);
-        $product = api_product_data($db, (string)$venta['Producto']);
+        $numPagos   = max(1, (int)$venta['NumeroPagos']);
+        $producto   = (string)$venta['Producto'];
+        $costoVenta = (float)$venta['CostoVenta'];
+
+        $product = api_product_data($db, $producto);
         if (!$product) return 0.0;
 
-        $numPagos = max(1, (int)$venta['NumeroPagos']);
-        $pagoNormal = api_pago_si((float)$product['TasaAnual'], $numPagos, (float)$venta['CostoVenta']) / 2;
+        $tasaAnual = (float)$product['TasaAnual'];
+        $perido    = max(1, (int)($product['Perido'] ?? 1));
 
-        if ($saldo >= $valorCredito) {
-            $pagosRealizados = ($pagoNormal > 0) ? ($totalPagos / $pagoNormal) : 0;
-            $pagosRestantes = max(1, $numPagos - $pagosRealizados);
-            return round($saldo / $pagosRestantes, 2);
+        // Pago mensual sistema francés
+        $pagoMensual = api_pago_si($tasaAnual, $numPagos, $costoVenta);
+
+        // Ajuste por periodicidad: quincenal → mitad, mensual → igual
+        if ($perido == 2) {
+            return round($pagoMensual / 2, 2);
         }
-
-        $diferencia = $totalPagos - $valorCredito;
-        return ($diferencia >= 0) ? 0.0 : round($pagoNormal, 2);
+        return round($pagoMensual, 2);
     }
 }
 
@@ -477,14 +585,23 @@ if (!function_exists('api_pagos_pendientes')) {
     {
         $venta = api_get_venta($db, $idVenta);
         if (!$venta) return 0;
+
         $product = api_product_data($db, (string)$venta['Producto']);
         if (!$product) return 0;
 
         $totalPagos = api_sum_pagos($db, $idVenta, false);
-        $numPagos = max(1, (int)$venta['NumeroPagos']);
-        $pagoNormal = api_pago_si((float)$product['TasaAnual'], $numPagos, (float)$venta['CostoVenta']);
+        $numPagos   = max(1, (int)$venta['NumeroPagos']);
+        $costoVenta = (float)$venta['CostoVenta'];
+        $tasaAnual  = (float)$product['TasaAnual'];
+        $perido     = max(1, (int)($product['Perido'] ?? 1));
+
+        // Pago mensual sistema francés, ajustado por periodicidad
+        $pagoMensual = api_pago_si($tasaAnual, $numPagos, $costoVenta);
+        $pagoNormal  = ($perido == 2) ? round($pagoMensual / 2, 2) : round($pagoMensual, 2);
+
+        $totalPeriodos   = $numPagos * $perido;
         $pagosRealizados = ($pagoNormal > 0) ? ($totalPagos / $pagoNormal) : 0;
-        return (int)round(max(0, $numPagos - $pagosRealizados), 0, PHP_ROUND_HALF_DOWN);
+        return (int)round(max(0, $totalPeriodos - $pagosRealizados), 0, PHP_ROUND_HALF_DOWN);
     }
 }
 
@@ -579,6 +696,32 @@ if (!function_exists('api_find_venta_by_curp_poliza')) {
     }
 }
 
+if (!function_exists('api_find_venta_by_poliza')) {
+    /** Busca una venta solo por numero de poliza (IdFIrma). Retorna datos completos con CURP y contacto. */
+    function api_find_venta_by_poliza(mysqli $db, string $poliza): ?array
+    {
+        return api_fetch_one(
+            $db,
+            "SELECT
+                v.*,
+                c.Mail AS Mail,
+                c.Telefono AS Telefono,
+                u.ClaveCurp AS ClaveCurp,
+                u.Nombre AS NombreUsuario,
+                u.Paterno AS Paterno,
+                u.Materno AS Materno
+             FROM Venta v
+             JOIN Usuario u ON u.IdContact = v.IdContact
+             LEFT JOIN Contacto c ON c.id = v.IdContact
+             WHERE v.IdFIrma = ?
+             ORDER BY v.Id DESC
+             LIMIT 1",
+            's',
+            [trim($poliza)]
+        );
+    }
+}
+
 if (!function_exists('api_validar_usr_api')) {
     function api_validar_usr_api(mysqli $db, string $user, string $agent)
     {
@@ -610,11 +753,26 @@ if (!function_exists('api_token_verify')) {
         $timestamp = (int)($data['token_data']['timestamp'] ?? 0);
         $expires = (int)($data['token_data']['expires_in'] ?? 0);
         $curp = api_norm_curp((string)($data['curp_en_uso'] ?? ''));
+        $tokenIp = (string)($data['token_data']['ip'] ?? '');
         if ($token === '' || $secretKey === '' || $timestamp <= 0 || $expires <= 0 || $curp === '') {
             return false;
         }
+        // IP binding opcional (activar con KASU_TOKEN_BIND_IP=1 en .env)
+        if (getenv('KASU_TOKEN_BIND_IP') === '1' && $tokenIp !== '') {
+            $currentIp = api_client_ip();
+            // Tolerancia: comparar /24 subnet (misma red local)
+            $tokenSubnet = strrpos($tokenIp, '.') !== false ? substr($tokenIp, 0, (int)strrpos($tokenIp, '.')) : '';
+            $currentSubnet = strrpos($currentIp, '.') !== false ? substr($currentIp, 0, (int)strrpos($currentIp, '.')) : '';
+            if ($tokenSubnet === '' || $tokenSubnet !== $currentSubnet) {
+                return false;
+            }
+        }
         $firmaA = hash_hmac('sha256', $curp, $secretKey);
-        $tokenDataJson = json_encode(['timestamp' => $timestamp, 'expires_in' => $expires], JSON_UNESCAPED_UNICODE);
+        $tokenDataJson = json_encode([
+            'timestamp' => $timestamp,
+            'expires_in' => $expires,
+            'ip' => $tokenIp,
+        ], JSON_UNESCAPED_UNICODE);
         $firmaB = hash_hmac('sha256', (string)$tokenDataJson, $firmaA);
         if (!hash_equals($firmaB, $token)) {
             return false;

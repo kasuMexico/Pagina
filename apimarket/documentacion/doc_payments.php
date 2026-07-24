@@ -46,7 +46,7 @@ require_once '../librerias_api.php';
       <div class="doc-heading">
         <span class="api-kicker">API_PAYMENTS</span>
         <h2>Códigos, funciones y permisos</h2>
-        <p>Estos son los códigos generales generados por <strong>API_PAYMENTS</strong> y las funciones admitidas por <strong>/api/Payments_V1</strong>.</p>
+        <p>Estos son los códigos generales generados por <strong>API_PAYMENTS</strong> y las funciones admitidas por <strong>/api/Payments_V1</strong>. <span class="api-badge api-badge--postpay">POST-PAGO</span></p>
       </div>
       <div class="row">
         <div class="col-lg-5 col-md-12 col-sm-12 align-self-center" data-scroll-reveal="enter left move 30px over 0.6s after 0.4s">
@@ -84,8 +84,8 @@ require_once '../librerias_api.php';
                   <strong>activamos de forma selectiva</strong> las funcionalidades asignadas a ese token.
                 </td>
               </tr>
-              <tr><td>account_status</td><td style="text-align: justify;">Consulta saldo, pago del periodo, mora y estado de cobranza.</td></tr>
-              <tr><td>pagos_psd2</td><td style="text-align: justify;">Registra un pago y aplica primero mora cuando corresponde.</td></tr>
+              <tr><td>account_status</td><td style="text-align: justify;">Consulta saldo, pago del periodo, pagos realizados y estado de cobranza.</td></tr>
+              <tr><td>pagos_psd2</td><td style="text-align: justify;">Registra un pago y actualiza el estado de la poliza.</td></tr>
             </table>
           </div>
 
@@ -108,6 +108,7 @@ require_once '../librerias_api.php';
                 <tr><td>2</td><td>Permite consultar el <strong>pago del periodo</strong>.</td></tr>
                 <tr><td>3</td><td>Permite consultar la <strong>comisión del pago del periodo</strong>.</td></tr>
                 <tr><td>4</td><td>Permite <strong>registrar el pago</strong> de un cliente.</td></tr>
+                <tr><td>5</td><td>Permite consultar la <strong>fecha de liquidación</strong> de la póliza.</td></tr>
               </table>
             </div>
 
@@ -120,6 +121,7 @@ require_once '../librerias_api.php';
                 <tr><td>1</td><td>Consulta la póliza por <strong>Número de Póliza</strong> y calcula el saldo total.</td></tr>
                 <tr><td>2</td><td>Consulta la póliza por <strong>Número de Póliza</strong> y determina el pago del periodo.</td></tr>
                 <tr><td>3</td><td>Consulta en <strong>Productos</strong> la comisión aplicable y la devuelve desglosada.</td></tr>
+                <tr><td>5</td><td>Devuelve <strong>fecha_liquidacion</strong>: la fecha en que la póliza quedó saldada.</td></tr>
               </table>
               <p style="text-align: justify;">
                 Nota: La activación de cada Ref Func se liga al token emitido. Podrás verificar tus permisos
@@ -137,12 +139,12 @@ require_once '../librerias_api.php';
     <div class="container">
       <div class="doc-heading">
         <h2>Ejemplos de consumo</h2>
-        <p>Ambas operaciones requieren <strong>curp_en_uso</strong>, <strong>poliza_en_uso</strong>, Bearer token y <strong>token_data</strong>.</p>
+        <p>Ambas operaciones requieren <strong>poliza_en_uso</strong> (número de póliza KASU), Bearer token y <strong>token_data</strong>.</p>
       </div>
       <div class="doc-grid">
         <div class="doc-panel">
           <span class="doc-pill">account_status</span>
-          <p>Consulta saldo, pago de periodo, mora, pagos realizados, pagos pendientes, comisión y liga de pago.</p>
+          <p>Consulta saldo, pago de periodo, pagos realizados, pagos pendientes, comisión y liga de pago.</p>
           <div class="code-window">
             <pre id="codecopi" class="userContent" style="white-space: pre-wrap;"><code>POST https://apimarket.kasu.com.mx/api/Payments_V1
 Authorization: Bearer API_KEY_AQUI
@@ -152,7 +154,6 @@ User-Agent: SECRET_KEY_USUARIO_SECRET_KEY_ID
 {
   "tipo_peticion": "account_status",
   "nombre_de_usuario": "YOUR_APPUSER",
-  "curp_en_uso": "CURP_CODE",
   "poliza_en_uso": "POLIZA",
   "token_data": {
     "timestamp": TIMESTAMP,
@@ -163,7 +164,7 @@ User-Agent: SECRET_KEY_USUARIO_SECRET_KEY_ID
         </div>
         <div class="doc-panel">
           <span class="doc-pill">pagos_psd2</span>
-          <p>Registra un pago. Si existe mora, la API aplica primero la mora y después el abono principal.</p>
+          <p>Registra un pago y actualiza el estado de la poliza segun el progreso de pagos.</p>
           <div class="code-window">
             <pre id="codecopindex" class="userContent" style="white-space: pre-wrap;"><code>POST https://apimarket.kasu.com.mx/api/Payments_V1
 Authorization: Bearer API_KEY_AQUI
@@ -173,7 +174,6 @@ User-Agent: SECRET_KEY_USUARIO_SECRET_KEY_ID
 {
   "tipo_peticion": "pagos_psd2",
   "nombre_de_usuario": "YOUR_APPUSER",
-  "curp_en_uso": "CURP_CODE",
   "poliza_en_uso": "POLIZA",
   "cantidad": 850.00,
   "metodo": "API_PAYMENTS",

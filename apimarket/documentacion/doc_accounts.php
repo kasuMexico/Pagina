@@ -74,7 +74,7 @@ try {
         <div class="doc-heading">
             <span class="api-kicker">API_ACCOUNTS</span>
             <h2>Códigos, funciones y productos</h2>
-            <p>Estos son los códigos generales generados por <strong>API_ACCOUNTS</strong>, la función <strong>new_service</strong> y los productos habilitados para alta desde <strong>/api/Accounts_V1</strong>.</p>
+            <p>Estos son los códigos generales generados por <strong>API_ACCOUNTS</strong>, la función <strong>new_service</strong> y los productos habilitados para alta desde <strong>/api/Accounts_V1</strong>. <span class="api-badge api-badge--free">GRATIS</span></p>
         </div>
         <div class="row">
             <div class="col-lg-5 col-md-12 col-sm-12 align-self-center" data-scroll-reveal="enter left move 30px over 0.6s after 0.4s">
@@ -120,6 +120,8 @@ try {
                             <td><strong>DESCRIPCIÓN</strong></td>
                         </tr>
                         <tr><td>Funerario</td><td style="text-align: justify;">Servicio de <strong>Gastos Funerarios</strong> ligado a la edad.</td></tr>
+                        <tr><td>Seguridad</td><td style="text-align: justify;">Servicio de <strong>Seguridad y Protección</strong> ligado a la edad.</td></tr>
+                        <tr><td>Transporte</td><td style="text-align: justify;">Servicio de <strong>Transporte</strong> ligado a la edad.</td></tr>
                         <tr><td>Retiro</td><td style="text-align: justify;">Plan Privado de Retiro para adultos menores de <strong>65 años</strong>.</td></tr>
                     </table>
                 </div>
@@ -149,7 +151,7 @@ try {
                         <tr><td>CURP_CODE</td><td style="text-align: justify;">CURP del cliente.</td></tr>
                         <tr><td>mail</td><td style="text-align: justify;">Correo del cliente.</td></tr>
                         <tr><td>telefono</td><td style="text-align: justify;">Teléfono del cliente, 10 dígitos MX.</td></tr>
-                        <tr><td>producto</td><td style="text-align: justify;">Producto solicitado: <strong>Funerario</strong> o <strong>Retiro</strong>, sujeto a edad y catálogo.</td></tr>
+                        <tr><td>producto</td><td style="text-align: justify;">Producto solicitado: <strong>Funerario</strong>, <strong>Seguridad</strong>, <strong>Transporte</strong> o <strong>Retiro</strong>, sujeto a edad y catálogo.</td></tr>
                         <tr><td>numero_pagos</td><td style="text-align: justify;">Número de pagos elegidos. Si es mayor a 1 se calcula crédito.</td></tr>
                         <tr><td>dia_pago</td><td style="text-align: justify;">Día de pago mensual permitido: <strong>1</strong> o <strong>15</strong>. En contado se registra como 0.</td></tr>
                         <tr><td>tipo_servicio</td><td style="text-align: justify;">Tipo de servicio KASU. Si no se envía, se usa <strong>Ecologico</strong>.</td></tr>

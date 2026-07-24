@@ -365,6 +365,9 @@ function cache_rfc_upsert(mysqli $db, string $rfc, array $data, int $ttlDays = 3
 try {
   mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
+  api_security_headers();
+  api_rate_limit('validatemexico:' . get_ip(), 30, 60);
+
   $data = must_post_json();
 
   // Requeridos para tu patrón

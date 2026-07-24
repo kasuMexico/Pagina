@@ -22,6 +22,17 @@ $metrica_fondo      = 0;
 $metrica_cobrado    = 0;
 $metrica_entregado  = 0;
 
+// --- Métricas financieras del fondo funerario ---
+$fondo_estado       = 'CRÍTICO';
+$fondo_cobertura    = 0.0;
+$fondo_aporta_total = 0.0;
+$fondo_costo_total  = 0.0;
+$fondo_brecha       = 0.0;
+$fondo_rendimiento  = 0.0;
+$fondo_valor_actual = 0.0;
+$fondo_udi          = 8.20;
+$fondo_polizas_act  = 0;
+
 if (isset($mysqli) && $mysqli instanceof mysqli) {
     // Pólizas activas emitidas
     $r = $mysqli->query("SELECT COUNT(*) AS c FROM Venta WHERE Status IN ('ACTIVO','ACTIVACION')");
@@ -35,8 +46,130 @@ if (isset($mysqli) && $mysqli instanceof mysqli) {
     $r = $mysqli->query("SELECT COALESCE(SUM(Cantidad),0) AS c FROM Pagos WHERE status IS NULL OR status != 'Mora'");
     if ($r) { $row = $r->fetch_assoc(); $metrica_cobrado = (float)($row['c'] ?? 0); $r->free(); }
 
-    // Rendimientos entregados (placeholder — se integra con smart contract en el futuro)
-    $metrica_entregado = 0;
+    // Valor total de ventas activas por producto (para gráfico de barras)
+    $valor_ventas_activas = 0.0;
+    $ventas_por_producto  = [];
+    $r = $mysqli->query("
+        SELECT v.Producto, COALESCE(SUM(v.CostoVenta),0) AS total
+        FROM Venta v
+        WHERE v.Status = 'ACTIVO'
+        GROUP BY v.Producto
+        ORDER BY total DESC
+    ");
+    while ($r && $row = $r->fetch_assoc()) {
+        $prod = $row['Producto'];
+        $total = (float)$row['total'];
+        if ($total > 0) {
+            $ventas_por_producto[] = ['producto' => $prod, 'total' => $total];
+            $valor_ventas_activas += $total;
+        }
+    }
+    if ($r) $r->free();
+    $max_barra = count($ventas_por_producto) > 0 ? max(array_column($ventas_por_producto, 'total')) : 1;
+
+    // --- Fondo Funerario: métricas de solvencia (mismo cálculo que Pwa_Analisis_Ventas) ---
+    $r = $mysqli->query("
+        SELECT
+            COUNT(*) AS polizas,
+            COALESCE(SUM(v.CostoVenta * (p.Fideicomiso / 100.0)), 0) AS aportacion_total
+        FROM Venta v
+        JOIN (
+            SELECT Producto, Fideicomiso
+            FROM Productos
+            WHERE Id IN (SELECT MAX(Id) FROM Productos GROUP BY Producto)
+        ) p ON p.Producto = v.Producto
+        WHERE v.Status IN ('ACTIVO','ACTIVACION')
+    ");
+    if ($r) {
+        $row = $r->fetch_assoc();
+        $fondo_polizas_act  = (int)($row['polizas'] ?? 0);
+        $fondo_aporta_total = (float)($row['aportacion_total'] ?? 0);
+        $r->free();
+    }
+
+    // --- Valor actual del fondo: portafolio real (port_trades + port_prices_daily) ---
+    // Mismo cálculo que Pwa_Analisis_Ventas (línea 385-469)
+    // Tasa USD/MXN para convertir precios de acciones americanas
+    $usdmxn = 20.50;
+
+    $lastPrices = [];
+    $r = $mysqli->query("
+        SELECT p.symbol, p.close
+        FROM port_prices_daily p
+        INNER JOIN (
+            SELECT symbol, MAX(price_date) AS max_date
+            FROM port_prices_daily GROUP BY symbol
+        ) m ON p.symbol = m.symbol AND p.price_date = m.max_date
+    ");
+    while ($r && $p = $r->fetch_assoc()) {
+        $lastPrices[$p['symbol']] = (float)$p['close'];
+    }
+    if ($r) $r->free();
+
+    $pfTotalCost   = 0.0;
+    $pfTotalMarket = 0.0;
+    $r = $mysqli->query("
+        SELECT symbol,
+            MAX(currency) AS currency,
+            SUM(CASE WHEN side='BUY' THEN qty ELSE -qty END) AS shares,
+            SUM(CASE WHEN side='BUY' THEN qty ELSE 0 END) AS total_buy_qty,
+            SUM(CASE WHEN side='BUY' THEN (qty * price) + fee ELSE 0 END) AS total_buy_cost
+        FROM port_trades
+        GROUP BY symbol
+        HAVING ABS(SUM(CASE WHEN side='BUY' THEN qty ELSE -qty END)) > 1e-9
+    ");
+    while ($r && $row = $r->fetch_assoc()) {
+        $symbol       = $row['symbol'];
+        $currency     = strtolower($row['currency'] ?? '');
+        $shares       = (float)$row['shares'];
+        $totalBuyQty  = (float)$row['total_buy_qty'];
+        $totalBuyCost = (float)$row['total_buy_cost'];
+        $avgCost      = $totalBuyQty > 0 ? $totalBuyCost / $totalBuyQty : 0.0;
+        $costBasis    = $shares * $avgCost;
+        $lastPrice    = $lastPrices[$symbol] ?? 0.0;
+
+        // Convertir precio USD → MXN si la acción es americana y el trade está en pesos
+        $isUS = ($currency === 'mxn' && !str_contains($symbol, '.MX'));
+        if ($isUS && $lastPrice > 0) {
+            $lastPrice = $lastPrice * $usdmxn;
+        }
+
+        $marketValue  = $shares * $lastPrice;
+        $pfTotalCost   += $costBasis;
+        $pfTotalMarket += $marketValue;
+    }
+    if ($r) $r->free();
+
+    // Rendimiento del portafolio
+    $fondo_valor_actual = $pfTotalMarket;
+    $fondo_rendimiento  = $pfTotalCost > 0 ? round((($pfTotalMarket - $pfTotalCost) / $pfTotalCost) * 100, 2) : 0.0;
+
+    // Costo servicio proyectado (mismo método que CalculoFondoFunerario)
+    $fondo_udi = 8.20;
+    $costo_por_poliza = 14500.0;
+    $r = $mysqli->query("SELECT AVG(Costo) AS avg_costo FROM EntregaServicio WHERE Costo IS NOT NULL AND Costo > 0 AND (FechaEntrega IS NULL OR FechaEntrega >= DATE_SUB(NOW(), INTERVAL 24 MONTH))");
+    if ($r && $row = $r->fetch_assoc()) {
+        $avg = (float)($row['avg_costo'] ?? 0);
+        if ($avg > 0) $costo_por_poliza = min($avg, 2600 * $fondo_udi);
+        $r->free();
+    }
+
+    // Costo servicios total y cobertura (con valor de mercado del portafolio, igual que Pwa_Analisis_Ventas)
+    $costoServicios = round($costo_por_poliza * $fondo_polizas_act, 2);
+    $coberturaPf    = $costoServicios > 0 ? ($pfTotalMarket / $costoServicios) : 0;
+    $brechaPf       = max(0.0, $costoServicios - $pfTotalMarket);
+
+    $fondo_costo_total = $costoServicios;
+    $fondo_cobertura   = round($coberturaPf * 100, 1);
+    $fondo_brecha      = $brechaPf;
+
+    if ($fondo_cobertura >= 100) {
+        $fondo_estado = 'SANO';
+    } elseif ($fondo_cobertura >= 70) {
+        $fondo_estado = 'MANEJABLE';
+    } else {
+        $fondo_estado = 'CRÍTICO';
+    }
 }
 
 /* ===== Parámetro de idioma ===== */
@@ -65,11 +198,13 @@ $t = [
         'how_lead'        => 'KASU emite un NFT por cada póliza funeraria. El inversionista Web3 compra el token al 50% del valor FIAT y al fallecimiento del titular cobra el 50% de la utilidad pasiva generada por el fideicomiso.',
         'how_step1_title' => '1. Cliente tradicional compra su póliza en FIAT',
         'how_step1_desc'  => 'Sin wallet, sin cripto. El cliente paga su servicio funerario normalmente y queda protegido.',
-        'how_step2_title' => '2. KASU mintea el NFT al 50% del valor',
-        'how_step2_desc'  => 'El inversionista adquiere en OpenSea un token respaldado por un contrato real con descuento del 50%.',
-        'how_step3_title' => '3. Mercado secundario libre',
+        'how_step1b_title' => '2. El dinero va al fideicomiso F0003',
+        'how_step1b_desc'  => 'KASU transfiere la aportación al fideicomiso real que respalda cada póliza, garantizando la solvencia del fondo.',
+        'how_step2_title' => '3. KASU mintea el NFT al 50% del valor de la póliza',
+        'how_step2_desc'  => 'El inversionista adquiere en OpenSea un token respaldado por el valor que el fideicomiso F0003 asigna a esta póliza.',
+        'how_step3_title' => '4. Mercado secundario libre',
         'how_step3_desc'  => 'El NFT se negocia en OpenSea. KASU recibe 10% de regalías por cada reventa (ERC-2981).',
-        'how_step4_title' => '4. Liquidación al fallecimiento',
+        'how_step4_title' => '5. Liquidación al fallecimiento',
         'how_step4_desc'  => 'Utilidad Pasiva = Fondo − Costo Servicio. 50% para KASU, 50% para el dueño del NFT en USDC.',
         'how_example_title' => 'Ejemplo real: Póliza 30a49 · $3,000 MXN',
         'how_example_col1'  => 'Etapa',
@@ -97,12 +232,25 @@ $t = [
         // Dashboard
         'dash_eyebrow'      => 'Dashboard',
         'dash_title'        => 'Métricas en Tiempo Real',
-        'dash_lead'         => 'Datos on-chain y off-chain actualizados desde la base de datos de KASU.',
+        'dash_lead'         => 'El fondo KASU invierte en activos bursátiles reales (acciones, FIBRAs, ETFs). Este panel muestra en tiempo real el valor actual del portafolio, las aportaciones al fideicomiso F0003, y la cobertura frente al costo proyectado de los servicios funerarios.',
         'dash_polizas'      => 'Pólizas Emitidas',
         'dash_fondo'        => 'Fondo Total (MXN)',
         'dash_cobrado'      => 'Total Cobrado (MXN)',
         'dash_entregado'    => 'Rendimientos Entregados',
         'dash_footer'       => '* Los rendimientos se integran con el Smart Contract en Polygon/Base. Montos en USDC.',
+        // Fondo Funerario
+        'fondo_eyebrow'     => 'Salud del Fondo',
+        'fondo_title'       => 'Análisis del Fondo Funerario',
+        'fondo_lead'        => 'Métricas de solvencia calculadas en tiempo real. El fondo se compone de las aportaciones de cada póliza activa al fideicomiso (F0003).',
+        'fondo_estado_label' => 'Estado del Fondo',
+        'fondo_cobertura_label' => 'Cobertura de Servicios',
+        'fondo_polizas_label' => 'Pólizas Activas',
+        'fondo_aporta_label' => 'Aportación Total al Fondo',
+        'fondo_costo_label' => 'Costo Servicios Total',
+        'fondo_brecha_label' => 'Brecha a Cubrir',
+        'fondo_rend_label' => 'Rendimiento Anual Est.',
+        'fondo_udi_label' => 'UDI Actual',
+        'fondo_nota'        => '* Máximo del servicio: 2,600 UDIs por póliza. Las aportaciones representan la proporción del fideicomiso de cada producto.',
         // Claim Vault
         'claim_eyebrow'     => 'Claim Vault',
         'claim_title'       => 'Portal de Reclamo',
@@ -127,11 +275,13 @@ $t = [
         'how_lead'        => 'KASU mints an NFT for each funeral policy. The Web3 investor buys the token at 50% of the FIAT value and, upon the holder\'s passing, collects 50% of the passive income generated by the trust.',
         'how_step1_title' => '1. Traditional client buys their policy in FIAT',
         'how_step1_desc'  => 'No wallet, no crypto. The client pays for their funeral service as usual and is fully covered.',
-        'how_step2_title' => '2. KASU mints the NFT at 50% of value',
-        'how_step2_desc'  => 'The investor acquires a token backed by a real contract on OpenSea at a 50% discount.',
-        'how_step3_title' => '3. Free secondary market',
+        'how_step1b_title' => '2. Money goes to the F0003 trust',
+        'how_step1b_desc'  => 'KASU transfers the contribution to the real trust backing each policy, ensuring the fund\'s solvency.',
+        'how_step2_title' => '3. KASU mints the NFT at 50% of the policy value',
+        'how_step2_desc'  => 'The investor acquires a token on OpenSea backed by the value the F0003 trust allocates to this policy.',
+        'how_step3_title' => '4. Free secondary market',
         'how_step3_desc'  => 'The NFT trades on OpenSea. KASU earns 10% royalties on every resale (ERC-2981).',
-        'how_step4_title' => '4. Settlement upon passing',
+        'how_step4_title' => '5. Settlement upon passing',
         'how_step4_desc'  => 'Passive Income = Fund − Service Cost. 50% to KASU, 50% to the NFT owner in USDC.',
         'how_example_title' => 'Real example: Policy 30a49 · $3,000 MXN',
         'how_example_col1'  => 'Stage',
@@ -157,12 +307,25 @@ $t = [
         'guarantee_anon_text'  => 'NFT metadata only exposes: folio (#1156), age range (30a49), issuance year, and estimated fund value. Never name, government ID, or phone number.',
         'dash_eyebrow'      => 'Dashboard',
         'dash_title'        => 'Real-Time Metrics',
-        'dash_lead'         => 'On-chain and off-chain data updated from KASU\'s database.',
+        'dash_lead'         => 'The KASU fund invests in real stock market assets (stocks, FIBRAs, ETFs). This dashboard shows in real time the current portfolio value, contributions to the F0003 trust, and coverage against the projected cost of funeral services.',
         'dash_polizas'      => 'Policies Issued',
         'dash_fondo'        => 'Total Fund (MXN)',
         'dash_cobrado'      => 'Total Collected (MXN)',
         'dash_entregado'    => 'Returns Delivered',
         'dash_footer'       => '* Returns integrate with the Smart Contract on Polygon/Base. Amounts in USDC.',
+        // Fund Health
+        'fondo_eyebrow'     => 'Fund Health',
+        'fondo_title'       => 'Funeral Fund Analysis',
+        'fondo_lead'        => 'Solvency metrics calculated in real time. The fund consists of contributions from each active policy to the trust (F0003).',
+        'fondo_estado_label' => 'Fund Status',
+        'fondo_cobertura_label' => 'Service Coverage',
+        'fondo_polizas_label' => 'Active Policies',
+        'fondo_aporta_label' => 'Total Fund Contributions',
+        'fondo_costo_label' => 'Total Service Cost',
+        'fondo_brecha_label' => 'Gap to Cover',
+        'fondo_rend_label' => 'Est. Annual Return',
+        'fondo_udi_label' => 'Current UDI',
+        'fondo_nota'        => '* Maximum service cost: 2,600 UDIs per policy. Contributions represent each product\'s trust proportion.',
         'claim_eyebrow'     => 'Claim Vault',
         'claim_title'       => 'Claim Portal',
         'claim_lead'        => 'Connect your wallet to check your pending balance and claim returns in USDC.',
@@ -186,11 +349,13 @@ $t = [
         'how_lead'        => 'KASU prägt einen NFT für jede Bestattungsvorsorge. Der Web3-Investor kauft den Token zu 50% des FIAT-Werts und erhält beim Tod des Versicherten 50% der passiven Erträge aus dem Treuhandvermögen.',
         'how_step1_title' => '1. Traditioneller Kunde kauft Police in FIAT',
         'how_step1_desc'  => 'Ohne Wallet, ohne Krypto. Der Kunde zahlt normal und ist vollständig abgesichert.',
-        'how_step2_title' => '2. KASU prägt NFT zu 50% des Werts',
-        'how_step2_desc'  => 'Der Investor erwirbt auf OpenSea einen Token mit 50% Rabatt, gedeckt durch einen echten Vertrag.',
-        'how_step3_title' => '3. Freier Sekundärmarkt',
+        'how_step1b_title' => '2. Das Geld geht an den F0003-Treuhandfonds',
+        'how_step1b_desc'  => 'KASU überträgt den Beitrag an den realen Treuhandfonds, der jede Police absichert und die Solvenz des Fonds gewährleistet.',
+        'how_step2_title' => '3. KASU prägt NFT zu 50% des Policenwerts',
+        'how_step2_desc'  => 'Der Investor erwirbt auf OpenSea einen Token, gedeckt durch den Wert, den der F0003-Treuhandfonds dieser Police zuweist.',
+        'how_step3_title' => '4. Freier Sekundärmarkt',
         'how_step3_desc'  => 'Der NFT wird auf OpenSea gehandelt. KASU erhält 10% Lizenzgebühren bei jedem Weiterverkauf (ERC-2981).',
-        'how_step4_title' => '4. Abrechnung im Todesfall',
+        'how_step4_title' => '5. Abrechnung im Todesfall',
         'how_step4_desc'  => 'Passives Einkommen = Fonds − Servicekosten. 50% an KASU, 50% an den NFT-Eigentümer in USDC.',
         'how_example_title' => 'Reales Beispiel: Police 30a49 · $3.000 MXN',
         'how_example_col1'  => 'Phase',
@@ -216,12 +381,25 @@ $t = [
         'guarantee_anon_text'  => 'NFT-Metadaten zeigen nur: Folio (#1156), Altersgruppe (30a49), Ausgabejahr und Fondswert. Niemals Name, Ausweisnummer oder Telefonnummer.',
         'dash_eyebrow'      => 'Dashboard',
         'dash_title'        => 'Echtzeit-Metriken',
-        'dash_lead'         => 'On-Chain- und Off-Chain-Daten aus der KASU-Datenbank.',
+        'dash_lead'         => 'Der KASU-Fonds investiert in reale Börsenwerte (Aktien, FIBRAs, ETFs). Dieses Dashboard zeigt in Echtzeit den aktuellen Portfoliowert, die Beiträge zum F0003-Treuhandfonds und die Deckung im Verhältnis zu den projizierten Kosten der Bestattungsdienste.',
         'dash_polizas'      => 'Ausgegebene Policen',
         'dash_fondo'        => 'Gesamtfonds (MXN)',
         'dash_cobrado'      => 'Gesamteinnahmen (MXN)',
         'dash_entregado'    => 'Auszahlungen',
         'dash_footer'       => '* Auszahlungen werden mit dem Smart Contract auf Polygon/Base integriert. Beträge in USDC.',
+        // Fonds-Gesundheit
+        'fondo_eyebrow'     => 'Fonds-Gesundheit',
+        'fondo_title'       => 'Analyse des Bestattungsfonds',
+        'fondo_lead'        => 'Solvenzkennzahlen in Echtzeit. Der Fonds besteht aus Beiträgen jeder aktiven Police zum Treuhandvermögen (F0003).',
+        'fondo_estado_label' => 'Fonds-Status',
+        'fondo_cobertura_label' => 'Deckungsgrad',
+        'fondo_polizas_label' => 'Aktive Policen',
+        'fondo_aporta_label' => 'Gesamtbeiträge',
+        'fondo_costo_label' => 'Gesamtkosten',
+        'fondo_brecha_label' => 'Deckungslücke',
+        'fondo_rend_label' => 'Geschätzte Rendite',
+        'fondo_udi_label' => 'Aktuelle UDI',
+        'fondo_nota'        => '* Maximale Kosten: 2.600 UDIs pro Police. Beiträge entsprechen dem Treuhandanteil jedes Produkts.',
         'claim_eyebrow'     => 'Claim Vault',
         'claim_title'       => 'Auszahlungsportal',
         'claim_lead'        => 'Verbinde deine Wallet, um dein Guthaben zu prüfen und Erträge in USDC zu beanspruchen.',
@@ -381,6 +559,12 @@ $fmt = function($v) { return '$' . number_format($v, 0, '.', ',') . ' MXN'; };
           </div>
           <div class="kasu-nft__how-arrow">→</div>
           <div class="kasu-nft__how-step">
+            <div class="kasu-nft__how-step-icon">🏛️</div>
+            <h3><?= htmlspecialchars($tx['how_step1b_title'], ENT_QUOTES, 'UTF-8') ?></h3>
+            <p><?= htmlspecialchars($tx['how_step1b_desc'], ENT_QUOTES, 'UTF-8') ?></p>
+          </div>
+          <div class="kasu-nft__how-arrow">→</div>
+          <div class="kasu-nft__how-step">
             <div class="kasu-nft__how-step-icon">🪙</div>
             <h3><?= htmlspecialchars($tx['how_step2_title'], ENT_QUOTES, 'UTF-8') ?></h3>
             <p><?= htmlspecialchars($tx['how_step2_desc'], ENT_QUOTES, 'UTF-8') ?></p>
@@ -399,48 +583,7 @@ $fmt = function($v) { return '$' . number_format($v, 0, '.', ',') . ' MXN'; };
           </div>
         </div>
 
-        <!-- Tabla de unit economics -->
-        <div class="kasu-nft__example">
-          <h3 class="kasu-nft__example-title"><?= htmlspecialchars($tx['how_example_title'], ENT_QUOTES, 'UTF-8') ?></h3>
-          <div class="kasu-nft__table-wrapper" style="display:block;">
-            <table class="kasu-nft__table kasu-nft__table--economics">
-              <thead>
-                <tr>
-                  <th><?= htmlspecialchars($tx['how_example_col1'], ENT_QUOTES, 'UTF-8') ?></th>
-                  <th><?= htmlspecialchars($tx['how_example_col2'], ENT_QUOTES, 'UTF-8') ?></th>
-                  <th><?= htmlspecialchars($tx['how_example_col3'], ENT_QUOTES, 'UTF-8') ?></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><strong><?= htmlspecialchars($tx['how_row1_label'], ENT_QUOTES, 'UTF-8') ?></strong></td>
-                  <td class="kasu-nft__cell-kasu"><?= htmlspecialchars($tx['how_row1_kasu'], ENT_QUOTES, 'UTF-8') ?></td>
-                  <td class="kasu-nft__cell-inv"><?= htmlspecialchars($tx['how_row1_inv'], ENT_QUOTES, 'UTF-8') ?></td>
-                </tr>
-                <tr>
-                  <td><strong><?= htmlspecialchars($tx['how_row2_label'], ENT_QUOTES, 'UTF-8') ?></strong></td>
-                  <td class="kasu-nft__cell-kasu"><?= htmlspecialchars($tx['how_row2_kasu'], ENT_QUOTES, 'UTF-8') ?></td>
-                  <td class="kasu-nft__cell-inv"><?= htmlspecialchars($tx['how_row2_inv'], ENT_QUOTES, 'UTF-8') ?></td>
-                </tr>
-                <tr>
-                  <td><strong><?= htmlspecialchars($tx['how_row3_label'], ENT_QUOTES, 'UTF-8') ?></strong></td>
-                  <td class="kasu-nft__cell-kasu"><?= htmlspecialchars($tx['how_row3_kasu'], ENT_QUOTES, 'UTF-8') ?></td>
-                  <td class="kasu-nft__cell-inv"><?= htmlspecialchars($tx['how_row3_inv'], ENT_QUOTES, 'UTF-8') ?></td>
-                </tr>
-                <tr>
-                  <td><strong><?= htmlspecialchars($tx['how_row4_label'], ENT_QUOTES, 'UTF-8') ?></strong></td>
-                  <td class="kasu-nft__cell-kasu"><?= htmlspecialchars($tx['how_row4_kasu'], ENT_QUOTES, 'UTF-8') ?></td>
-                  <td class="kasu-nft__cell-inv"><?= htmlspecialchars($tx['how_row4_inv'], ENT_QUOTES, 'UTF-8') ?></td>
-                </tr>
-                <tr class="kasu-nft__table-total">
-                  <td><strong>TOTAL</strong></td>
-                  <td class="kasu-nft__cell-kasu"><?= htmlspecialchars($tx['how_total_kasu'], ENT_QUOTES, 'UTF-8') ?></td>
-                  <td class="kasu-nft__cell-inv"><?= htmlspecialchars($tx['how_total_inv'], ENT_QUOTES, 'UTF-8') ?></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+
 
         <!-- Garantías -->
         <div class="kasu-nft__guarantees">
@@ -457,8 +600,13 @@ $fmt = function($v) { return '$' . number_format($v, 0, '.', ',') . ' MXN'; };
     </section>
 
     <!-- ═══════════════════════════════════════════════ -->
-    <!-- 3. DASHBOARD EN TIEMPO REAL                     -->
+    <!-- 3. DASHBOARD UNIFICADO                          -->
     <!-- ═══════════════════════════════════════════════ -->
+    <?php
+      $estadoColor = $fondo_estado === 'SANO' ? '#2e7d32' : ($fondo_estado === 'MANEJABLE' ? '#ed6c02' : '#d32f2f');
+      $estadoIcono = $fondo_estado === 'SANO' ? '🟢' : ($fondo_estado === 'MANEJABLE' ? '🟠' : '🔴');
+      $valor_portafolio = $fondo_valor_actual > 0 ? $fondo_valor_actual : $fondo_aporta_total;
+    ?>
     <section class="kasu-nft__section kasu-nft__section--muted" id="kasu-nft-dash" aria-labelledby="kasu-nft-dash-title">
       <div class="container">
         <div class="kasu-nft__section-header">
@@ -467,29 +615,64 @@ $fmt = function($v) { return '$' . number_format($v, 0, '.', ',') . ' MXN'; };
           <p class="kasu-nft__lead"><?= htmlspecialchars($tx['dash_lead'], ENT_QUOTES, 'UTF-8') ?></p>
         </div>
 
-        <div class="kasu-nft__metrics">
-          <div class="kasu-nft__metric">
-            <span class="kasu-nft__metric-icon">📋</span>
-            <span class="kasu-nft__metric-value" data-counter><?= number_format($metrica_polizas, 0) ?></span>
-            <span class="kasu-nft__metric-label"><?= htmlspecialchars($tx['dash_polizas'], ENT_QUOTES, 'UTF-8') ?></span>
+        <!-- Valor Actual del Portafolio -->
+        <div class="kasu-nft__fondo-status" style="background:#fff;border-radius:22px;padding:1.8rem 2rem;border:1px solid var(--kasu-nft-border);box-shadow:var(--kasu-nft-shadow);text-align:center;margin-bottom:1.8rem;">
+          <span style="font-size:2.2rem;display:block;margin-bottom:0.3rem;">📈</span>
+          <div style="font-size:2.8rem;font-weight:800;color:var(--kasu-nft-accent);">
+            <?= $fmt($valor_portafolio) ?>
           </div>
-          <div class="kasu-nft__metric">
-            <span class="kasu-nft__metric-icon">🏛️</span>
-            <span class="kasu-nft__metric-value"><?= $fmt($metrica_fondo) ?></span>
-            <span class="kasu-nft__metric-label"><?= htmlspecialchars($tx['dash_fondo'], ENT_QUOTES, 'UTF-8') ?></span>
-          </div>
-          <div class="kasu-nft__metric">
-            <span class="kasu-nft__metric-icon">💳</span>
-            <span class="kasu-nft__metric-value"><?= $fmt($metrica_cobrado) ?></span>
-            <span class="kasu-nft__metric-label"><?= htmlspecialchars($tx['dash_cobrado'], ENT_QUOTES, 'UTF-8') ?></span>
-          </div>
-          <div class="kasu-nft__metric">
-            <span class="kasu-nft__metric-icon">📤</span>
-            <span class="kasu-nft__metric-value">$<?= number_format($metrica_entregado, 0) ?> USDC</span>
-            <span class="kasu-nft__metric-label"><?= htmlspecialchars($tx['dash_entregado'], ENT_QUOTES, 'UTF-8') ?></span>
-          </div>
+          <span style="color:var(--kasu-nft-ink-soft);font-size:0.9rem;">Valor Actual Portafolio</span>
         </div>
-        <p class="kasu-nft__metrics-footer"><?= htmlspecialchars($tx['dash_footer'], ENT_QUOTES, 'UTF-8') ?></p>
+
+        <!-- Grid unificado 4 tarjetas -->
+        <?php
+          $colores_pie = ['#0f3d4c','#1a6b82','#2e8b57','#c9a15a','#8b4513','#6b3fa0','#b8324e','#4a7c96','#d4956a','#5c8a5c'];
+          $conic = []; $acum = 0; $pie_legend = '';
+          foreach ($ventas_por_producto as $i => $vp):
+            $pct_pie = $valor_ventas_activas > 0 ? round(($vp['total'] / $valor_ventas_activas) * 100, 1) : 0;
+            $c = $colores_pie[$i % count($colores_pie)];
+            $conic[] = $c . ' ' . $acum . '% ' . ($acum + $pct_pie) . '%';
+            $acum += $pct_pie;
+            $pie_legend .= '<div style="display:flex;justify-content:space-between;"><span><strong style="color:'.$c.';">•</strong> '.htmlspecialchars($vp['producto']).'</span><strong>'.$pct_pie.'%</strong></div>';
+          endforeach;
+          $pie_gradient = count($conic) > 0 ? implode(', ', $conic) : '#e8ecf2 0% 100%';
+        ?>
+        <div class="kasu-nft__metrics-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.2rem;align-items:stretch;">
+
+          <!-- Tarjeta 1: Pólizas Emitidas -->
+          <div class="kasu-nft__metric-card" style="background:#fff;border-radius:22px;padding:1.5rem;border:1px solid var(--kasu-nft-border);box-shadow:var(--kasu-nft-shadow);text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center;">
+            <div style="font-size:1.8rem;margin-bottom:0.5rem;">📋</div>
+            <div style="font-size:1.8rem;font-weight:700;color:#0d1628;"><?= number_format($metrica_polizas, 0) ?></div>
+            <div style="font-size:0.85rem;color:var(--kasu-nft-ink-soft);font-weight:500;"><?= htmlspecialchars($tx['dash_polizas'], ENT_QUOTES, 'UTF-8') ?></div>
+          </div>
+
+          <!-- Tarjeta 2: Aportación Total -->
+          <div class="kasu-nft__metric-card" style="background:#fff;border-radius:22px;padding:1.5rem;border:1px solid var(--kasu-nft-border);box-shadow:var(--kasu-nft-shadow);text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center;">
+            <div style="font-size:1.8rem;margin-bottom:0.5rem;">🏛️</div>
+            <div style="font-size:1.6rem;font-weight:700;color:#0d1628;"><?= $fmt($fondo_aporta_total) ?></div>
+            <div style="font-size:0.85rem;color:var(--kasu-nft-ink-soft);font-weight:500;"><?= htmlspecialchars($tx['fondo_aporta_label'], ENT_QUOTES, 'UTF-8') ?></div>
+          </div>
+
+          <!-- Tarjeta 3: Estado + Cobertura -->
+          <div class="kasu-nft__metric-card" style="background:#fff;border-radius:22px;padding:1.5rem;border:1px solid var(--kasu-nft-border);box-shadow:var(--kasu-nft-shadow);text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center;">
+            <div style="font-size:1.8rem;margin-bottom:0.5rem;"><?= $estadoIcono ?></div>
+            <div style="font-size:1.6rem;font-weight:700;color:<?= $estadoColor ?>;"><?= $fondo_estado ?></div>
+            <div style="font-size:0.85rem;color:var(--kasu-nft-ink-soft);font-weight:500;"><?= number_format($fondo_cobertura, 1) ?>% Cobertura · Rend. <?= number_format($fondo_rendimiento, 1) ?>%</div>
+          </div>
+
+          <!-- Tarjeta 4: Gráfica de pastel composición por producto -->
+          <div class="kasu-nft__metric-card" style="background:#fff;border-radius:22px;padding:1.2rem 1.5rem;border:1px solid var(--kasu-nft-border);box-shadow:var(--kasu-nft-shadow);display:flex;flex-direction:column;justify-content:space-between;">
+            <p style="font-weight:600;font-size:0.85rem;color:var(--kasu-nft-ink-soft);margin-bottom:0.8rem;text-align:center;">Composición por producto</p>
+            <div style="display:flex;align-items:center;justify-content:space-around;gap:1rem;">
+              <div style="width:90px;height:90px;border-radius:50%;flex-shrink:0;background:conic-gradient(<?= $pie_gradient ?>);"></div>
+              <div style="font-size:0.72rem;display:flex;flex-direction:column;gap:2px;width:100%;">
+                <?= $pie_legend ?>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
       </div>
     </section>
 

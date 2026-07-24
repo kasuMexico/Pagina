@@ -460,3 +460,281 @@
     margin-top: 2rem;
   }
 }
+
+/* ================================================================
+   SECCIÓN 2: CÓMO FUNCIONA (How It Works)
+   ================================================================ */
+.kasu-nft__how-steps {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin-bottom: 2.5rem;
+}
+
+.kasu-nft__how-step {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 1.4rem;
+  border: 1px solid var(--kasu-nft-border);
+  box-shadow: var(--kasu-nft-shadow-soft);
+  text-align: center;
+}
+
+.kasu-nft__how-step-icon {
+  font-size: 2rem;
+  margin-bottom: 0.6rem;
+}
+
+.kasu-nft__how-step h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--kasu-nft-ink);
+}
+
+.kasu-nft__how-step p {
+  font-size: 0.9rem;
+  color: var(--kasu-nft-ink-soft);
+  margin: 0;
+}
+
+.kasu-nft__how-arrow {
+  display: none;
+  align-self: center;
+  font-size: 1.5rem;
+  color: var(--kasu-nft-gold);
+  font-weight: 700;
+}
+
+/* Tabla de unit economics */
+.kasu-nft__example {
+  margin-bottom: 2.5rem;
+}
+
+.kasu-nft__example-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 1.2rem;
+  color: var(--kasu-nft-accent);
+}
+
+.kasu-nft__table--economics {
+  min-width: 100%;
+}
+
+.kasu-nft__cell-kasu {
+  color: var(--kasu-nft-accent);
+  font-weight: 600;
+}
+
+.kasu-nft__cell-inv {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.kasu-nft__table-total td {
+  background: #f0f6f0;
+  font-size: 1.05rem;
+}
+
+/* Garantías */
+.kasu-nft__guarantees {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.2rem;
+}
+
+.kasu-nft__guarantee-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.4rem;
+  border: 1px solid var(--kasu-nft-border);
+  border-left: 4px solid var(--kasu-nft-gold);
+  box-shadow: var(--kasu-nft-shadow-soft);
+}
+
+.kasu-nft__guarantee-card h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.6rem;
+}
+
+.kasu-nft__guarantee-card p {
+  font-size: 0.92rem;
+  color: var(--kasu-nft-ink-soft);
+  margin: 0;
+}
+
+/* ================================================================
+   SECCIÓN 3: DASHBOARD DE MÉTRICAS
+   ================================================================ */
+.kasu-nft__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.kasu-nft__metric {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 1.5rem 1.2rem;
+  text-align: center;
+  border: 1px solid var(--kasu-nft-border);
+  box-shadow: var(--kasu-nft-shadow-soft);
+  transition: transform 0.2s ease;
+}
+
+.kasu-nft__metric:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--kasu-nft-shadow);
+}
+
+.kasu-nft__metric-icon {
+  font-size: 1.8rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.kasu-nft__metric-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--kasu-nft-accent);
+  margin-bottom: 0.3rem;
+}
+
+.kasu-nft__metric-label {
+  font-size: 0.85rem;
+  color: var(--kasu-nft-ink-soft);
+  font-weight: 500;
+}
+
+.kasu-nft__metrics-footer {
+  margin-top: 1.2rem;
+  font-size: 0.82rem;
+  color: var(--kasu-nft-ink-soft);
+  text-align: center;
+}
+
+/* ================================================================
+   SECCIÓN 4: CLAIM VAULT
+   ================================================================ */
+.kasu-nft__claim-card {
+  background: #ffffff;
+  border-radius: 22px;
+  padding: 2rem;
+  border: 1px solid var(--kasu-nft-border);
+  box-shadow: var(--kasu-nft-shadow);
+  text-align: center;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.kasu-nft__claim-wallet-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.kasu-nft__claim-placeholder p {
+  color: var(--kasu-nft-ink-soft);
+  max-width: 360px;
+  margin: 0 auto 1.2rem;
+}
+
+.kasu-nft__claim-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-bottom: 0.8rem;
+}
+
+.kasu-nft__btn-outline {
+  background: transparent;
+  color: var(--kasu-nft-ink-soft);
+  border-color: var(--kasu-nft-border);
+}
+
+.kasu-nft__btn-outline:hover {
+  border-color: var(--kasu-nft-accent);
+  color: var(--kasu-nft-accent);
+}
+
+.kasu-nft__btn-outline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.kasu-nft__claim-network {
+  font-size: 0.82rem;
+  color: var(--kasu-nft-ink-soft);
+  margin: 0;
+}
+
+.kasu-nft__claim-balance-label {
+  font-size: 0.9rem;
+  color: var(--kasu-nft-ink-soft);
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.kasu-nft__claim-balance-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2e7d32;
+  display: block;
+  margin-bottom: 1.2rem;
+}
+
+.kasu-nft__claim-info {
+  padding: 1rem;
+}
+
+.kasu-nft__claim-info h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+}
+
+.kasu-nft__claim-info p {
+  color: var(--kasu-nft-ink-soft);
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+@media (min-width: 768px) {
+  .kasu-nft__how-steps {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .kasu-nft__guarantees {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .kasu-nft__metrics {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 992px) {
+  .kasu-nft__how-steps {
+    grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+    align-items: start;
+  }
+
+  .kasu-nft__how-arrow {
+    display: block;
+    padding: 0 0.3rem;
+    margin-top: 1.5rem;
+  }
+
+  .kasu-nft__metric-value {
+    font-size: 1.8rem;
+  }
+}

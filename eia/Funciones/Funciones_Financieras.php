@@ -260,70 +260,103 @@ class Financieras {
         return round($valorTotal, 2);
     }
 
-    /** Saldo aproximado a hoy con interés diario. */
+    /** Saldo pendiente real: cuotas vencidas × valor de cuota − pagos realizados (sistema frances). */
     public function SaldoCredito($c0, $Vta) {
         $this->trackUsage();
 
         $venta = $this->getVenta($c0, $Vta);
         if (!$venta) return 0.0;
 
-        $fechaHoy   = strtotime(date("Y-m-d"));
-        $fechaVenta = strtotime($venta['FechaRegistro']);
-
         global $basicas;
-        $ultimoPagoFecha = $basicas->Max1Dat($c0, "FechaRegistro", "Pagos", "IdVenta", $venta['Id']);
-        $fechaUltimoPago = $ultimoPagoFecha ? strtotime($ultimoPagoFecha) : $fechaVenta;
 
-        $diasDesdeVenta      = max(0, (int)floor(($fechaHoy - $fechaVenta) / 86400));
-        $diasDesdeUltimoPago = max(0, (int)floor(($fechaHoy - $fechaUltimoPago) / 86400));
+        $numMeses   = max(1, (int)$venta['NumeroPagos']);
+        $producto   = $venta['Producto'];
+        $CostoVenta = (float)$venta['CostoVenta'];
+        $tasaAnual  = (float)$basicas->BuscarCampos($c0, 'TasaAnual', 'Productos', 'Producto', $producto);
+        $perido     = max(1, (int)$basicas->BuscarCampos($c0, 'Perido',    'Productos', 'Producto', $producto));
+        $fechaAlta  = new DateTime($venta['FechaRegistro']);
+        $hoy        = new DateTime('today');
 
-        $datosProd  = $this->getProductoData($c0, $venta["Producto"]);
-        $tasaAnual  = (float)$datosProd['TasaAnual'];
+        // --- Contado: lo que falta del precio total ---
+        if ($numMeses <= 1) {
+            $totalPagado = $this->SumarPagos($c0, 'Cantidad', 'Pagos', 'IdVenta', $venta['Id']);
+            return max(0.0, round($CostoVenta - $totalPagado, 2));
+        }
 
-        $i    = ($tasaAnual / 100) / 365.0; // diaria
-        $base = 1 + $i;
+        // --- Credito: cuota por periodo (ya ajustada a quincenal / mensual) ---
+        $totalPeriodos = $numMeses * $perido;
+        $cuota = $this->PagoSI($tasaAnual, $numMeses, $CostoVenta);
+        if ($perido == 2) {
+            $cuota = round($cuota / 2, 2);
+        }
 
-        $factorUltimoPago = ($diasDesdeUltimoPago > 0) ? pow($base, $diasDesdeUltimoPago) : 1.0;
-        $factorVenta      = ($diasDesdeVenta      > 0) ? pow($base, $diasDesdeVenta)      : 1.0;
+        // --- Contar cuotas vencidas (misma logica que estado_mora_corriente) ---
+        $stepDias = max(1, (int)floor(30 / $perido));
+        $y = (int)$fechaAlta->format('Y');
+        $m = (int)$fechaAlta->format('m');
+        $d = (int)$fechaAlta->format('d');
 
-        $totalPagos       = (float)$this->SumarPagos($c0, "Cantidad", "Pagos", "IdVenta", $venta["Id"]);
-        $valorAcumulado   = $totalPagos / $factorUltimoPago;
-        $capitalPendiente = ((float)$venta["CostoVenta"]) - $valorAcumulado;
+        if ($perido === 1) {
+            $venc = new DateTime(date('Y-m-t', $fechaAlta->getTimestamp()));
+            if ($venc <= $fechaAlta) {
+                $venc = (new DateTime("{$y}-{$m}-01"))->modify('last day of next month');
+            }
+        } elseif ($perido === 2) {
+            if ($d <= 15) {
+                $venc = new DateTime("{$y}-{$m}-15");
+            } else {
+                $venc = new DateTime(date('Y-m-t', $fechaAlta->getTimestamp()));
+            }
+            if ($venc <= $fechaAlta) {
+                $venc->modify("+{$stepDias} days");
+            }
+        } else {
+            $venc = new DateTime("{$y}-{$m}-01");
+            while ($venc <= $fechaAlta) {
+                $venc->modify("+{$stepDias} days");
+            }
+        }
 
-        $saldoActual = $capitalPendiente * $factorVenta;
-        return round(max(0, $saldoActual), 2);
+        $cuotasVencidas = 0;
+        $v = clone $venc;
+        while ($v <= $hoy && $cuotasVencidas < $totalPeriodos) {
+            $cuotasVencidas++;
+            $v->modify("+{$stepDias} days");
+        }
+
+        // --- Pendiente = esperado − pagado ---
+        $esperado    = round($cuota * $cuotasVencidas, 2);
+        $totalPagado = $this->SumarPagos($c0, 'Cantidad', 'Pagos', 'IdVenta', $venta['Id']);
+
+        return max(0.0, round($esperado - $totalPagado, 2));
     }
 
-    /** Pago por periodo actual. */
+    /** Cuota fija por periodo segun sistema frances, ajustada por Perido del producto. */
     public function Pago($c0, $IdVta) {
         $this->trackUsage();
         $IdVta = $this->esc($c0, $IdVta);
 
         global $basicas;
 
-        $totalPagos   = (float)$this->SumarPagos($c0, "Cantidad", "Pagos", "IdVenta", $IdVta);
-        $valorCredito = (float)$this->PagoCredito($c0, $IdVta);
-        $saldo        = (float)$this->SaldoCredito($c0, $IdVta);
-
         $numPagos   = (int)$basicas->BuscarCampos($c0, "NumeroPagos", "Venta", "Id", $IdVta);
         $producto   =       $basicas->BuscarCampos($c0, "Producto",    "Venta", "Id", $IdVta);
         $TasaAnual  = (float)$basicas->BuscarCampos($c0, "TasaAnual",  "Productos", "Producto", $producto);
         $CostoVenta = (float)$basicas->BuscarCampos($c0, "CostoVenta", "Venta", "Id", $IdVta);
+        $perido     = max(1, (int)$basicas->BuscarCampos($c0, "Perido", "Productos", "Producto", $producto));
 
-        // Mantengo /2 si tu lógica ya consideraba quincenas
-        $pagoNormal = $this->PagoSI($TasaAnual, $numPagos, $CostoVenta) / 2;
+        if ($numPagos <= 0) return 0.0;
 
-        if ($saldo >= $valorCredito) {
-            $pagosRealizados = ($pagoNormal > 0) ? ($totalPagos / $pagoNormal) : 0;
-            $pagosRestantes  = max(1, $numPagos - $pagosRealizados);
-            return round($saldo / $pagosRestantes, 2);
-        } else {
-            $diferencia = $totalPagos - $valorCredito;
-            return ($diferencia >= 0) ? 0.0 : round($pagoNormal, 2);
+        // Pago mensual sistema frances (=PAGO() de Excel)
+        $pagoMensual = $this->PagoSI($TasaAnual, $numPagos, $CostoVenta);
+
+        // Ajustar por periodicidad: quincenal -> mitad, mensual -> igual
+        if ($perido == 2) {
+            return round($pagoMensual / 2, 2);
         }
+        return round($pagoMensual, 2);
     }
 
-    /** Cantidad de pagos pendientes. */
+    /** Cantidad de pagos pendientes (ajustado por Perido del producto). */
     public function PagosPend($c0, $IdVta) {
         $this->trackUsage();
         $IdVta = $this->esc($c0, $IdVta);
@@ -337,10 +370,15 @@ class Financieras {
         $producto   =       $basicas->BuscarCampos($c0, "Producto",    "Venta", "Id", $IdVta);
         $CostoVenta = (float)$basicas->BuscarCampos($c0, "CostoVenta", "Venta", "Id", $IdVta);
         $TasaAnual  = (float)$basicas->BuscarCampos($c0, "TasaAnual",  "Productos", "Producto", $producto);
+        $perido     = max(1, (int)$basicas->BuscarCampos($c0, "Perido", "Productos", "Producto", $producto));
 
-        $pagoNormal = $this->PagoSI($TasaAnual, $numPagos, $CostoVenta);
+        // Cuota por periodo (ajustada a quincenal/mensual)
+        $pagoMensual = $this->PagoSI($TasaAnual, $numPagos, $CostoVenta);
+        $pagoNormal  = ($perido == 2) ? round($pagoMensual / 2, 2) : round($pagoMensual, 2);
+
+        $totalPeriodos   = $numPagos * $perido;
         $pagosRealizados = ($pagoNormal > 0) ? ($totalPagos / $pagoNormal) : 0;
-        $pagosRestantes  = max(0, $numPagos - $pagosRealizados);
+        $pagosRestantes  = max(0, $totalPeriodos - $pagosRealizados);
 
         return (int)round($pagosRestantes, 0, PHP_ROUND_HALF_DOWN);
     }
@@ -370,70 +408,117 @@ class Financieras {
     }
 
     /**
-     * Actualiza estatus de ventas por reglas de tiempo y pagos.
+     * Actualiza estatus de ventas por reglas de tiempo y pagos (basado en sets).
      */
     public function actualizaVts($c0) {
         $this->trackUsage();
         global $basicas;
 
-        mysqli_query($c0, "TRUNCATE TABLE `Comisiones`");
+        $afectadas = 0;
 
-        $Hoy = strtotime(date("Y-m-d"));
-        $maxVenta = (int)$basicas->MaxDat($c0, "Id", "Venta");
+        // ── 1) PREVENTA sin pagos + 180 dias → marcar como abandonadas (Usuario=SISTEMA) ──
+        $c0->query("
+            UPDATE Venta
+            SET Usuario = 'SISTEMA'
+            WHERE Status = 'PREVENTA'
+              AND Id NOT IN (SELECT DISTINCT IdVenta FROM Pagos)
+              AND FechaRegistro <= DATE_SUB(NOW(), INTERVAL 180 DAY)
+        ");
+        $afectadas += max(0, $c0->affected_rows);
 
-        for ($ventaId = 1; $ventaId <= $maxVenta; $ventaId++) {
+        // ── 2) PREVENTA con al menos un pago → COBRANZA ──
+        $c0->query("
+            UPDATE Venta
+            SET Status = 'COBRANZA'
+            WHERE Status = 'PREVENTA'
+              AND Id IN (SELECT DISTINCT IdVenta FROM Pagos)
+        ");
+        $afectadas += max(0, $c0->affected_rows);
 
-            $venta = $this->getVenta($c0, $ventaId);
-            if (!$venta) continue;
+        // ── 3) COBRANZA + 90 dias sin pago → CANCELADO ──
+        $c0->query("
+            UPDATE Venta v
+            SET v.Status = 'CANCELADO'
+            WHERE v.Status = 'COBRANZA'
+              AND COALESCE(
+                    (SELECT MAX(FechaRegistro) FROM Pagos WHERE IdVenta = v.Id AND (status IS NULL OR status != 'Mora')),
+                    v.FechaRegistro
+                  ) <= DATE_SUB(NOW(), INTERVAL 90 DAY)
+        ");
+        $afectadas += max(0, $c0->affected_rows);
 
-            $SuPag        = (float)$this->SumarPagos($c0, "Cantidad", "Pagos", "IdVenta", $ventaId);
-            $valorCredito = (float)$this->PagoCredito($c0, $ventaId);
+        // ── 4) COBRANZA + pagos >= Total financiado → ACTIVACION ──
+        $c0->query("
+            UPDATE Venta v
+            SET v.Status = 'ACTIVACION'
+            WHERE v.Status = 'COBRANZA'
+              AND (SELECT COALESCE(SUM(Cantidad),0) FROM Pagos WHERE IdVenta = v.Id AND (status IS NULL OR status != 'Mora'))
+                  >= v.Subtotal
+              AND v.Subtotal > 0
+        ");
+        $activacionRows = max(0, $c0->affected_rows);
+        $afectadas += $activacionRows;
 
-            $ultimoPagoFecha = $basicas->Max1Dat($c0, "FechaRegistro", "Pagos", "IdVenta", $venta['Id']);
+        // Registrar FechaLiquidacion para las que acaban de pasar a ACTIVACION
+        if ($activacionRows > 0 && $this->ventaTieneColumna($c0, 'FechaLiquidacion')) {
+            $c0->query("
+                UPDATE Venta v
+                LEFT JOIN (
+                    SELECT IdVenta, MAX(FechaRegistro) AS FechaUltimoPago
+                    FROM Pagos
+                    WHERE status IS NULL OR status != 'Mora'
+                    GROUP BY IdVenta
+                ) p ON p.IdVenta = v.Id
+                SET v.FechaLiquidacion = COALESCE(v.FechaLiquidacion, p.FechaUltimoPago, v.FechaRegistro)
+                WHERE v.Status = 'ACTIVACION' AND v.FechaLiquidacion IS NULL
+            ");
+        }
 
-            if ($venta['Status'] === "PREVENTA") {
-                if ($SuPag <= 0) {
-                    $FecVta = $basicas->BuscarCampos($c0, "FechaRegistro", "Venta", "Id", $ventaId);
-                    if ($FecVta) {
-                        $fechaLimite = strtotime($FecVta . " + 180 days");
-                        if ($Hoy >= $fechaLimite) {
-                            $basicas->ActCampo($c0, "Venta", "Usuario", "SISTEMA", $ventaId);
-                        }
-                    }
-                } else {
-                    $basicas->ActCampo($c0, "Venta", "Status", "COBRANZA", $ventaId);
-                }
+        // ── 5) ACTIVACION + 30 dias desde liquidacion → ACTIVO (con correo) ──
+        if ($this->ventaTieneColumna($c0, 'FechaLiquidacion')) {
+            $res = $c0->query("
+                SELECT v.Id, v.IdContact
+                FROM Venta v
+                WHERE v.Status = 'ACTIVACION'
+                  AND v.FechaLiquidacion IS NOT NULL
+                  AND DATE(v.FechaLiquidacion) <= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+            ");
+        } else {
+            $res = $c0->query("
+                SELECT v.Id, v.IdContact
+                FROM Venta v
+                LEFT JOIN (
+                    SELECT IdVenta, MAX(FechaRegistro) AS FechaUltimoPago
+                    FROM Pagos
+                    WHERE status IS NULL OR status != 'Mora'
+                    GROUP BY IdVenta
+                ) p ON p.IdVenta = v.Id
+                WHERE v.Status = 'ACTIVACION'
+                  AND DATE(COALESCE(p.FechaUltimoPago, v.FechaRegistro)) <= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+            ");
+        }
 
-            } elseif ($venta['Status'] === "COBRANZA") {
-                $baseCanc  = $ultimoPagoFecha ?: $venta['FechaRegistro'];
-                $fechaCanc = strtotime(date("Y-m-d", strtotime($baseCanc . " + 90 days")));
-                if ($Hoy > $fechaCanc) {
-                    $basicas->ActCampo($c0, "Venta", "Status", "CANCELADO", $ventaId);
-                } elseif ($SuPag >= $valorCredito) {
-                    $basicas->ActCampo($c0, "Venta", "Status", "ACTIVACION", $ventaId);
-                    $this->registrarFechaLiquidacion($c0, $ventaId, $ultimoPagoFecha ?: date('Y-m-d H:i:s'));
-                }
+        if ($res) {
+            while ($row = $res->fetch_assoc()) {
+                $ventaId   = (int)$row['Id'];
+                $IdContact = (int)$row['IdContact'];
 
-            } elseif ($venta['Status'] === "ACTIVACION") {
-                $baseAct  = $venta['FechaLiquidacion'] ?? ($ultimoPagoFecha ?: $venta['FechaRegistro']);
-                $fechaAct = strtotime($baseAct . " + 30 days");
-                if ($Hoy >= $fechaAct) {
-                    $basicas->ActCampo($c0, "Venta", "Status", "ACTIVO", $ventaId);
+                $c0->query("UPDATE Venta SET Status = 'ACTIVO' WHERE Id = {$ventaId}");
+                $afectadas++;
 
-                    // Correo de activación por instancia/variable
-                    $Asunto    = '¡BIENVENIDO A KASU!';
-                    $IdContact = $basicas->BuscarCampos($c0, "IdContact", "Venta", "Id", $ventaId);
-                    $DirUrl    = base64_encode($IdContact);
-                    $Cte       = $basicas->BuscarCampos($c0, "Nombre", "Usuario", "IdContact", $IdContact);
-                    $Address   = $basicas->BuscarCampos($c0, "Mail",   "Contacto", "Id", $IdContact);
-
-                    if (!empty($Address)) {
-                        $this->enviarCorreoActivacion((string)$Cte, (string)$Address, $Asunto, (string)$IdContact, (string)$DirUrl);
-                    }
+                // Correo de activacion
+                $Cte     = $basicas->BuscarCampos($c0, "Nombre", "Usuario", "IdContact", $IdContact);
+                $Address = $basicas->BuscarCampos($c0, "Mail",   "Contacto", "Id", $IdContact);
+                if (!empty($Address)) {
+                    $Asunto = '¡BIENVENIDO A KASU!';
+                    $DirUrl = base64_encode((string)$IdContact);
+                    $this->enviarCorreoActivacion((string)$Cte, (string)$Address, $Asunto, (string)$IdContact, (string)$DirUrl);
                 }
             }
+            $res->close();
         }
-        return $maxVenta;
+
+        return $afectadas;
     }
 
     /**

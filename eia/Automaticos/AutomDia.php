@@ -167,6 +167,14 @@ if (!$dryRun && isset($mysqli) && $mysqli instanceof mysqli) {
   } catch (Throwable $e) {
     kasu_cron_log('No se pudieron regularizar las pólizas en activación: ' . $e->getMessage());
   }
+
+  // Actualizar estados de ventas (PREVENTA → COBRANZA → CANCELADO/ACTIVACION)
+  try {
+    $ventasActualizadas = $financieras->actualizaVts($mysqli);
+    kasu_cron_log("Ventas procesadas por actualizaVts: {$ventasActualizadas}.");
+  } catch (Throwable $e) {
+    kasu_cron_log('Error en actualizaVts: ' . $e->getMessage());
+  }
 }
 
 $frecuencias = ['DIARIO'];

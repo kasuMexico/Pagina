@@ -1,343 +1,276 @@
 <?php
-//Variables generales
-$Secret_KEY = "ef235aacf90d9f4aadd8c92e4b2562e1d9eb97f0";
-//Este código busca todos los archivos con extensión ".php" en la carpeta "Funciones"  con un array los requiere
-foreach (glob("../Funciones/*.php") as $archivo) {
-    require_once $archivo;
-}
-//creamos una variable general para las funciones
-$basicas = new Basicas();
-$seguridad = new Seguridad();
-//Requerir las conexiones
-require_once '../Conexiones/cn_pruebas.php';
-require_once '../Conexiones/cn_prosp.php';
-// Iniciar el almacenamiento en búfer
-ob_start();
+declare(strict_types=1);
 
-// Verificar que la petición sea de tipo POST
-if ($_SERVER['REQUEST_METHOD'] != 'POST') {
-    header('HTTP/1.1 405 Method Not Allowed');
-    exit;
-}
+/**
+ * Registro_sbx.php
+ * Sandbox legacy para pruebas de API Market V1.
+ * NO USAR EN PRODUCCION: este endpoint es solo para entornos sandbox.
+ *
+ * La Secret_KEY se obtiene desde variable de entorno KASU_SANDBOX_SECRET.
+ * Las CURPs de prueba estan anonimizadas.
+ */
 
-// Leer el contenido de la petición y convertirlo a un array de PHP
-  $input = file_get_contents('php://input');
-  $data = json_decode($input, true);
+require_once __DIR__ . '/../librerias_api.php';
 
-  //Enviamos a la funcion de validacion de curp
-  if($data['curp_en_uso'] == "CAMC880526HMCBNR04"){
-    $ArrayRes["Response"]   = "TRUE";
-    $ArrayRes["StatusCurp"] = "NC";
-    $ArrayRes["Nombre"]     = "JOSE CARLOS";
-    $ArrayRes["Paterno"]    = "CABRERA";
-    $ArrayRes["Materno"]    = "MONROY";
-  }elseif ($data['curp_en_uso'] == "CAPC200504HMCBXRA2") {
-    $ArrayRes["Response"]   = "TRUE";
-    $ArrayRes["StatusCurp"] = "NC";
-    $ArrayRes["Nombre"]     = "JOSE CARLOS";
-    $ArrayRes["Paterno"]    = "CABRERA";
-    $ArrayRes["Materno"]    = "PIÑA";
-  }elseif ($data['curp_en_uso'] == "REAE060617MMCYLVA4") {
-    $ArrayRes["Response"]   = "TRUE";
-    $ArrayRes["StatusCurp"] = "NC";
-    $ArrayRes["Nombre"]     = "EVELYN";
-    $ArrayRes["Paterno"]    = "REYES";
-    $ArrayRes["Materno"]    = "ALVAREZ";
-  }else{
-    $ArrayRes["StatusCurp"] == "BD";
-    $ArrayRes["Response"] == "Error";
-  }
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
+try {
+    api_security_headers();
+    api_rate_limit('sandbox:' . api_client_ip(), 10, 60);
 
-//La peticion debe ser por metodo POST y el cuerpo de la solicitud
-//debe estar en formato (Content-Type: application/json)
-//y debe contener los siguientes parámetros:
-//Tipo_Peticion	    Especifica el tipo de petición, debe ser establecido segun las tablas de acceso
-//nombre_de_usuario	Especifica tu nombre de usuario registrado en la aplicación KASU.
-//Firma_KEY	        Firma la clave CURP de tu cliente con tu Secret KEY mediante el algoritmo criptográfico HMAC.
-//curp_en_uso	      La clave CURP para generar la firma HMAC que este cifrada en BASE64.
-if ($data['tipo_peticion'] == 'token_full') {
+    $data = api_read_json();
 
-    // Verificar que los datos necesarios estén presentes
-    if (!isset($data['nombre_de_usuario'], $data['firma_KEY'], $data['curp_en_uso'])) {
-        header('HTTP/1.1 400 Bad Request');
-        exit;
+    // Secret KEY desde entorno (sin hardcode)
+    $Secret_KEY = getenv('KASU_SANDBOX_SECRET') ?: '';
+    if ($Secret_KEY === '') {
+        api_error(500, 'Configuracion sandbox no disponible');
     }
 
-      //$ArrayRes =  $seguridad->peticion_get($data['curp_en_uso']);
+    // --- CURPs de prueba ANONIMIZADAS (datos ficticios) ---
+    $curpsPrueba = [
+        'TECA880526HMCBNR04' => ['Nombre' => 'PRUEBA', 'Paterno' => 'UNO',   'Materno' => 'TEST'],
+        'TEPC200504HMCBXRA2' => ['Nombre' => 'PRUEBA', 'Paterno' => 'DOS',   'Materno' => 'TEST'],
+        'TEEE060617MMCYLVA4' => ['Nombre' => 'PRUEBA', 'Paterno' => 'TRES',  'Materno' => 'TEST'],
+    ];
 
-    if ($ArrayRes["Response"] == "Error" || $ArrayRes["StatusCurp"] == "BD") {
-        header('HTTP/1.1 417 Bad Request');
-        exit;
+    $curpInput = api_norm_curp((string)($data['curp_en_uso'] ?? ''));
+    if (isset($curpsPrueba[$curpInput])) {
+        $ArrayRes = [
+            'Response'   => 'correct',
+            'StatusCurp' => 'NC',
+            'Nombre'     => $curpsPrueba[$curpInput]['Nombre'],
+            'Paterno'    => $curpsPrueba[$curpInput]['Paterno'],
+            'Materno'    => $curpsPrueba[$curpInput]['Materno'],
+        ];
+    } else {
+        $ArrayRes = [
+            'Response'   => 'Error',
+            'StatusCurp' => 'BD',
+        ];
     }
 
-    //se buscamos el secret KEY registrado en la base de datos
-    //$basicas->BuscarCampos($mysqli,"id","Usuario","ClaveCurp",$data['curp_en_uso']);
-    // Verificar la FIRMA_KEY
-    $firma_key_sha = hash_hmac('sha256', $data['curp_en_uso'], $Secret_KEY);
+    $tipo = (string)($data['tipo_peticion'] ?? '');
 
-    if ($data['firma_KEY'] != $firma_key_sha) {
-        header('HTTP/1.1 401 Unauthorized');
-        exit;
-    }
-    // Verificar las credenciales del usuario
-    if ($basicas->ValidarUsrAPI_sandbox($mysqli,$data['nombre_de_usuario'])) {
-        //como el tiempo de expiración y los datos del usuario
-        $token_data = array(
-            "timestamp"   => time(),
-            "expires_in"  => 600, // 10 minutos de duracion por Token
-        );
-        //Convertir los datos en formato JSON.
-        $token_data_json = json_encode($token_data);
-        //Generar un hash HMAC de los datos JSON utilizando la clave segura generada en el paso 2.
-        $token = hash_hmac('sha256', $token_data_json, $firma_key_sha); //Este es el token que contiene todos los datos de uso
-        // Enviar la respuesta en formato JSON
-        header('HTTP/1.1 200 OK');
-        header('Content-Type: application/json');
-        echo json_encode(
-          array(
-            'token'      => $token,
-            'nombre'     => $ArrayRes["Nombre"]." ".$ArrayRes["Paterno"]." ".$ArrayRes["Materno"],
-            'token_data' => $token_data
-          )
-        );
-        exit;
-    }else{
-        // Devolver un mensaje de error si las credenciales son inválidas 401
-        header('HTTP/1.1 403 Unauthorized');
-        exit;
-    }
-}
-
-//****  Esta peticion nos permite saber el costo de el producto que seleccione el cliente, recuerda que debes usar la CLAVE CURP que fue usada para generar
-//****  el Token de Acceso, retorna el costo del producto y te permite calcular las comisiones, pagos y maximos tiempos de credito
-//****  API_KEY_AQUI	   Reemplaza el API_KEY_AQUI con el TOKEN recibido en la petición de AUTENTICACION
-//****  tipo_peticion	   Especifica el tipo de petición, debe ser establecido segun las tablas de acceso
-//****  curp_en_uso	     La clave CURP de el cliente con el que interactuaras
-//****  producto	       Especifica el tipo de producto, debe ser establecido segun las tablas de acceso
-//****  token_data	     Es el token retornado por la peticion de ACCESO a API_REGISTRO
-//****  timestamp	       EL tiempo en el cual se genero el token retornado por la peticion de ACCESO a API_REGISTRO
-//****  expires_in	     EL tiempo en el cual sera valido el token retornado por la peticion de ACCESO a API_REGISTRO
-// Procesar la petición
-if ($data['tipo_peticion'] == 'product_cost') {
-      // Verificar que los datos necesarios estén presentes
-      if (!isset($data['curp_en_uso'], $data['producto'])) {
-          header('HTTP/1.1 400 Bad Request');
-          exit;
-      }
-      //Obtenemos el valor de el TOKEN
-      $authorizationHeader = $_SERVER['HTTP_AUTHORIZATION'];
-      $token = substr($authorizationHeader, 7); // El número 7 representa la longitud del prefijo "Bearer "
-      //Variable para multimples consultas
-      $producto = $data['producto'];
-      //Validamos el Token de ACCeso
-      if ($seguridad->verificarToken($token,$data,$Secret_KEY)) {
-        //Validamos el producto
-        if($basicas->VerificarProducto($data['curp_en_uso'],$producto)){
-          //si el producto es Funerario obtenemos el bloque del producto
-          if($producto == "Funerario"){
-            //Obtene mos la edad de el cliente
-            $EdadCte = $basicas->ObtenerEdad($data['curp_en_uso']);
-            $producto =  $basicas->ProdFune($EdadCte);
-          }
-            // Enviar la respuesta en formato JSON
-            header('HTTP/1.1 200 OK');
-            header('Content-Type: application/json');
-            echo json_encode(
-              array(
-                   'costo'         => $basicas->BuscarCampos($mysqli,"Costo","Productos","Producto",$producto),
-                   'comision'      => $basicas->BuscarCampos($mysqli,"comision","Productos","Producto",$producto),
-                   'foma_pago'     => array(
-                      'meses_max'     => $basicas->BuscarCampos($mysqli,"MaxCredito","Productos","Producto",$producto),
-                      'tasa_interes'  => $basicas->BuscarCampos($mysqli,"TasaAnual","Productos","Producto",$producto)
-                   )
-              )
-            );
-            exit;
-        }else{
-          //Si el cliente tiene mas de la edad aceptable del producto
-          header('HTTP/1.1 406 No aceptable');
-          exit;
+    // --- token_full ---
+    if ($tipo === 'token_full') {
+        if ($ArrayRes['Response'] === 'Error' || $ArrayRes['StatusCurp'] === 'BD') {
+            api_error(417, 'CURP no valida');
         }
-      } else {
-        header('HTTP/1.1 401 Unauthorized');
-        exit;
-      }
-}
 
-//****  Esta peticion nos permite saber el costo de el producto que seleccione el cliente, recuerda que debes usar la CLAVE CURP que fue usada para generar
-//****  el Token de Acceso, retorna el costo del producto y te permite calcular las comisiones, pagos y maximos tiempos de credito
-//****  API_KEY_AQUI	   Reemplaza el API_KEY_AQUI con el TOKEN recibido en la petición de AUTENTICACION
-//****  tipo_peticion	   Especifica el tipo de petición, debe ser establecido segun las tablas de acceso
-//****  curp_en_uso	     La clave CURP de el cliente con el que interactuaras
-//****  producto	       Especifica el tipo de producto, debe ser establecido segun las tablas de acceso
-//****  token_data	     Es el token retornado por la peticion de ACCESO a API_REGISTRO
-//****  timestamp	       EL tiempo en el cual se genero el token retornado por la peticion de ACCESO a API_REGISTRO
-//****  expires_in	     EL tiempo en el cual sera valido el token retornado por la peticion de ACCESO a API_REGISTRO
-if ($data['tipo_peticion'] == 'registro_servicio') { // if tipo_peticion
-      // Verificar que los datos necesarios estén presentes
-      if (!isset($data['curp_en_uso'],$data['mail'],$data['telefono'], $data['producto'], $data['numero_pagos'],$data['terminos'], $data['aviso'], $data['fideicomiso'])) {
-          header('HTTP/1.1 400 Bad Request');
+        $firmaUser = trim((string)($data['firma_KEY'] ?? ''));
+        $firmaEsperada = hash_hmac('sha256', $curpInput, $Secret_KEY);
+        if (!hash_equals($firmaEsperada, $firmaUser)) {
+            api_error(401, 'Firma invalida');
+        }
 
-          //header('HTTP/1.1 200 OK');
-          //header('Content-Type: application/json');
-          //echo json_encode(array('data' => $data));
-          exit;
-      }
-      //Variable para multimples consultas
-      $producto = $data['producto'];
-      //Validamos que hayase aceptado los temrminos y condicones
-      if($data['terminos'] != "acepto" && $data['aviso'] != "acepto" && $data['fideicomiso'] != "acepto"){
-        //Si el cliente tiene mas de la edad aceptable del producto
-        header('HTTP/1.1 406 No aceptable');
-        exit;
-      }
-      //Obtenemos el valor de el TOKEN
-      $authorizationHeader = $_SERVER['HTTP_AUTHORIZATION'];
-      $token = substr($authorizationHeader, 7);
-      //Validamos el Token de ACCeso
-      if ($seguridad->verificarToken($token,$data,$Secret_KEY)) { //Validamos el TOKEN
-        //Validamos el producto
-        if($basicas->VerificarProducto($data['curp_en_uso'],$producto)){ //Verificamos el Producto
-          //si el producto es Funerario obtenemos el bloque del producto
-          if($producto == "Funerario"){
-            //Obtene mos la edad de el cliente
-            $EdadCte = $basicas->ObtenerEdad($data['curp_en_uso']);
-            $producto =  $basicas->ProdFune($EdadCte);
-          }
-          /*
-          //Buscamos si el cliente no se encuentra duplicado en la base de datos
-          $OPsd = $basicas->BuscarCampos($mysqli,"IdContact","Usuario","ClaveCurp",$data['curp_en_uso']);
-          //Si el cliente ya se encuentraregistrado arroja un error
-          if(!empty($OPsd)){
-            //Buscamos si el cliente no se encuentra duplicado en la base de datos
-            $DJsuT = $basicas->BuscarCampos($mysqli,"Producto","Venta","IdContact",$OPsd);
-            //Se comparan los productos
-            if($DJsuT == $producto){ //Producto Duplicado
-              //Si el cliente tiene mas de la edad aceptable del producto
-              header('HTTP/1.1 412 No aceptable');
-              exit;
+        $dbSandbox = api_require_db($mysqli_api ?? null, 'apimarket');
+        $userName = trim((string)($data['nombre_de_usuario'] ?? ''));
+        $usrOk = api_fetch_one(
+            $dbSandbox,
+            'SELECT nombre_de_usuario FROM api_usuarios WHERE nombre_de_usuario = ? AND activo = 1 LIMIT 1',
+            's',
+            [$userName]
+        );
+        if (!$usrOk) {
+            api_error(403, 'Usuario sandbox no autorizado');
+        }
+
+        $tokenData = [
+            'timestamp' => time(),
+            'expires_in' => 600,
+        ];
+        $tokenJson = json_encode($tokenData, JSON_UNESCAPED_UNICODE);
+        $token = hash_hmac('sha256', (string)$tokenJson, $firmaEsperada);
+
+        api_json([
+            'ok' => true,
+            'token' => $token,
+            'nombre' => trim($ArrayRes['Nombre'] . ' ' . $ArrayRes['Paterno'] . ' ' . $ArrayRes['Materno']),
+            'token_data' => $tokenData,
+        ]);
+    }
+
+    // --- product_cost ---
+    if ($tipo === 'product_cost') {
+        $token = api_bearer_token();
+        if ($token === '') {
+            api_error(401, 'Falta Authorization: Bearer');
+        }
+        $valid = api_token_verify($token, $data, $Secret_KEY);
+        if ($valid !== true) {
+            api_error(401, 'Token invalido o expirado');
+        }
+
+        $producto = trim((string)($data['producto'] ?? ''));
+        if ($producto === '') {
+            api_error(400, 'Falta producto');
+        }
+
+        $db = api_require_db($mysqli ?? null, 'ventas');
+        $productCode = api_product_code($producto, $curpInput);
+        if ($productCode === null) {
+            api_error(406, 'Producto no viable');
+        }
+        $productData = api_product_data($db, $productCode);
+        if (!$productData) {
+            api_error(406, 'Producto inexistente');
+        }
+
+        api_json([
+            'ok' => true,
+            'costo' => (float)$productData['Costo'],
+            'comision' => (float)($productData['comision'] ?? 0),
+            'forma_pago' => [
+                'meses_max' => (int)($productData['MaxCredito'] ?? 0),
+                'tasa_interes' => (float)($productData['TasaAnual'] ?? 0),
+            ],
+        ]);
+    }
+
+    // --- registro_servicio ---
+    if ($tipo === 'registro_servicio') {
+        $required = ['curp_en_uso', 'mail', 'telefono', 'producto', 'numero_pagos', 'terminos', 'aviso', 'fideicomiso'];
+        foreach ($required as $key) {
+            if (!array_key_exists($key, $data) || trim((string)$data[$key]) === '') {
+                api_error(400, 'Falta dato requerido: ' . $key);
             }
-          }*/
-          //Se busca que el cliente exista
-          //$ArrayRes = $seguridad->peticion_get($data['curp_en_uso']);
-          //Validamos que la curp sea real
-          if($ArrayRes["Response"] == "correct" || $ArrayRes["StatusCurp"] != "BD"){ //Validamos la Clave CURP
-              //Creamos la Direccion de el Cliente
-              $calle          = $mysqli -> real_escape_string($data['direccion']['calle']);
-              $numero         = $mysqli -> real_escape_string($data['direccion']['numero']);
-              $colonia        = $mysqli -> real_escape_string($data['direccion']['colonia']);
-              $municipio      = $mysqli -> real_escape_string($data['direccion']['municipio']);
-              $codigo_postal  = $mysqli -> real_escape_string($data['direccion']['codigo_postal']);
-              $estado         = $mysqli -> real_escape_string($data['direccion']['estado']);
-              //Aseguramos los datos recibidos por las API REST FULL
-              $User_Agent     = $mysqli -> real_escape_string($_SERVER['HTTP_USER_AGENT']);
-              $curp_en_uso    = $mysqli -> real_escape_string($data['curp_en_uso']);
-              $mail           = $mysqli -> real_escape_string($data['mail']);
-              $telefono       = $mysqli -> real_escape_string($data['telefono']);
-              $numero_pagos    = $mysqli -> real_escape_string($data['numero_pagos']);
-              $terminos       = $mysqli -> real_escape_string($data['terminos']);
-              $aviso          = $mysqli -> real_escape_string($data['aviso']);
-              $fideicomiso    = $mysqli -> real_escape_string($data['fideicomiso']);
-              //Si el pago es de Contado para que el pago de contado sea 1
-              if($numero_pagos == 0){$numero_pagos = 1;}
-              //Se registra el array para el registro en la base de datos de Contacto
-              $DatContac = array (
-                 "Usuario"   => $User_Agent,
-                 "Host"      => "API_REGISTRO",
-                 "Mail"      => $mail,
-                 "Telefono"  => $telefono,
-                 "Direccion" => $calle." ".$numero.", ".$colonia." ".$municipio." ".$estado." C.P.".$codigo_postal,
-                 "Producto"  => $producto
-              );
-              //Se realiza el insert en la base de datos
-              $IdContacto = $basicas->InsertCampo($mysqli,"Contacto",$DatContac);
-              //Registramos el nombre de el cliente
-              $nombre = $ArrayRes["Nombre"]." ".$ArrayRes["Paterno"]." ".$ArrayRes["Materno"];
-              //Se crea el array que contiene los datos de registro
-              $DatUser = array (
-                  "IdContact"     => $IdContacto,
-                  "Usuario"       => $User_Agent,
-                  "Tipo"          => "Cliente",
-                  "Nombre"        => $nombre,
-                  "ClaveCurp"     => $curp_en_uso,
-                  "Email"         => $mail
-              );
-              //Se realiza el insert en la base de datos
-              $basicas->InsertCampo($mysqli,"Usuario",$DatUser);
-              //Se crea el array que contiene los datos de registro
-              $DatLegal = array (
-                  "IdContacto"    => $IdContacto,
-                  "Meses"         => $numero_pagos,
-                  "Terminos"      => $terminos,
-                  "Aviso"         => $aviso,
-                  "Fideicomiso"   => $fideicomiso
-              );
-              //Se realiza el insert en la base de datos
-              $basicas->InsertCampo($mysqli,"Legal",$DatLegal);
-              //Buscar precios y tasas
-              $Costo = $basicas->BuscarCampos($mysqli,"Costo","Productos","Producto",$producto);
-              $Tasa = $basicas->BuscarCampos($mysqli,"TasaAnual","Productos","Producto",$producto);
-              //Se genera la referencia unica del cte MMN
-              $firma = $seguridad->Firma($mysqli,$IdContacto,$Costo);
-              //Buscamos los datos y realizamos un registro en la venta
-              $Venta = array (
-                  "Usuario"       => $User_Agent,
-                  "IdContact"     => $IdContacto,
-                  "Nombre"        => $nombre,
-                  "Producto"      => $producto,
-                  "CostoVenta"    => $Costo,
-                  "NumeroPagos"   => $numero_pagos,
-                  "IdFIrma"       => $firma,
-                  "Status"        => "PREVENTA",
-                  "Mes"           => date("M"),
-                  "TipoServicio"  => "Ecologico"
-                );
-                //Insertar los datos en la base
-                $IdVenta = $basicas->InsertCampo($mysqli,"Venta",$Venta);
-                //Se crea el array que contiene los datos para REGISTRO DE EVENTOS
-                $DatEventos = array(
-                    "Contacto"      => $IdContacto,
-                    "Evento"        => "Vta",
-                    "Host"          => $User_Agent,
-                    "FechaRegistro" => date('Y-m-d')." ".date('H:i:s')
-                );
-                //Se realiza el insert en la base de datos
-                $basicas->InsertCampo($mysqli,"Eventos",$DatEventos);
-                // Enviar la respuesta en formato JSON
-                header('HTTP/1.1 201 OK');
-                header('Content-Type: application/json');
-                echo json_encode(
-                  array(
-                       'mensaje'          => "Registro exitoso del servicio ".$data['producto'],
-                       'datos_compra'     => array(
-                          'nombre' => $nombre,
-                          'CURP'   => $curp_en_uso,
-                          'mail'   => $mail,
-                          'poliza' => $firma,
-                          'Status' => "PREVENTA",
-                          'Costo'  => $Costo
-                       )
-                  )
-                );
-            exit;
-          } else { //Validamos la Clave CURP
-            //La clave curp de el cliente no existe
-            header('HTTP/1.1 417 No aceptable');
-            exit;
-          }
-        }else{ //Verificamos el Producto
-          //Si el cliente tiene mas de la edad aceptable del producto
-          header('HTTP/1.1 409 No aceptable');
-          exit;
         }
-      } else { //Validamos el TOKEN
-        header('HTTP/1.1 401 Unauthorized');
-        exit;
-      }
-}   // if tipo_peticion
 
-ob_end_flush(); // Enviar la salida almacenada en búfer al cliente
-// Si se llega hasta aquí, se recibió una petición desconocida
-header('HTTP/1.1 404 Not Found');
-exit;
+        if (!api_accepts($data['terminos']) || !api_accepts($data['aviso']) || !api_accepts($data['fideicomiso'])) {
+            api_error(409, 'Debe aceptar terminos, aviso y fideicomiso');
+        }
+
+        $token = api_bearer_token();
+        if ($token === '') {
+            api_error(401, 'Falta Authorization: Bearer');
+        }
+        $valid = api_token_verify($token, $data, $Secret_KEY);
+        if ($valid !== true) {
+            api_error(401, 'Token invalido o expirado');
+        }
+
+        $email = strtolower(trim((string)$data['mail']));
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            api_error(400, 'Email invalido');
+        }
+        $telefono = api_norm_phone_mx((string)$data['telefono']);
+        if (strlen($telefono) !== 10) {
+            api_error(400, 'Telefono invalido');
+        }
+
+        $db = api_require_db($mysqli ?? null, 'ventas');
+        $producto = trim((string)$data['producto']);
+        $productCode = api_product_code($producto, $curpInput);
+        if ($productCode === null) {
+            api_error(406, 'Producto no viable');
+        }
+        $productData = api_product_data($db, $productCode);
+        if (!$productData) {
+            api_error(406, 'Producto inexistente');
+        }
+
+        if ($ArrayRes['Response'] !== 'correct' || $ArrayRes['StatusCurp'] === 'BD') {
+            api_error(417, 'CURP no valida');
+        }
+
+        $plazo = max(1, (int)$data['numero_pagos']);
+        $costoVenta = round((float)$productData['Costo'], 2);
+        $subtotal = ($plazo > 1) ? api_pago_credito_values($db, $productCode, $plazo, $costoVenta) : $costoVenta;
+        $nombreCompleto = trim($ArrayRes['Nombre'] . ' ' . $ArrayRes['Paterno'] . ' ' . $ArrayRes['Materno']);
+
+        $direccion = $data['direccion'] ?? [];
+        $pick = static function (array $source, array $keys, string $fallback = ''): string {
+            foreach ($keys as $key) {
+                if (isset($source[$key]) && trim((string)$source[$key]) !== '') {
+                    return trim((string)$source[$key]);
+                }
+            }
+            return $fallback;
+        };
+
+        $db->begin_transaction();
+        try {
+            $idContacto = api_insert($db, 'Contacto', [
+                'Usuario' => 'SANDBOX',
+                'Idgps' => 0,
+                'Host' => 'API_REGISTRO_SBX',
+                'Mail' => $email,
+                'Telefono' => $telefono,
+                'calle' => $pick($direccion, ['calle', 'Calle']),
+                'numero' => $pick($direccion, ['numero', 'Numero', 'nro'], '0'),
+                'colonia' => $pick($direccion, ['colonia', 'Colonia']),
+                'municipio' => $pick($direccion, ['municipio', 'Municipio']),
+                'codigo_postal' => $pick($direccion, ['codigo_postal', 'Codigo_Postal', 'CodigoPostal', 'CP', 'cp']),
+                'estado' => $pick($direccion, ['estado', 'Estado']),
+                'Producto' => $productCode,
+            ]);
+
+            api_insert($db, 'Legal', [
+                'IdContacto' => $idContacto,
+                'Meses' => $plazo,
+                'Terminos' => 'ACEPTO',
+                'Aviso' => 'ACEPTO',
+                'Fideicomiso' => 'ACEPTO',
+            ]);
+
+            api_insert($db, 'Usuario', [
+                'Usuario' => 'SANDBOX',
+                'IdContact' => $idContacto,
+                'Tipo' => 'Cliente',
+                'Nombre' => $ArrayRes['Nombre'],
+                'Paterno' => $ArrayRes['Paterno'],
+                'Materno' => $ArrayRes['Materno'],
+                'ClaveCurp' => $curpInput,
+                'Email' => $email,
+            ]);
+
+            $fechaAltaUsuario = api_now();
+            $folio = api_poliza_id_compacto($curpInput, $fechaAltaUsuario, api_master_key());
+
+            api_insert($db, 'Venta', [
+                'Usuario' => 'SANDBOX',
+                'IdContact' => $idContacto,
+                'Nombre' => $nombreCompleto,
+                'Producto' => $productCode,
+                'CostoVenta' => $costoVenta,
+                'Idgps' => 0,
+                'Subtotal' => $subtotal,
+                'NumeroPagos' => $plazo,
+                'DiaPago' => 0,
+                'IdFIrma' => $folio,
+                'Status' => 'PREVENTA',
+                'Mes' => date('M'),
+                'Cupon' => 0,
+                'TipoServicio' => 'Ecologico',
+            ]);
+
+            api_log_event($db, $data, 'API_SANDBOX_registro', $idContacto, null);
+            $db->commit();
+        } catch (Throwable $e) {
+            $db->rollback();
+            throw $e;
+        }
+
+        api_json([
+            'ok' => true,
+            'mensaje' => 'Registro exitoso del servicio ' . $producto,
+            'datos_compra' => [
+                'nombre' => $nombreCompleto,
+                'CURP' => $curpInput,
+                'mail' => $email,
+                'poliza' => $folio,
+                'Status' => 'PREVENTA',
+                'Costo' => $costoVenta,
+            ],
+        ], 201);
+    }
+
+    api_error(404, 'Peticion desconocida');
+
+} catch (mysqli_sql_exception $e) {
+    error_log('[API_SANDBOX] ' . $e->getMessage());
+    api_error(500, 'Error de base de datos');
+} catch (Throwable $e) {
+    error_log('[API_SANDBOX] ' . $e->getMessage());
+    api_error(500, $e->getMessage());
+}

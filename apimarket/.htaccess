@@ -1,4 +1,42 @@
+# =========================================
+# API Market KASU — .htaccess de proteccion
+# =========================================
+
 RewriteEngine On
+
+# Bloquear archivos sensibles
+<Files ".env">
+  Require all denied
+</Files>
+<Files "error.log">
+  Require all denied
+</Files>
+<FilesMatch "error_log$">
+  Require all denied
+</FilesMatch>
+
+# Bloquear listado de directorios
+<IfModule mod_autoindex.c>
+  Options -Indexes
+</IfModule>
+
+# Headers de seguridad
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "DENY"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always unset X-Powered-By
+</IfModule>
+
+# Reglas de enrutamiento para metadatos e imagenes NFT (DEBEN ir antes de la regla generica .php)
+# /api/nft/metadata/1156 o /api/nft/metadata/1156.json -> /api/nft/metadata.php?id=1156
+RewriteRule ^api/nft/metadata/([0-9]+)(\.json)?$ api/nft/metadata.php?id=$1 [QSA,L]
+
+# /api/nft/image/1156 o /api/nft/image/1156.png -> /api/nft/image.php?id=1156
+RewriteRule ^api/nft/image/([0-9]+)(\.png)?$ api/nft/image.php?id=$1 [QSA,L]
+
+# Extensiones .php automaticas (con seguridad de archivo real)
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^(.*)$ $1.php [L]
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.+?)/?$ $1.php [L]

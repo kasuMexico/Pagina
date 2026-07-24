@@ -11,9 +11,11 @@ require_once __DIR__ . '/eia/librerias.php';
 require_once __DIR__ . '/eia/php/Telcto.php';
 $tel = isset($tel) && $tel !== '' ? $tel : '7208177632';
 
-/* ===== Alert opcional ===== */
+/* ===== Alert opcional (sanitizado) ===== */
 if (isset($_GET['Msg'])) {
-    echo "<script type='text/javascript'>alert(" . json_encode((string)$_GET['Msg'], JSON_UNESCAPED_UNICODE) . ");</script>";
+    $msg = strip_tags((string)$_GET['Msg']);
+    $msg = preg_replace('/[<>"\']/', '', $msg);
+    echo "<script>alert(" . json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) . ");</script>";
 }
 
 /* ===== Métricas en tiempo real desde BD ===== */

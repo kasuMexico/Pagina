@@ -24,9 +24,13 @@ class Seguridad {
             $Curp => es la clave curp a consultar
   *************************************************************************************************************/
   public function peticion_get($Curp){
-    // Credenciales desde variables de entorno (fallback a valores legacy por compatibilidad)
-    $user = getenv('CONECTAME_USER') ?: 'Kasu';
-    $pass = getenv('CONECTAME_PASS') ?: ']Q*[4Jt7eBw5!aY5';
+    // Credenciales desde variables de entorno (obligatorio, sin fallback)
+    $user = getenv('CONECTAME_USER');
+    $pass = getenv('CONECTAME_PASS');
+    if (!$user || !$pass) {
+        error_log('[KASU][Seguridad] CONECTAME_USER o CONECTAME_PASS no definidos en entorno');
+        return 'error';
+    }
     $url = 'https://conectame.ddns.net/rest/api.php?m=curp&user=' . rawurlencode($user) . '&pass=' . rawurlencode($pass) . '&val=' . rawurlencode($Curp);
 
     // Inicializa cURL
@@ -175,8 +179,8 @@ class Seguridad {
     if ($hilos = $c0->query($aguja)) {
       if ($tela = $hilos->fetch_assoc()) {
         $costura = (string)$tela['Usuario'] . (string)$tela['Producto'] . (string)$tela['ClaveCurp'] . $subStr . (string)$tela['FechaRegistro'];
-        /* Generar el hash */
-        $firma = hash("adler32", $costura, false);
+        /* Generar el hash criptografico SHA-256 */
+        $firma = hash('sha256', $costura);
         return $firma;
       }
     }

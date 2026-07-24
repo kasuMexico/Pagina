@@ -64,6 +64,37 @@ function norm_rfc(string $s): string {
 function sha256(string $s): string {
   return hash('sha256', $s);
 }
+
+// --- Cifrado de datos sensibles en cache (AES-256-CBC) ---
+function cache_cipher_key(): string {
+  $key = getenv('KASU_CACHE_CIPHER_KEY') ?: getenv('KASU_MASTER_KEY') ?: '';
+  if ($key === '') {
+    jout(['ok'=>false,'error'=>'Falta KASU_CACHE_CIPHER_KEY o KASU_MASTER_KEY para cifrado de cache'], 500);
+  }
+  // Derivar clave AES-256 de 32 bytes desde la master key
+  return hash('sha256', 'cache_cipher_v1:' . $key, true);
+}
+
+function cache_encrypt(string $plaintext): string {
+  $key = cache_cipher_key();
+  $iv = random_bytes(16);
+  $ciphertext = openssl_encrypt($plaintext, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+  // Guardar IV + ciphertext en base64
+  return base64_encode($iv . $ciphertext);
+}
+
+function cache_decrypt(string $encoded): string {
+  $key = cache_cipher_key();
+  $data = base64_decode($encoded, true);
+  if ($data === false || strlen($data) < 16) {
+    return '';
+  }
+  $iv = substr($data, 0, 16);
+  $ciphertext = substr($data, 16);
+  $result = openssl_decrypt($ciphertext, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+  return $result !== false ? $result : '';
+}
+
 function get_ip(): string {
   return $_SERVER['HTTP_CF_CONNECTING_IP']
     ?? ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? ($_SERVER['REMOTE_ADDR'] ?? ''));
@@ -247,6 +278,10 @@ function cache_curp_get(mysqli $db, string $curp): ?array {
   $st->bind_param('s', $curp);
   $st->execute();
   $r = $st->get_result()->fetch_assoc();
+  if ($r && !empty($r['raw_json'])) {
+    $r['raw_json'] = cache_decrypt((string)$r['raw_json']);
+    if ($r['raw_json'] === '') $r = null;
+  }
   return $r ?: null;
 }
 function cache_rfc_get(mysqli $db, string $rfc): ?array {
@@ -254,12 +289,18 @@ function cache_rfc_get(mysqli $db, string $rfc): ?array {
   $st->bind_param('s', $rfc);
   $st->execute();
   $r = $st->get_result()->fetch_assoc();
+  if ($r && !empty($r['raw_json'])) {
+    $r['raw_json'] = cache_decrypt((string)$r['raw_json']);
+    if ($r['raw_json'] === '') $r = null;
+  }
   return $r ?: null;
 }
 
 function cache_curp_upsert(mysqli $db, string $curp, array $data, int $ttlDays = 30): void {
   $curpHash = sha256($curp);
   $rawJson = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+  // Cifrar raw_json en reposo (datos personales sensibles)
+  $rawJsonEncrypted = cache_encrypt($rawJson);
   $resp = (string)($data['Response'] ?? '');
   $statusCurp = (string)($data['StatusCurp'] ?? '');
 
@@ -303,7 +344,7 @@ function cache_curp_upsert(mysqli $db, string $curp, array $data, int $ttlDays =
   $st->bind_param(
     'ssssssssssssii',
     $curp, $curpHash, $resp, $statusCurp, $nombre, $paterno, $materno, $sexo, $fechaN, $nac,
-    $dfJson, $histJson, $rawJson, $ttlDays, $ttlDays
+    $dfJson, $histJson, $rawJsonEncrypted, $ttlDays, $ttlDays
   );
   $st->execute();
 }
@@ -311,6 +352,8 @@ function cache_curp_upsert(mysqli $db, string $curp, array $data, int $ttlDays =
 function cache_rfc_upsert(mysqli $db, string $rfc, array $data, int $ttlDays = 30): void {
   $rfcHash = sha256($rfc);
   $rawJson = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+  // Cifrar raw_json en reposo
+  $rawJsonEncrypted = cache_encrypt($rawJson);
 
   $resp = (string)($data['Response'] ?? '');
   $razon = (string)($data['RazonSocial'] ?? '');
@@ -356,7 +399,7 @@ function cache_rfc_upsert(mysqli $db, string $rfc, array $data, int $ttlDays = 3
   $st->bind_param(
     'ssssssssssssii',
     $rfc, $rfcHash, $resp, $razon, $rfcRep, $curpRep, $tipoP,
-    $lcoS, $lrfcS, $sncfS, $subc, $extra, $rawJson, $ttlDays, $ttlDays
+    $lcoS, $lrfcS, $sncfS, $subc, $extra, $rawJsonEncrypted, $ttlDays, $ttlDays
   );
   $st->execute();
 }

@@ -132,6 +132,7 @@ if (!function_exists('api_security_headers')) {
         header('X-XSS-Protection: 1; mode=block');
         header('Referrer-Policy: strict-origin-when-cross-origin');
         header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
+        header("Content-Security-Policy: default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");
         // CORS solo para el dominio de KASU y apimarket
         $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
         if (in_array($origin, ['https://kasu.com.mx', 'https://apimarket.kasu.com.mx'], true)) {
@@ -142,6 +143,8 @@ if (!function_exists('api_security_headers')) {
         // Remover headers que filtran informacion del servidor
         header_remove('X-Powered-By');
         header_remove('Server');
+        header_remove('Platform');
+        header_remove('Panel');
     }
 }
 
@@ -843,6 +846,7 @@ if (!function_exists('api_log_event')) {
                 'IdVta' => $idVenta,
                 'IdUsr' => (string)($data['nombre_de_usuario'] ?? ''),
                 'FechaRegistro' => api_now(),
+                'IP' => api_client_ip(),
             ]);
         } catch (Throwable $e) {
             error_log('[API Market] No se pudo registrar evento: ' . $e->getMessage());

@@ -16,6 +16,22 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     exit;
 }
 
+// Restringir por Referer/Origin (solo desde kasu.com.mx)
+$allowedOrigins = ['https://kasu.com.mx', 'https://apimarket.kasu.com.mx'];
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+$referer = $_SERVER['HTTP_REFERER'] ?? '';
+$isAllowed = false;
+foreach ($allowedOrigins as $allowed) {
+    if (stripos($origin, $allowed) === 0 || stripos($referer, $allowed) === 0) {
+        $isAllowed = true;
+        break;
+    }
+}
+if (!$isAllowed && $origin === '' && $referer === '') {
+    // Sin referer ni origin: bloquear en produccion (puede ser llamada directa)
+    $isAllowed = true; // Cambiar a false si se requiere referer estricto
+}
+
 // Construir query string con los parámetros permitidos
 $allowedParams = ['per_page', '_embed', 'page', 'orderby', 'order', 'categories', 'tags', 'search', 'slug'];
 $queryParams = [];

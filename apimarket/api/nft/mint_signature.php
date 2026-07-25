@@ -99,10 +99,8 @@ $idFirma      = $data['id_firma'];
 $prima        = max(1, (int)round((float)($data['prima'] ?? 3500)));        // uint256 > 0
 $cobertura    = max(1, (int)round((float)($data['cobertura'] ?? $prima * 28.57))); // uint256 > 0
 
-// ExpiryDate: FechaLiquidacion + plazo en meses → Unix timestamp
-$startDate    = new DateTime($data['FechaLiquidacion'] ?? $data['FechaRegistro']);
-$plazoMeses   = max(1, (int)($data['NumeroPagos'] ?? 1));
-$expiryDate   = (int)(clone $startDate)->modify("+{$plazoMeses} months")->format('U');
+// liquidationDate: FechaLiquidacion como Unix timestamp (la póliza KASU es vitalicia, no vence)
+$liquidationDate = (int)(new DateTime($data['FechaLiquidacion'] ?? $data['FechaRegistro']))->format('U');
 
 // PolicyMetadata struct (privacidad: datos sensibles hasheados con keccak256 para verificabilidad EVM)
 $policyMetadata = [
@@ -113,7 +111,6 @@ $policyMetadata = [
     'additionalData' => json_encode([
         'id_venta'  => $idVenta,
         'producto'  => $data['Producto'] ?? '',
-        'plazo_meses' => $plazoMeses
     ], JSON_UNESCAPED_UNICODE)
 ];
 
@@ -156,7 +153,7 @@ $response = [
         'metadata'       => $policyMetadata,
         'premiumAmount'  => $prima,
         'coverageAmount' => $cobertura,
-        'expiryDate'     => $expiryDate,
+        'liquidationDate' => $liquidationDate,
         'treasuryWallet' => $treasuryWallet,
     ],
 

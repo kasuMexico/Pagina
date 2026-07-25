@@ -86,11 +86,11 @@ $fechaInicio = new DateTime($data['FechaLiquidacion'] ?? $data['FechaRegistro'])
 $fechaActual = new DateTime();
 $aniosVigencia = max(0, $fechaInicio->diff($fechaActual)->days / 365.25);
 
-$startDateUnix  = (int)$fechaInicio->format('U');
-$expiryDateUnix = (int)(clone $fechaInicio)->modify("+{$plazoMeses} months")->format('U');
+// liquidationDate: fecha en que la póliza fue liquidada (pago completado)
+$liquidationDateUnix = (int)$fechaInicio->format('U');
 
-// isActive = status == Active AND no expirado
-$isActive = ($policyStatusEnum === 0) && ($expiryDateUnix > time());
+// isActive = status == Active (pólizas KASU son vitalicias, no expiran)
+$isActive = ($policyStatusEnum === 0);
 
 // ============================================================================
 // 4. CÁLCULO FINANCIERO (Fondo 40% inicial + 12% anual = 8% base + 4% IPC)
@@ -117,8 +117,7 @@ echo json_encode([
     'id_venta'               => (int)$data['id_venta'],
     'premium_amount'         => $prima,
     'coverage_amount'        => $cobertura,
-    'start_date_unix'        => $startDateUnix,
-    'expiry_date_unix'       => $expiryDateUnix,
+    'liquidation_date_unix'  => $liquidationDateUnix,
     'policy_status'          => $policyStatusEnum,
     'policy_status_name'     => $bdStatus,
     'is_active'              => $isActive,

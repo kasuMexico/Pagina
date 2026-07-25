@@ -86,11 +86,9 @@ $policyStatusEnum = $policyStatusMap[$data['Status']] ?? 0;
 // ============================================================================
 $prima      = max(1, (int)round((float)($data['prima'] ?? 0)));
 $cobertura  = max(1, (int)round((float)($data['cobertura'] ?? 0)));
-$plazoMeses = max(1, (int)($data['plazo_meses'] ?? 1));
 
-$fechaInicio     = new DateTime($data['FechaLiquidacion'] ?? $data['FechaRegistro']);
-$startDateUnix   = (int)$fechaInicio->format('U');
-$expiryDateUnix  = (int)(clone $fechaInicio)->modify("+{$plazoMeses} months")->format('U');
+$fechaInicio          = new DateTime($data['FechaLiquidacion'] ?? $data['FechaRegistro']);
+$liquidationDateUnix  = (int)$fechaInicio->format('U');
 
 // ============================================================================
 // 4. NOMBRE Y DESCRIPCIÓN DINÁMICOS
@@ -119,8 +117,7 @@ $attributes = [
     ['display_type' => 'number', 'trait_type' => 'Suma Asegurada (MXN)','value' => $cobertura],
 
     // ─── Fechas (tipo date para visores NFT) ───
-    ['display_type' => 'date', 'trait_type' => 'Fecha de Inicio',     'value' => $startDateUnix],
-    ['display_type' => 'date', 'trait_type' => 'Expiración',          'value' => $expiryDateUnix],
+    ['display_type' => 'date', 'trait_type' => 'Fecha de Liquidación', 'value' => $liquidationDateUnix],
 
     // ─── Fondo y regalías ───
     ['trait_type' => 'Fondo de Respaldo',        'value' => 'Fideicomiso F/0003'],

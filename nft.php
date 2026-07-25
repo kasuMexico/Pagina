@@ -187,7 +187,7 @@ $t = [
         'lang' => 'es', 'lang_label' => 'Idioma',
         // Hero
         'hero_eyebrow'    => 'KASU NFT · Web3',
-        'hero_title'      => 'Invierte en Pólizas Funerarias Titularizadas',
+        'hero_title'      => 'Pólizas Funerarias Titularizadas',
         'hero_subtitle'   => 'Activos digitales respaldados por fideicomisos del mundo real',
         'cta_primary'     => 'Ver Colección en OpenSea',
         'cta_secondary'   => 'Conectar Wallet',

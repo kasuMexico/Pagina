@@ -273,8 +273,8 @@ $VerCache   = $VerCache ?? '1';
           <p class="value"><?= h($persona['Nombre'] ?? ''); ?></p>
         </div>
         <div class="summary-card">
-          <div class="label">Fecha de contratación</div>
-          <p class="value"><?= h(substr((string)($venta['FechaRegistro'] ?? ''), 0, 10)); ?></p>
+          <div class="label">Fecha de liquidación</div>
+          <p class="value"><?= h(substr((string)($venta['FechaLiquidacion'] ?? ''), 0, 10)); ?></p>
         </div>
         <div class="summary-card">
           <div class="label">Saldo de la cuenta</div>

@@ -2,11 +2,15 @@
 declare(strict_types=1);
 
 /**
- * NFT Metadata — KASU Policy Shares (ERC-721)
- * Endpoint: GET /api/nft/metadata.php?id={idVenta}
+ * OpenSea / ERC-721 Metadata API — KASU Policy Shares (alineado con KasuPolicyShare.sol)
+ * Endpoint: GET /apimarket/api/nft/metadata.php?id={IdFirma}
  *
- * Retorna JSON con atributos del NFT compatible con OpenSea.
- * No expone PII: solo producto, costo, status, rango de edad y genero.
+ * El contrato construye tokenURI así:
+ *   _baseTokenURI = "https://apimarket.kasu.com.mx/api/nft/metadata.php?id="
+ *   tokenURI(tokenId) → _baseTokenURI + idFirma
+ *
+ * Este endpoint recibe el IdFirma como parámetro 'id' y retorna JSON estándar ERC-721
+ * compatible con OpenSea y marketplaces, con atributos alineados al PolicyInfo del contrato.
  */
 
 require_once __DIR__ . '/../../librerias_api.php';
@@ -15,84 +19,130 @@ header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, OPTIONS');
 
-$tokenId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-
-if ($tokenId <= 0) {
-    http_response_code(404);
-    echo json_encode(['error' => 'Token ID no especificado o invalido'], JSON_UNESCAPED_UNICODE);
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
     exit;
 }
 
-// Usar la conexion de ventas ($mysqli) definida en librerias_api.php
+$polizaId = strtoupper(trim((string)($_GET['id'] ?? '')));
+
+if (empty($polizaId)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Se requiere el parámetro id (IdFirma).'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 global $mysqli;
 $db = api_require_db($mysqli ?? null, 'ventas');
 
-// 1. Consultar datos de Venta y Usuario (sin exponer PII)
+// ============================================================================
+// 1. CONSULTA DE PÓLIZA
+// ============================================================================
 $stmt = $db->prepare("
-    SELECT
-        v.Id,
-        v.Producto,
-        v.CostoVenta,
+    SELECT 
+        v.Id               AS id_venta,
+        v.IdFirma          AS id_firma,
         v.Status,
+        v.CostoVenta       AS prima,
+        v.Subtotal         AS cobertura,
+        v.FechaLiquidacion,
         v.FechaRegistro,
-        u.ClaveCurp,
-        vn.precio_nft_usdc,
-        vn.mint_status
+        v.Producto,
+        v.NumeroPagos      AS plazo_meses,
+        u.ClaveCurp        AS curp
     FROM Venta v
     JOIN Usuario u ON v.IdContact = u.IdContact AND u.Tipo = 'Cliente'
-    LEFT JOIN VentaNFT vn ON v.Id = vn.id_venta
-    WHERE v.Id = ?
+    WHERE (v.IdFirma = ? OR v.Id = ?)
+      AND v.Status IN ('ACTIVO', 'LIQUIDADO', 'FALLECIDO', 'LIQUIDADO_SINIESTRO')
     LIMIT 1
 ");
-$stmt->bind_param('i', $tokenId);
-$stmt->execute();
-$res = $stmt->get_result();
-$venta = $res->fetch_assoc();
 
-if (!$venta) {
+$stmt->bind_param('ss', $polizaId, $polizaId);
+$stmt->execute();
+$data = $stmt->get_result()->fetch_assoc();
+
+if (!$data) {
     http_response_code(404);
-    echo json_encode(['error' => 'Poliza no encontrada'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Póliza no encontrada.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-// 2. Extraer Rango de Edad desde la cadena del Producto
-preg_match('/(\d{2}a\d{2}|\d{2}y\+|Universidad)/i', (string)$venta['Producto'], $matches);
-$rangoEdad = !empty($matches[0]) ? strtoupper($matches[0]) : 'GENERAL';
+// ============================================================================
+// 2. ESTADO Y ENUM PolicyStatus (Solidity)
+// ============================================================================
+$isFallecido = in_array($data['Status'], ['FALLECIDO', 'LIQUIDADO_SINIESTRO'], true);
 
-// 3. Determinar Genero para el trait
-$curp = strtoupper(trim((string)$venta['ClaveCurp']));
-$sexo = (strlen($curp) >= 11) ? substr($curp, 10, 1) : 'M';
-$generoLabel = ($sexo === 'H') ? 'Masculino (Panchito)' : 'Femenino (Lele)';
+$policyStatusMap = [
+    'ACTIVO'              => 0,
+    'LIQUIDADO'           => 0,
+    'FALLECIDO'           => 1,
+    'LIQUIDADO_SINIESTRO' => 1,
+    'CANCELADO'           => 3,
+];
+$policyStatusEnum = $policyStatusMap[$data['Status']] ?? 0;
 
-// 4. Determinar Estado de Vigencia
-$esMoraCancelado = ($venta['Status'] === 'CANCELADO');
-$statusDisplay = $esMoraCancelado ? 'REVOCADO POR MORA (+90D)' : (string)$venta['Status'];
+// ============================================================================
+// 3. MONTOS Y FECHAS (nativos, no wei)
+// ============================================================================
+$prima      = max(1, (int)round((float)($data['prima'] ?? 0)));
+$cobertura  = max(1, (int)round((float)($data['cobertura'] ?? 0)));
+$plazoMeses = max(1, (int)($data['plazo_meses'] ?? 1));
 
-// 5. Construccion de Metadatos JSON (ERC-721 Standard)
-$metadata = [
-    'name'        => 'KASU Policy Share #' . $venta['Id'],
-    'description' => 'Titulo de participacion al 50% de la utilidad pasiva de la poliza funeraria #'
-                     . $venta['Id'] . ' respaldada por el Fideicomiso F0003 de KASU.',
-    'image'       => 'https://apimarket.kasu.com.mx/api/nft/image.php?id=' . $venta['Id'],
-    'external_url' => 'https://kasu.com.mx/nft/poliza/' . $venta['Id'],
-    'attributes'  => [
-        ['trait_type' => 'Folio Poliza',          'value' => '#' . $venta['Id']],
-        ['trait_type' => 'Avatar Lele',           'value' => $generoLabel],
-        ['trait_type' => 'Rango de Edad',         'value' => $rangoEdad],
-        ['trait_type' => 'Anio de Emision',        'value' => date('Y', strtotime((string)$venta['FechaRegistro']))],
-        ['trait_type' => 'Valor Fondo FIAT',      'value' => '$' . number_format((float)$venta['CostoVenta'], 2) . ' MXN'],
-        ['trait_type' => 'Estatus Poliza',        'value' => $statusDisplay],
-        [
-            'display_type' => 'number',
-            'trait_type'   => 'Participacion Utilidad (%)',
-            'value'        => 50,
-        ],
-    ],
+$fechaInicio     = new DateTime($data['FechaLiquidacion'] ?? $data['FechaRegistro']);
+$startDateUnix   = (int)$fechaInicio->format('U');
+$expiryDateUnix  = (int)(clone $fechaInicio)->modify("+{$plazoMeses} months")->format('U');
+
+// ============================================================================
+// 4. NOMBRE Y DESCRIPCIÓN DINÁMICOS
+// ============================================================================
+$idFirma     = $data['id_firma'];
+$producto    = $data['Producto'] ?? 'Funerario';
+$statusLabel = $isFallecido ? 'SINIESTRADO / EN LIQUIDACIÓN' : 'ACTIVO / EN RENDIMIENTO';
+
+$name = "KASU Policy Share #{$idFirma}" . ($isFallecido ? ' [SINIESTRADA]' : '');
+
+$description = $isFallecido
+    ? "Póliza activada por fallecimiento. Este NFT da derecho al cobro del 50% del remanente del fondo F/0003. Royalty 5% a KASU Treasury en cada transferencia."
+    : "Título colateralizado respaldado por el Fideicomiso F/0003 de KASU. Rendimiento garantizado 8% anual + IPC. Royalty 5% (ERC-2981) a la Treasury de KASU en cada venta secundaria.";
+
+// ============================================================================
+// 5. ATRIBUTOS ERC-721 (alineados con PolicyInfo del contrato)
+// ============================================================================
+$attributes = [
+    // ─── Estado on-chain ───
+    ['trait_type' => 'Policy Status',    'value' => $statusLabel],
+    ['display_type' => 'number', 'trait_type' => 'Policy Status ID', 'value' => $policyStatusEnum],
+
+    // ─── Datos financieros del contrato ───
+    ['trait_type' => 'Producto',         'value' => $producto],
+    ['display_type' => 'number', 'trait_type' => 'Prima (MXN)',        'value' => $prima],
+    ['display_type' => 'number', 'trait_type' => 'Suma Asegurada (MXN)','value' => $cobertura],
+
+    // ─── Fechas (tipo date para visores NFT) ───
+    ['display_type' => 'date', 'trait_type' => 'Fecha de Inicio',     'value' => $startDateUnix],
+    ['display_type' => 'date', 'trait_type' => 'Expiración',          'value' => $expiryDateUnix],
+
+    // ─── Fondo y regalías ───
+    ['trait_type' => 'Fondo de Respaldo',        'value' => 'Fideicomiso F/0003'],
+    ['trait_type' => 'Royalty (ERC-2981)',       'value' => '5%'],
+    ['trait_type' => 'Royalty Receiver',         'value' => '0xb20fdef97a88b99daca0bb1dcd297b2a57f2f8e4'],
+    ['display_type' => 'number', 'trait_type' => 'Participación Remanente NFT', 'value' => 50],
 ];
 
-// Si la poliza fue revocada por mora, fondo negro en OpenSea
-if ($esMoraCancelado) {
-    $metadata['background_color'] = '000000';
+// Si está siniestrado, agregar atributos extra
+if ($isFallecido) {
+    $attributes[] = ['trait_type' => 'Costo Servicio Funerario Est.', 'value' => '$40,000 MXN'];
+    $attributes[] = ['trait_type' => 'Liquidación',                   'value' => '50% dueño NFT / 50% KASU'];
 }
 
-echo json_encode($metadata, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+// ============================================================================
+// 6. RESPUESTA ERC-721 ESTÁNDAR (OpenSea compatible)
+// ============================================================================
+echo json_encode([
+    'name'             => $name,
+    'description'      => $description,
+    'image'            => "https://apimarket.kasu.com.mx/api/nft/image.php?id={$idFirma}",
+    'external_url'     => "https://kasu.com.mx/nft?id={$idFirma}",
+    'background_color' => '0A0E17',
+    'attributes'       => $attributes,
+], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

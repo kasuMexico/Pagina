@@ -138,8 +138,7 @@ if (!empty($_POST['RegisFun'])) {
         "CFDI"         => $Firma,
         "Costo"        => $Costo,
         "EmpFune"      => $EmpFune,
-        // Si tu tabla tiene RFC, descomenta:
-        // "RFC"       => $RFC,
+        "RFC"          => $RFC,
     ];
     $basicas->InsertCampo($mysqli, "EntregaServicio", $NvoRegistroarray);
 

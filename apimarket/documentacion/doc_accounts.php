@@ -74,7 +74,7 @@ try {
         <div class="doc-heading">
             <span class="api-kicker">API_ACCOUNTS</span>
             <h2>Códigos, funciones y productos</h2>
-            <p>Estos son los códigos generales generados por <strong>API_ACCOUNTS</strong>, la función <strong>new_service</strong> y los productos habilitados para alta desde <strong>/api/Accounts_V1</strong>. <span class="api-badge api-badge--free">GRATIS</span></p>
+            <p>Estos son los códigos generales generados por <strong>API_ACCOUNTS</strong> y la única función admitida por el endpoint <strong>/api/Accounts_V1</strong>. <span class="api-badge api-badge--free">ALTA DE SERVICIO</span></p>
         </div>
         <div class="row">
             <div class="col-lg-5 col-md-12 col-sm-12 align-self-center" data-scroll-reveal="enter left move 30px over 0.6s after 0.4s">
@@ -84,14 +84,17 @@ try {
                             <td><strong>CÓDIGOS</strong></td>
                             <td><strong>DESCRIPCIÓN</strong></td>
                         </tr>
-                        <tr><td>200</td><td style="text-align: justify;">Petición exitosa. Respuesta en JSON.</td></tr>
+                        <tr><td>201</td><td style="text-align: justify;">Registro exitoso. Retorna datos de la venta creada en JSON.</td></tr>
                         <tr><td>400</td><td style="text-align: justify;">Falta algún dato requerido por la solicitud.</td></tr>
-                        <tr><td>401</td><td style="text-align: justify;">Comunicación corrupta. Datos modificados.</td></tr>
-                        <tr><td>404</td><td style="text-align: justify;">Petición desconocida. Solo se admiten claves documentadas.</td></tr>
+                        <tr><td>401</td><td style="text-align: justify;">Token Bearer faltante, inválido o expirado (Validador_Token).</td></tr>
+                        <tr><td>404</td><td style="text-align: justify;">Petición desconocida. Solo se admite <strong>new_service</strong>.</td></tr>
                         <tr><td>405</td><td style="text-align: justify;">El método HTTP es distinto de <strong>POST</strong>.</td></tr>
+                        <tr><td>406</td><td style="text-align: justify;">Producto no viable para la edad del cliente o inexistente.</td></tr>
+                        <tr><td>409</td><td style="text-align: justify;">Email o teléfono ya registrados, o falta aceptación de términos/aviso/fideicomiso.</td></tr>
                         <tr><td>412</td><td style="text-align: justify;">El cliente ya está registrado con el producto seleccionado.</td></tr>
                         <tr><td>417</td><td style="text-align: justify;">CURP de persona fallecida o inexistente.</td></tr>
-                        <tr><td>418</td><td style="text-align: justify;">Tiempo de operación excedido para este TOKEN.</td></tr>
+                        <tr><td>418</td><td style="text-align: justify;">Tiempo de operación excedido para este TOKEN (Validador_Token).</td></tr>
+                        <tr><td>500</td><td style="text-align: justify;">Error interno del servidor o de base de datos.</td></tr>
                     </table>
                 </div>
             </div>
@@ -105,9 +108,7 @@ try {
                             <td><strong>CLAVES DE FUNCIONES</strong></td>
                             <td><strong>DESCRIPCIÓN</strong></td>
                         </tr>
-                        <tr><td>token_full</td><td style="text-align: justify;">Genera un token de autorización de uso con vigencia de 10 minutos.</td></tr>
-                        <tr><td>new_service</td><td style="text-align: justify;">Registra un cliente <strong>KASU</strong>.</td></tr>
-                        <tr><td>account_status</td><td style="text-align: justify;">Consulta el estado de cuenta desde <strong>API_PAYMENTS</strong>.</td></tr>
+                        <tr><td>new_service</td><td style="text-align: justify;">Registra un cliente <strong>KASU</strong>, genera póliza, venta y liga de pago.</td></tr>
                     </table>
                 </div>
 
@@ -245,9 +246,11 @@ try {
                             <td><strong>CÓDIGO</strong></td>
                             <td><strong>ERRORES DE PETICIÓN</strong></td>
                         </tr>
-                        <tr><td>201</td><td style="text-align: justify;">Registro exitoso con estatus PREVENTA.</td></tr>
+                        <tr><td>201</td><td style="text-align: justify;">Registro exitoso con estatus <strong>PREVENTA</strong>.</td></tr>
                         <tr><td>406</td><td style="text-align: justify;">Edad fuera de rango o producto inexistente.</td></tr>
-                        <tr><td>409</td><td style="text-align: justify;">No se aceptó fideicomiso, privacidad o términos.</td></tr>
+                        <tr><td>409</td><td style="text-align: justify;">Email o teléfono duplicados, o no se aceptó fideicomiso/privacidad/términos.</td></tr>
+                        <tr><td>412</td><td style="text-align: justify;">Cliente ya registrado con el mismo producto.</td></tr>
+                        <tr><td>417</td><td style="text-align: justify;">CURP no válida, fallecida o no elegible.</td></tr>
                     </table>
                 </div>
             </div>
@@ -267,10 +270,15 @@ try {
                         <tr><td>datos_compra.nombre</td><td style="text-align: justify;">Nombre del cliente según validación CURP.</td></tr>
                         <tr><td>datos_compra.CURP</td><td style="text-align: justify;">CURP ligada al servicio <strong>KASU</strong>.</td></tr>
                         <tr><td>datos_compra.mail</td><td style="text-align: justify;">Correo ligado al servicio.</td></tr>
-                        <tr><td>datos_compra.poliza</td><td style="text-align: justify;">Póliza única del servicio.</td></tr>
+                        <tr><td>datos_compra.producto</td><td style="text-align: justify;">Código interno del producto asignado según edad.</td></tr>
+                        <tr><td>datos_compra.poliza</td><td style="text-align: justify;">Póliza única del servicio (IdFirma).</td></tr>
                         <tr><td>datos_compra.status</td><td style="text-align: justify;">Estatus inicial del servicio: <strong>PREVENTA</strong>.</td></tr>
+                        <tr><td>datos_compra.costo</td><td style="text-align: justify;">Costo base del producto (CostoVenta).</td></tr>
                         <tr><td>datos_compra.subtotal</td><td style="text-align: justify;">Total de la venta o crédito.</td></tr>
-                        <tr><td>datos_compra.amount</td><td style="text-align: justify;">Monto inicial a cobrar.</td></tr>
+                        <tr><td>datos_compra.amount</td><td style="text-align: justify;">Monto inicial a cobrar (por pago si es crédito).</td></tr>
+                        <tr><td>datos_compra.plan</td><td style="text-align: justify;">Modalidad: <strong>CONTADO</strong> o <strong>MENSUAL</strong>.</td></tr>
+                        <tr><td>datos_compra.numero_pagos</td><td style="text-align: justify;">Número de pagos del plan.</td></tr>
+                        <tr><td>datos_compra.dia_pago</td><td style="text-align: justify;">Día de pago mensual (1, 15) o 0 si es contado.</td></tr>
                         <tr><td>datos_compra.pago_link</td><td style="text-align: justify;">Liga para generar o continuar el pago.</td></tr>
                     </table>
 

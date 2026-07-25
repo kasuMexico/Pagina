@@ -113,19 +113,38 @@ if (isset($mysqli) && ($mysqli instanceof mysqli)) {
                         <table class="table table-responsive justify">
                             <tr>
                                 <td><strong>tipo_peticion</strong></td>
-                                <td><strong>DESCRIPCIÓN DE CLAVES DE FUNCIONES</strong></td>
+                                <td><strong>request</strong></td>
+                                <td><strong>Resultado</strong></td>
                             </tr>
                             <tr>
-                                <td>request</td>
-                                <td style="text-align: justify;">Retorna las claves y datos consultables.</td>
+                                <td><code>request</code></td>
+                                <td><code>request_block</code></td>
+                                <td style="text-align: justify;">Lista los bloques de datos consultables.</td>
                             </tr>
                             <tr>
-                                <td>individual_request</td>
-                                <td style="text-align: justify;">Búsqueda puntual: <strong>Contacto</strong> cliente, datos <strong>personales</strong> o una <strong>venta</strong> específica.</td>
+                                <td><code>request</code></td>
+                                <td><code>individual_request</code></td>
+                                <td style="text-align: justify;">Lista los campos individuales consultables.</td>
                             </tr>
                             <tr>
-                                <td>request_block</td>
-                                <td style="text-align: justify;">Búsqueda por conjunto de datos específico.</td>
+                                <td><code>individual_request</code></td>
+                                <td>Nombre del campo</td>
+                                <td style="text-align: justify;">Devuelve el valor de un campo puntual del cliente o venta.</td>
+                            </tr>
+                            <tr>
+                                <td><code>request_block</code></td>
+                                <td><code>cliente</code></td>
+                                <td style="text-align: justify;">Devuelve todos los datos del cliente, contacto y ventas.</td>
+                            </tr>
+                            <tr>
+                                <td><code>request_block</code></td>
+                                <td><code>producto_cliente</code></td>
+                                <td style="text-align: justify;">Evalúa viabilidad de un producto para el cliente (requiere parámetro <strong>producto</strong>).</td>
+                            </tr>
+                            <tr>
+                                <td><code>request_block</code></td>
+                                <td><code>catalogo_productos</code></td>
+                                <td style="text-align: justify;">Devuelve el catálogo completo de productos con costos y comisiones.</td>
                             </tr>
                         </table>
                     </div>
@@ -138,8 +157,8 @@ if (isset($mysqli) && ($mysqli instanceof mysqli)) {
     <section class="doc-section" id="consulta-base">
         <div class="container">
             <div class="doc-heading">
-                <h2>Consulta base</h2>
-                <p>Envía el token Bearer, el usuario API, la CURP ligada al token y la estructura <strong>token_data</strong> recibida desde <strong>Token_Full</strong>.</p>
+                <h2>Descubrimiento de campos</h2>
+                <p>Usa <strong>tipo_peticion: request</strong> para descubrir qué bloques y campos están disponibles. La API usa enrutamiento de 2 niveles: <strong>tipo_peticion</strong> define la operación y <strong>request</strong> define el objetivo.</p>
             </div>
             <div class="row">
                 <div class="col-lg-5 col-md-12 col-sm-12 align-self-center" data-scroll-reveal="enter left move 30px over 0.6s after 0.4s">
@@ -163,7 +182,7 @@ if (isset($mysqli) && ($mysqli instanceof mysqli)) {
                             </tr>
                             <tr>
                                 <td>CLAVE_CONSULTA</td>
-                                <td style="text-align: justify;">Clave de búsqueda requerida.</td>
+                                <td style="text-align: justify;">Para descubrir: <strong>request_block</strong> (lista bloques) o <strong>individual_request</strong> (lista campos).</td>
                             </tr>
                             <tr>
                                 <td>CURP_CODE</td>
@@ -215,13 +234,15 @@ if (isset($mysqli) && ($mysqli instanceof mysqli)) {
     <section class="doc-section doc-section--muted" id="ejemplos">
         <div class="container">
             <div class="doc-heading">
-                <h2>Ejemplos frecuentes</h2>
-                <p><strong>request</strong> lista claves disponibles, <strong>individual_request</strong> devuelve un campo puntual y <strong>request_block</strong> devuelve bloques completos. Campos de venta ahora incluyen <strong>Subtotal</strong>, <strong>DiaPago</strong> y <strong>FechaLiquidacion</strong>.</p>
+                <h2>Ejemplos de consumo</h2>
+                <p><strong>request_block</strong> devuelve bloques completos de datos. <strong>individual_request</strong> devuelve un campo puntual. Campos de venta incluyen <strong>Subtotal</strong>, <strong>DiaPago</strong>, <strong>IdFirma</strong> y <strong>FechaLiquidacion</strong>.</p>
             </div>
             <div class="doc-grid">
+                <!-- Bloque: Cliente -->
                 <div class="doc-panel">
                     <span class="doc-pill">request_block</span>
-                    <h3>Datos completos del cliente</h3>
+                    <h3>Datos del cliente</h3>
+                    <p><strong>request: cliente</strong> – Retorna datos de contacto, usuario, dirección y todas las ventas asociadas.</p>
                     <div class="code-window">
                         <pre id="codecopindex" class="userContent" style="white-space: pre-wrap;"><code>POST https://apimarket.kasu.com.mx/api/Customer_V1
 Authorization: Bearer API_KEY_AQUI
@@ -237,12 +258,34 @@ User-Agent: SECRET_KEY_USUARIO_SECRET_KEY_ID
     "timestamp": TIMESTAMP,
     "expires_in": EXPIRE_IN
   }
+}
+
+// Respuesta (202):
+{
+  "ok": true,
+  "curp_en_uso": "CURP_CODE",
+  "Ejecutivo": "usuario_api",
+  "Nombre": "Juan Perez Lopez",
+  "Tipo": "Cliente",
+  "Mail": "cliente@mail.com",
+  "Telefono": "5512345678",
+  "Producto": "02a29",
+  "FechaRegistro": "2025-01-15",
+  "Direccion": {
+    "calle": "...", "numero": "...",
+    "colonia": "...", "municipio": "...",
+    "codigo_postal": "...", "estado": "..."
+  },
+  "ventas": [{ ... }]
 }</code></pre>
                     </div>
                 </div>
+
+                <!-- Bloque: Producto Cliente -->
                 <div class="doc-panel">
-                    <span class="doc-pill">individual_request</span>
-                    <h3>Campo de venta</h3>
+                    <span class="doc-pill">request_block</span>
+                    <h3>Viabilidad de producto</h3>
+                    <p><strong>request: producto_cliente</strong> – Evalúa si un producto es viable para la edad del cliente. <strong>Requiere el parámetro adicional <code>producto</code></strong> con el nombre del producto (ej. "Funerario").</p>
                     <div class="code-window">
                         <pre id="codecopi2" class="userContent" style="white-space: pre-wrap;"><code>POST https://apimarket.kasu.com.mx/api/Customer_V1
 Authorization: Bearer API_KEY_AQUI
@@ -250,14 +293,98 @@ Content-Type: application/json
 User-Agent: SECRET_KEY_USUARIO_SECRET_KEY_ID
 
 {
-  "tipo_peticion": "individual_request",
+  "tipo_peticion": "request_block",
   "nombre_de_usuario": "YOUR_APPUSER",
-  "request": "IdFIrma",
+  "request": "producto_cliente",
+  "curp_en_uso": "CURP_CODE",
+  "producto": "Funerario",
+  "token_data": {
+    "timestamp": TIMESTAMP,
+    "expires_in": EXPIRE_IN
+  }
+}
+
+// Respuesta (202):
+{
+  "ok": true,
+  "producto": "02a29",
+  "costo": 3500.00,
+  "comision": 350.00,
+  "forma_pago": {
+    "meses_max": 12,
+    "tasa_anual": 0.00
+  }
+}</code></pre>
+                    </div>
+                </div>
+
+                <!-- Bloque: Catálogo -->
+                <div class="doc-panel">
+                    <span class="doc-pill">request_block</span>
+                    <h3>Catálogo de productos</h3>
+                    <p><strong>request: catalogo_productos</strong> – Lista todos los productos con costo, comisión, fideicomiso y condiciones de crédito.</p>
+                    <div class="code-window">
+                        <pre id="codecopi3" class="userContent" style="white-space: pre-wrap;"><code>POST https://apimarket.kasu.com.mx/api/Customer_V1
+Authorization: Bearer API_KEY_AQUI
+Content-Type: application/json
+User-Agent: SECRET_KEY_USUARIO_SECRET_KEY_ID
+
+{
+  "tipo_peticion": "request_block",
+  "nombre_de_usuario": "YOUR_APPUSER",
+  "request": "catalogo_productos",
   "curp_en_uso": "CURP_CODE",
   "token_data": {
     "timestamp": TIMESTAMP,
     "expires_in": EXPIRE_IN
   }
+}
+
+// Respuesta (202):
+{
+  "ok": true,
+  "productos": [
+    {
+      "producto": "02a29",
+      "costo": 3500.00,
+      "comision": 350.00,
+      "fideicomiso": "50.00",
+      "forma_pago": { "meses_max": 12, "tasa_anual": 0 }
+    },
+    ...
+  ]
+}</code></pre>
+                    </div>
+                </div>
+
+                <!-- Campo individual -->
+                <div class="doc-panel">
+                    <span class="doc-pill">individual_request</span>
+                    <h3>Campo individual</h3>
+                    <p><strong>tipo_peticion: individual_request</strong> – Retorna el valor de un solo campo. Usa <code>individual_request</code> primero para ver campos disponibles.</p>
+                    <div class="code-window">
+                        <pre id="codecopi4" class="userContent" style="white-space: pre-wrap;"><code>POST https://apimarket.kasu.com.mx/api/Customer_V1
+Authorization: Bearer API_KEY_AQUI
+Content-Type: application/json
+User-Agent: SECRET_KEY_USUARIO_SECRET_KEY_ID
+
+{
+  "tipo_peticion": "individual_request",
+  "nombre_de_usuario": "YOUR_APPUSER",
+  "request": "Status",
+  "curp_en_uso": "CURP_CODE",
+  "token_data": {
+    "timestamp": TIMESTAMP,
+    "expires_in": EXPIRE_IN
+  }
+}
+
+// Respuesta (202):
+{
+  "ok": true,
+  "curp_en_uso": "CURP_CODE",
+  "request": "Status",
+  "data": "ACTIVO"
 }</code></pre>
                     </div>
                 </div>

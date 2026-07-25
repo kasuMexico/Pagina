@@ -3,21 +3,18 @@ declare(strict_types=1);
 
 /**
  * NFT Image Generator — KASU Policy Shares
- * Endpoint: GET /api/nft/image.php?id={idVenta}
+ * Endpoint: GET /apimarket/api/nft/image.php?id={id_venta_o_id_firma}
  *
- * Genera PNG 1000x1000 con capas deterministas basadas en el id de venta.
+ * Genera PNG 1000x1000 con capas deterministas basadas en el id o IdFirma.
  * Género deriva de la CURP registrada. Si la póliza está CANCELADO, se aplica grayscale.
  */
 
 require_once __DIR__ . '/../../librerias_api.php';
 
-header('Content-Type: image/png');
-header('Cache-Control: public, max-age=31536000, immutable');
+$searchParam = isset($_GET['id']) ? trim((string)$_GET['id']) : '';
 
-$idVenta = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-
-if ($idVenta <= 0) {
-    dibujarErrorPNG('Poliza Invalida');
+if (empty($searchParam)) {
+    dibujarErrorPNG('Parametro ID Requerido');
     exit;
 }
 
@@ -25,37 +22,48 @@ if ($idVenta <= 0) {
 global $mysqli;
 $db = api_require_db($mysqli ?? null, 'ventas');
 
-// 1. Consultar CURP y Status desde la BD
+// 1. Consultar CURP, Status e IdFirma desde la BD (Acepta ID numérico o IdFirma)
 $stmt = $db->prepare("
-    SELECT u.ClaveCurp, v.Status
+    SELECT 
+        v.Id AS id_venta,
+        v.Status,
+        v.IdFirma,
+        u.ClaveCurp
     FROM Venta v
     JOIN Usuario u ON v.IdContact = u.IdContact AND u.Tipo = 'Cliente'
-    WHERE v.Id = ?
+    WHERE (v.Id = ? OR v.IdFirma = ?)
+      AND v.IdFirma IS NOT NULL 
+      AND v.IdFirma != ''
     LIMIT 1
 ");
-$stmt->bind_param('i', $idVenta);
+
+$stmt->bind_param('ss', $searchParam, $searchParam);
 $stmt->execute();
-$res = $stmt->get_result();
-$datos = $res->fetch_assoc();
+$datos = $stmt->get_result()->fetch_assoc();
 
 if (!$datos) {
-    dibujarErrorPNG("Poliza #{$idVenta} No Encontrada");
+    dibujarErrorPNG("Poliza '{$searchParam}' No Encontrada");
     exit;
 }
 
-// 2. Extraccion de Genero desde la CURP (Posicion 11)
+// 2. Establecer Headers de Imagen PNG con Caché solo si la póliza es válida
+header('Content-Type: image/png');
+header('Cache-Control: public, max-age=31536000, immutable');
+
+// 3. Extracción de Género desde la CURP (Posición 11)
 $curp = strtoupper(trim((string)$datos['ClaveCurp']));
 $sexo = (strlen($curp) >= 11) ? substr($curp, 10, 1) : 'M';
 $folderGender = ($sexo === 'H') ? 'male' : 'female';
 
-// 3. Generacion Determinista de Seed basada en idVenta
-$seed = crc32('KASU_LELE_SEED_' . $idVenta);
+// 4. Generación Determinista de Seed basada en el IdFirma (o id_venta como respaldo)
+$seedKey = !empty($datos['IdFirma']) ? $datos['IdFirma'] : (string)$datos['id_venta'];
+$seed    = crc32('KASU_LELE_SEED_' . $seedKey);
 mt_srand($seed);
 
-// 4. Ruta base de assets (PNGs transparentes de 1000x1000px)
+// 5. Ruta base de assets (PNGs transparentes de 1000x1000px)
 $baseTraitsDir = __DIR__ . '/../../assets/nft_traits/';
 
-// 5. Seleccionar assets por capa (1-20 variantes)
+// 6. Seleccionar assets por capa (1-20 variantes)
 $bgIndex       = mt_rand(1, 20);
 $clothesIndex  = mt_rand(1, 20);
 $hairIndex     = mt_rand(1, 20);
@@ -64,12 +72,12 @@ $eyesIndex     = mt_rand(1, 20);
 $mouthIndex    = mt_rand(1, 20);
 $eyewearIndex  = mt_rand(1, 20);
 
-// 6. Crear lienzo principal
+// 7. Crear lienzo principal
 $imgCanvas = imagecreatetruecolor(1000, 1000);
 imagealphablending($imgCanvas, true);
 imagesavealpha($imgCanvas, true);
 
-// 7. Funcion auxiliar para superponer capas PNG
+// 8. Función auxiliar para superponer capas PNG
 function superponerCapa($canvas, string $pathFile): void {
     if (file_exists($pathFile)) {
         $layer = imagecreatefrompng($pathFile);
@@ -78,7 +86,7 @@ function superponerCapa($canvas, string $pathFile): void {
     }
 }
 
-// 8. Ensamblado de Capas (Stack)
+// 9. Ensamblado de Capas (Stack)
 superponerCapa($imgCanvas, "{$baseTraitsDir}/backgrounds/bg_{$bgIndex}.png");
 superponerCapa($imgCanvas, "{$baseTraitsDir}/{$folderGender}/base/cuerpo.png");
 superponerCapa($imgCanvas, "{$baseTraitsDir}/{$folderGender}/clothes/ropa_{$clothesIndex}.png");
@@ -91,7 +99,7 @@ if ($eyewearIndex > 5) {
     superponerCapa($imgCanvas, "{$baseTraitsDir}/{$folderGender}/eyewear/lentes_{$eyewearIndex}.png");
 }
 
-// 9. Grayscale si la poliza esta CANCELADO
+// 10. Grayscale si la póliza está CANCELADO
 if ($datos['Status'] === 'CANCELADO') {
     imagefilter($imgCanvas, IMG_FILTER_GRAYSCALE);
 }
@@ -101,14 +109,17 @@ imagepng($imgCanvas);
 imagedestroy($imgCanvas);
 exit;
 
-// --- Funcion de respaldo en caso de error ---
+// --- Función de respaldo en caso de error ---
 function dibujarErrorPNG(string $mensaje): void {
-    $img = imagecreatetruecolor(1000, 1000);
+    header('Content-Type: image/png');
+    header('Cache-Control: no-cache, must-revalidate'); // No cachear imágenes con error
+    
+    $img  = imagecreatetruecolor(1000, 1000);
     $bg   = imagecolorallocate($img, 13, 22, 40);
     $text = imagecolorallocate($img, 255, 255, 255);
     imagefill($img, 0, 0, $bg);
-    imagestring($img, 5, 380, 480, 'KASU NFT ERROR:', $text);
-    imagestring($img, 5, 380, 510, $mensaje, $text);
+    imagestring($img, 5, 300, 480, 'KASU NFT ERROR:', $text);
+    imagestring($img, 5, 300, 510, $mensaje, $text);
     imagepng($img);
     imagedestroy($img);
 }

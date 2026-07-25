@@ -19,10 +19,31 @@ require_once __DIR__ . '/eia/librerias.php';
 require_once __DIR__ . '/eia/php/Telcto.php';
 $tel = isset($tel) && $tel !== '' ? $tel : '7208177632';
 
-/* ---------- 1) Entrada segura ---------- */
+/* ---------- 1) Entrada segura: ?Art= o slug desde REQUEST_URI ---------- */
+$hasArtParam = array_key_exists('Art', $_GET);
 $artId = filter_input(INPUT_GET, 'Art', FILTER_VALIDATE_INT, [
   'options' => ['default' => 1, 'min_range' => 1]
 ]);
+
+// Si no viene ?Art=, resolvemos el slug desde la URL (compatible con rewrite de .htaccess)
+if (!$hasArtParam) {
+  // Mapa de slugs canónicos → Id (coherente con .htaccess)
+  $slugMap = [
+    1 => 'gastos-funerarios',
+    2 => 'plan-privado-de-retiro',
+    3 => 'gastos-funerarios-policias',
+    6 => 'gastos-funerarios-taxistas',
+    7 => 'kasu-maternidad',
+    8 => 'kasu-futuro-18',
+  ];
+  $slugToId = array_flip($slugMap);
+
+  $reqUri = strtok($_SERVER['REQUEST_URI'] ?? '', '?');
+  $reqUri = rtrim($reqUri, '/');
+  if (preg_match('#^/productos/([\w-]+)$#', $reqUri, $m)) {
+    $artId = $slugToId[$m[1]] ?? $artId;
+  }
+}
 
 /* ---------- 2) Validación básica ---------- */
 $maxProd = (int)$basicas->MaxDat($mysqli, "Id", "ContProd");
@@ -652,7 +673,5 @@ $prospectoUrl = '/prospectos.php?producto=' . rawurlencode($prospectoProducto);
 <script async src="https://d335luupugsy2.cloudfront.net/js/loader-scripts/28dd2782-ee7d-4b25-82b1-f5993b27764a-loader.js"></script>
 <?php require_once __DIR__ . '/html/kasu-chat-widget.php'; ?>
 
-</body>
-</html>
 </body>
 </html>

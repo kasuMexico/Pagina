@@ -77,14 +77,7 @@ require_once '../librerias_api.php';
                 <td><strong>CLAVES DE FUNCIONES</strong></td>
                 <td><strong>DESCRIPCIÓN</strong></td>
               </tr>
-              <tr>
-                <td>token_full</td>
-                <td style="text-align: justify;">
-                  Acceso único a todas las API KASU. Cada token se emite con permisos finos y
-                  <strong>activamos de forma selectiva</strong> las funcionalidades asignadas a ese token.
-                </td>
-              </tr>
-              <tr><td>account_status</td><td style="text-align: justify;">Consulta saldo, pago del periodo, pagos realizados y estado de cobranza.</td></tr>
+              <tr><td>account_status</td><td style="text-align: justify;">Consulta saldo, pago del periodo, pagos realizados, estado de cobranza y fecha de liquidación.</td></tr>
               <tr><td>pagos_psd2</td><td style="text-align: justify;">Registra un pago y actualiza el estado de la poliza.</td></tr>
             </table>
           </div>
@@ -144,7 +137,7 @@ require_once '../librerias_api.php';
       <div class="doc-grid">
         <div class="doc-panel">
           <span class="doc-pill">account_status</span>
-          <p>Consulta saldo, pago de periodo, pagos realizados, pagos pendientes, comisión y liga de pago.</p>
+          <p>Consulta el estado completo de la cuenta: saldo, pagos, estatus, cobranza y comisión.</p>
           <div class="code-window">
             <pre id="codecopi" class="userContent" style="white-space: pre-wrap;"><code>POST https://apimarket.kasu.com.mx/api/Payments_V1
 Authorization: Bearer API_KEY_AQUI
@@ -159,12 +152,38 @@ User-Agent: SECRET_KEY_USUARIO_SECRET_KEY_ID
     "timestamp": TIMESTAMP,
     "expires_in": EXPIRE_IN
   }
+}
+
+// Respuesta (200):
+{
+  "ok": true,
+  "data": {
+    "id_venta": 1234,
+    "poliza": "K2C8R1WZ7M4Q3F",
+    "curp": "CURP_CODE",
+    "cliente": "Juan Perez Lopez",
+    "producto": "02a29",
+    "tipo_servicio": "Ecologico",
+    "status": "ACTIVO",
+    "costo_venta": 3500.00,
+    "subtotal": 3500.00,
+    "fecha_liquidacion": "2025-03-15",
+    "numero_pagos": 1,
+    "dia_pago": 0,
+    "pago_periodo": 3500.00,
+    "pagos_realizados": 3500.00,
+    "saldo": 0.00,
+    "pagos_pendientes": 0,
+    "estado_cobranza": "CORRIENTE",
+    "comision_producto": 350.00,
+    "pago_link": "https://kasu.com.mx/pago/..."
+  }
 }</code></pre>
           </div>
         </div>
         <div class="doc-panel">
           <span class="doc-pill">pagos_psd2</span>
-          <p>Registra un pago y actualiza el estado de la poliza segun el progreso de pagos.</p>
+          <p>Registra un pago y actualiza el estado de la póliza. <strong>referencia</strong> es opcional (ID de PromesaPago).</p>
           <div class="code-window">
             <pre id="codecopindex" class="userContent" style="white-space: pre-wrap;"><code>POST https://apimarket.kasu.com.mx/api/Payments_V1
 Authorization: Bearer API_KEY_AQUI
@@ -182,6 +201,14 @@ User-Agent: SECRET_KEY_USUARIO_SECRET_KEY_ID
     "timestamp": TIMESTAMP,
     "expires_in": EXPIRE_IN
   }
+}
+
+// Respuesta (201):
+{
+  "ok": true,
+  "mensaje": "Pago registrado correctamente",
+  "payment_ids": [5678],
+  "data": { ... }   // mismo esquema que account_status
 }</code></pre>
           </div>
         </div>

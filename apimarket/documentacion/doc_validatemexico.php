@@ -114,7 +114,7 @@ $TOKEN_URL = $BASE_URL . '/api/Token_Full';
   <div class="container">
     <div class="doc-heading">
       <h2>Ejemplos de consumo</h2>
-      <p>También se acepta <strong>request</strong> como alias de <strong>metodo</strong>. El valor a validar viaja en <strong>valor</strong>.</p>
+      <p>También se aceptan alias de compatibilidad: <strong>request</strong> como sinónimo de <strong>metodo</strong>, y <strong>curp</strong> o <strong>rfc</strong> como sinónimos de <strong>valor</strong>. El endpoint solo acepta <strong>tipo_peticion: request</strong>.</p>
     </div>
     <div class="doc-grid">
       <div class="doc-panel">

@@ -5,10 +5,8 @@
  */
 ?>
 <?php
-  // Normaliza teléfono a dígitos para tel:/WhatsApp
+  // Normaliza teléfono a dígitos para tel:/WhatsApp (sin forzar prefijo 52)
   $tel_digits = isset($tel) ? preg_replace('/\D+/', '', $tel) : '';
-  // Asegura prefijo país México si falta
-  if ($tel_digits && strpos($tel_digits, '52') !== 0) { $tel_digits = '52' . $tel_digits; }
 ?>
 
 <div class="kasu-footer">
@@ -24,7 +22,7 @@
           <li><a target="_blank" rel="noopener noreferrer" href="https://instagram.com/kasumexico" aria-label="Instagram KASU"><i class="fa fa-instagram" aria-hidden="true"></i></a></li>
           <li><a target="_blank" rel="noopener noreferrer" href="https://www.linkedin.com/company/kasuservicios/" aria-label="LinkedIn KASU"><i class="fa fa-linkedin" aria-hidden="true"></i></a></li>
           <li><a href="mailto:atncliente@kasu.com.mx" aria-label="Enviar correo a Atencion a Clientes"><i class="fa fa-envelope" aria-hidden="true"></i></a></li>
-          <li><a target="_blank" rel="noopener noreferrer" href="https://wa.me/<?= htmlspecialchars($tel_digits, ENT_QUOTES, 'UTF-8') ?>" aria-label="Contactar por WhatsApp"><i class="fa fa-comments-o" aria-hidden="true"></i></a></li>
+          <li><a target="_blank" rel="noopener noreferrer" href="https://wa.me/<?= htmlspecialchars($tel_digits, ENT_QUOTES, 'UTF-8') ?>?text=Hola,%20requiero%20informaci%C3%B3n" aria-label="Contactar por WhatsApp"><i class="fa fa-comments-o" aria-hidden="true"></i></a></li>
         </ul>
       </div>
 

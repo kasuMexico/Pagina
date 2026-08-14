@@ -16,6 +16,9 @@ require_once __DIR__ . '/eia/librerias.php';
 date_default_timezone_set('America/Mexico_City');
 header_remove('X-Powered-By');
 
+// Content Security Policy
+header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com; img-src 'self' data:; frame-src https://www.googletagmanager.com; connect-src 'self'");
+
 if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
   http_response_code(500);
   exit('Error de conexión.');
@@ -26,7 +29,7 @@ $nombre      = $_GET['nombre']   ?? '';
 $producto    = $_GET['producto'] ?? 'FUNERARIO'; // Por defecto FUNERARIO si no viene
 $productoRaw = trim((string)$producto);
 $nombreSafe  = htmlspecialchars((string)$nombre,   ENT_QUOTES, 'UTF-8');
-$selfSafe    = htmlspecialchars((string)($_SERVER['PHP_SELF'] ?? ''), ENT_QUOTES, 'UTF-8');
+$selfSafe    = htmlspecialchars((string)($_SERVER['SCRIPT_NAME'] ?? '/prospectos.php'), ENT_QUOTES, 'UTF-8');
 $productoSafe= htmlspecialchars($productoRaw, ENT_QUOTES, 'UTF-8');
 
 /* ===== Mapeo de servicio para prospectos ===== */
@@ -49,84 +52,56 @@ function map_servicio_interes(string $productoRaw): string {
 $servicioFromQuery = map_servicio_interes($productoRaw);
 
 /* ===== Catalogo de productos (iconos desde ContProd.Image_Desc) ===== */
-$catalogOrder = [1, 2, 3, 6, 7, 8];
-$catalogMeta = [
-  1 => ['value' => 'FUNERARIO',  'fallback_name' => 'Funerario',   'fallback_icon' => '/assets/images/Index/funer.png'],
-  2 => ['value' => 'RETIRO',     'fallback_name' => 'Retiro',      'fallback_icon' => '/assets/images/Index/retiro.png'],
-  3 => ['value' => 'SEGURIDAD',  'fallback_name' => 'Seguridad',   'fallback_icon' => '/assets/images/Index/funer.png'],
-  6 => ['value' => 'TRANSPORTE', 'fallback_name' => 'Transporte',  'fallback_icon' => '/assets/images/Index/funer.png'],
-  7 => ['value' => 'MATERNIDAD', 'fallback_name' => 'Maternidad',  'fallback_icon' => '/assets/images/Index/funer.png'],
-  8 => ['value' => 'UNIVERSIDAD','fallback_name' => 'Universidad', 'fallback_icon' => '/assets/images/Index/retiro.png'],
-];
-$catalogRows = [];
-$catalog = [];
-$sqlCatalog = "SELECT Id, Producto, Nombre, Image_Desc, Imagen_index FROM ContProd WHERE Id IN (1,2,3,6,7,8)";
-if ($resCatalog = $mysqli->query($sqlCatalog)) {
-  while ($row = $resCatalog->fetch_assoc()) {
-    $catalogRows[(int)$row['Id']] = $row;
-  }
-  $resCatalog->free();
+require_once __DIR__ . '/eia/catalogo_productos.php';
+// prospectos usa valores en mayúsculas para compatibilidad con el backend
+foreach ($catalog as &$item) {
+  $item['value'] = strtoupper($item['value']);
 }
-foreach ($catalogOrder as $id) {
-  $meta = $catalogMeta[$id];
-  $row = $catalogRows[$id] ?? [];
-  $label = (string)($row['Nombre'] ?? $meta['fallback_name']);
-  $icon = (string)($row['Image_Desc'] ?? '');
-  if ($icon === '') {
-    $icon = (string)($row['Imagen_index'] ?? $meta['fallback_icon']);
-  }
-  if ($icon === '') {
-    $icon = '/assets/images/kasu_logo.jpeg';
-  }
-  $catalog[] = [
-    'value' => $meta['value'],
-    'label' => $label,
-    'icon'  => $icon,
-  ];
-}
+unset($item);
+
 
 /* ===== Copy segmentado (si viene producto preseleccionado) ===== */
 $copyByServicio = [
   'FUNERARIO' => [
-    'title' => 'Recibe informacion de Gastos Funerarios',
-    'copy'  => 'Dejanos tus datos y un asesor KASU te explicara como funciona el plan funerario con pago unico y cobertura nacional.',
-    'lead'  => 'Guia completa para contratar un servicio funerario',
+    'title' => 'Recibe información de Gastos Funerarios',
+    'copy'  => 'Déjanos tus datos y un asesor KASU te explicará cómo funciona el plan funerario con pago único y cobertura nacional.',
+    'lead'  => 'Guía completa para contratar un servicio funerario',
   ],
   'RETIRO' => [
-    'title' => 'Recibe informacion de Retiro',
-    'copy'  => 'Dejanos tus datos y un asesor KASU te explicara el plan de retiro y sus beneficios.',
-    'lead'  => 'Informacion completa del plan de retiro KASU',
+    'title' => 'Recibe información de Retiro',
+    'copy'  => 'Déjanos tus datos y un asesor KASU te explicará el plan de retiro y sus beneficios.',
+    'lead'  => 'Información completa del plan de retiro KASU',
   ],
   'SEGURIDAD' => [
     'title' => 'Planes Funerarios para oficiales de seguridad',
-    'copy'  => 'Comparte tus datos y te explicamos el plan para oficiales de seguridad publica.',
-    'lead'  => 'Informacion completa para seguridad publica',
+    'copy'  => 'Comparte tus datos y te explicamos el plan para oficiales de seguridad pública.',
+    'lead'  => 'Información completa para seguridad pública',
   ],
   'TRANSPORTE' => [
     'title' => 'Planes Funerarios para taxistas',
-    'copy'  => 'Dejanos tus datos y te explicamos el plan para taxistas y transportistas.',
-    'lead'  => 'Informacion completa para taxistas',
+    'copy'  => 'Déjanos tus datos y te explicamos el plan para taxistas y transportistas.',
+    'lead'  => 'Información completa para taxistas',
   ],
   'MATERNIDAD' => [
     'title' => 'KASU Maternidad',
-    'copy'  => 'Dejanos tus datos para recibir informacion del plan de maternidad y la red KASU.',
-    'lead'  => 'Informacion completa de KASU Maternidad',
+    'copy'  => 'Déjanos tus datos para recibir información del plan de maternidad y la red KASU.',
+    'lead'  => 'Información completa de KASU Maternidad',
   ],
   'UNIVERSIDAD' => [
     'title' => 'KASU Futuro 18',
-    'copy'  => 'Dejanos tus datos para recibir informacion del plan de universidad y emprendimiento.',
-    'lead'  => 'Informacion completa de KASU Futuro 18',
+    'copy'  => 'Déjanos tus datos para recibir información del plan de universidad y emprendimiento.',
+    'lead'  => 'Información completa de KASU Futuro 18',
   ],
   'DISTRIBUIDOR' => [
     'title' => 'Conviértete en distribuidor KASU',
-    'copy'  => 'Dejanos tus datos para conocer el programa de distribuidores y sus beneficios.',
-    'lead'  => 'Informacion completa para distribuidores KASU',
+    'copy'  => 'Déjanos tus datos para conocer el programa de distribuidores y sus beneficios.',
+    'lead'  => 'Información completa para distribuidores KASU',
   ],
 ];
 $defaultCopy = [
-  'title' => 'Registrate para recibir informacion',
-  'copy'  => 'Dejanos tus datos para que un asesor KASU pueda contactarte y explicarte como funcionan nuestros servicios funerarios, maternidad, universidad y planes de retiro.',
-  'lead'  => 'Llena tus datos para recibir informacion de nuestros servicios',
+  'title' => 'Regístrate para recibir información',
+  'copy'  => 'Déjanos tus datos para que un asesor KASU pueda contactarte y explicarte cómo funcionan nuestros servicios funerarios, maternidad, universidad y planes de retiro.',
+  'lead'  => 'Llena tus datos para recibir información de nuestros servicios',
 ];
 $heroCopy = $servicioFromQuery !== '' && isset($copyByServicio[$servicioFromQuery])
   ? $copyByServicio[$servicioFromQuery]
@@ -141,9 +116,9 @@ $guideMap = [
   'SEGURIDAD'   => 'guiaoficiales.png',
   'DISTRIBUIDOR'=> 'guiadistribuidor.png',
 ];
-// Variable modificable para la imagen por defecto
-$defaultGuideImage = 'guiafuneraria.png'; // Puedes cambiar esta línea por cualquier otro nombre de archivo
-$guideImage = $guideMap[$servicioFromQuery] ?? $defaultGuideImage;
+// Imagen de guía por defecto
+define('PROSPECTOS_DEFAULT_GUIDE', 'guiafuneraria.png');
+$guideImage = $guideMap[$servicioFromQuery] ?? PROSPECTOS_DEFAULT_GUIDE;
 
 /* ===== Opiniones (prueba social) ===== */
 $opiniones = [];
@@ -154,12 +129,16 @@ if ($resOpin = $mysqli->query("SELECT Nombre, Opinion, Servicio, foto FROM opini
   $resOpin->free();
 }
 
-/* ===== CSRF (mismo esquema que el modal de prospectos) ===== */
-$csrf = $_SESSION['csrf_auth'] ?? ($_SESSION['csrf'] ?? null);
-if (!$csrf) {
-  $_SESSION['csrf_auth'] = bin2hex(random_bytes(32));
-  $csrf = $_SESSION['csrf_auth'];
+/* ===== CSRF independiente para prospectos ===== */
+if (empty($_SESSION['csrf_prospectos'])) {
+  try {
+    $_SESSION['csrf_prospectos'] = bin2hex(random_bytes(32));
+  } catch (\Random\RandomException $e) {
+    error_log('prospectos.php CSRF random_bytes: ' . $e->getMessage());
+    $_SESSION['csrf_prospectos'] = bin2hex(openssl_random_pseudo_bytes(32));
+  }
 }
+$csrf = $_SESSION['csrf_prospectos'];
 $csrfSafe = htmlspecialchars((string)$csrf, ENT_QUOTES, 'UTF-8');
 
 /* ===== Origen / método (para compatibilidad con Registro_Prospectos.php) ===== */
@@ -187,7 +166,7 @@ if (isset($_GET['Msg'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <!-- SEO básico -->
-  <meta name="description" content="Regístrate como prospecto KASU para recibir informacion sobre servicios funerarios, maternidad, universidad y planes de retiro.">
+  <meta name="description" content="Regístrate como prospecto KASU para recibir información sobre servicios funerarios, maternidad, universidad y planes de retiro.">
   <meta name="author" content="Erendida Itzel Castro Marquez; Jose Carlos Cabrera Monroy">
   <meta name="robots" content="index,follow,max-image-preview:large">
 
@@ -215,8 +194,10 @@ if (isset($_GET['Msg'])) {
 
   <!-- CSS externo + local -->
   <link rel="stylesheet" href="/assets/css/fonts.css?v=<?php echo $VerCache; ?>">
-  <link rel="stylesheet" href="assets/css/Compra.css?v=6">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/assets/css/Compra.css?v=6">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+        integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu"
+        crossorigin="anonymous">
 
   <style>
     html, body {
@@ -253,6 +234,22 @@ if (isset($_GET['Msg'])) {
       font-size:15px;
       line-height:1.5;
       margin:0;
+    }
+    .ProspectoGuia {
+      padding: 20px;
+      text-align: center;
+      background: #fff;
+    }
+    .ProspectoGuia p {
+      font-size: 14px;
+      color: #374151;
+      margin: 0 0 12px;
+      font-weight: 500;
+    }
+    .GuiaImg {
+      max-width: 200px;
+      height: auto;
+      border-radius: 8px;
     }
     .ProspectoForm {
       padding:30px 30px 24px;
@@ -463,7 +460,7 @@ if (isset($_GET['Msg'])) {
           <!-- Origen fijado a WEB (puedes cambiarlo en el backend si lo requieres) -->
           <input type="hidden" name="Origen" value="<?= $metodoSafe ?>">
           <input type="hidden" name="prospectoNvo" value="1" id="ProspectoNvoInput">
-          <input type="hidden" name="Cita" value="1" id="CitaInput" disabled>
+          <input type="hidden" name="Cita" value="" id="CitaInput">
           <input type="hidden" name="IdProspecto" value="" id="IdProspectoInput">
 
           <div class="form-group ProspectoHideOnAgenda" id="CurpGroup">
@@ -580,8 +577,8 @@ if (isset($_GET['Msg'])) {
           <div class="ProspectoHint">Te contactamos en horario laboral. Si prefieres WhatsApp, indicalo al asesor.</div>
 
           <div class="ProspectoLegal">
-            KASU Servicios a Futuro utilizara tus datos unicamente para contactarte y
-            brindarte informacion sobre nuestros servicios, conforme a nuestro
+            KASU Servicios a Futuro utilizará tus datos únicamente para contactarte y
+            brindarte información sobre nuestros servicios, conforme a nuestro
             <a href="/privacidad" target="_blank" rel="noopener">Aviso de Privacidad</a>.
           </div>
 
@@ -612,8 +609,12 @@ if (isset($_GET['Msg'])) {
   </div>
 </div>
 
-<script src="assets/js/jquery-2.1.0.min.js"></script>
-<!-- JS: GPS (igual lógica que en la página de compra) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+        integrity="sha384-1H217gwSVyLSIfaLxHbE7dRb3v4mYCKbpQvzx0cegeju1MVsGrX5xXxAvs/HgeFs"
+        crossorigin="anonymous"></script>
+<!-- Fingerprint (cargar antes del form para que esté listo al enviar) -->
+<script src="eia/javascript/finger.js?v=4"></script>
+<!-- JS: Formulario -->
 <script>
 (function(){
   var origenInput = document.getElementById('OrigenVisibleInput');
@@ -775,7 +776,7 @@ if (isset($_GET['Msg'])) {
       el.style.display = 'none';
     });
     if (prospectoNvoInput) prospectoNvoInput.disabled = true;
-    if (citaInput) citaInput.disabled = false;
+    if (citaInput) citaInput.value = '1';
     if (fechaInput) {
       fechaInput.disabled = false;
       fechaInput.required = true;
@@ -907,34 +908,24 @@ if (isset($_GET['Msg'])) {
           setMsg((res && res.msg) ? res.msg : 'No se pudo agendar la llamada.', true);
         }
       }).fail(function(jqXHR){
-        var raw = (jqXHR && jqXHR.responseText) ? jqXHR.responseText.trim() : '';
-        var parsed = null;
-        if (raw) {
-          try {
-            parsed = JSON.parse(raw);
-          } catch (err) {
-            var startOk = raw.lastIndexOf('{"ok"');
-            if (startOk === -1) startOk = raw.lastIndexOf('{"ok":');
-            if (startOk === -1) startOk = raw.lastIndexOf('"ok":');
-            var start = startOk !== -1 ? startOk : raw.indexOf('{');
-            var end = raw.lastIndexOf('}');
-            if (start !== -1 && end > start) {
-              var candidate = raw.slice(start, end + 1);
-              if (candidate.charAt(0) !== '{') {
-                candidate = '{' + candidate;
-              }
-              try { parsed = JSON.parse(candidate); } catch (err2) {}
+        // El backend ya usa ob_clean() para garantizar JSON limpio;
+        // si aun asi falla, mostramos mensaje genérico.
+        try {
+          var raw = (jqXHR && jqXHR.responseText) ? jqXHR.responseText.trim() : '';
+          if (raw) {
+            var parsed = JSON.parse(raw);
+            if (parsed && parsed.ok) {
+              if (parsed.send_url) window.jQuery.get(parsed.send_url);
+              setMsg(parsed.msg ? parsed.msg : 'Tu llamada quedo agendada y te enviamos la guia.', false);
+              keepDisabled = true;
+              return;
+            }
+            if (parsed && parsed.msg) {
+              setMsg(parsed.msg, true);
+              return;
             }
           }
-        }
-        if (parsed && parsed.ok) {
-          if (parsed.send_url) {
-            window.jQuery.get(parsed.send_url);
-          }
-          setMsg(parsed.msg ? parsed.msg : 'Tu llamada quedo agendada y te enviamos la guia.', false);
-          keepDisabled = true;
-          return;
-        }
+        } catch (err) {}
         setMsg('No se pudo agendar la llamada. Intenta de nuevo.', true);
       }).always(function(){
         if (!keepDisabled && submitBtn) submitBtn.disabled = false;
@@ -944,8 +935,50 @@ if (isset($_GET['Msg'])) {
 })();
 </script>
 
-<!-- Fingerprint -->
-<script src="eia/javascript/finger.js?v=3"></script>
+<!-- Geolocalización -->
+<script>
+(function(){
+  var gpsDiv = document.getElementById('Gps');
+  if (!gpsDiv) return;
+
+  function injectGPS(pos){
+    if (!gpsDiv) return;
+    var latitude  = pos.coords.latitude;
+    var longitud  = pos.coords.longitude;
+    var accuracy  = pos.coords.accuracy;
+    var ts        = Date.now();
+    gpsDiv.innerHTML =
+      "<input type='hidden' name='latitud' value='" + latitude + "'>" +
+      "<input type='hidden' name='longitud' value='" + longitud + "'>" +
+      "<input type='hidden' name='accuracy' value='" + accuracy + "'>" +
+      "<input type='hidden' name='GeoTS' value='" + ts + "'>";
+  }
+
+  function geoError(err){
+    console.error('prospectos geo:', err && err.message ? err.message : 'desconocido');
+  }
+
+  function requestGeo(){
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(injectGPS, geoError, {
+      enableHighAccuracy: true,
+      maximumAge: 0,
+      timeout: 10000
+    });
+  }
+
+  if (navigator.permissions && navigator.permissions.query) {
+    navigator.permissions.query({ name: 'geolocation' }).then(function(status){
+      if (status.state !== 'denied') requestGeo();
+      status.onchange = function(){
+        if (status.state === 'granted') requestGeo();
+      };
+    }).catch(function(){ requestGeo(); });
+  } else {
+    requestGeo();
+  }
+})();
+</script>
 
 </body>
 </html>

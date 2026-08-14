@@ -149,6 +149,16 @@ function fingerprint_language(){var S="|",P="=",out="";try{
   out+=(tSys!=="undefined")?"syslang"+P+navigator.systemLanguage+S:"syslang"+P+S;
   out+=(tUsr!=="undefined")?"userlang"+P+navigator.userLanguage:"userlang"+P; return out;
 }catch(_){return "Error";}}
+function fingerprint_plugins(){try{
+  if (!navigator.plugins) return "";
+  var out=[],i=0,j=0,p=null,mt=null,mimes=null;
+  for(i=0;i<navigator.plugins.length;i++){
+    p=navigator.plugins[i]; mimes=[];
+    for(j=0;j<p.length;j++){mt=p[j];mimes.push([mt.type,mt.suffixes].join('~'));}
+    out.push([p.name,p.description,mimes.join(',')].join('::'));
+  }
+  return out.join(';');
+}catch(_){return "";}}
 function fingerprint_silverlight(){try{
   try{var c=new ActiveXObject('AgControl.AgControl'); if(c.IsVersionSupported("5.0"))return"5.x";else if(c.IsVersionSupported("4.0"))return"4.x";else if(c.IsVersionSupported("3.0"))return"3.x";else if(c.IsVersionSupported("2.0"))return"2.x";else return"1.x";}
   catch(e){var p=navigator.plugins["Silverlight Plug-In"]; if(p){return p.description==="1.0.30226.2"?"2.x":parseInt(p.description[0],10);}else{return "N/A";}}
@@ -297,8 +307,21 @@ function fingerprint_truebrowser(){var ua=navigator.userAgent.toLowerCase(),out=
     var uid=fp.get(); var html=buildInputs(uid); slots.forEach(function(s){s.innerHTML=html;});
   }
   window.renderFingerprint=renderFingerprint;
-  document.addEventListener('DOMContentLoaded',function(){renderFingerprint(document);});
-  if(window.jQuery){jQuery(document).on('shown.bs.modal','.modal',function(){renderFingerprint(this);});}
+  function scheduleFingerprint(ctx){
+    var run = function(){ renderFingerprint(ctx); };
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(run, {timeout: 2000});
+    } else {
+      setTimeout(run, 1500);
+    }
+  }
+  var ready = document.readyState === 'complete' || document.readyState === 'interactive';
+  if (ready) {
+    scheduleFingerprint(document);
+  } else {
+    document.addEventListener('DOMContentLoaded',function(){scheduleFingerprint(document);});
+  }
+  if(window.jQuery){jQuery(document).on('shown.bs.modal','.modal',function(){scheduleFingerprint(this);});}
 })();
 
 /* === Inyección global en formularios === */

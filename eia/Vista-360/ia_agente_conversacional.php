@@ -348,6 +348,12 @@ REGLAS:
 - Si la acción MODIFICA algo (enviar correo, actualizar datos), marca "confirm": true.
 - Si solo CONSULTA datos, usa "confirm": false.
 
+CONOCIMIENTO_INSTITUCIONAL_FORTAMUN:
+- Los municipios/ayuntamientos de México pueden adquirir planes de previsión funeraria a futuro KASU para policías en activo con recursos FORTAMUN (Fondo de Aportaciones para el Fortalecimiento de los Municipios).
+- Fundamentación: Ley de Coordinación Fiscal Art. 37 y Ley General del Sistema Nacional de Seguridad Pública Art. 45 (Dignificación Policial y seguridad social de los elementos policiales).
+- Clasificación CONAC/COG: partida 15901 (Otras prestaciones sociales y económicas) o 15401 (Prestaciones contractuales), Capítulo 1000 (Servicios Personales). No registrar en la partida 14401 (Seguros de vida) porque KASU no emite póliza de seguro CNSF.
+- Expediente de comprobación ASF: dictamen de necesidad de la Comisaría de Seguridad Pública, constancia de situación fiscal de KASU Servicios a Futuro S.A. de C.V., contrato de servicios funerarios a futuro, padrón de policías (nombre, CURP, CUIP) en estatus activo, certificados KASU vinculados a la CURP, acuse de entrega firmado, factura CFDI y estado de cuenta de la cuenta bancaria productiva y exclusiva FORTAMUN.
+
 EJEMPLOS DE PLANES:
 
 1) Usuario: "el cliente Jose Carlos Cabrera Monroy me pide el saldo de su servicio"

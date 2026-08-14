@@ -555,6 +555,11 @@ if (!empty($historialFondo) && count($historialFondo) >= 2) {
           var data  = new google.visualization.DataTable(tbl);
           var chart = new google.visualization.PieChart(document.getElementById(containerId));
           chart.draw(data, { width:'100%', height:300, title: titleTxt });
+        })
+        .fail(function(xhr, status, err){
+          var el = document.getElementById(containerId);
+          if (el) el.innerHTML = '<p style=\"color:#999;text-align:center;padding:20px;\">No se pudieron cargar los datos de: ' + titleTxt + '</p>';
+          console.error('drawPieFrom error:', url, status, err);
         });
     }
 

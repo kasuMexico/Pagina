@@ -175,7 +175,7 @@ $isBot = (bool)preg_match('/facebookexternalhit|twitterbot|linkedinbot|slackbot|
   </form>
 
   <?php if (!$isBot): ?>
-  <script defer src="/eia/javascript/finger.js"></script>
+  <script defer src="/eia/javascript/finger.js?v=4"></script>
   <script>
   (function(){
     const endpoint = '<?= htmlspecialchars($_SERVER['PHP_SELF'],ENT_QUOTES) ?>';

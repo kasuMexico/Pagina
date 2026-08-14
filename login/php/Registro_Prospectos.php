@@ -316,6 +316,16 @@ if ($isAjax && isset($_POST['Cita']) && (!$IdProspecto || !$FechaCita)) {
    ========================================================================= */
 if (isset($_POST['prospectoNvo'])) {
 
+  // Rate-limit por sesión: máximo 5 registros en 10 minutos
+  $now = time();
+  $rl = $_SESSION['rl_prospectos'] ?? ['count' => 0, 'reset' => $now + 600];
+  if ($now > $rl['reset']) { $rl = ['count' => 1, 'reset' => $now + 600]; }
+  else { $rl['count']++; }
+  $_SESSION['rl_prospectos'] = $rl;
+  if ($rl['count'] > 5) {
+    json_response(['ok' => false, 'msg' => 'Demasiados intentos. Espera unos minutos.']);
+  }
+
   $SERV_ALLOWED = ['FUNERARIO','SEGURIDAD','TRANSPORTE','RETIRO','MATERNIDAD','UNIVERSIDAD','DISTRIBUIDOR'];
 
   $Curp             = s_curp(p_get('Curp') ?? p_get('CURP'));

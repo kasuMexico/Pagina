@@ -384,21 +384,30 @@
     overflow: hidden;
 }
 
-/* Acciones: grid 2x2 para que 4 botones quepan sin desbordar */
+/* Acciones: botones en fila fluida, sin forzar tamaño mínimo */
 .mesa-actions-grid {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 4px !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    align-items: center !important;
 }
 .mesa-actions-grid form {
     margin: 0;
     min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
 }
 .mesa-actions-grid .btn {
-    width: 100% !important;
-    min-width: 0;
-    padding: 4px 2px !important;
-    font-size: .7rem !important;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0;
 }
 /* Date + botón: apilar verticalmente */
 .mesa-actions-grid .d-flex {

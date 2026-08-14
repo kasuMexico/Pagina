@@ -154,7 +154,10 @@ $stmt->close();
 $symbolMap = [];
 $resMap = $mysqli->query("SELECT symbol_input, symbol_yahoo FROM port_symbol_map");
 while ($r = $resMap->fetch_assoc()) {
-    $symbolMap[$r['symbol_input']] = $r['symbol_yahoo'];
+    $symbolMap[$r['symbol_input']] = [
+        'yahoo' => $r['symbol_yahoo'] ?? '',
+        'currency' => '',
+    ];
 }
 
 // Últimos precios por símbolo
@@ -214,7 +217,8 @@ while ($row = $resPos->fetch_assoc()) {
         'market_value' => $marketValue,
         'unrealized' => $unrealized,
         'last_price_date' => $lastPriceDate,
-        'symbol_yahoo' => $symbolMap[$symbol] ?? '',
+        'symbol_yahoo' => $symbolMap[$symbol]['yahoo'] ?? '',
+        'map_currency' => $symbolMap[$symbol]['currency'] ?? '',
     ];
 
     $totalCostBasis += $costBasis;
@@ -275,7 +279,7 @@ foreach ($symbolsAll as $sym) {
         'symbol' => $sym,
         'last_price_date' => $lastPrices[$sym]['date'] ?? null,
         'last_dividend_date' => $dividendLastDate[$sym] ?? null,
-        'symbol_yahoo' => $symbolMap[$sym] ?? '',
+        'symbol_yahoo' => $symbolMap[$sym]['yahoo'] ?? '',
     ];
 }
 
@@ -397,6 +401,7 @@ foreach ($symbolsAll as $sym) {
                                 <th>Cant</th>
                                 <th>Precio</th>
                                 <th>Fee</th>
+                                <th>Mon</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -416,6 +421,7 @@ foreach ($symbolsAll as $sym) {
                                 <td><?= h(number_format((float)$t['qty'], 4, '.', ',')) ?></td>
                                 <td><?= h(money_mx((float)$t['price'])) ?></td>
                                 <td><?= h(money_mx((float)$t['fee'])) ?></td>
+                                <td><?= h($t['currency'] ?: '—') ?></td>
                                 <td>
                                     <form method="POST" class="d-inline" onsubmit="return confirm('Eliminar operación?');">
                                         <input type="hidden" name="csrf_port" value="<?= h($csrfToken) ?>">
@@ -465,6 +471,7 @@ foreach ($symbolsAll as $sym) {
                                     <th>Último</th>
                                     <th>Valor</th>
                                     <th>Unrealized</th>
+                                    <th>Mon</th>
                                     <th>Precio fecha</th>
                                 </tr>
                             </thead>
@@ -484,6 +491,7 @@ foreach ($symbolsAll as $sym) {
                                     <td class="<?= $p['unrealized'] >= 0 ? 'text-success' : 'text-danger' ?>">
                                         <?= h(money_mx($p['unrealized'])) ?>
                                     </td>
+                                    <td><?= h($p['map_currency'] ?: '—') ?></td>
                                     <td><?= h($p['last_price_date'] ?? 'Sin datos') ?></td>
                                 </tr>
                                 <?php endforeach; ?>

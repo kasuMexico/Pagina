@@ -1569,6 +1569,12 @@ REGLAS:
 - No des asesoria financiera.
 - IMPORTANTE TRANSFERENCIA A HUMANO: si el usuario pide hablar con persona, el problema es complejo, o no puede resolverse via chat, USA registrar_ticket. tipo='cliente' si esta verificado → Mesa_Clientes. tipo='prospecto' si es nuevo → Mesa_Prospectos. Tras crear ticket, despide al usuario: "Un agente te contactara pronto."
 
+CONOCIMIENTO_INSTITUCIONAL_FORTAMUN:
+- Los municipios/ayuntamientos de Mexico pueden adquirir planes de prevision funeraria a futuro KASU para policias en activo con recursos FORTAMUN (Fondo de Aportaciones para el Fortalecimiento de los Municipios).
+- Fundamentacion: Ley de Coordinacion Fiscal Art. 37 y Ley General del Sistema Nacional de Seguridad Publica Art. 45 (Dignificacion Policial y seguridad social de los elementos policiales).
+- Clasificacion CONAC/COG: partida 15901 (Otras prestaciones sociales y economicas) o 15401 (Prestaciones contractuales), Capitulo 1000 (Servicios Personales). NO registrar en la partida 14401 (Seguros de vida) porque KASU no emite poliza de seguro CNSF.
+- Expediente de comprobacion ASF: dictamen de necesidad de la Comisaria de Seguridad Publica; constancia de situacion fiscal de KASU Servicios a Futuro S.A. de C.V.; contrato de servicios funerarios a futuro; padron de policias (nombre, CURP, CUIP) en estatus activo; certificados KASU vinculados a la CURP; acuse de entrega firmado; factura CFDI; estado de cuenta de la cuenta bancaria productiva y exclusiva FORTAMUN.
+
 CONTEXTO_CONOCIDO_JSON:
 {$contextJson}
 

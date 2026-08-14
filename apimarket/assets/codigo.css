@@ -8,28 +8,9 @@
   position: relative;
 }
 
-.code-header {
-  background-color: #f1f1f1;
-  border-bottom: 1px solid #ccc;
-  border-radius: 5px 5px 0 0;
-  padding: 1.5em;
-}
-
-.copy-button {
-  background-color: #4CAF50;
-  border: none;
-  border-radius: 5px;
-  color: white;
-  cursor: pointer;
-  font-size: 16px;
-  padding: 8px 16px;
-  position: absolute;
-  right: 0.5em;
-  top: 0.5em;
-}
-
-/* Cambiar el color del fondo del bloque de código */
-#codecopi {
+/* Todos los bloques de código: fondo oscuro, letra clara */
+.code-window pre,
+.code-window .userContent {
   background: #111827;
   color: #e5e7eb;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
@@ -40,43 +21,7 @@
   padding: 16px;
   text-align: left;
 }
-/* Cambiar el color del fondo del bloque de código */
-#codecopindex {
-  background: #111827;
-  color: #e5e7eb;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-  font-size: 13px;
-  line-height: 1.65;
-  margin: 0;
-  overflow-x: auto;
-  padding: 16px;
-  text-align: left;
+.code-window code {
+  color: inherit;
+  background: transparent;
 }
-	/* Cambiar el color de los diferentes tipos de palabras clave */
-	#codecopi code .keyword {
-		color: #569CD6;
-		font-weight: bold;
-	}
-
-	/* Cambiar el color de las cadenas de texto */
-	#codecopi code .string {
-		color: #ce9178;
-	}
-
-	/* Cambiar el color de los comentarios */
-	#codecopi code .comment {
-		color: #6A9955;
-		font-style: italic;
-	}
-  /* estilos para los link dentro de la clase*/
-  div.link-api a {
-    display: block;
-    padding: 10px 0 0 10px;
-    text-align: left;
-  }
-
-  /* Centramos la tabla en la página */
-  .table-container {
-    display: flex;
-    justify-content: center;
-  }

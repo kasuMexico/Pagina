@@ -122,6 +122,13 @@ section.dashboard-row {
     gap: 20px !important;
 }
 
+/* En móvil, una sola columna: IA arriba, KPIs debajo */
+@media (max-width: 768px) {
+  section.dashboard-row {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
 /* 4. Hero Card: 2 columnas fluidas (info izq, avatar der) */
 section.hero-card {
     display: grid !important;

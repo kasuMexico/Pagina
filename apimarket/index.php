@@ -362,6 +362,8 @@ Content-Type: application/json
   <script src="https://kasu.com.mx/assets/js/jquery-2.1.0.min.js" defer></script>
   <script src="https://kasu.com.mx/assets/js/bootstrap.min.js" defer></script>
   <script src="https://kasu.com.mx/assets/js/scrollreveal.min.js" defer></script>
+  <script src="https://kasu.com.mx/assets/js/waypoints.min.js" defer></script>
+  <script src="https://kasu.com.mx/assets/js/jquery.counterup.min.js" defer></script>
   <script src="https://kasu.com.mx/assets/js/custom.js" defer></script>
 </body>
 </html>

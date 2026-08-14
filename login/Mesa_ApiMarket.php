@@ -168,7 +168,8 @@ function api_admin_send_credentials_email(
     string $userAgent,
     array $apis,
     int $saldoInicial,
-    bool $isResend = false
+    bool $isResend = false,
+    string $xApiKey = ''
 ): void {
     $email = trim((string)($request['correo'] ?? ''));
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -188,6 +189,9 @@ function api_admin_send_credentials_email(
         $apisText = 'API Market KASU V1';
     }
     $saldoText = $saldoInicial > 0 ? api_access_centavos_to_money($saldoInicial) : 'No aplica';
+    $xApiKeyRow = $xApiKey !== ''
+        ? '<tr><td style="padding:10px;border-bottom:1px solid #dbe4ef;background:#f8fafc;font-weight:700">X-API-Key</td><td style="padding:10px;border-bottom:1px solid #dbe4ef"><code>' . h($xApiKey) . '</code></td></tr>'
+        : '';
     $tokenUrl = 'https://apimarket.kasu.com.mx/api/Token_Full';
     $docsUrl = 'https://apimarket.kasu.com.mx/';
     $title = $isResend ? 'Reenvío de credenciales API Market KASU' : 'Credenciales API Market KASU';
@@ -217,6 +221,7 @@ function api_admin_send_credentials_email(
                   <td style="padding:10px;border-bottom:1px solid #dbe4ef;background:#f8fafc;font-weight:700">User-Agent</td>
                   <td style="padding:10px;border-bottom:1px solid #dbe4ef"><code>' . h($userAgent) . '</code></td>
                 </tr>
+                ' . $xApiKeyRow . '
                 <tr>
                   <td style="padding:10px;border-bottom:1px solid #dbe4ef;background:#f8fafc;font-weight:700">APIs</td>
                   <td style="padding:10px;border-bottom:1px solid #dbe4ef">' . h($apisText) . '</td>
@@ -238,6 +243,7 @@ function api_admin_send_credentials_email(
         . "nombre_de_usuario: {$apiUser}\n"
         . "PRIVATE_KEY: {$privateKey}\n"
         . "User-Agent: {$userAgent}\n"
+        . ($xApiKey !== '' ? "X-API-Key: {$xApiKey}\n" : '')
         . "APIs: {$apisText}\n"
         . "Saldo Validate_Mexico: {$saldoText}\n\n"
         . "Token_Full: {$tokenUrl}\n"
@@ -286,7 +292,7 @@ try {
         }
 
         $action = (string)($_POST['action'] ?? '');
-        $managedActions = ['approve_request', 'deny_request', 'secret_status', 'add_wallet', 'resend_credentials'];
+        $managedActions = ['approve_request', 'deny_request', 'secret_status', 'add_wallet', 'resend_credentials', 'generate_api_key', 'revoke_api_key'];
         if (in_array($action, $managedActions, true) && !$canManageApis) {
             api_admin_redirect('No tienes permisos para modificar accesos API.');
         }
@@ -337,14 +343,17 @@ try {
 
             $userAgent = $secretUsuario . '_' . $secretId;
             $approvedApis = api_access_request_apis($request);
+            // Genera la X-API-Key automáticamente al aprobar (solo se guarda el hash).
+            $xApiKey = api_access_create_api_key($mysqli_api, $apiUser, 'Produccion');
             $mailError = '';
             try {
-                api_admin_send_credentials_email($request, $apiUser, $privateKey, $userAgent, $approvedApis, $saldoInicial);
+                api_admin_send_credentials_email($request, $apiUser, $privateKey, $userAgent, $approvedApis, $saldoInicial, false, $xApiKey);
                 $_SESSION['api_admin_flash_secret'] = [
                     'delivery' => 'email',
                     'email' => (string)($request['correo'] ?? ''),
                     'api_user' => $apiUser,
                     'user_agent' => $userAgent,
+                    'x_api_key' => $xApiKey,
                 ];
                 api_admin_redirect('Solicitud aprobada. Credenciales enviadas por correo.');
             } catch (Throwable $mailException) {
@@ -356,9 +365,10 @@ try {
                 'api_user' => $apiUser,
                 'private_key' => $privateKey,
                 'user_agent' => $userAgent,
+                'x_api_key' => $xApiKey,
                 'mail_error' => $mailError,
             ];
-            api_admin_redirect('Solicitud aprobada, pero no se pudo enviar el correo. Copia la credencial privada y entrégala por canal seguro.');
+            api_admin_redirect('Solicitud aprobada, pero no se pudo enviar el correo. Copia las credenciales y entrégala por canal seguro.');
         }
 
         if ($action === 'resend_credentials') {
@@ -421,6 +431,32 @@ try {
             api_access_add_wallet_balance($mysqli_api, $apiUser, $amount, $reason, (string)$_SESSION['Vendedor']);
             api_admin_redirect('Saldo agregado a Validate_Mexico.');
         }
+
+        if ($action === 'generate_api_key') {
+            // Se conserva el nombre exacto (case-sensitive) para que coincida
+            // con el nombre_de_usuario que envía el cliente en la petición.
+            $apiUser = trim((string)($_POST['api_user'] ?? ''));
+            if ($apiUser === '') {
+                api_admin_redirect('Usuario API inválido para generar la clave.');
+            }
+            $label = trim((string)($_POST['label'] ?? ''));
+            $plain = api_access_create_api_key($mysqli_api, $apiUser, $label);
+            $_SESSION['api_admin_flash_secret'] = [
+                'delivery' => 'x_api_key',
+                'api_user' => $apiUser,
+                'x_api_key' => $plain,
+            ];
+            api_admin_redirect('Clave X-API-Key generada. Se muestra una sola vez; entrégala por canal seguro.');
+        }
+
+        if ($action === 'revoke_api_key') {
+            $keyId = (int)($_POST['key_id'] ?? 0);
+            $stmt = $mysqli_api->prepare('UPDATE api_keys SET enabled = 0 WHERE id = ?');
+            $stmt->bind_param('i', $keyId);
+            $stmt->execute();
+            $stmt->close();
+            api_admin_redirect('Clave X-API-Key revocada.');
+        }
     }
 } catch (Throwable $e) {
     error_log('[Mesa_ApiMarket] ' . $e->getMessage());
@@ -457,6 +493,17 @@ $res = $mysqli_api->query('
 ');
 while ($row = $res->fetch_assoc()) {
     $wallets[] = $row;
+}
+
+$apiKeys = [];
+$res = $mysqli_api->query('
+    SELECT id, api_user, label, enabled, expires_at, last_used_at, created_at
+    FROM api_keys
+    ORDER BY id DESC
+    LIMIT 100
+');
+while ($row = $res->fetch_assoc()) {
+    $apiKeys[] = $row;
 }
 
 $msg = isset($_GET['Msg']) ? (string)$_GET['Msg'] : '';
@@ -522,13 +569,24 @@ $VerCache = time();
       <?php } ?>
 
       <?php if (is_array($flashSecret)) { ?>
-        <?php $mailDelivered = (($flashSecret['delivery'] ?? '') === 'email'); ?>
+        <?php
+          $delivery = (string)($flashSecret['delivery'] ?? 'fallback');
+          $mailDelivered = ($delivery === 'email');
+          $isApiKey = ($delivery === 'x_api_key');
+        ?>
         <div class="api-secret-box<?= $mailDelivered ? ' email-sent' : '' ?>">
           <?php if ($mailDelivered) { ?>
             <strong>Credenciales enviadas por correo.</strong>
             <p class="mb-1">Destino: <code><?= h($flashSecret['email'] ?? '') ?></code></p>
             <p class="mb-1">nombre_de_usuario: <code><?= h($flashSecret['api_user'] ?? '') ?></code></p>
-            <p class="mb-0">User-Agent: <code><?= h($flashSecret['user_agent'] ?? '') ?></code></p>
+            <p class="mb-1">User-Agent: <code><?= h($flashSecret['user_agent'] ?? '') ?></code></p>
+            <?php if ((string)($flashSecret['x_api_key'] ?? '') !== '') { ?>
+              <p class="mb-0">X-API-Key: <code><?= h($flashSecret['x_api_key'] ?? '') ?></code></p>
+            <?php } ?>
+          <?php } elseif ($isApiKey) { ?>
+            <strong>Clave X-API-Key generada. Se muestra UNA sola vez; entrégala por canal seguro.</strong>
+            <p class="mb-1">nombre_de_usuario: <code><?= h($flashSecret['api_user'] ?? '') ?></code></p>
+            <p class="mb-0">X-API-Key: <code><?= h($flashSecret['x_api_key'] ?? '') ?></code></p>
           <?php } else { ?>
             <strong>Credencial recién generada. Entrégala por canal seguro.</strong>
             <?php if ((string)($flashSecret['mail_error'] ?? '') !== '') { ?>
@@ -536,7 +594,10 @@ $VerCache = time();
             <?php } ?>
             <p class="mb-1">nombre_de_usuario: <code><?= h($flashSecret['api_user'] ?? '') ?></code></p>
             <p class="mb-1">PRIVATE_KEY: <code><?= h($flashSecret['private_key'] ?? '') ?></code></p>
-            <p class="mb-0">User-Agent: <code><?= h($flashSecret['user_agent'] ?? '') ?></code></p>
+            <p class="mb-1">User-Agent: <code><?= h($flashSecret['user_agent'] ?? '') ?></code></p>
+            <?php if ((string)($flashSecret['x_api_key'] ?? '') !== '') { ?>
+              <p class="mb-0">X-API-Key: <code><?= h($flashSecret['x_api_key'] ?? '') ?></code></p>
+            <?php } ?>
           <?php } ?>
         </div>
       <?php } ?>
@@ -663,6 +724,48 @@ $VerCache = time();
                 </td>
               </tr>
               <?php } ?>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="api-admin-card mt-3">
+        <h5>Claves X-API-Key</h5>
+        <p class="text-muted mb-2">Genera una clave de alta entropía (se guarda solo su hash) y entrégala una sola vez por canal seguro. Revoca para deshabilitar acceso.</p>
+        <form method="post" class="form-inline mb-3">
+          <input type="hidden" name="csrf" value="<?= h($_SESSION['csrf_api_admin']) ?>">
+          <input type="hidden" name="action" value="generate_api_key">
+          <input class="form-control form-control-sm mr-2 mb-2" name="api_user" placeholder="nombre_de_usuario exacto" maxlength="50" required>
+          <input class="form-control form-control-sm mr-2 mb-2" name="label" placeholder="Etiqueta (ej. Produccion)" maxlength="120">
+          <button class="btn btn-success btn-sm mb-2" type="submit">Generar clave</button>
+        </form>
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr><th>ID</th><th>Usuario API</th><th>Etiqueta</th><th>Estado</th><th>Expira</th><th>Último uso</th><th>Acción</th></tr>
+            </thead>
+            <tbody>
+              <?php foreach ($apiKeys as $key) { ?>
+              <tr>
+                <td><?= (int)$key['id'] ?></td>
+                <td><code><?= h($key['api_user']) ?></code></td>
+                <td><?= h($key['label'] ?? '') ?></td>
+                <td><?= (int)$key['enabled'] === 1 ? 'ACTIVA' : 'REVOCADA' ?></td>
+                <td><?= h($key['expires_at'] ?? '—') ?></td>
+                <td><?= h($key['last_used_at'] ?? '—') ?></td>
+                <td>
+                  <?php if ((int)$key['enabled'] === 1) { ?>
+                  <form method="post" class="api-actions">
+                    <input type="hidden" name="csrf" value="<?= h($_SESSION['csrf_api_admin']) ?>">
+                    <input type="hidden" name="action" value="revoke_api_key">
+                    <input type="hidden" name="key_id" value="<?= (int)$key['id'] ?>">
+                    <button class="btn btn-outline-danger btn-sm" type="submit">Revocar</button>
+                  </form>
+                  <?php } ?>
+                </td>
+              </tr>
+              <?php } ?>
+              <?php if (!$apiKeys) { ?><tr><td colspan="7" class="text-muted">No hay claves X-API-Key registradas.</td></tr><?php } ?>
             </tbody>
           </table>
         </div>

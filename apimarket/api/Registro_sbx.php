@@ -14,6 +14,17 @@ require_once __DIR__ . '/../librerias_api.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
+// GUARDIA DE ENTORNO: Abortar si no estamos explícitamente en el sandbox.
+// Va después de librerias_api.php para que getenv() lea APIMARKET_ENV del .env.
+if (getenv('APIMARKET_ENV') !== 'sandbox') {
+    http_response_code(403);
+    header('Content-Type: application/json; charset=utf-8');
+    exit(json_encode([
+        'error'   => 'Forbidden',
+        'message' => 'El entorno de pruebas (sandbox) no está habilitado.',
+    ], JSON_UNESCAPED_UNICODE));
+}
+
 try {
     api_security_headers();
     api_rate_limit('sandbox:' . api_client_ip(), 10, 60);

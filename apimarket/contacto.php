@@ -18,11 +18,9 @@ if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
   exit;
 }
 
-/* === CSRF === */
-$csrf_ok = true;
-if (isset($_POST['csrf'], $_SESSION['csrf_auth'])) {
-  $csrf_ok = hash_equals((string)$_SESSION['csrf_auth'], (string)$_POST['csrf']);
-}
+/* === CSRF (fail-closed: si el token falta, se rechaza) === */
+$csrf_ok = isset($_POST['csrf'], $_SESSION['csrf_auth'])
+    && hash_equals((string)$_SESSION['csrf_auth'], (string)$_POST['csrf']);
 
 /* === Mensaje por defecto === */
 $Msg = 'Error al contactarnos, intenta más tarde';

@@ -68,6 +68,18 @@ if (!function_exists('api_bearer_token')) {
     }
 }
 
+if (!function_exists('api_x_api_key')) {
+    function api_x_api_key(): string
+    {
+        $header = $_SERVER['HTTP_X_API_KEY'] ?? '';
+        if ($header === '' && function_exists('getallheaders')) {
+            $headers = getallheaders();
+            $header = $headers['X-API-Key'] ?? $headers['x-api-key'] ?? '';
+        }
+        return trim((string)$header);
+    }
+}
+
 if (!function_exists('api_client_ip')) {
     function api_client_ip(): string
     {
@@ -787,9 +799,52 @@ if (!function_exists('api_token_verify')) {
     }
 }
 
+if (!function_exists('api_validate_x_api_key_or_exit')) {
+    function api_validate_x_api_key_or_exit(mysqli $db, array $data, string $xApiKey, string $apiKey = ''): array
+    {
+        global $mysqli_api;
+        if (!($mysqli_api instanceof mysqli)) {
+            api_error(500, 'Conexion apimarket no disponible para validar X-API-Key');
+        }
+        $resolved = api_access_resolve_api_key($mysqli_api, $xApiKey);
+        if ($resolved === null) {
+            api_error(401, 'X-API-Key invalida o inactiva');
+        }
+        $user = (string)$resolved['api_user'];
+
+        // Coherencia: si el payload trae nombre_de_usuario, debe coincidir con la clave.
+        $payloadUser = trim((string)($data['nombre_de_usuario'] ?? ''));
+        if ($payloadUser !== '' && $payloadUser !== $user) {
+            api_error(403, 'X-API-Key no corresponde al nombre_de_usuario');
+        }
+
+        if ($apiKey !== '') {
+            if (function_exists('api_access_has_grant') && !api_access_has_grant($mysqli_api, $user, $apiKey)) {
+                api_error(403, 'Usuario API sin permiso para ' . $apiKey);
+            }
+        }
+
+        return [
+            'usuario' => $user,
+            'usr_agent_key' => '',
+            'secret_key' => '',
+            'token' => '',
+            'auth_method' => 'x_api_key',
+        ];
+    }
+}
+
 if (!function_exists('api_validate_bearer_or_exit')) {
     function api_validate_bearer_or_exit(mysqli $db, array $data, string $apiKey = ''): array
     {
+        // Flujo nuevo: X-API-Key (alta entropia, hasheada en api_keys).
+        // Tiene precedencia sobre el flujo legacy Bearer + User-Agent.
+        $xApiKey = api_x_api_key();
+        if ($xApiKey !== '') {
+            return api_validate_x_api_key_or_exit($db, $data, $xApiKey, $apiKey);
+        }
+
+        // Flujo legacy: Bearer token + User-Agent.
         $token = api_bearer_token();
         if ($token === '') {
             api_error(401, 'Falta Authorization: Bearer');

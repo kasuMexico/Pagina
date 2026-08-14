@@ -125,6 +125,24 @@ if (!function_exists('api_access_schema')) {
                 KEY idx_api_wallet_movs_sub (subdistribuidor_id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
+
+        $db->query("
+            CREATE TABLE IF NOT EXISTS api_keys (
+                id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                api_user VARCHAR(50) NOT NULL,
+                key_hash CHAR(64) NOT NULL,
+                label VARCHAR(120) DEFAULT NULL,
+                enabled TINYINT(1) NOT NULL DEFAULT 1,
+                expires_at DATETIME NULL DEFAULT NULL,
+                last_used_at DATETIME NULL DEFAULT NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                UNIQUE KEY uq_api_keys_hash (key_hash),
+                KEY idx_api_keys_user (api_user),
+                KEY idx_api_keys_enabled (enabled)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
     }
 }
 
@@ -229,13 +247,19 @@ if (!function_exists('api_access_sync_grants')) {
 if (!function_exists('api_access_has_grant')) {
     function api_access_has_grant(?mysqli $db, string $apiUser, string $apiKey): bool
     {
-        if (!$db instanceof mysqli || $apiKey === '' || $apiUser === '') {
-            return true;
+        // Fail-closed: si no se puede verificar un grant explicito, se DENIEGA.
+        if (!$db instanceof mysqli) {
+            error_log('[API_ACCESS_GRANT] Conexion apimarket no disponible; acceso denegado.');
+            return false;
+        }
+        if ($apiKey === '' || $apiUser === '') {
+            return false;
         }
         try {
             $exists = $db->query("SHOW TABLES LIKE 'api_access_grants'");
             if (!$exists || $exists->num_rows === 0) {
-                return true;
+                error_log('[API_ACCESS_GRANT] Tabla api_access_grants inexistente; acceso denegado.');
+                return false;
             }
 
             $stmt = $db->prepare('SELECT COUNT(*) AS total FROM api_access_grants WHERE api_user = ?');
@@ -244,7 +268,9 @@ if (!function_exists('api_access_has_grant')) {
             $row = $stmt->get_result()->fetch_assoc();
             $stmt->close();
             if ((int)($row['total'] ?? 0) === 0) {
-                return true;
+                // Sin grants registrados para el usuario -> denegar (fail-closed).
+                error_log('[API_ACCESS_GRANT] Usuario sin grants registrados: ' . $apiUser);
+                return false;
             }
 
             $stmt = $db->prepare('SELECT enabled FROM api_access_grants WHERE api_user = ? AND api_key = ? LIMIT 1');
@@ -255,7 +281,7 @@ if (!function_exists('api_access_has_grant')) {
             return $grant && (int)$grant['enabled'] === 1;
         } catch (Throwable $e) {
             error_log('[API_ACCESS_GRANT] ' . $e->getMessage());
-            return true;
+            return false;
         }
     }
 }
@@ -430,5 +456,63 @@ if (!function_exists('api_access_add_wallet_balance')) {
             $db->rollback();
             throw $e;
         }
+    }
+}
+
+if (!function_exists('api_access_resolve_api_key')) {
+    /**
+     * Resuelve una X-API-Key de alta entropia contra api_keys (por hash).
+     * Retorna ['api_user' => ...] si la clave es valida y esta habilitada,
+     * o null en cualquier otro caso (fail-closed). Nunca guarda la clave en claro.
+     */
+    function api_access_resolve_api_key(mysqli $db, string $apiKey): ?array
+    {
+        $apiKey = trim($apiKey);
+        if ($apiKey === '' || strlen($apiKey) < 32) {
+            return null;
+        }
+        $hash = hash('sha256', $apiKey);
+        try {
+            $stmt = $db->prepare('SELECT api_user, enabled, expires_at FROM api_keys WHERE key_hash = ? LIMIT 1');
+            $stmt->bind_param('s', $hash);
+            $stmt->execute();
+            $row = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+            if (!$row) {
+                return null;
+            }
+            if ((int)$row['enabled'] !== 1) {
+                return null;
+            }
+            if (!empty($row['expires_at']) && strtotime((string)$row['expires_at']) < time()) {
+                return null;
+            }
+            // Best-effort: marcar uso (no falla la validacion si esto falla).
+            $stmt = $db->prepare('UPDATE api_keys SET last_used_at = NOW() WHERE key_hash = ?');
+            $stmt->bind_param('s', $hash);
+            $stmt->execute();
+            $stmt->close();
+            return ['api_user' => (string)$row['api_user']];
+        } catch (Throwable $e) {
+            error_log('[API_ACCESS_KEY] ' . $e->getMessage());
+            return null;
+        }
+    }
+}
+
+if (!function_exists('api_access_create_api_key')) {
+    /**
+     * Genera una X-API-Key para un usuario API y guarda SOLO su hash.
+     * Retorna la clave en claro UNA sola vez (para entregar por canal seguro).
+     */
+    function api_access_create_api_key(mysqli $db, string $apiUser, string $label = ''): string
+    {
+        $plain = bin2hex(random_bytes(32)); // 64 hex
+        $hash  = hash('sha256', $plain);
+        $stmt = $db->prepare('INSERT INTO api_keys (api_user, key_hash, label, enabled) VALUES (?, ?, ?, 1)');
+        $stmt->bind_param('sss', $apiUser, $hash, $label);
+        $stmt->execute();
+        $stmt->close();
+        return $plain;
     }
 }

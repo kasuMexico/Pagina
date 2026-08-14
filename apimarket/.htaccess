@@ -15,6 +15,11 @@ RewriteEngine On
   Require all denied
 </FilesMatch>
 
+# Bloquear archivos sensibles (logs, reportes, variables de entorno, documentacion interna)
+<FilesMatch "\.(log|txt|env|md|sql)$">
+  Require all denied
+</FilesMatch>
+
 # Bloquear listado de directorios
 <IfModule mod_autoindex.c>
   Options -Indexes
@@ -27,6 +32,10 @@ RewriteEngine On
   Header set Referrer-Policy "strict-origin-when-cross-origin"
   Header always unset X-Powered-By
 </IfModule>
+
+# Bloquear acceso web directo al directorio de helpers/funciones (relativo y portable).
+# ^Funciones/ aplica tanto en kasu.com.mx/apimarket/ como en apimarket.kasu.com.mx/.
+RewriteRule ^Funciones/ - [F,L]
 
 # Reglas de enrutamiento para metadatos e imagenes NFT (DEBEN ir antes de la regla generica .php)
 # /api/nft/metadata/1156 o /api/nft/metadata/1156.json -> /api/nft/metadata.php?id=1156

@@ -666,7 +666,14 @@ try {
     ], 200);
   }
 
-  // Admin endpoints (si decides habilitarlos por permisos más adelante)
+  // Admin endpoints: exigen un grant operativo explicito (Validate_Mexico:admin).
+  // Sin ese grant, cualquier usuario API (aun con Bearer valido) queda fuera.
+  if ($metodo === 'upstream_saldo' || $metodo === 'upstream_peticiones') {
+    if (!api_access_has_grant($mysqli_api, $usuario, 'Validate_Mexico:admin')) {
+      jout(['ok'=>false,'error'=>'Permiso insuficiente para operacion upstream'], 403);
+    }
+  }
+
   if ($metodo === 'upstream_saldo') {
     [$u, $p] = conectame_creds();
     $client = conectame_client();

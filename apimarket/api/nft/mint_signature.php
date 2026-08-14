@@ -23,7 +23,13 @@ header('Content-Type: application/json; charset=utf-8');
 // ============================================================================
 $inputData = json_decode(file_get_contents('php://input'), true) ?? $_REQUEST;
 $apiKey    = $inputData['api_key'] ?? $_SERVER['HTTP_X_KASU_KEY'] ?? '';
-$adminKey  = getenv('KASU_INTERNAL_API_KEY') ?: 'CLAVE_INTERNA_KASU_123';
+$adminKey  = getenv('KASU_INTERNAL_API_KEY') ?: '';
+
+if ($adminKey === '') {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Configuracion interna incompleta: falta KASU_INTERNAL_API_KEY.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 if (!hash_equals($adminKey, $apiKey)) {
     http_response_code(401);

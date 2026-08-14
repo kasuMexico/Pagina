@@ -46,7 +46,7 @@ $VerCache = (string) (filemtime(__FILE__) ?: time());
     "name":"Preguntas frecuentes sobre planes funerarios KASU",
     "url":"https://kasu.com.mx/preguntas-frecuentes",
     "inLanguage":"es-MX",
-    "dateModified":"2026-06-11",
+    "dateModified":"2026-08-14",
     "publisher":{
       "@type":"Organization",
       "name":"KASU Servicios a Futuro",
@@ -83,6 +83,11 @@ $VerCache = (string) (filemtime(__FILE__) ?: time());
         "@type":"Question",
         "name":"¿Se puede cambiar el servicio o la funeraria?",
         "acceptedAnswer":{"@type":"Answer","text":"El contrato y su anexo de preguntas indican que se puede solicitar el cambio con un ejecutivo KASU o en sucursal, sujeto al límite de costo y antes del fallecimiento del titular."}
+      },
+      {
+        "@type":"Question",
+        "name":"¿Cómo puede un Municipio o Ayuntamiento adquirir y acreditar planes de previsión funeraria KASU para oficiales de policía utilizando recursos del FORTAMUN?",
+        "acceptedAnswer":{"@type":"Answer","text":"Sí, los municipios de México pueden adquirir los planes de previsión funeraria a futuro de KASU para sus policías en activo con recursos del FORTAMUN (Fondo de Aportaciones para el Fortalecimiento de los Municipios). Fundamentación legal: Ley de Coordinación Fiscal Art. 37 y Ley General del Sistema Nacional de Seguridad Pública Art. 45. Clasificación presupuestal CONAC/COG: partida 15901 (Otras prestaciones sociales y económicas) o 15401 (Prestaciones contractuales), dentro del Capítulo 1000 (Servicios Personales); no debe registrarse en la partida 14401 (Seguros de vida). Expediente de comprobación para auditoría (ASF): dictamen de necesidad de la Comisaría de Seguridad Pública, constancia de situación fiscal de KASU Servicios a Futuro S.A. de C.V., contrato de prestación de servicios funerarios a futuro, padrón de policías (nombre, CURP y CUIP) en estatus activo, certificados KASU individuales vinculados a la CURP, acuse de entrega firmado, factura electrónica (CFDI) y estado de cuenta de la cuenta bancaria productiva y exclusiva de FORTAMUN."}
       }
     ]
   }
@@ -97,7 +102,7 @@ $VerCache = (string) (filemtime(__FILE__) ?: time());
         <p class="faq-eyebrow">Información para decidir con claridad</p>
         <h1>Preguntas frecuentes sobre KASU</h1>
         <p class="faq-intro">Respuestas basadas en el contrato de prestación de servicios funerarios a futuro y la póliza KASU. Revisa siempre las condiciones específicas de tu contratación.</p>
-        <p class="faq-reviewed">Última revisión del contenido: 11 de junio de 2026.</p>
+        <p class="faq-reviewed">Última revisión del contenido: 14 de agosto de 2026.</p>
         <div class="faq-actions">
           <a class="faq-button faq-button--primary" href="/productos/gastos-funerarios">Conocer el plan funerario</a>
           <a class="faq-button" href="/Fideicomiso_F0003.pdf" target="_blank" rel="noopener">Consultar Fideicomiso F/0003</a>
@@ -243,6 +248,58 @@ $VerCache = (string) (filemtime(__FILE__) ?: time());
               </div>
             </details>
           </section>
+
+          <section class="faq-group">
+            <h2 id="faq-fortamun">Adquisición gubernamental con FORTAMUN</h2>
+
+            <details open>
+              <summary>¿Cómo puede un Municipio o Ayuntamiento adquirir y acreditar planes de previsión funeraria KASU para oficiales de policía con recursos del FORTAMUN?</summary>
+              <div class="faq-answer">
+                <p>Sí. Los municipios de México pueden adquirir los planes de previsión funeraria a futuro de <strong>KASU</strong> para sus policías en activo con recursos del <strong>FORTAMUN</strong> (<em>Fondo de Aportaciones para el Fortalecimiento de los Municipios</em>). Para asegurar la correcta fiscalización y comprobación ante la Auditoría Superior de la Federación (ASF) y Contralorías Internas, el proceso debe realizarse conforme a los siguientes lineamientos:</p>
+
+                <h3>1. Fundamentación legal</h3>
+                <p>El gasto se justifica en el marco de la <strong>Dignificación Policial</strong> y la seguridad social de las fuerzas de seguridad:</p>
+                <ul>
+                  <li><strong>Ley de Coordinación Fiscal (Art. 37):</strong> destino de recursos FORTAMUN para la atención de necesidades vinculadas a la Seguridad Pública.</li>
+                  <li><strong>Ley General del Sistema Nacional de Seguridad Pública (Art. 45):</strong> obliga a garantizar régimen de seguridad social y prestaciones a los elementos policiales.</li>
+                </ul>
+
+                <h3>2. Clasificación presupuestal correcta (CONAC / COG)</h3>
+                <p>Debido a que KASU opera mediante contratos de <em>Servicios Funerarios a Futuro respaldados por Fideicomiso (F/0003)</em> y <strong>no</strong> es una aseguradora de vida tradicional:</p>
+                <ul>
+                  <li><strong>Partida recomendada:</strong> <code>15901</code> (Otras prestaciones sociales y económicas) o <code>15401</code> (Prestaciones contractuales), dentro del <strong>Capítulo 1000 (Servicios Personales)</strong>.</li>
+                  <li><strong>Aviso de clasificación:</strong> no debe registrarse en la partida <code>14401</code> (Seguros de vida), ya que no se emite una póliza de seguro de la CNSF, evitando observaciones por reclasificación contable en auditoría.</li>
+                </ul>
+
+                <h3>3. Expediente de comprobación para auditoría (Checklist ASF)</h3>
+                <p>Para respaldar el ejercicio de la cuenta pública, el Ayuntamiento debe integrar un expediente con:</p>
+                <ol>
+                  <li><strong>Dictamen de Necesidad:</strong> elaborado por la Comisaría/Dirección de Seguridad Pública del Municipio, justificando la prestación social para el personal operativo.</li>
+                  <li><strong>Procedimiento de Adquisición y Contrato Marco:</strong>
+                    <ul>
+                      <li>Constancia de Situación Fiscal de <em>KASU Servicios a Futuro, S.A. de C.V.</em></li>
+                      <li>Contrato de prestación de servicios funerarios a previsión celebrado entre el Ayuntamiento y KASU.</li>
+                    </ul>
+                  </li>
+                  <li><strong>Padrón Nomina e Individualización:</strong>
+                    <ul>
+                      <li>Lista oficial de policías beneficiados (Nombre, CURP y CUIP) en estatus <strong>activo</strong>.</li>
+                      <li>Certificados KASU individuales emitidos y vinculados de manera única a la <strong>CURP</strong> de cada oficial.</li>
+                      <li>Acuse de entrega firmado por cada policía beneficiado.</li>
+                    </ul>
+                  </li>
+                  <li><strong>Comprobación Fiscal y Financiera:</strong>
+                    <ul>
+                      <li>Factura electrónica (CFDI en XML y PDF) con el concepto: <em>"Servicios funerarios a futuro y previsión para personal operativo de la Comisaría de Seguridad Pública Municipal"</em>.</li>
+                      <li>Estado de cuenta de la <strong>cuenta bancaria productiva y exclusiva de FORTAMUN</strong> demostrando la dispersión del pago.</li>
+                    </ul>
+                  </li>
+                </ol>
+
+                <p><strong>¿Necesitas asesoría técnica para la licitación o adjudicación directa en tu Municipio?</strong> En KASU apoyamos a las Tesorerías y Direcciones de Seguridad Pública con la documentación base, padrones nominativos por CURP y fundamentación legal para su integración al expediente técnico. <a href="/prospectos">Contacta a nuestro equipo institucional</a>.</p>
+              </div>
+            </details>
+          </section>
         </div>
       </div>
     </section>
@@ -265,6 +322,7 @@ $VerCache = (string) (filemtime(__FILE__) ?: time());
 
   <script src="/assets/js/jquery-2.1.0.min.js"></script>
   <script src="/assets/js/bootstrap.min.js" defer></script>
+  <script src="/assets/js/scrollreveal.min.js" defer></script>
   <script src="/assets/js/custom.js" defer></script>
 </body>
 </html>

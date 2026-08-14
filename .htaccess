@@ -159,6 +159,11 @@ ErrorDocument 404 /error.php
   <FilesMatch "\.(?:css|js|mjs|json|svg|woff2?)$">
     Header set Cache-Control "public, max-age=2592000, immutable"
   </FilesMatch>
+
+  # CORS para fuentes web (permite carga cross-origin desde subdominios)
+  <FilesMatch "\.(?:woff2?|ttf|otf|eot|svg)$">
+    Header set Access-Control-Allow-Origin "*"
+  </FilesMatch>
 </IfModule>
 # Bloquear archivos sensibles
 <Files ".env">

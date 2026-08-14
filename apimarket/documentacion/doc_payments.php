@@ -22,7 +22,7 @@ require_once '../librerias_api.php';
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="description" content="Documentación API_PAYMENTS V1 para consultar estado de cuenta y registrar pagos PSD2.">
   <meta name="author" content="Jose Carlos cabrera Monroy">
-  <link rel="stylesheet" type="text/css" href="/assets/css/fonts.css">
+  <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/fonts.css">
   <link rel="icon" href="https://kasu.com.mx/assets/images/Index/florkasu.png">
   <title>KASU | API_PAYMENTS</title>
 

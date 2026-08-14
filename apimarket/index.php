@@ -120,7 +120,7 @@ if (isset($_GET['Msg'])) {
   <link rel="icon" href="https://kasu.com.mx/assets/images/Index/florkasu.png">
 
   <!-- Fuentes -->
-  <link rel="stylesheet" type="text/css" href="/assets/css/fonts.css">
+  <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/fonts.css">
 
   <!-- CSS externo + local -->
   <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/bootstrap.min.css">

@@ -51,7 +51,7 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Documentación API_ACCOUNTS V1 para registrar servicios KASU, generar póliza y liga de pago.">
     <meta name="author" content="Jose Carlos Cabrera Monroy">
-    <link rel="stylesheet" type="text/css" href="/assets/css/fonts.css">
+    <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/fonts.css">
     <link rel="icon" href="https://kasu.com.mx/assets/images/Index/florkasu.png">
     <title>KASU | API_ACCOUNTS</title>
 

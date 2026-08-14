@@ -56,7 +56,7 @@ if (isset($mysqli) && ($mysqli instanceof mysqli)) {
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="Documentación API_CUSTOMER V1 para consultar clientes, catálogo de productos y ventas autorizadas.">
     <meta name="author" content="Jose Carlos Cabrera Monroy">
-    <link rel="stylesheet" type="text/css" href="/assets/css/fonts.css">
+    <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/fonts.css">
     <link rel="icon" href="https://kasu.com.mx/assets/images/Index/florkasu.png">
     <title>KASU | API_CUSTOMER</title>
 

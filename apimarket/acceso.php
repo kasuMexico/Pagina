@@ -182,7 +182,7 @@ $msg = isset($_GET['Msg']) ? (string)$_GET['Msg'] : '';
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Acceso API Market KASU</title>
-  <link rel="stylesheet" type="text/css" href="/assets/css/fonts.css">
+  <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/fonts.css">
   <link rel="icon" href="https://kasu.com.mx/assets/images/Index/florkasu.png">
   <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/bootstrap.min.css">
   <link rel="stylesheet" type="text/css" href="https://kasu.com.mx/assets/css/font-awesome.css">

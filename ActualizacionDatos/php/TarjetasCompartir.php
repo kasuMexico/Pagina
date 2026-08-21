@@ -35,7 +35,7 @@ function comisionPorProducto(mysqli $db, string $producto, float $porcentaje): f
 /** URLs de share por red */
 function buildShare(array $reg, string $idFirma): array {
   $payload = (string)($reg['Id'] ?? '') . '|' . $idFirma;
-  $dest = 'https://kasu.com.mx/constructor.php?datafb=' . base64_encode($payload);
+  $dest = 'https://kasu.com.mx/constructor.php?datafb=' . base64_encode($payload) . '&v=3';
   $tit  = (string)($reg['TitA'] ?? '');
   $txt  = (string)($reg['DesA'] ?? '');
 

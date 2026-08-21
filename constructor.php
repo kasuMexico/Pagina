@@ -99,10 +99,29 @@ $img = ($Reg['Tipo']==='Art')
       ? "https://kasu.com.mx/assets/images/cupones/".ltrim($Reg['Img'],'/')
       : (string)($Reg['Img'] ?? ''));
 
+// Dimensiones reales de la imagen (para og:image:width/height)
+$imgW = $imgH = null;
+if ($img !== '') {
+  $imgLocal = null;
+  if (preg_match('~^https?://kasu\.com\.mx/assets/images/cupones/(.+)$~i', (string)$img, $m)) {
+    $imgLocal = __DIR__ . '/assets/images/cupones/' . ltrim($m[1], '/');
+  } elseif (!preg_match('~^https?://~i', (string)$img)) {
+    $imgLocal = __DIR__ . '/assets/images/cupones/' . ltrim((string)$img, '/');
+  }
+  if ($imgLocal && is_file($imgLocal)) {
+    $dims = @getimagesize($imgLocal);
+    if ($dims) {
+      $imgW = (int)$dims[0];
+      $imgH = (int)$dims[1];
+    }
+  }
+}
+
 $titulo = htmlspecialchars((string)($Reg['TitA'] ?? 'KASU'), ENT_QUOTES, 'UTF-8');
 $descr  = htmlspecialchars((string)($Reg['DesA'] ?? ''),   ENT_QUOTES, 'UTF-8');
 $dest   = (string)($Reg['Dire'] ?? 'https://www.kasu.com.mx');
-$self   = 'https://kasu.com.mx/constructor.php?datafb='.rawurlencode($datafb);
+$selfQuery = (string)($_SERVER['QUERY_STRING'] ?? ('datafb=' . rawurlencode($datafb)));
+$self   = 'https://kasu.com.mx/constructor.php' . ($selfQuery !== '' ? '?' . $selfQuery : '');
 
 $ua = strtolower((string)($_SERVER['HTTP_USER_AGENT'] ?? ''));
 $isBot = (bool)preg_match('/facebookexternalhit|twitterbot|linkedinbot|slackbot|whatsapp|telegram|bot|crawler|spider/i',$ua);
@@ -127,6 +146,10 @@ $isBot = (bool)preg_match('/facebookexternalhit|twitterbot|linkedinbot|slackbot|
   <meta property="og:title" content="<?= $titulo ?>">
   <meta property="og:description" content="<?= $descr ?>">
   <meta property="og:image" content="<?= htmlspecialchars($img,ENT_QUOTES) ?>">
+  <?php if ($imgW && $imgH): ?>
+  <meta property="og:image:width" content="<?= $imgW ?>">
+  <meta property="og:image:height" content="<?= $imgH ?>">
+  <?php endif; ?>
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="<?= $titulo ?>">
   <meta name="twitter:description" content="<?= $descr ?>">
@@ -154,7 +177,7 @@ $isBot = (bool)preg_match('/facebookexternalhit|twitterbot|linkedinbot|slackbot|
         <h1 class="t"><?= $titulo ?></h1>
         <p class="d"><?= $descr ?></p>
       </div>
-      <a class="cta" href="<?= htmlspecialchars($dest,ENT_QUOTES) ?>" style="display: none;">Abrir</a>
+      <a class="cta" href="<?= htmlspecialchars($dest,ENT_QUOTES) ?>">Abrir</a>
       <p class="hint" style="text-align: center">Te estamos redirigiendo a la pagina .</p>
     </article>
   </div>
@@ -234,8 +257,6 @@ $isBot = (bool)preg_match('/facebookexternalhit|twitterbot|linkedinbot|slackbot|
     document.addEventListener('DOMContentLoaded', waitFP);
   })();
   </script>
-  <?php else: ?>
-  <noscript><meta http-equiv="refresh" content="2;url=<?= htmlspecialchars($dest,ENT_QUOTES) ?>"></noscript>
   <?php endif; ?>
 </body>
 </html>

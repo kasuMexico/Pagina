@@ -69,7 +69,7 @@ function comisionPorProducto(mysqli $db, string $producto, float $porcentaje): f
  * ========================================================================================== */
 function buildShareEmpleado(array $reg, string $idVendedor): array {
   $payload = (string)($reg['Id'] ?? '') . '|' . $idVendedor; // <- se registra en constructor.php como IdUsr
-  $dest = 'https://kasu.com.mx/constructor.php?datafb=' . base64_encode($payload);
+  $dest = 'https://kasu.com.mx/constructor.php?datafb=' . base64_encode($payload) . '&v=3';
 
   $tit = (string)($reg['TitA'] ?? '');
   $txt = (string)($reg['DesA'] ?? '');

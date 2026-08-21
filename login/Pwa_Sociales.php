@@ -80,6 +80,7 @@ function buildShareEmpleado(array $reg, string $idVendedor): array {
     'fb'   => 'https://www.facebook.com/sharer/sharer.php?u=' . rawurlencode($dest),
     'x'    => 'https://twitter.com/intent/tweet?text=' . rawurlencode($tx) . '&url=' . rawurlencode($dest),
     'li'   => 'https://www.linkedin.com/sharing/share-offsite/?url=' . rawurlencode($dest),
+    'wa'   => 'https://wa.me/?text=' . rawurlencode($tx . ' ' . $dest),
   ];
 }
 
@@ -192,6 +193,10 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
                 target="_blank" rel="external noopener noreferrer" aria-label="Compartir en LinkedIn">
                 <img class="ico-social" src="/login/assets/img/sociales/LinkedIn.png" alt="LinkedIn">
               </a>
+              <a href="<?= htmlspecialchars($share['wa'], ENT_QUOTES) ?>"
+                target="_blank" rel="external noopener noreferrer" aria-label="Compartir en WhatsApp">
+                <img class="ico-social" src="/login/assets/img/sociales/whatsapp.svg" alt="WhatsApp">
+              </a>
             </div>
             <div class="social-meta">
               <div class="pill">Comisión por compra · $<?= number_format($Comis, 2) ?></div>
@@ -233,6 +238,9 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
               </a>
               <a href="<?= htmlspecialchars($share['li'], ENT_QUOTES) ?>" target="_blank" rel="noopener" aria-label="Compartir en LinkedIn">
                 <img class="ico-social" src="/login/assets/img/sociales/LinkedIn.png" alt="LinkedIn">
+              </a>
+              <a href="<?= htmlspecialchars($share['wa'], ENT_QUOTES) ?>" target="_blank" rel="noopener" aria-label="Compartir en WhatsApp">
+                <img class="ico-social" src="/login/assets/img/sociales/whatsapp.svg" alt="WhatsApp">
               </a>
               <a href="#" onclick="shareInstagram('<?= htmlspecialchars($share['dest'], ENT_QUOTES) ?>');return false;" aria-label="Compartir en Instagram">
                 <img class="ico-social" src="/login/assets/img/sociales/instagram.png" alt="Instagram">

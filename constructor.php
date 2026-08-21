@@ -17,6 +17,7 @@ if (($_POST['action'] ?? '') === 'log') {
   $canal = 'direct';
   if (strpos($qstr,'fbclid=')!==false || str_contains($ref,'facebook') || str_contains($ua,'facebook')) $canal='facebook';
   elseif (str_contains($qstr,'li_fat_id=') || str_contains($ref,'linkedin') || str_contains($ua,'linkedin')) $canal='linkedin';
+  elseif (str_contains($ref,'whatsapp') || str_contains($ua,'whatsapp') || str_contains($qstr,'wa_lid=')) $canal='whatsapp';
   elseif (str_contains($ref,'t.co') || str_contains($ref,'twitter') || str_contains($ua,'twitter')) $canal='twitter';
 
   // 1) FingerPrint idempotente
@@ -126,8 +127,6 @@ $isBot = (bool)preg_match('/facebookexternalhit|twitterbot|linkedinbot|slackbot|
   <meta property="og:title" content="<?= $titulo ?>">
   <meta property="og:description" content="<?= $descr ?>">
   <meta property="og:image" content="<?= htmlspecialchars($img,ENT_QUOTES) ?>">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="<?= $titulo ?>">
   <meta name="twitter:description" content="<?= $descr ?>">

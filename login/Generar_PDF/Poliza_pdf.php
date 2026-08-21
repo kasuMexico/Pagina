@@ -117,6 +117,7 @@ try {
     // ===== Render HTML =====
     ob_start();
     require __DIR__ . '/html/Poliza_Servicio.php';
+/** @var mysqli $mysqli */
     $html = (string)ob_get_clean();
     if ($html === '') {
         throw new RuntimeException('El template Poliza_Servicio.php no produjo salida.');

@@ -41,6 +41,7 @@ try {
 
     // ===== Dependencias de tu app
     require_once '../../eia/librerias.php'; // Debe exponer $mysqli y clases Basicas/Financieras
+/** @var mysqli $mysqli */
 
     // ===== Entrada
     if (!isset($_GET['busqueda'])) {

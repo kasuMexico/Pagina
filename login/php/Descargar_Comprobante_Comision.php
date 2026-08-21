@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__, 2) . '/eia/session.php';
 kasu_session_start();
 require_once dirname(__DIR__, 2) . '/eia/librerias.php';
+/** @var mysqli $mysqli */
 require_once __DIR__ . '/mesa_helpers.php';
 
 if (empty($_SESSION['Vendedor'])) {

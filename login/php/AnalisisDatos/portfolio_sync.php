@@ -47,6 +47,7 @@ $dbPass = getenv('DB_PASS') ?: ';9Ai!5;G0QU';      // <-- pon tu pass si no est�
 $dbPort = getenv('DB_PORT') ?: '3306';
 
 // Si librerias.php ya trae credenciales en variables, puedes mapearlas aquí.
+/** @var mysqli $mysqli */
 // Ejemplo típico (ajusta si aplica en tu proyecto):
 // $dbName = $dbName ?: ($GLOBALS['DB_NAME'] ?? '');
 // $dbUser = $dbUser ?: ($GLOBALS['DB_USER'] ?? '');

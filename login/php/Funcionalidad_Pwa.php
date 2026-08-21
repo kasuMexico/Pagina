@@ -25,6 +25,7 @@ if (!isset($_SESSION["Vendedor"])) {
 }
 
 require_once '../../eia/librerias.php';
+/** @var mysqli $mysqli */
 require_once __DIR__ . '/mesa_helpers.php';
 kasu_apply_error_settings(); // 2025-11-18: Centraliza errores en /eia/error.log accesible vía HTTPS
 

@@ -1,4 +1,5 @@
 <?php
+/** @var mysqli $mysqli */
 /**
  * Vista modal: resumen de póliza y acciones (Agregar Pago / Estado de Cuenta)
  * Qué hace: muestra datos del cliente, producto, saldo y estado; renderiza botones según nivel/estatus.

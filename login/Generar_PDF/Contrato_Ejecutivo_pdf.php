@@ -110,6 +110,7 @@ require_once '../../eia/Conexiones/cn_vtas.php';
     ob_start();
     // El template usará variables: $fecha, $Direccion, $EMail, $Nombre, $RFC, $CLABE
     require __DIR__ . '/html/Contrato_Ejecutivo.php';
+/** @var mysqli $mysqli */
     $html = ob_get_clean();
     if ($html === '' || $html === false) {
         throw new Exception('El template no generó contenido.');

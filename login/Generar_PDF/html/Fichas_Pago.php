@@ -1,4 +1,5 @@
 <?php
+/** @var mysqli $mysqli */
 // Requiere: $row (Venta), $mysqli, $basicas, $financieras, $fec (opcional)
 
 if (!isset($row) || !is_array($row)) {

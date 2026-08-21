@@ -14,6 +14,7 @@
 
 declare(strict_types=1);
 require_once __DIR__ . '/../php/mesa_helpers.php';
+/** @var mysqli $mysqli */
 
 /* ==========================================================================================
  * BLOQUE: Variables de contexto

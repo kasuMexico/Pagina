@@ -1,4 +1,5 @@
 <?php
+/** @var mysqli $mysqli */
 /********************************************************************************************
  * Qué hace: Modal "Reasignar Colaborador". Reasigna superior y permite cambiar sucursal.
  * Cambios 10/11/2025:

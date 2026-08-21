@@ -19,6 +19,7 @@ require_once dirname(__DIR__, 3) . '/eia/session.php';
 kasu_session_start();
 //inlcuir el archivo de funciones
 require_once __DIR__ . '/../../../eia/librerias.php';
+/** @var mysqli $mysqli */
 require_once __DIR__ . '/../mesa_helpers.php';
 kasu_require_finance_access($mysqli, $basicas);
 

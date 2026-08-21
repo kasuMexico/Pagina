@@ -16,6 +16,7 @@ $HERE    = __DIR__;                   // -> /public_html/login/Generar_PDF
 // Dependencias (nota: carpeta composer es "vendor" en minúsculas)
 require $WEBROOT . '/vendor/autoload.php';
 require $WEBROOT . '/eia/librerias.php';
+/** @var mysqli $mysqli */
 
 use Dompdf\Dompdf;
 use Dompdf\Options;

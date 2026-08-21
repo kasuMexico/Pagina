@@ -40,6 +40,7 @@ try {
 
     /* ===== App deps ===== */
     require_once '../../eia/librerias.php'; // Debe definir $mysqli, Basicas, Financieras
+    /** @var mysqli $mysqli */
 
     /* ===== Resolver parámetros ===== */
     $idVenta   = null;

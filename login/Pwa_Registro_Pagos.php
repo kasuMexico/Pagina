@@ -15,6 +15,7 @@ kasu_session_start();
 date_default_timezone_set('America/Mexico_City');
 setlocale(LC_ALL,'es_ES.UTF-8');
 require_once __DIR__ . '/../eia/librerias.php';
+/** @var mysqli $mysqli */
 require_once __DIR__ . '/php/mesa_helpers.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 

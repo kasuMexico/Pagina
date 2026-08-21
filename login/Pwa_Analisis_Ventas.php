@@ -16,6 +16,7 @@ kasu_session_start();
  * [1] INICIALIZACIÓN: conexión, zona horaria, helpers
  * ========================================================================== */
 require_once __DIR__ . '/../eia/librerias.php';          // Debe exponer $mysqli, $basicas, $financieras
+/** @var mysqli $mysqli */
 require_once __DIR__ . '/php/mesa_helpers.php';
 
 if (empty($_SESSION['Vendedor'])) {

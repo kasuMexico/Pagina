@@ -1,4 +1,5 @@
 <?php
+/** @var mysqli $mysqli */
 /********************************************************************************************
  * Qué hace: Formulario modal para registrar pagos y promesas con CSRF, GPS y fingerprint.
  * Fecha: 05/11/2025

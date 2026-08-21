@@ -155,6 +155,7 @@ function api_admin_load_mailer(): void
         throw new RuntimeException('No se encontró vendor/autoload.php para PHPMailer.');
     }
     require_once $autoload;
+/** @var mysqli $mysqli */
 
     if (class_exists(\Dotenv\Dotenv::class) && is_file($root . '/.env')) {
         \Dotenv\Dotenv::createUnsafeImmutable($root)->safeLoad();

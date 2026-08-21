@@ -1,4 +1,5 @@
 <?php
+/** @var mysqli $mysqli */
 /**
  * Template: Estado de Cuenta (HTML para Dompdf) homologado a .doc-*
  * Requisitos en scope:

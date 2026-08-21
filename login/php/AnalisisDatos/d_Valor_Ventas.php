@@ -20,6 +20,7 @@ date_default_timezone_set('America/Mexico_City');
 header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../../../eia/librerias.php';
+/** @var mysqli $mysqli */
 require_once __DIR__ . '/../mesa_helpers.php';
 kasu_require_finance_access($mysqli, $basicas);
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);

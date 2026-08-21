@@ -24,6 +24,7 @@ kasu_session_start();
  * Fecha: 05/11/2025 — Revisado por: JCCM
  * ========================================================================================== */
 require_once '../../eia/librerias.php';
+/** @var mysqli $mysqli */
 require_once __DIR__ . '/mesa_helpers.php';
 kasu_apply_error_settings(); // 2025-11-18: Registro centralizado en https://kasu.com.mx/eia/error.log
 date_default_timezone_set('America/Mexico_City');

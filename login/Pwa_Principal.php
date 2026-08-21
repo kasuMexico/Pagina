@@ -15,6 +15,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/eia/session.php';
 kasu_session_start();
 require_once __DIR__ . '/../eia/librerias.php';
+/** @var mysqli $mysqli */
 require_once __DIR__ . '/php/mesa_helpers.php';
 require_once __DIR__ . '/php/Analisis_Metas.php';
 require_once __DIR__ . '/../eia/Vista-360/ia_role_profiles.php';

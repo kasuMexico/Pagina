@@ -1,4 +1,5 @@
 <?php 
+/** @var mysqli $mysqli */
 /* Plantilla DOMPDF para Cotización (PHP 8.2 + dompdf 3.x)
    Usa imágenes en /assets/poliza/img2/
    Requiere $Propuest/$Prospecto y $basicas,$mysqli

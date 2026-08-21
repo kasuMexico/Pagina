@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+/** @var mysqli $mysqli */
 
 if (function_exists('kasu_apply_error_settings')) {
     kasu_apply_error_settings(); // 2025-11-18: helpers reportan errores a /eia/error.log

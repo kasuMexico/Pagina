@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__, 3) . '/eia/session.php';
 kasu_session_start();
 require_once __DIR__ . '/../../../eia/librerias.php';
+/** @var mysqli $mysqli */
 require_once __DIR__ . '/../mesa_helpers.php';
 kasu_require_finance_access($mysqli, $basicas);
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);

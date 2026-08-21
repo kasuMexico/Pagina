@@ -1,4 +1,5 @@
 <?php
+/** @var mysqli $mysqli */
 /********************************************************************************************
  * Qué hace: Modal "Presupuesto de Venta" para prospecto. Calcula producto y costos según
  *           servicio y edad. Controla opciones de pago/plazo por tipo de servicio. Incluye

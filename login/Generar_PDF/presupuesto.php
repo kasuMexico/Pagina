@@ -11,6 +11,7 @@ date_default_timezone_set('America/Mexico_City');
 
 $root = dirname(__DIR__, 2); // /public_html
 require_once $root . '/eia/librerias.php'; // debe cargar $pros/$mysqli
+/** @var mysqli $mysqli */
 
 $token = $_GET['token'] ?? '';
 if (!$token || strlen($token) !== 64) {

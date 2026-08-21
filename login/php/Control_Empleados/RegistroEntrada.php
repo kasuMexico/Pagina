@@ -16,6 +16,7 @@ kasu_session_start();
 date_default_timezone_set('America/Mexico_City');
 
 require_once __DIR__ . '/../../eia/librerias.php'; // Debe exponer $mysqli, $basicas, clase Correo, etc.
+/** @var mysqli $mysqli */
 
 // ===== Helpers mínimos =====
 function path_from_ref(string $ref, string $fallback = '/login/Mesa_Herramientas.php'): string {

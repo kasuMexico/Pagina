@@ -405,7 +405,8 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
       <?php endif; ?>
 
       <?php if (!empty($data) && isset($messages[$data])): ?>
-        <div class="auth-toast" role="status">
+        <?php $isErrorToast = in_array($data, [1, 2, 4, 5], true); ?>
+        <div class="auth-toast <?= $isErrorToast ? 'auth-toast-error' : 'auth-toast-success' ?>" role="<?= $isErrorToast ? 'alert' : 'status' ?>">
           <span class="auth-toast-dot"></span>
           <p class="auth-toast-text"><?= htmlspecialchars($messages[$data], ENT_QUOTES) ?></p>
         </div>

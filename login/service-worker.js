@@ -1,7 +1,7 @@
 // /login/service-worker.js
 'use strict';
 
-const CACHE_STATIC  = 'kasu-static-v5';
+const CACHE_STATIC  = 'kasu-static-v6';
 const CACHE_RUNTIME = 'kasu-runtime-v3';
 const OFFLINE_URL   = '/login/offline.html';
 

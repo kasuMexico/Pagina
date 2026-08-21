@@ -1,7 +1,7 @@
 // /login/Javascript/install.js
 (() => {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/login/service-worker.js', { scope: '/login/' })
+    navigator.serviceWorker.register('/login/service-worker.js', { scope: '/login/', updateViaCache: 'none' })
       .catch((err) => console.error('SW register failed', err));
   }
 

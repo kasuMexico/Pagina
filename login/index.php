@@ -104,8 +104,8 @@ $VerCacheSafe = isset($VerCache) ? (string)$VerCache : '1';
 <title>KASU | Ventas</title>
 
 <link rel="icon" href="/assets/images/Index/florkasu.png">
-<link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png">
-<link rel="manifest" href="/login/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/login/assets/img/icon-152x152.png?v=2">
+<link rel="manifest" href="/login/manifest.webmanifest?v=2">
 
 <!-- Bootstrap (para .btn, .form-control, grid) -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">

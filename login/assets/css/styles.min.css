@@ -680,3 +680,51 @@ body::before{
     line-height: 1;
   }
 }
+
+/* Mostrar/ocultar contraseña */
+.auth-password{
+  position: relative;
+}
+
+.auth-password .auth-control.form-control{
+  padding-right: 46px;
+}
+
+.auth-eye{
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #7a8495;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.auth-eye:hover{
+  color: #1c2540;
+}
+
+.auth-eye:focus-visible{
+  outline: 2px solid rgba(50,103,255,.5);
+  outline-offset: 2px;
+}
+
+.auth-eye .icon-eye-off{
+  display: none;
+}
+
+.auth-eye.is-visible .icon-eye{
+  display: none;
+}
+
+.auth-eye.is-visible .icon-eye-off{
+  display: block;
+}
